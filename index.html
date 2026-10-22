@@ -259,7 +259,7 @@ textarea:focus,input:focus,select:focus{outline:2px solid var(--accent);outline-
 
 <section id="settings" class="sheetwrap pad" hidden>
   <form class="sheet" id="settingsForm">
-    <div class="sheethead"><h2>الإعدادات <small>إصدار 10</small></h2></div>
+    <div class="sheethead"><h2>الإعدادات <small>إصدار 11</small></h2></div>
     <div class="field">
       <label for="apiKey">مفتاح Gemini API</label>
       <input id="apiKey" type="password" dir="ltr" autocomplete="off" placeholder="AIza...">
@@ -308,6 +308,12 @@ textarea:focus,input:focus,select:focus{outline:2px solid var(--accent);outline-
   </form>
 </section>
 
+<section id="preview" class="sheetwrap pad" hidden>
+  <div class="sheet" style="height:100%;padding-block:12px">
+    <div class="sheethead"><h2>معاينة</h2><button class="ghost" type="button" id="closePreview">رجوع</button></div>
+    <iframe id="previewFrame" title="معاينة الصفحة" sandbox="allow-scripts allow-forms allow-modals" style="flex:1;min-height:70vh;width:100%;border:1px solid var(--line);border-radius:12px;background:#fff"></iframe>
+  </div>
+</section>
 <div id="toast" class="toast" hidden></div>
 <div id="printArea"></div>
 
@@ -349,7 +355,9 @@ applyName();
 function system(){
   return `أنت "${botName()}"، مساعد شخصي ذكي ولطيف. تحدّث بالعربية إلا إذا كتب المستخدم بلغة أو لهجة أخرى فجاريه. كن واضحاً ومباشراً ومفيداً، واجعل الإجابات مختصرة ما لم يُطلب التفصيل. استخدم Markdown بسيطاً عند الحاجة.
 - عندما يطلب المستخدم جدولاً أو تكون المعلومات مناسبة للمقارنة، اعرضها في جدول Markdown (صف عناوين ثم سطر |---| ثم الصفوف).
-- ضع أي كود داخل كتلة \`\`\` مع اسم اللغة. وعندما يُطلب شرح كود، اشرحه بالعربية البسيطة جزءاً جزءاً، وترجم معنى الأوامر والأسماء الإنجليزية إلى العربية.
+- ضع أي كود داخل كتلة \`\`\` مع اسم اللغة واسم الملف بعدها، مثل: \`\`\`html shift-schedule.html
+- هذا التطبيق يستطيع حفظ الملفات على هاتف المستخدم تلقائياً: كل كتلة كود تُحفظ كملف باسمها، وصفحات HTML يمكن معاينتها مباشرة. لذلك لا تقل أبداً إنك لا تستطيع حفظ الملفات، ولا تطلب من المستخدم نسخ الكود إلى برنامج آخر. عندما يطلب «احفظه» أو «اعمل لي ملف»، اكتب المحتوى كاملاً في كتلة كود واحدة باسم ملف مناسب (مثل .html أو .csv أو .txt، ولملف Word استخدم .doc واكتب محتواه بصيغة HTML)، وقل له إنه حُفظ في التنزيلات.
+- وعندما يُطلب شرح كود، اشرحه بالعربية البسيطة جزءاً جزءاً، وترجم معنى الأوامر والأسماء الإنجليزية إلى العربية.
 - إذا أرسل المستخدم صوراً أو ملفات (PDF أو Word أو Excel أو نص) أو تسجيلاً صوتياً فافحصها بدقة واستخدم ما فيها.
 - في نهاية كل رد، أضف سطراً أخيراً بهذا الشكل بالضبط فيه 3 اقتراحات قصيرة لما قد يطلبه المستخدم بعد ذلك (بصيغة طلب من المستخدم، أقل من 8 كلمات لكل اقتراح):
 <<اقتراحات: الاقتراح الأول | الاقتراح الثاني | الاقتراح الثالث>>`+(cfg.persona?.trim()?`\n\nتعليمات إضافية من المستخدم: ${cfg.persona.trim()}`:'');
@@ -361,8 +369,10 @@ function inline(s){return s.replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\*\
 function md(src){
   const re=/```([^\n`]*)\n?([\s\S]*?)(```|$)/g;let out='',last=0,m;
   while((m=re.exec(src))){out+=mdText(src.slice(last,m.index));
-    const lang=(m[1]||'').trim()||'code';
-    out+=`<div class="codebox"><div class="codebar"><span class="lang">${esc(lang)}</span><button type="button" class="copy">نسخ</button><button type="button" class="explain">اشرح بالعربي</button></div><pre><code>${esc(m[2].replace(/\n$/,''))}</code></pre></div>`;
+    const info=(m[1]||'').trim();const fm=info.match(/(?:file(?:name)?\s*=\s*)?["']?([^\s"'=]+\.[A-Za-z0-9]{1,6})["']?/);
+    const fname=fm?fm[1].split('/').pop():'';const lang=(info.split(/\s+/)[0]||'').replace(/=.*/,'')||(fname?fname.split('.').pop():'code');
+    const isHtml=/^(html?|svg)$/i.test(lang)||/\.(html?|svg)$/i.test(fname);
+    out+=`<div class="codebox" data-lang="${esc(lang)}" data-file="${esc(fname)}"><div class="codebar"><span class="lang">${esc(fname||lang)}</span><button type="button" class="copy">نسخ</button><button type="button" class="dl">⬇️ حفظ</button>${isHtml?'<button type="button" class="run">▶️ معاينة</button>':''}<button type="button" class="explain">اشرح بالعربي</button></div><pre><code>${esc(m[2].replace(/\n$/,''))}</code></pre></div>`;
     last=re.lastIndex;if(!m[3]||last>=src.length)break}
   return out+mdText(src.slice(last));
 }
@@ -480,11 +490,29 @@ function codeClick(e,before){
     else{const {name,blob}=tableFile(table);shareBlob(blob,name)}
     return}
   const b=e.target.closest('.codebar button');if(!b)return;
-  const code=b.closest('.codebox').querySelector('code').textContent;
+  const cb=b.closest('.codebox'),code=cb.querySelector('code').textContent;
   if(b.classList.contains('copy'))copyText(code);
+  else if(b.classList.contains('dl'))saveCodeFile(cb);
+  else if(b.classList.contains('run'))previewHtml(code);
   else{before&&before();send('اشرح هذا الكود بالعربي جزءاً جزءاً بلغة بسيطة، وترجم معاني الأوامر:\n```\n'+code+'\n```')}
 }
 thread.addEventListener('click',e=>codeClick(e));
+const EXT={html:'html',htm:'html',css:'css',js:'js',javascript:'js',ts:'ts',typescript:'ts',python:'py',py:'py',json:'json',java:'java',kotlin:'kt',c:'c',cpp:'cpp','c++':'cpp',csharp:'cs',cs:'cs',php:'php',sql:'sql',bash:'sh',sh:'sh',shell:'sh',xml:'xml',svg:'svg',csv:'csv',markdown:'md',md:'md',text:'txt',txt:'txt',yaml:'yml',yml:'yml',dart:'dart',swift:'swift',go:'go',ruby:'rb',doc:'doc',word:'doc'};
+const MIME={html:'text/html',css:'text/css',js:'text/javascript',json:'application/json',svg:'image/svg+xml',csv:'text/csv',xml:'application/xml',doc:'application/msword',md:'text/markdown'};
+function codeFileName(cb){
+  let f=cb.dataset.file;if(f)return f;
+  const ext=EXT[(cb.dataset.lang||'').toLowerCase()]||'txt';return 'ملف-'+stamp()+'.'+ext;
+}
+function saveCodeFile(cb,quiet){
+  const name=codeFileName(cb),ext=name.split('.').pop().toLowerCase();let code=cb.querySelector('code').textContent;
+  if(ext==='doc'&&!/<html/i.test(code))code='<html><head><meta charset="utf-8"></head><body dir="rtl" style="font-family:Arial">'+code+'</body></html>';
+  const pre=(ext==='csv'||ext==='doc')?'\ufeff':'';
+  downloadBlob(new Blob([pre+code],{type:(MIME[ext]||'text/plain')+';charset=utf-8'}),name);
+  if(!quiet)toast('تم حفظ '+name+' في التنزيلات ✅');return name;
+}
+function previewHtml(code){
+  const w=$('preview');const f=$('previewFrame');f.srcdoc=code;w.hidden=false;
+}
 function copyText(t){
   const done=()=>toast('تم النسخ');
   const fallback=()=>{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done()}catch(e){toast('تعذّر النسخ')}ta.remove()};
@@ -672,6 +700,10 @@ async function send(text,extra){
     if(!answer)throw{status:0,msg:'empty',empty:true};
     turns().push({role:'assistant',content:answer});persist();
     finishBot(b,answer,true);
+    if(/احفظ|حفظ|نزّل|نزل|حمّل|حمل|ملف|صدّر|صدر/.test(text)){
+      const boxes=[...b.querySelectorAll('.codebox')].slice(0,3);
+      if(boxes.length){const names=boxes.map(cb=>saveCodeFile(cb,true));toast('تم حفظ '+names.join('، ')+' في التنزيلات ✅')}
+    }
     if(cfg.autoSpeak)speak(splitSug(answer).body,b.querySelector('.act.speak'));
   }catch(e){
     if(answer){turns().push({role:'assistant',content:answer});persist();finishBot(b,answer,false)}
@@ -680,7 +712,7 @@ async function send(text,extra){
     else{const n=document.createElement('div');n.className='note';
       n.textContent=e&&e.empty?'لم يصل رد. جرّب صياغة مختلفة.':errText((e&&e.status)||0,(e&&e.msg)||'');b.appendChild(n);
       if(!(e&&e.empty)){const d=document.createElement('div');d.className='note small';
-        d.textContent='v10 · ('+((e&&e.status)||'network')+') '+((e&&e.model)||'')+' · '+((e&&(e.msg||e.message))||String(e));b.appendChild(d)}}
+        d.textContent='v11 · ('+((e&&e.status)||'network')+') '+((e&&e.model)||'')+' · '+((e&&(e.msg||e.message))||String(e));b.appendChild(d)}}
   }finally{setBusy(false);scrollDown()}
 }
 
@@ -785,6 +817,8 @@ $('forgotPin').onclick=()=>{const b=$('forgotPin');
 document.addEventListener('visibilitychange',()=>{if(document.hidden)hiddenAt=Date.now();else if(pinHash&&hiddenAt&&Date.now()-hiddenAt>60000)lockNow()});
 function pinUI(){$('pinState').textContent=pinHash?'القفل مفعّل ✅ اكتب رقماً جديداً لتغييره.':'بدون قفل حالياً. اكتب رقماً واضغط حفظ لتفعيل القفل.';$('pinRemove').hidden=!pinHash}
 $('pinRemove').onclick=()=>{pinHash=null;try{localStorage.removeItem('pin')}catch(e){}pinUI();toast('تمت إزالة القفل')};
+
+$('closePreview').onclick=()=>{$('preview').hidden=true;$('previewFrame').srcdoc=''};
 
 /* settings */
 const sel=$('model'),custom=$('customModel');
