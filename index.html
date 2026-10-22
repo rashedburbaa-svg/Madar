@@ -132,6 +132,19 @@ textarea:focus,input:focus,select:focus{outline:2px solid var(--accent);outline-
 .item .x{flex:none;border:0;background:transparent;color:var(--muted);font-size:13px;cursor:pointer;padding:4px 6px;border-radius:8px}
 .empty{color:var(--muted);text-align:center;padding:24px 8px}
 .saved-full{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px}
+.codesbtn{position:relative}
+.badge{position:absolute;top:-5px;left:-5px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--accent);color:var(--accent-fg);font-size:11px;line-height:18px;font-weight:600}
+.codechip{display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin:0 0 .7em}
+.codechip .open{flex:1;min-width:150px;display:flex;align-items:center;gap:10px;background:none;border:0;padding:2px 0;text-align:right;cursor:pointer}
+.codechip .txt{flex:1;min-width:0;display:flex;flex-direction:column}
+.codechip .chipacts{display:flex;gap:6px}
+.codechip .act{font-size:14px;padding:5px 12px;color:var(--fg)}
+.codechip .chiprun{background:var(--accent);color:var(--accent-fg);border-color:transparent}
+.codechip .ic{flex:none;width:34px;height:34px;border-radius:9px;background:var(--code);color:var(--code-fg);display:grid;place-items:center;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+.codechip .nm{font-weight:600;direction:ltr;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.codechip .sub{font-size:13px;color:var(--muted)}
+.codebox.flash{outline:3px solid var(--accent);outline-offset:2px}
+.codegroup{font-size:13px;color:var(--muted);margin:6px 0 -6px}
 .tblbar{display:flex;gap:6px;margin:-4px 0 10px;flex-wrap:wrap}
 #printArea{display:none}
 @media print{
@@ -167,8 +180,9 @@ textarea:focus,input:focus,select:focus{outline:2px solid var(--accent);outline-
     </button>
     <img class="mark" id="markLetter" alt="" aria-hidden="true" src="data:image/png;base64,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">
     <div class="title" id="titleName">مساعدي</div>
-    <button class="icon" id="themeBtn" type="button" aria-label="تبديل الوضع الليلي">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    <button class="icon codesbtn" id="codesBtn" type="button" aria-label="خانة الأكواد">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5M13.5 4l-3 16"/></svg>
+      <span class="badge" id="codeCount" hidden>0</span>
     </button>
     <button class="icon" id="newChat" type="button" aria-label="محادثة جديدة">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
@@ -259,7 +273,7 @@ textarea:focus,input:focus,select:focus{outline:2px solid var(--accent);outline-
 
 <section id="settings" class="sheetwrap pad" hidden>
   <form class="sheet" id="settingsForm">
-    <div class="sheethead"><h2>الإعدادات <small>إصدار 11</small></h2></div>
+    <div class="sheethead"><h2>الإعدادات <small>إصدار 13</small></h2></div>
     <div class="field">
       <label for="apiKey">مفتاح Gemini API</label>
       <input id="apiKey" type="password" dir="ltr" autocomplete="off" placeholder="AIza...">
@@ -298,6 +312,7 @@ textarea:focus,input:focus,select:focus{outline:2px solid var(--accent);outline-
       <button class="linkbtn" type="button" id="pinRemove" style="align-self:flex-start" hidden>إزالة القفل</button>
     </div>
     <div class="field">
+      <label class="check"><input type="checkbox" id="inlineCode"> عرض الأكواد داخل المحادثة (بدل خانة الأكواد)</label>
       <label class="check"><input type="checkbox" id="autoSpeak"> قراءة الردود بالصوت تلقائياً</label>
       <label class="check"><input type="checkbox" id="autoSendVoice"> إرسال الرسالة الصوتية فور انتهائي من الكلام</label>
     </div>
@@ -306,6 +321,14 @@ textarea:focus,input:focus,select:focus{outline:2px solid var(--accent);outline-
       <button class="ghost" type="button" id="closeSettings">إلغاء</button>
     </div>
   </form>
+</section>
+
+<section id="codes" class="sheetwrap pad" hidden>
+  <div class="sheet">
+    <div class="sheethead"><h2>الأكواد</h2><button class="ghost" type="button" id="closeCodes">رجوع</button></div>
+    <div class="field"><small>كل الأكواد والملفات في هذه المحادثة، الأحدث أولاً. احفظها أو عاينها أو اطلب شرحها بالعربي.</small></div>
+    <div id="codesList" class="list"></div>
+  </div>
 </section>
 
 <section id="preview" class="sheetwrap pad" hidden>
@@ -346,7 +369,7 @@ function persist(){const c=cur();if(c){c.updated=Date.now();c.title=titleFrom(c.
 const THEMES={auto:'تلقائي',light:'فاتح',dark:'داكن'};
 function applyTheme(){const t=cfg.theme||'auto';const r=document.documentElement;if(t==='auto')r.removeAttribute('data-theme');else r.setAttribute('data-theme',t)}
 applyTheme();
-$('themeBtn').onclick=()=>{const order=['auto','dark','light'];cfg.theme=order[(order.indexOf(cfg.theme||'auto')+1)%3];save('cfg',cfg);applyTheme();toast('المظهر: '+THEMES[cfg.theme])};
+
 
 function botName(){return (cfg.name||'').trim()||'مساعدي'}
 function applyName(){$('titleName').textContent=botName();document.title=botName()}
@@ -366,13 +389,31 @@ function system(){
 /* markdown */
 function esc(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 function inline(s){return s.replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')}
-function md(src){
+function codeInfo(info){
+  info=(info||'').trim();const fm=info.match(/(?:file(?:name)?\s*=\s*)?["']?([^\s"'=]+\.[A-Za-z0-9]{1,6})["']?/);
+  const fname=fm?fm[1].split('/').pop():'';const lang=(info.split(/\s+/)[0]||'').replace(/=.*/,'')||(fname?fname.split('.').pop():'code');
+  return {fname,lang};
+}
+function codeKey(name,code){let h=0;for(let i=0;i<code.length;i++)h=(h*31+code.charCodeAt(i))|0;return name+':'+code.length+':'+h}
+function extractCode(src){
+  const re=/```([^\n`]*)\n?([\s\S]*?)```/g;const out=[];let m;
+  while((m=re.exec(src))){const {fname,lang}=codeInfo(m[1]);const code=m[2].replace(/\n$/,'');out.push({fname,lang,code,key:codeKey(fname||lang,code)})}
+  return out;
+}
+function codeBoxHTML(fname,lang,code,key){
+  const isHtml=/^(html?|svg)$/i.test(lang)||/\.(html?|svg)$/i.test(fname);
+  return `<div class="codebox" data-k="${esc(key)}" data-lang="${esc(lang)}" data-file="${esc(fname)}"><div class="codebar"><span class="lang">${esc(fname||lang)}</span><button type="button" class="copy">نسخ</button><button type="button" class="dl">⬇️ حفظ</button>${isHtml?'<button type="button" class="run">▶️ معاينة</button>':''}<button type="button" class="explain">اشرح بالعربي</button></div><pre><code>${esc(code)}</code></pre></div>`;
+}
+const CODEREG={};
+function md(src,full){
+  const inlineMode=full||cfg.inlineCode;
   const re=/```([^\n`]*)\n?([\s\S]*?)(```|$)/g;let out='',last=0,m;
   while((m=re.exec(src))){out+=mdText(src.slice(last,m.index));
-    const info=(m[1]||'').trim();const fm=info.match(/(?:file(?:name)?\s*=\s*)?["']?([^\s"'=]+\.[A-Za-z0-9]{1,6})["']?/);
-    const fname=fm?fm[1].split('/').pop():'';const lang=(info.split(/\s+/)[0]||'').replace(/=.*/,'')||(fname?fname.split('.').pop():'code');
-    const isHtml=/^(html?|svg)$/i.test(lang)||/\.(html?|svg)$/i.test(fname);
-    out+=`<div class="codebox" data-lang="${esc(lang)}" data-file="${esc(fname)}"><div class="codebar"><span class="lang">${esc(fname||lang)}</span><button type="button" class="copy">نسخ</button><button type="button" class="dl">⬇️ حفظ</button>${isHtml?'<button type="button" class="run">▶️ معاينة</button>':''}<button type="button" class="explain">اشرح بالعربي</button></div><pre><code>${esc(m[2].replace(/\n$/,''))}</code></pre></div>`;
+    const {fname,lang}=codeInfo(m[1]);const code=m[2].replace(/\n$/,'');const key=codeKey(fname||lang,code);const done=!!m[3];
+    if(inlineMode)out+=codeBoxHTML(fname,lang,code,key);
+    else{const lines=code?code.split('\n').length:0;CODEREG[key]={fname,lang,code};
+      const isHtml=/^(html?|svg)$/i.test(lang)||/\.(html?|svg)$/i.test(fname);
+      out+=`<div class="codechip" data-k="${esc(key)}"><button type="button" class="open"><span class="ic">&lt;/&gt;</span><span class="txt"><span class="nm">${esc(fname||lang)}</span><span class="sub">${done?lines+' سطر · اضغط لعرض الكود':'يكتب الكود... ('+lines+' سطر)'}</span></span></button>${done?`<span class="chipacts">${isHtml?'<button type="button" class="act chiprun">▶️ معاينة</button>':''}<button type="button" class="act chipdl">⬇️ حفظ</button></span>`:''}</div>`}
     last=re.lastIndex;if(!m[3]||last>=src.length)break}
   return out+mdText(src.slice(last));
 }
@@ -429,6 +470,7 @@ function finishBot(d,text,showSug){
 }
 function scrollDown(){thread.scrollTop=thread.scrollHeight}
 function render(){
+  updateCodeCount();
   thread.innerHTML='';const ts=turns();
   if(!ts.length){
     const w=document.createElement('section');w.className='welcome';
@@ -499,12 +541,13 @@ function codeClick(e,before){
 thread.addEventListener('click',e=>codeClick(e));
 const EXT={html:'html',htm:'html',css:'css',js:'js',javascript:'js',ts:'ts',typescript:'ts',python:'py',py:'py',json:'json',java:'java',kotlin:'kt',c:'c',cpp:'cpp','c++':'cpp',csharp:'cs',cs:'cs',php:'php',sql:'sql',bash:'sh',sh:'sh',shell:'sh',xml:'xml',svg:'svg',csv:'csv',markdown:'md',md:'md',text:'txt',txt:'txt',yaml:'yml',yml:'yml',dart:'dart',swift:'swift',go:'go',ruby:'rb',doc:'doc',word:'doc'};
 const MIME={html:'text/html',css:'text/css',js:'text/javascript',json:'application/json',svg:'image/svg+xml',csv:'text/csv',xml:'application/xml',doc:'application/msword',md:'text/markdown'};
-function codeFileName(cb){
-  let f=cb.dataset.file;if(f)return f;
-  const ext=EXT[(cb.dataset.lang||'').toLowerCase()]||'txt';return 'ملف-'+stamp()+'.'+ext;
+function codeFileName(o){
+  if(o.fname)return o.fname;
+  const ext=EXT[(o.lang||'').toLowerCase()]||'txt';return 'ملف-'+stamp()+'.'+ext;
 }
 function saveCodeFile(cb,quiet){
-  const name=codeFileName(cb),ext=name.split('.').pop().toLowerCase();let code=cb.querySelector('code').textContent;
+  const o=cb.nodeType?{fname:cb.dataset.file,lang:cb.dataset.lang,code:cb.querySelector('code').textContent}:cb;
+  const name=codeFileName(o),ext=name.split('.').pop().toLowerCase();let code=o.code;
   if(ext==='doc'&&!/<html/i.test(code))code='<html><head><meta charset="utf-8"></head><body dir="rtl" style="font-family:Arial">'+code+'</body></html>';
   const pre=(ext==='csv'||ext==='doc')?'\ufeff':'';
   downloadBlob(new Blob([pre+code],{type:(MIME[ext]||'text/plain')+';charset=utf-8'}),name);
@@ -699,10 +742,10 @@ async function send(text,extra){
     }
     if(!answer)throw{status:0,msg:'empty',empty:true};
     turns().push({role:'assistant',content:answer});persist();
-    finishBot(b,answer,true);
+    finishBot(b,answer,true);updateCodeCount();
     if(/احفظ|حفظ|نزّل|نزل|حمّل|حمل|ملف|صدّر|صدر/.test(text)){
-      const boxes=[...b.querySelectorAll('.codebox')].slice(0,3);
-      if(boxes.length){const names=boxes.map(cb=>saveCodeFile(cb,true));toast('تم حفظ '+names.join('، ')+' في التنزيلات ✅')}
+      const files=extractCode(answer).slice(0,3);
+      if(files.length){const names=files.map(c=>saveCodeFile(c,true));toast('تم حفظ '+names.join('، ')+' في التنزيلات ✅')}
     }
     if(cfg.autoSpeak)speak(splitSug(answer).body,b.querySelector('.act.speak'));
   }catch(e){
@@ -712,7 +755,7 @@ async function send(text,extra){
     else{const n=document.createElement('div');n.className='note';
       n.textContent=e&&e.empty?'لم يصل رد. جرّب صياغة مختلفة.':errText((e&&e.status)||0,(e&&e.msg)||'');b.appendChild(n);
       if(!(e&&e.empty)){const d=document.createElement('div');d.className='note small';
-        d.textContent='v11 · ('+((e&&e.status)||'network')+') '+((e&&e.model)||'')+' · '+((e&&(e.msg||e.message))||String(e));b.appendChild(d)}}
+        d.textContent='v13 · ('+((e&&e.status)||'network')+') '+((e&&e.model)||'')+' · '+((e&&(e.msg||e.message))||String(e));b.appendChild(d)}}
   }finally{setBusy(false);scrollDown()}
 }
 
@@ -748,7 +791,7 @@ function drawLists(){
     it.append(m,x);sl.appendChild(it)});
 }
 let openS=null;
-function openSaved(s){openS=s;$('savedTitle').textContent=s.from||'محفوظ';$('savedBody').innerHTML=md(s.text);$('savedView').hidden=false}
+function openSaved(s){openS=s;$('savedTitle').textContent=s.from||'محفوظ';$('savedBody').innerHTML=md(s.text,true);$('savedView').hidden=false}
 $('closeSaved').onclick=()=>{$('savedView').hidden=true;if('speechSynthesis' in window){speechSynthesis.cancel();resetSpeakBtn()}};
 $('savedCopy').onclick=()=>openS&&copyText(openS.text);
 $('savedSpeak').onclick=e=>openS&&speak(openS.text,e.currentTarget);
@@ -818,6 +861,22 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)hiddenAt=Da
 function pinUI(){$('pinState').textContent=pinHash?'القفل مفعّل ✅ اكتب رقماً جديداً لتغييره.':'بدون قفل حالياً. اكتب رقماً واضغط حفظ لتفعيل القفل.';$('pinRemove').hidden=!pinHash}
 $('pinRemove').onclick=()=>{pinHash=null;try{localStorage.removeItem('pin')}catch(e){}pinUI();toast('تمت إزالة القفل')};
 
+function chatCodes(){const all=[];turns().forEach(t=>{if(t.role!=='user')extractCode(t.content).forEach(c=>{if(!all.some(x=>x.key===c.key))all.push(c)})});return all.reverse()}
+function updateCodeCount(){const n=chatCodes().length;const b=$('codeCount');b.textContent=n;b.hidden=!n}
+function openCodes(key){
+  const l=$('codesList');const list=chatCodes();
+  l.innerHTML=list.length?list.map(c=>codeBoxHTML(c.fname,c.lang,c.code,c.key)).join(''):'<div class="empty">لا توجد أكواد في هذه المحادثة بعد. عندما يكتب المساعد كوداً سيظهر هنا، وتبقى المحادثة نظيفة.</div>';
+  $('codes').hidden=false;$('codes').scrollTop=0;
+  if(key){const el=[...l.querySelectorAll('.codebox')].find(x=>x.dataset.k===key);if(el){el.scrollIntoView({block:'start'});el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),1500)}}
+}
+$('codesBtn').onclick=()=>openCodes();
+$('closeCodes').onclick=()=>{$('codes').hidden=true};
+$('codesList').addEventListener('click',e=>codeClick(e,()=>{$('codes').hidden=true}));
+thread.addEventListener('click',e=>{
+  const c=e.target.closest('.codechip');if(!c)return;const o=CODEREG[c.dataset.k];
+  if(e.target.closest('.chipdl')){if(o)saveCodeFile(o);return}
+  if(e.target.closest('.chiprun')){if(o)previewHtml(o.code);return}
+  if(e.target.closest('.open'))openCodes(c.dataset.k)});
 $('closePreview').onclick=()=>{$('preview').hidden=true;$('previewFrame').srcdoc=''};
 
 /* settings */
@@ -825,7 +884,7 @@ const sel=$('model'),custom=$('customModel');
 function openSettings(){
   $('apiKey').value=cfg.key||'';$('botName').value=cfg.name||'';$('persona').value=cfg.persona||'';
   $('themeSel').value=cfg.theme||'auto';$('pinNew').value='';pinUI();
-  $('autoSpeak').checked=!!cfg.autoSpeak;$('autoSendVoice').checked=cfg.autoSendVoice!==false;
+  $('autoSpeak').checked=!!cfg.autoSpeak;$('inlineCode').checked=!!cfg.inlineCode;$('autoSendVoice').checked=cfg.autoSendVoice!==false;
   const known=[...sel.options].some(o=>o.value===cfg.model);
   sel.value=known?cfg.model:'custom';custom.hidden=known;custom.value=known?'':cfg.model;
   $('settings').hidden=false;
@@ -838,7 +897,7 @@ $('settingsForm').addEventListener('submit',async e=>{
   const np=$('pinNew').value.trim();
   if(np){if(!/^\d{4,}$/.test(np)){toast('الرقم السري يجب أن يكون 4 أرقام أو أكثر');return}pinHash=await hashPin(np);save('pin',pinHash)}
   cfg={theme:$('themeSel').value,key:$('apiKey').value.trim(),name:$('botName').value.trim(),persona:$('persona').value,
-    autoSpeak:$('autoSpeak').checked,autoSendVoice:$('autoSendVoice').checked,
+    autoSpeak:$('autoSpeak').checked,inlineCode:$('inlineCode').checked,autoSendVoice:$('autoSendVoice').checked,
     model:sel.value==='custom'?(custom.value.trim()||'gemini-3.8-flash'):sel.value};
   save('cfg',cfg);applyName();applyTheme();$('settings').hidden=true;render();toast(np?'تم الحفظ وتفعيل القفل 🔒':'تم الحفظ');
 });
