@@ -145,6 +145,13 @@ textarea:focus,input:focus,select:focus{outline:2px solid var(--accent);outline-
 .codechip .sub{font-size:13px;color:var(--muted)}
 .codebox.flash{outline:3px solid var(--accent);outline-offset:2px}
 .codegroup{font-size:13px;color:var(--muted);margin:6px 0 -6px}
+.projbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-block:8px;border-top:1px solid var(--line);background:var(--user)}
+.projbar .pn{flex:1;min-width:120px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:ltr;text-align:right}
+.projbar .pn small{color:var(--muted);font-weight:400}
+.projbar .act{color:var(--fg);background:var(--surface);font-size:13px}
+.projbar .act.main{background:var(--accent);color:var(--accent-fg);border-color:transparent}
+.errbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--danger);border-radius:12px;padding:8px 12px;color:var(--danger);font-size:14px}
+.errbar .btn{height:38px;font-size:14px}
 .tblbar{display:flex;gap:6px;margin:-4px 0 10px;flex-wrap:wrap}
 #printArea{display:none}
 @media print{
@@ -194,6 +201,13 @@ textarea:focus,input:focus,select:focus{outline:2px solid var(--accent);outline-
 
   <main id="thread" class="pad" aria-live="polite"></main>
 
+  <div id="projBar" class="pad projbar" hidden>
+    <span class="pn">📁 <span id="projName">مشروع</span> <small id="projVer"></small></span>
+    <button type="button" class="act main" id="projRun">▶️ تشغيل</button>
+    <button type="button" class="act" id="projSave">⬇️ حفظ</button>
+    <button type="button" class="act" id="projUndo">↩️ تراجع</button>
+    <button type="button" class="act" id="projEnd" aria-label="إنهاء وضع المشروع">✕</button>
+  </div>
   <div id="previews" class="pad previews" hidden></div>
   <div id="listening" class="pad" hidden>🎙️ أستمع إليك... تكلّم ثم اضغط الميكروفون للإيقاف</div>
   <form id="composer" class="pad">
@@ -273,7 +287,7 @@ textarea:focus,input:focus,select:focus{outline:2px solid var(--accent);outline-
 
 <section id="settings" class="sheetwrap pad" hidden>
   <form class="sheet" id="settingsForm">
-    <div class="sheethead"><h2>الإعدادات <small>إصدار 13</small></h2></div>
+    <div class="sheethead"><h2>الإعدادات <small>إصدار 14</small></h2></div>
     <div class="field">
       <label for="apiKey">مفتاح Gemini API</label>
       <input id="apiKey" type="password" dir="ltr" autocomplete="off" placeholder="AIza...">
@@ -334,6 +348,7 @@ textarea:focus,input:focus,select:focus{outline:2px solid var(--accent);outline-
 <section id="preview" class="sheetwrap pad" hidden>
   <div class="sheet" style="height:100%;padding-block:12px">
     <div class="sheethead"><h2>معاينة</h2><button class="ghost" type="button" id="closePreview">رجوع</button></div>
+    <div id="errBar" class="errbar" hidden><span id="errText" style="flex:1">⚠️ ظهرت أخطاء</span><button type="button" class="btn" id="fixErrors">🛠️ أصلح الأخطاء</button></div>
     <iframe id="previewFrame" title="معاينة الصفحة" sandbox="allow-scripts allow-forms allow-modals" style="flex:1;min-height:70vh;width:100%;border:1px solid var(--line);border-radius:12px;background:#fff"></iframe>
   </div>
 </section>
@@ -375,6 +390,24 @@ function botName(){return (cfg.name||'').trim()||'مساعدي'}
 function applyName(){$('titleName').textContent=botName();document.title=botName()}
 applyName();
 
+function projectPrompt(){
+  const c=cur();if(!c||!c.projectMode)return '';const p=c.project;
+  let t=`\n\n## وضع المشاريع
+أنت الآن تبني مع المستخدم مشروعاً (تطبيق أو موقع ويب) في ملف HTML واحد يحتوي CSS و JavaScript بداخله، ويعمل على الهاتف، وبالعربية من اليمين لليسار. للحفظ الدائم داخل المشروع استخدم localStorage. اكتب كوداً كاملاً يعمل فعلاً بدون أجزاء ناقصة أو تعليقات مثل "أكمل هنا".`;
+  if(!p)t+=`\nلا يوجد ملف بعد. اكتب الملف كاملاً في كتلة واحدة: \`\`\`html اسم-مناسب.html`;
+  else t+=`\nهذا هو الملف الحالي للمشروع (اسمه ${p.name}، نسخة ${p.versions.length}):
+\`\`\`html ${p.name}
+${p.code}
+\`\`\`
+لأي تعديل لا تُعد كتابة الملف كاملاً، بل اكتب التعديلات فقط داخل كتلة \`\`\`edit ${p.name} بهذا الشكل لكل تعديل:
+<<<<<<< SEARCH
+سطور منسوخة حرفياً من الملف الحالي
+=======
+السطور الجديدة
+>>>>>>> REPLACE
+اجعل جزء SEARCH قصيراً (بضعة أسطر) وفريداً ومطابقاً للملف تماماً. اكتب الملف كاملاً بنفس الاسم فقط إذا طلب المستخدم ذلك أو كان التغيير يشمل معظم الملف. بعد الكود اشرح باختصار ما غيّرته.`;
+  return t;
+}
 function system(){
   return `أنت "${botName()}"، مساعد شخصي ذكي ولطيف. تحدّث بالعربية إلا إذا كتب المستخدم بلغة أو لهجة أخرى فجاريه. كن واضحاً ومباشراً ومفيداً، واجعل الإجابات مختصرة ما لم يُطلب التفصيل. استخدم Markdown بسيطاً عند الحاجة.
 - عندما يطلب المستخدم جدولاً أو تكون المعلومات مناسبة للمقارنة، اعرضها في جدول Markdown (صف عناوين ثم سطر |---| ثم الصفوف).
@@ -383,7 +416,7 @@ function system(){
 - وعندما يُطلب شرح كود، اشرحه بالعربية البسيطة جزءاً جزءاً، وترجم معنى الأوامر والأسماء الإنجليزية إلى العربية.
 - إذا أرسل المستخدم صوراً أو ملفات (PDF أو Word أو Excel أو نص) أو تسجيلاً صوتياً فافحصها بدقة واستخدم ما فيها.
 - في نهاية كل رد، أضف سطراً أخيراً بهذا الشكل بالضبط فيه 3 اقتراحات قصيرة لما قد يطلبه المستخدم بعد ذلك (بصيغة طلب من المستخدم، أقل من 8 كلمات لكل اقتراح):
-<<اقتراحات: الاقتراح الأول | الاقتراح الثاني | الاقتراح الثالث>>`+(cfg.persona?.trim()?`\n\nتعليمات إضافية من المستخدم: ${cfg.persona.trim()}`:'');
+<<اقتراحات: الاقتراح الأول | الاقتراح الثاني | الاقتراح الثالث>>`+(cfg.persona?.trim()?`\n\nتعليمات إضافية من المستخدم: ${cfg.persona.trim()}`:'')+projectPrompt();
 }
 
 /* markdown */
@@ -397,7 +430,7 @@ function codeInfo(info){
 function codeKey(name,code){let h=0;for(let i=0;i<code.length;i++)h=(h*31+code.charCodeAt(i))|0;return name+':'+code.length+':'+h}
 function extractCode(src){
   const re=/```([^\n`]*)\n?([\s\S]*?)```/g;const out=[];let m;
-  while((m=re.exec(src))){const {fname,lang}=codeInfo(m[1]);const code=m[2].replace(/\n$/,'');out.push({fname,lang,code,key:codeKey(fname||lang,code)})}
+  while((m=re.exec(src))){const {fname,lang}=codeInfo(m[1]);if(lang==='edit')continue;const code=m[2].replace(/\n$/,'');out.push({fname,lang,code,key:codeKey(fname||lang,code)})}
   return out;
 }
 function codeBoxHTML(fname,lang,code,key){
@@ -411,9 +444,11 @@ function md(src,full){
   while((m=re.exec(src))){out+=mdText(src.slice(last,m.index));
     const {fname,lang}=codeInfo(m[1]);const code=m[2].replace(/\n$/,'');const key=codeKey(fname||lang,code);const done=!!m[3];
     if(inlineMode)out+=codeBoxHTML(fname,lang,code,key);
+    else if(lang==='edit'){const n=(code.match(/<<<<<<< ?SEARCH/g)||[]).length;CODEREG[key]={fname,lang,code};
+      out+=`<div class="codechip" data-k="${esc(key)}"><button type="button" class="open"><span class="ic">✏️</span><span class="txt"><span class="nm">${esc(fname||'المشروع')}</span><span class="sub">${done?n+' تعديل على المشروع · اضغط للعرض':'يكتب التعديلات...'}</span></span></button></div>`}
     else{const lines=code?code.split('\n').length:0;CODEREG[key]={fname,lang,code};
       const isHtml=/^(html?|svg)$/i.test(lang)||/\.(html?|svg)$/i.test(fname);
-      out+=`<div class="codechip" data-k="${esc(key)}"><button type="button" class="open"><span class="ic">&lt;/&gt;</span><span class="txt"><span class="nm">${esc(fname||lang)}</span><span class="sub">${done?lines+' سطر · اضغط لعرض الكود':'يكتب الكود... ('+lines+' سطر)'}</span></span></button>${done?`<span class="chipacts">${isHtml?'<button type="button" class="act chiprun">▶️ معاينة</button>':''}<button type="button" class="act chipdl">⬇️ حفظ</button></span>`:''}</div>`}
+      out+=`<div class="codechip" data-k="${esc(key)}"><button type="button" class="open"><span class="ic">&lt;/&gt;</span><span class="txt"><span class="nm">${esc(fname||lang)}</span><span class="sub">${done?lines+' سطر · اضغط لعرض الكود':'يكتب الكود... ('+lines+' سطر)'}</span></span></button>${done?`<span class="chipacts">${isHtml?'<button type="button" class="act chiprun">▶️ معاينة</button>':''}<button type="button" class="act chipdl">⬇️ حفظ</button>${isHtml&&!(cur()&&cur().projectMode)?'<button type="button" class="act chipproj">📁 مشروع</button>':''}</span>`:''}</div>`}
     last=re.lastIndex;if(!m[3]||last>=src.length)break}
   return out+mdText(src.slice(last));
 }
@@ -470,7 +505,7 @@ function finishBot(d,text,showSug){
 }
 function scrollDown(){thread.scrollTop=thread.scrollHeight}
 function render(){
-  updateCodeCount();
+  updateCodeCount();drawProjBar();
   thread.innerHTML='';const ts=turns();
   if(!ts.length){
     const w=document.createElement('section');w.className='welcome';
@@ -482,6 +517,7 @@ function render(){
       SUGGEST.forEach(s=>{const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=s;b.onclick=()=>send(s);c.appendChild(b)});
       const code=document.createElement('button');code.type='button';code.className='chip';code.textContent='💻 الصق كوداً وسأشرحه لك بالعربي';
       code.onclick=()=>{box.value='اشرح هذا الكود بالعربي:\n';grow();box.focus()};c.appendChild(code);
+      const pj=document.createElement('button');pj.type='button';pj.className='chip';pj.textContent='📁 ابدأ مشروعاً (تطبيق أو موقع)';pj.onclick=newProject;c.appendChild(pj);
       const tp=document.createElement('button');tp.type='button';tp.className='chip';tp.textContent='📋 كل القوالب الجاهزة';tp.onclick=openTemplates;c.appendChild(tp);
       w.appendChild(c)}
     else{const b=document.createElement('button');b.type='button';b.className='btn';b.style.alignSelf='flex-start';b.textContent='إضافة المفتاح';b.onclick=openSettings;w.appendChild(b)}
@@ -553,9 +589,22 @@ function saveCodeFile(cb,quiet){
   downloadBlob(new Blob([pre+code],{type:(MIME[ext]||'text/plain')+';charset=utf-8'}),name);
   if(!quiet)toast('تم حفظ '+name+' في التنزيلات ✅');return name;
 }
+let previewErrors=[];
+const CATCH='<script>(function(){try{localStorage.getItem("x")}catch(e){var m={};try{Object.defineProperty(window,"localStorage",{value:{getItem:function(k){return k in m?m[k]:null},setItem:function(k,v){m[k]=String(v)},removeItem:function(k){delete m[k]},clear:function(){m={}},key:function(i){return Object.keys(m)[i]||null},get length(){return Object.keys(m).length}}})}catch(_){}}function s(t){try{parent.postMessage({__err:String(t).slice(0,400)},"*")}catch(_){}}window.addEventListener("error",function(e){s((e.message||"خطأ")+(e.lineno?" (سطر "+e.lineno+")":""))});window.addEventListener("unhandledrejection",function(e){s("Promise: "+((e.reason&&e.reason.message)||e.reason))});var ce=console.error;console.error=function(){s([].join.call(arguments," "));ce.apply(console,arguments)}})()<\/script>';
 function previewHtml(code){
-  const w=$('preview');const f=$('previewFrame');f.srcdoc=code;w.hidden=false;
+  previewErrors=[];$('errBar').hidden=true;
+  const withCatch=/<head[^>]*>/i.test(code)?code.replace(/<head[^>]*>/i,m=>m+CATCH):CATCH+code;
+  const f=$('previewFrame');f.srcdoc=withCatch;$('preview').hidden=false;
 }
+window.addEventListener('message',e=>{
+  if(e.source!==$('previewFrame').contentWindow||!e.data||!e.data.__err)return;
+  if(previewErrors.length<15&&!previewErrors.includes(e.data.__err))previewErrors.push(e.data.__err);
+  $('errText').textContent='⚠️ ظهر '+previewErrors.length+' خطأ في الصفحة';$('errBar').hidden=false;
+});
+$('fixErrors').onclick=()=>{
+  const list=previewErrors.map(x=>'- '+x).join('\n');$('preview').hidden=true;$('previewFrame').srcdoc='';
+  send('عند تشغيل الصفحة ظهرت هذه الأخطاء. اعرف سببها وأصلحها:\n'+list);
+};
 function copyText(t){
   const done=()=>toast('تم النسخ');
   const fallback=()=>{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done()}catch(e){toast('تعذّر النسخ')}ta.remove()};
@@ -689,6 +738,39 @@ function errText(status,msg){
   return 'تعذّر الاتصال. تحقق من الإنترنت ثم أعد المحاولة.';
 }
 
+async function streamOnce(contents,statusEl,onText){
+  let res=null,lastErr=null;
+  const models=[cfg.model,...FALLBACK.filter(m=>m!==cfg.model)];
+  for(const model of models){
+    res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:streamGenerateContent?alt=sse`,{
+      method:'POST',signal:ctl.signal,
+      headers:{'Content-Type':'application/json','x-goog-api-key':cfg.key},
+      body:JSON.stringify({systemInstruction:{parts:[{text:system()}]},contents})
+    });
+    if(res.ok){if(model!==cfg.model){cfg.model=model;save('cfg',cfg)}break}
+    let raw='';try{raw=await res.text()}catch(e){}
+    let m='';try{m=JSON.parse(raw).error?.message||''}catch(e){m=raw.slice(0,200)}
+    lastErr={status:res.status,msg:m||'no message',model};res=null;
+    if(!(lastErr.status>=500||lastErr.status===404||lastErr.status===429))break;
+    if(statusEl)statusEl.innerHTML='<span class="thinking">أجرّب نموذجاً آخر...</span>';
+  }
+  if(!res)throw lastErr;
+  const reader=res.body.getReader(),dec=new TextDecoder();let buf='',finish='';
+  while(true){
+    const {value,done}=await reader.read();if(done)break;
+    buf+=dec.decode(value,{stream:true});
+    const lines=buf.split('\n');buf=lines.pop();
+    for(const line of lines){
+      if(!line.startsWith('data:'))continue;
+      try{const j=JSON.parse(line.slice(5));const cand=j.candidates?.[0];
+        if(cand?.finishReason)finish=cand.finishReason;
+        const tx=(cand?.content?.parts||[]).filter(p=>!p.thought).map(p=>p.text||'').join('');
+        if(tx)onText(tx);
+      }catch(e){}
+    }
+  }
+  return {finish};
+}
 async function send(text,extra){
   text=(text||'').trim();const imgs=pending,audio=extra&&extra.audio;
   if((!text&&!imgs.length&&!audio)||busy)return;
@@ -710,40 +792,30 @@ async function send(text,extra){
     const parts=[{text:txt}];
     if(last){imgs.forEach(p=>{if(p.kind==='text')parts.unshift({text:'محتوى الملف المرفق ('+p.name+'):\n'+p.text.slice(0,200000)});else parts.unshift({inlineData:{mimeType:p.mime,data:p.data}})});if(audio)parts.unshift({inlineData:{mimeType:audio.mime,data:audio.data}})}
     return {role:h.role==='user'?'user':'model',parts}});
-  let answer='',res=null,lastErr=null;
-  const models=[cfg.model,...FALLBACK.filter(m=>m!==cfg.model)];
+  let answer='';
+  const inProject=!!(cur()&&cur().projectMode);
+  if(inProject)contents.forEach((cc,i)=>{if(cc.role==='model'&&i<contents.length-1)cc.parts=[{text:cc.parts[0].text.replace(/```[\s\S]*?```/g,'[كود — النسخة الحالية في ملف المشروع]')}]});
   try{
-    for(const model of models){
-      res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:streamGenerateContent?alt=sse`,{
-        method:'POST',signal:ctl.signal,
-        headers:{'Content-Type':'application/json','x-goog-api-key':cfg.key},
-        body:JSON.stringify({systemInstruction:{parts:[{text:system()}]},contents})
-      });
-      if(res.ok){if(model!==cfg.model){cfg.model=model;save('cfg',cfg)}break}
-      let raw='';try{raw=await res.text()}catch(e){}
-      let m='';try{m=JSON.parse(raw).error?.message||''}catch(e){m=raw.slice(0,200)}
-      lastErr={status:res.status,msg:m||'no message',model};res=null;
-      if(!(lastErr.status>=500||lastErr.status===404||lastErr.status===429))break;
-      cEl.innerHTML='<span class="thinking">أجرّب نموذجاً آخر...</span>';
-    }
-    if(!res)throw lastErr;
-    const reader=res.body.getReader(),dec=new TextDecoder();let buf='';
-    while(true){
-      const {value,done}=await reader.read();if(done)break;
-      buf+=dec.decode(value,{stream:true});
-      const lines=buf.split('\n');buf=lines.pop();
-      for(const line of lines){
-        if(!line.startsWith('data:'))continue;
-        try{const j=JSON.parse(line.slice(5));
-          const tx=(j.candidates?.[0]?.content?.parts||[]).filter(p=>!p.thought).map(p=>p.text||'').join('');
-          if(tx){answer+=tx;cEl.innerHTML=md(splitSug(answer).body);scrollDown()}
-        }catch(e){}
-      }
+    let base='';
+    const show=t=>{cEl.innerHTML=md(splitSug(t).body);scrollDown()};
+    let r=await streamOnce(contents,cEl,tx=>{answer+=tx;show(answer)});
+    let rounds=0;
+    while(r.finish==='MAX_TOKENS'&&rounds<6){
+      rounds++;base=answer;
+      const inside=((base.match(/```/g)||[]).length%2)===1;
+      const cont=contents.concat([{role:'model',parts:[{text:base}]},{role:'user',parts:[{text:'توقف ردك لأنه طويل. تابع الكتابة من آخر حرف كتبته بالضبط، بدون تكرار أي شيء وبدون أي مقدمة.'+(inside?' أنت الآن داخل كتلة كود مفتوحة، فلا تفتح كتلة جديدة بل أكمل السطور مباشرة.':'')}]}]);
+      const st=document.createElement('div');st.className='thinking';st.textContent='يكمل الكتابة (جزء '+(rounds+1)+')...';b.appendChild(st);
+      let part='';
+      r=await streamOnce(cont,null,tx=>{part+=tx;let p2=part;if(inside)p2=p2.replace(/^\s*```[^\n]*\n/,'');answer=base+p2;show(answer)});
+      st.remove();
     }
     if(!answer)throw{status:0,msg:'empty',empty:true};
     turns().push({role:'assistant',content:answer});persist();
-    finishBot(b,answer,true);updateCodeCount();
-    if(/احفظ|حفظ|نزّل|نزل|حمّل|حمل|ملف|صدّر|صدر/.test(text)){
+    finishBot(b,answer,true);
+    if(inProject)handleProjectReply(answer,b);
+    updateCodeCount();
+    if(inProject&&/احفظ|حفظ|نزّل|نزل|حمّل|حمل/.test(text)&&proj())saveCodeFile({fname:proj().name,lang:'html',code:proj().code});
+    else if(/احفظ|حفظ|نزّل|نزل|حمّل|حمل|ملف|صدّر|صدر/.test(text)){
       const files=extractCode(answer).slice(0,3);
       if(files.length){const names=files.map(c=>saveCodeFile(c,true));toast('تم حفظ '+names.join('، ')+' في التنزيلات ✅')}
     }
@@ -755,9 +827,59 @@ async function send(text,extra){
     else{const n=document.createElement('div');n.className='note';
       n.textContent=e&&e.empty?'لم يصل رد. جرّب صياغة مختلفة.':errText((e&&e.status)||0,(e&&e.msg)||'');b.appendChild(n);
       if(!(e&&e.empty)){const d=document.createElement('div');d.className='note small';
-        d.textContent='v13 · ('+((e&&e.status)||'network')+') '+((e&&e.model)||'')+' · '+((e&&(e.msg||e.message))||String(e));b.appendChild(d)}}
+        d.textContent='v14 · ('+((e&&e.status)||'network')+') '+((e&&e.model)||'')+' · '+((e&&(e.msg||e.message))||String(e));b.appendChild(d)}}
   }finally{setBusy(false);scrollDown()}
 }
+
+/* projects */
+function proj(){const c=cur();return c&&c.projectMode?c.project||null:null}
+function drawProjBar(){
+  const c=cur(),on=!!(c&&c.projectMode);$('projBar').hidden=!on;if(!on)return;
+  const p=c.project;$('projName').textContent=p?p.name:'مشروع جديد';
+  $('projVer').textContent=p?'· نسخة '+p.versions.length:'· صِف ما تريد بناءه';
+  $('projRun').disabled=$('projSave').disabled=!p;$('projUndo').disabled=!p||p.versions.length<2;
+}
+function ensureChat(){if(!cur()){const c={id:uid(),title:'مشروع',turns:[],updated:Date.now()};chats.unshift(c);curId=c.id}return cur()}
+function startProject(name,code){
+  const c=ensureChat();c.projectMode=true;
+  if(code)pushVersion(name,code,'بداية');else{persist();drawProjBar()}
+}
+function pushVersion(name,code,note){
+  const c=cur();if(!c)return;const p=c.project||{name,versions:[]};
+  if(name)p.name=name;p.code=code;p.versions.push({code,date:Date.now(),note:note||''});
+  while(p.versions.length>8)p.versions.shift();
+  c.project=p;persist();drawProjBar();updateCodeCount();
+}
+function normWS(t){return t.split('\n').map(l=>l.replace(/\s+$/,'')).join('\n')}
+function applyEdits(code,text){
+  const re=/<<<<<<< ?SEARCH\n([\s\S]*?)\n?=======\n([\s\S]*?)\n?>>>>>>> ?REPLACE/g;let m,ok=0,fail=0;
+  while((m=re.exec(text))){const [ ,a,b]=m;
+    if(a&&code.includes(a)){code=code.replace(a,()=>b);ok++;continue}
+    const na=normWS(a).trim();
+    if(na){const lines=code.split('\n');const al=na.split('\n').map(x=>x.trim());let hit=-1;
+      for(let i=0;i+al.length<=lines.length&&hit<0;i++){let good=true;for(let j=0;j<al.length;j++)if(lines[i+j].trim()!==al[j]){good=false;break}if(good)hit=i}
+      if(hit>=0){lines.splice(hit,al.length,...b.split('\n'));code=lines.join('\n');ok++;continue}}
+    fail++}
+  return {code,ok,fail};
+}
+function handleProjectReply(answer,b){
+  const c=cur();if(!c||!c.projectMode)return;const p=c.project;
+  const editBlocks=[...answer.matchAll(/```edit[^\n]*\n([\s\S]*?)```/g)].map(m=>m[1]).join('\n');
+  if(p&&editBlocks){const r=applyEdits(p.code,editBlocks);
+    if(r.ok)pushVersion(p.name,r.code,'تعديل');
+    const n=document.createElement('div');n.className=r.fail?'note':'tag';n.style.marginTop='8px';
+    if(r.fail){n.textContent='⚠️ طُبّق '+r.ok+' تعديل وتعذّر '+r.fail+'. ';const x=document.createElement('button');x.type='button';x.className='act';x.textContent='اطلب الملف كاملاً';x.onclick=()=>send('لم أستطع تطبيق بعض التعديلات. أرسل ملف المشروع كاملاً بعد التعديل.');n.appendChild(x)}
+    else n.textContent='✅ طُبّقت '+r.ok+' تعديلات على المشروع (نسخة '+c.project.versions.length+')';
+    b.appendChild(n);return}
+  const files=extractCode(answer).filter(f=>/^(html?)$/i.test(f.lang)||/\.html?$/i.test(f.fname));
+  if(files.length){const pick=(p&&files.find(f=>f.fname===p.name))||files.sort((x,y)=>y.code.length-x.code.length)[0];
+    pushVersion(pick.fname||(p&&p.name)||'project.html',pick.code,'ملف كامل');
+    const n=document.createElement('div');n.className='tag';n.style.marginTop='8px';n.textContent='✅ حُفظ في المشروع (نسخة '+c.project.versions.length+'). اضغط ▶️ تشغيل لتجربته';b.appendChild(n)}
+}
+$('projRun').onclick=()=>{const p=proj();if(p)previewHtml(p.code)};
+$('projSave').onclick=()=>{const p=proj();if(p)saveCodeFile({fname:p.name,lang:'html',code:p.code})};
+$('projUndo').onclick=()=>{const c=cur(),p=proj();if(!p||p.versions.length<2)return;p.versions.pop();p.code=p.versions[p.versions.length-1].code;persist();drawProjBar();updateCodeCount();toast('رجعت للنسخة '+p.versions.length)};
+$('projEnd').onclick=()=>confirmBtn($('projEnd'),()=>{const c=cur();if(c){c.projectMode=false;persist()}drawProjBar();render();toast('انتهى وضع المشروع. ملفه محفوظ في خانة الأكواد')});
 
 /* library */
 function openMenu(tab){$('search').value='';drawLists();showTab(tab||'chats');$('menu').hidden=false}
@@ -825,6 +947,7 @@ $('importFile').onchange=async()=>{
 
 /* templates */
 const TEMPLATES=[
+  ['📁 مشروع جديد','موقع أو تطبيق يُبنى ويُعدَّل خطوة خطوة','__project__'],
   ['📅 جدول نوبات','توزيع الموظفين على النوبات','اعمل جدول نوبات من [تاريخ البداية] لمدة [عدد الأيام] أيام.\nالموظفون: [اكتب الأسماء]\nعدد النوبات في اليوم: [3]، وأوقاتها: [6ص-2م، 2م-10م، 10م-6ص]\nالشروط: [مثلاً: لا يعمل أحد نوبتين متتاليتين، ويوم راحة لكل موظف]'],
   ['📝 تقرير يومي','تقرير رسمي عن عمل اليوم','اكتب تقريراً يومياً رسمياً عن عمل يوم [التاريخ].\nما تم إنجازه: [اكتب هنا]\nالمشاكل أو الملاحظات: [اكتب هنا]\nالمطلوب غداً: [اكتب هنا]'],
   ['✉️ رسالة رسمية','لمدير أو جهة عمل','اكتب رسالة رسمية إلى [الجهة أو الشخص] بخصوص [الموضوع].\nالتفاصيل: [اكتب هنا]\nالأسلوب: [رسمي ومختصر]'],
@@ -838,9 +961,13 @@ function openTemplates(){
   const l=$('tplList');l.innerHTML='';
   TEMPLATES.forEach(([t,d,body])=>{const b=document.createElement('button');b.type='button';b.className='tpl';
     b.innerHTML='<b></b><span></span>';b.querySelector('b').textContent=t;b.querySelector('span').textContent=d;
-    b.onclick=()=>{$('templates').hidden=true;box.value=body;grow();box.focus();const i=body.indexOf('[');if(i>=0)box.setSelectionRange(i,body.indexOf(']',i)+1)};
+    b.onclick=()=>{$('templates').hidden=true;if(body==='__project__'){newProject();return}box.value=body;grow();box.focus();const i=body.indexOf('[');if(i>=0)box.setSelectionRange(i,body.indexOf(']',i)+1)};
     l.appendChild(b)});
   $('templates').hidden=false;
+}
+function newProject(){
+  if(busy&&ctl)ctl.abort();curId=null;ensureChat();cur().projectMode=true;persist();render();
+  box.value='أريد أن أبني: [صِف التطبيق أو الموقع وما يجب أن يفعله]';grow();box.focus();const i=box.value.indexOf('[');box.setSelectionRange(i,box.value.length);
 }
 $('tplBtn').onclick=openTemplates;$('closeTpl').onclick=()=>{$('templates').hidden=true};
 
@@ -861,7 +988,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)hiddenAt=Da
 function pinUI(){$('pinState').textContent=pinHash?'القفل مفعّل ✅ اكتب رقماً جديداً لتغييره.':'بدون قفل حالياً. اكتب رقماً واضغط حفظ لتفعيل القفل.';$('pinRemove').hidden=!pinHash}
 $('pinRemove').onclick=()=>{pinHash=null;try{localStorage.removeItem('pin')}catch(e){}pinUI();toast('تمت إزالة القفل')};
 
-function chatCodes(){const all=[];turns().forEach(t=>{if(t.role!=='user')extractCode(t.content).forEach(c=>{if(!all.some(x=>x.key===c.key))all.push(c)})});return all.reverse()}
+function chatCodes(){const all=[];const pj=proj();if(pj&&pj.code)all.push({fname:pj.name,lang:'html',code:pj.code,key:'__project'});turns().forEach(t=>{if(t.role!=='user')extractCode(t.content).forEach(c=>{if(!all.some(x=>x.key===c.key))all.push(c)})});const first=all[0]&&all[0].key==='__project'?all.shift():null;all.reverse();if(first)all.unshift(first);return all}
 function updateCodeCount(){const n=chatCodes().length;const b=$('codeCount');b.textContent=n;b.hidden=!n}
 function openCodes(key){
   const l=$('codesList');const list=chatCodes();
@@ -876,6 +1003,7 @@ thread.addEventListener('click',e=>{
   const c=e.target.closest('.codechip');if(!c)return;const o=CODEREG[c.dataset.k];
   if(e.target.closest('.chipdl')){if(o)saveCodeFile(o);return}
   if(e.target.closest('.chiprun')){if(o)previewHtml(o.code);return}
+  if(e.target.closest('.chipproj')){if(o){startProject(o.fname||'project.html',o.code);toast('أصبح مشروعاً. اطلب أي تعديل وسيُطبَّق عليه')}return}
   if(e.target.closest('.open'))openCodes(c.dataset.k)});
 $('closePreview').onclick=()=>{$('preview').hidden=true;$('previewFrame').srcdoc=''};
 
