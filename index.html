@@ -95,7 +95,7 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
 <section id="settings" class="pad" hidden>
   <form class="sheet" id="settingsForm">
-    <h2>الإعدادات</h2>
+    <h2>الإعدادات <small style="font-size:13px;color:var(--muted)">إصدار 3</small></h2>
     <div class="field">
       <label for="apiKey">مفتاح Gemini API</label>
       <input id="apiKey" type="password" dir="ltr" autocomplete="off" placeholder="AIza...">
@@ -226,8 +226,9 @@ async function send(text){
         })
       });
       if(res.ok){if(model!==cfg.model){cfg.model=model;save('cfg',cfg)}break}
-      let m='';try{m=(await res.json()).error?.message||''}catch(e){}
-      lastErr={status:res.status,msg:m};res=null;
+      let raw='';try{raw=await res.text()}catch(e){}
+      let m='';try{m=JSON.parse(raw).error?.message||''}catch(e){m=raw.slice(0,200)}
+      lastErr={status:res.status,msg:m||'no message',model};res=null;
       if(!(res===null&&(lastErr.status>=500||lastErr.status===404||lastErr.status===429)))break;
       b.innerHTML='<span class="thinking">أجرّب نموذجاً آخر...</span>';
     }
@@ -253,7 +254,8 @@ async function send(text){
     if(e?.name==='AbortError'){if(!answer)b.remove()}
     else{const n=document.createElement('div');n.className='note';
       n.textContent=e?.empty?'لم يصل رد. جرّب صياغة مختلفة.':errText(e?.status||0,e?.msg||'');b.appendChild(n);
-      if(e?.msg&&!e.empty){const d=document.createElement('div');d.className='note';d.dir='ltr';d.style.opacity='.7';d.style.fontSize='12px';d.textContent='('+e.status+') '+e.msg;b.appendChild(d)}}
+      if(!e?.empty){const d=document.createElement('div');d.className='note';d.dir='ltr';d.style.opacity='.75';d.style.fontSize='12px';
+        d.textContent='v3 · ('+(e?.status||'network')+') '+(e?.model||'')+' · '+(e?.msg||e?.message||String(e));b.appendChild(d)}}
   }finally{setBusy(false);scrollDown()}
 }
 
