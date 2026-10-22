@@ -205,6 +205,7 @@ textarea:focus,input:focus,select:focus{outline:2px solid var(--accent);outline-
     <span class="pn">📁 <span id="projName">مشروع</span> <small id="projVer"></small></span>
     <button type="button" class="act main" id="projRun">▶️ تشغيل</button>
     <button type="button" class="act" id="projSave">⬇️ حفظ</button>
+    <button type="button" class="act" id="projDesign">🎨 تصميم</button>
     <button type="button" class="act" id="projUndo">↩️ تراجع</button>
     <button type="button" class="act" id="projEnd" aria-label="إنهاء وضع المشروع">✕</button>
   </div>
@@ -287,7 +288,7 @@ textarea:focus,input:focus,select:focus{outline:2px solid var(--accent);outline-
 
 <section id="settings" class="sheetwrap pad" hidden>
   <form class="sheet" id="settingsForm">
-    <div class="sheethead"><h2>الإعدادات <small>إصدار 14</small></h2></div>
+    <div class="sheethead"><h2>الإعدادات <small>إصدار 15</small></h2></div>
     <div class="field">
       <label for="apiKey">مفتاح Gemini API</label>
       <input id="apiKey" type="password" dir="ltr" autocomplete="off" placeholder="AIza...">
@@ -335,6 +336,15 @@ textarea:focus,input:focus,select:focus{outline:2px solid var(--accent);outline-
       <button class="ghost" type="button" id="closeSettings">إلغاء</button>
     </div>
   </form>
+</section>
+
+<section id="designSheet" class="sheetwrap pad" hidden>
+  <div class="sheet">
+    <div class="sheethead"><h2>تطوير التصميم</h2><button class="ghost" type="button" id="closeDesign">رجوع</button></div>
+    <div class="field"><small>اختر أسلوباً، وسيعيد المساعد تصميم المشروع بالكامل مع الحفاظ على كل وظائفه وبياناته.</small></div>
+    <div id="designList" class="list"></div>
+    <div class="field"><small>أو أرفق صورة لتصميم يعجبك بزر 📎، واكتب: «اجعل تصميم المشروع مثل هذه الصورة».</small></div>
+  </div>
 </section>
 
 <section id="codes" class="sheetwrap pad" hidden>
@@ -393,7 +403,22 @@ applyName();
 function projectPrompt(){
   const c=cur();if(!c||!c.projectMode)return '';const p=c.project;
   let t=`\n\n## وضع المشاريع
-أنت الآن تبني مع المستخدم مشروعاً (تطبيق أو موقع ويب) في ملف HTML واحد يحتوي CSS و JavaScript بداخله، ويعمل على الهاتف، وبالعربية من اليمين لليسار. للحفظ الدائم داخل المشروع استخدم localStorage. اكتب كوداً كاملاً يعمل فعلاً بدون أجزاء ناقصة أو تعليقات مثل "أكمل هنا".`;
+أنت الآن تبني مع المستخدم مشروعاً (تطبيق أو موقع ويب) في ملف HTML واحد يحتوي CSS و JavaScript بداخله، ويعمل على الهاتف، وبالعربية من اليمين لليسار. للحفظ الدائم داخل المشروع استخدم localStorage. اكتب كوداً كاملاً يعمل فعلاً بدون أجزاء ناقصة أو تعليقات مثل "أكمل هنا".
+### قواعد التصميم (إلزامية في كل مشروع)
+اجعل الواجهة احترافية وعصرية مثل التطبيقات الحديثة، لا صفحة بدائية:
+- ابدأ بمتغيرات CSS في :root (ألوان: خلفية، سطح، نص، نص ثانوي، حدود، لون أساسي، نجاح، تحذير، خطر؛ ومقاسات: زوايا 12-16px، مسافات 8/12/16/24px، ظلال خفيفة).
+- استخدم خطاً عربياً جميلاً من Google Fonts مثل IBM Plex Sans Arabic أو Tajawal أو Cairo عبر <link>، مع خط بديل.
+- dir="rtl" و lang="ar"، وتصميم للهاتف أولاً (عرض 360-430px) مع شبكة تتكيّف للشاشات الكبيرة.
+- شريط علوي ثابت فيه العنوان وأزرار، وبطاقات بخلفية بيضاء وظل ناعم وزوايا مستديرة، وأزرار واضحة بارتفاع 44px على الأقل مع حالات hover و active و disabled.
+- أيقونات SVG مضمّنة بسيطة (ليس رموز تعبيرية كثيرة).
+- جداول منسّقة: رأس ملوّن، صفوف متناوبة، تمرير أفقي داخل حاوية على الهاتف.
+- حقول إدخال مرتبة مع تسميات واضحة، ورسائل نجاح/خطأ لطيفة (toast) بدل alert.
+- حالة فارغة مصممة (أيقونة + جملة + زر) عندما لا توجد بيانات.
+- وضع ليلي عبر @media (prefers-color-scheme: dark).
+- حركات خفيفة (transition 150-200ms) بدون مبالغة.
+- تسلسل بصري واضح: عنوان كبير، أرقام ملخص في بطاقات صغيرة أعلى الصفحة عند الحاجة، ثم المحتوى.
+- @media print لطباعة نظيفة تخفي الأزرار والقوائم.
+`;
   if(!p)t+=`\nلا يوجد ملف بعد. اكتب الملف كاملاً في كتلة واحدة: \`\`\`html اسم-مناسب.html`;
   else t+=`\nهذا هو الملف الحالي للمشروع (اسمه ${p.name}، نسخة ${p.versions.length}):
 \`\`\`html ${p.name}
@@ -827,7 +852,7 @@ async function send(text,extra){
     else{const n=document.createElement('div');n.className='note';
       n.textContent=e&&e.empty?'لم يصل رد. جرّب صياغة مختلفة.':errText((e&&e.status)||0,(e&&e.msg)||'');b.appendChild(n);
       if(!(e&&e.empty)){const d=document.createElement('div');d.className='note small';
-        d.textContent='v14 · ('+((e&&e.status)||'network')+') '+((e&&e.model)||'')+' · '+((e&&(e.msg||e.message))||String(e));b.appendChild(d)}}
+        d.textContent='v15 · ('+((e&&e.status)||'network')+') '+((e&&e.model)||'')+' · '+((e&&(e.msg||e.message))||String(e));b.appendChild(d)}}
   }finally{setBusy(false);scrollDown()}
 }
 
@@ -837,7 +862,7 @@ function drawProjBar(){
   const c=cur(),on=!!(c&&c.projectMode);$('projBar').hidden=!on;if(!on)return;
   const p=c.project;$('projName').textContent=p?p.name:'مشروع جديد';
   $('projVer').textContent=p?'· نسخة '+p.versions.length:'· صِف ما تريد بناءه';
-  $('projRun').disabled=$('projSave').disabled=!p;$('projUndo').disabled=!p||p.versions.length<2;
+  $('projRun').disabled=$('projSave').disabled=$('projDesign').disabled=!p;$('projUndo').disabled=!p||p.versions.length<2;
 }
 function ensureChat(){if(!cur()){const c={id:uid(),title:'مشروع',turns:[],updated:Date.now()};chats.unshift(c);curId=c.id}return cur()}
 function startProject(name,code){
@@ -876,6 +901,25 @@ function handleProjectReply(answer,b){
     pushVersion(pick.fname||(p&&p.name)||'project.html',pick.code,'ملف كامل');
     const n=document.createElement('div');n.className='tag';n.style.marginTop='8px';n.textContent='✅ حُفظ في المشروع (نسخة '+c.project.versions.length+'). اضغط ▶️ تشغيل لتجربته';b.appendChild(n)}
 }
+const STYLES=[
+  ['✨ عصري ناعم','ألوان هادئة، بطاقات بيضاء، ظلال خفيفة','عصري ناعم: خلفية رمادية فاتحة جداً، بطاقات بيضاء بظلال ناعمة وزوايا 16px، لون أساسي أخضر زمردي، مسافات واسعة، وخط IBM Plex Sans Arabic'],
+  ['🏛️ رسمي حكومي','مناسب للعمل والجهات الرسمية','رسمي حكومي: كحلي داكن وذهبي هادئ، شريط علوي بشعار نصي، خطوط واضحة (Tajawal)، جداول رسمية بحدود دقيقة، ومظهر موثوق يصلح للطباعة كتقرير رسمي'],
+  ['🌙 داكن فاخر','خلفية داكنة ولمسات لامعة','داكن فاخر: خلفية شبه سوداء مائلة للأزرق، بطاقات داكنة بحدود رفيعة، لون أساسي ذهبي أو تركوازي، نصوص فاتحة واضحة، ولمسات توهج خفيفة على الأزرار'],
+  ['🎨 ملوّن حيوي','ألوان مشرقة ومرحة','ملوّن حيوي: ألوان مشرقة متناسقة لكل قسم، أيقونات ملوّنة، أزرار بارزة مستديرة، بطاقات ملخص ملوّنة بالأرقام، مع الحفاظ على وضوح القراءة'],
+  ['📊 لوحة تحكم','أرقام ورسوم وجداول منظمة','لوحة تحكم احترافية (Dashboard): بطاقات أرقام ملخصة في الأعلى، أقسام واضحة، جداول متقدمة مع بحث وفرز، وشريط تنقل سفلي على الهاتف'],
+  ['🔧 حسّن ما هو موجود','نفس الأسلوب لكن أجمل وأدق','نفس أسلوبه الحالي لكن احترافي أكثر: صحح المسافات والمحاذاة، وحّد الألوان والخطوط والأزرار، حسّن الجداول والحقول، وأضف حالات فارغة ورسائل لطيفة']
+];
+function openDesign(){
+  const l=$('designList');l.innerHTML='';
+  STYLES.forEach(([t,d,brief])=>{const b=document.createElement('button');b.type='button';b.className='tpl';b.innerHTML='<b></b><span></span>';
+    b.querySelector('b').textContent=t;b.querySelector('span').textContent=d;
+    b.onclick=()=>{$('designSheet').hidden=true;
+      send('أعد تصميم واجهة المشروع بالكامل بأسلوب '+brief+'. اتبع قواعد التصميم كلها. حافظ على كل الوظائف والبيانات المحفوظة وأسماء المعرّفات (id) والدوال التي يعتمد عليها JavaScript حتى لا يتعطل شيء. اكتب الملف كاملاً بنفس الاسم.')};
+    l.appendChild(b)});
+  $('designSheet').hidden=false;
+}
+$('projDesign').onclick=()=>{if(!proj()){toast('اطلب بناء المشروع أولاً');return}openDesign()};
+$('closeDesign').onclick=()=>{$('designSheet').hidden=true};
 $('projRun').onclick=()=>{const p=proj();if(p)previewHtml(p.code)};
 $('projSave').onclick=()=>{const p=proj();if(p)saveCodeFile({fname:p.name,lang:'html',code:p.code})};
 $('projUndo').onclick=()=>{const c=cur(),p=proj();if(!p||p.versions.length<2)return;p.versions.pop();p.code=p.versions[p.versions.length-1].code;persist();drawProjBar();updateCodeCount();toast('رجعت للنسخة '+p.versions.length)};
