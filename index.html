@@ -212,17 +212,26 @@ async function send(text){
   const b=bubble('assistant','');b.innerHTML='<span class="thinking">يفكّر...</span>';scrollDown();
   ctl=new AbortController();setBusy(true);
   const history=turns.slice(-40);while(history.length&&history[0].role!=='user')history.shift();
-  let answer='';
+  let answer='',res=null,lastErr=null;
+  const FALLBACK=['gemini-3.8-flash','gemini-3.6-flash','gemini-3.5-flash-lite','gemini-3.1-flash-lite','gemini-3-flash-preview','gemini-2.5-flash'];
+  const models=[cfg.model,...FALLBACK.filter(m=>m!==cfg.model)];
   try{
-    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(cfg.model)}:streamGenerateContent?alt=sse`,{
-      method:'POST',signal:ctl.signal,
-      headers:{'Content-Type':'application/json','x-goog-api-key':cfg.key},
-      body:JSON.stringify({
-        systemInstruction:{parts:[{text:system()}]},
-        contents:history.map(t=>({role:t.role==='user'?'user':'model',parts:[{text:t.content}]}))
-      })
-    });
-    if(!res.ok){let m='';try{m=(await res.json()).error?.message||''}catch(e){}throw{status:res.status,msg:m}}
+    for(const model of models){
+      res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:streamGenerateContent?alt=sse`,{
+        method:'POST',signal:ctl.signal,
+        headers:{'Content-Type':'application/json','x-goog-api-key':cfg.key},
+        body:JSON.stringify({
+          systemInstruction:{parts:[{text:system()}]},
+          contents:history.map(t=>({role:t.role==='user'?'user':'model',parts:[{text:t.content}]}))
+        })
+      });
+      if(res.ok){if(model!==cfg.model){cfg.model=model;save('cfg',cfg)}break}
+      let m='';try{m=(await res.json()).error?.message||''}catch(e){}
+      lastErr={status:res.status,msg:m};res=null;
+      if(!(res===null&&(lastErr.status>=500||lastErr.status===404||lastErr.status===429)))break;
+      b.innerHTML='<span class="thinking">أجرّب نموذجاً آخر...</span>';
+    }
+    if(!res)throw lastErr;
     const reader=res.body.getReader(),dec=new TextDecoder();let buf='';
     while(true){
       const {value,done}=await reader.read();if(done)break;
@@ -243,7 +252,8 @@ async function send(text){
     else b.innerHTML='';
     if(e?.name==='AbortError'){if(!answer)b.remove()}
     else{const n=document.createElement('div');n.className='note';
-      n.textContent=e?.empty?'لم يصل رد. جرّب صياغة مختلفة.':errText(e?.status||0,e?.msg||'');b.appendChild(n)}
+      n.textContent=e?.empty?'لم يصل رد. جرّب صياغة مختلفة.':errText(e?.status||0,e?.msg||'');b.appendChild(n);
+      if(e?.msg&&!e.empty){const d=document.createElement('div');d.className='note';d.dir='ltr';d.style.opacity='.7';d.style.fontSize='12px';d.textContent='('+e.status+') '+e.msg;b.appendChild(d)}}
   }finally{setBusy(false);scrollDown()}
 }
 
