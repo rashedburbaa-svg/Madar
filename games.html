@@ -39,6 +39,41 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .hubsub{margin:0;color:var(--muted);font-size:14px}
 h3.sec{font-family:var(--display);font-size:19px;margin:6px 0 -4px}
 
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:15;background:var(--panel);border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom,0px);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.tabbar .tb{max-width:540px;margin:0 auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.tabbar button{background:none;border:0;padding:9px 0 10px;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--muted);font-size:12.5px;cursor:pointer;position:relative;min-width:0}
+.tabbar button span{white-space:nowrap}
+.tabbar button svg{width:24px;height:24px}
+.tabbar button[aria-selected="true"]{color:var(--gold)}
+.tabbar button[aria-selected="true"]::before{content:"";position:absolute;top:-1px;left:30%;right:30%;height:3px;border-radius:0 0 3px 3px;background:var(--gold)}
+.tabbar .dot{position:absolute;top:7px;left:calc(50% - 18px);width:9px;height:9px;border-radius:50%;background:var(--fire);box-shadow:0 0 0 2px var(--panel)}
+#hub{padding-bottom:74px}
+.panel{display:flex;flex-direction:column;gap:14px}
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;text-align:center}
+.week span{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:var(--muted)}
+.week i{width:28px;height:28px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-style:normal;font-size:14px}
+.week .on i{border-color:var(--fire);background:rgba(255,138,76,.18)}
+.week .today{color:var(--fg);font-weight:600}
+.week .today i{border-style:dashed;border-color:var(--gold)}
+.week .today.on i{border-style:solid;border-color:var(--fire)}
+.dlist{display:flex;flex-direction:column;gap:8px}
+.drow{display:flex;align-items:center;gap:12px;width:100%;text-align:right;background:var(--tile);border:1px solid var(--line);border-radius:14px;padding:10px 12px;cursor:pointer}
+.drow:hover{border-color:var(--lit)}
+.drow .gi{width:46px;height:46px;flex:none;background:var(--bg)}
+.drow .gi svg{width:30px;height:30px}
+.drow .t{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.drow .t b{font-size:16px}
+.drow .t small{font-size:13px;color:var(--muted)}
+.drow .go{flex:none;font-size:13px;font-weight:600;padding:6px 14px;border-radius:999px;background:var(--lit);color:#062019}
+.drow.done{border-color:var(--lit)}
+.drow.done .go{background:transparent;color:var(--gold);padding:6px 4px;letter-spacing:1px}
+.dsum{font-size:13.5px;color:var(--muted);text-align:center;margin:0}
+.achhead{display:flex;align-items:baseline;gap:8px}
+.achhead b{font-family:var(--display);font-size:20px;flex:1;font-weight:700}
+.achhead span{color:var(--gold);font-weight:600;font-variant-numeric:tabular-nums}
+.achbar{height:8px;border-radius:999px;background:var(--panel);border:1px solid var(--line);overflow:hidden}
+.achbar i{display:block;height:100%;background:var(--gold);border-radius:999px;transition:width .4s}
 .daily{background:linear-gradient(0deg,var(--panel),var(--panel));border:1px solid var(--gold);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px}
 .daily .top{display:flex;align-items:center;gap:10px}
 .daily .top b{font-size:17px;flex:1}
@@ -98,7 +133,7 @@ h3.sec{font-family:var(--display);font-size:19px;margin:6px 0 -4px}
 .lv.cur{border-color:var(--lit)}
 .stars{display:flex;gap:6px}.stars svg{width:40px;height:40px}
 .stars .on{fill:var(--gold)}.stars .off{fill:#2a3f40}
-.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 16px;border-radius:999px;font-size:14px;white-space:nowrap;z-index:20;max-width:calc(100% - 32px);overflow:hidden;text-overflow:ellipsis}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 16px;border-radius:999px;font-size:14px;white-space:nowrap;z-index:20;max-width:calc(100% - 32px);overflow:hidden;text-overflow:ellipsis}
 .toast.ach{background:var(--gold);color:#2a1c00;font-weight:600}
 
 /* grid game */
@@ -147,7 +182,7 @@ canvas{display:block;width:100%;border-radius:14px;touch-action:none}
 @media (prefers-reduced-motion:reduce){.cell svg,.mc .in{transition:none}.hintflash,.shake{animation:none}}
 </style>
 </head>
-<body style="padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)">
+<body style="padding-top:env(safe-area-inset-top,0px)">
 
 
 <div class="wrap" dir="rtl" lang="ar">
@@ -158,12 +193,18 @@ canvas{display:block;width:100%;border-radius:14px;touch-action:none}
       <button class="tog" id="sndBtn" type="button" aria-label="الأصوات">🔊</button>
       <button class="tog" id="vibBtn" type="button" aria-label="الاهتزاز">📳</button>
     </div>
-    <p class="hubsub">ألعاب تفكير بلا نهاية. كل مستوى أصعب من الذي قبله، وتقدّمك محفوظ دائماً.</p>
-    <div class="daily" id="daily"></div>
-    <h3 class="sec">الألعاب</h3>
-    <div class="cards" id="cards"></div>
-    <h3 class="sec">الأوسمة <small id="achCount" style="font-family:var(--body);font-size:13px;color:var(--muted)"></small></h3>
-    <div class="badges" id="badges"></div>
+    <div class="panel" id="pDaily" role="tabpanel" aria-labelledby="tDaily">
+      <div class="daily" id="daily"></div>
+    </div>
+    <div class="panel" id="pGames" role="tabpanel" aria-labelledby="tGames">
+      <p class="hubsub">ألعاب تفكير بلا نهاية. كل مستوى أصعب من الذي قبله، وتقدّمك محفوظ دائماً.</p>
+      <div class="cards" id="cards"></div>
+    </div>
+    <div class="panel" id="pBadges" role="tabpanel" aria-labelledby="tBadges">
+      <div class="achhead"><b>أوسمتك</b><span id="achCount"></span></div>
+      <div class="achbar"><i id="achBar"></i></div>
+      <div class="badges" id="badges"></div>
+    </div>
   </section>
 
   <section id="play" class="inner" hidden>
@@ -179,6 +220,22 @@ canvas{display:block;width:100%;border-radius:14px;touch-action:none}
     <p class="help" id="help"></p>
   </section>
 </div>
+<nav class="tabbar" id="tabbar" dir="rtl" lang="ar" role="tablist" aria-label="أقسام القاعة">
+  <div class="tb">
+    <button type="button" role="tab" id="tDaily" data-tab="pDaily" aria-controls="pDaily">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="M12 13.5l.9 1.8 2 .3-1.45 1.4.35 2-1.8-.95-1.8.95.35-2-1.45-1.4 2-.3z" fill="currentColor" stroke="none"/></svg>
+      <span>التحديات اليومية</span><i class="dot" id="dailyDot" hidden></i>
+    </button>
+    <button type="button" role="tab" id="tGames" data-tab="pGames" aria-controls="pGames">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="11" rx="5"/><path d="M7 10.5v4M5 12.5h4"/><circle cx="15.5" cy="11.5" r="1" fill="currentColor"/><circle cx="18" cy="14" r="1" fill="currentColor"/></svg>
+      <span>الألعاب</span>
+    </button>
+    <button type="button" role="tab" id="tBadges" data-tab="pBadges" aria-controls="pBadges">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="6"/><path d="M8.5 13.9L7 22l5-3 5 3-1.5-8.1"/></svg>
+      <span>الأوسمة</span>
+    </button>
+  </div>
+</nav>
 <div class="toast" id="toast" hidden></div>
 
 <script>
@@ -676,10 +733,20 @@ const GAMES=[GridGame,SudokuGame,GolfGame,DiffGame,MemoryGame];
 function renderHub(){
   drawPrefs();
   const k=todayKey(),doneToday=daily.done[k]||{},alive=daily.last===k||daily.last===yesterdayKey(),streak=alive?daily.streak:0;
-  const d=$('daily');d.innerHTML=`<div class="top"><b>تحدي اليوم</b><span class="streak">🔥 ${streak} ${streak===1?'يوم':'أيام'}</span></div><small style="color:var(--muted)">لغز جديد كل يوم في كل لعبة. حلّ واحداً على الأقل يومياً لتحافظ على السلسلة.</small><div class="dgames"></div>`;
-  const dg=d.querySelector('.dgames');
-  GAMES.forEach((G,i)=>{const b=document.createElement('button');b.type='button';const s=doneToday[G.id];b.className='dg'+(s?' done':'');
-    b.innerHTML=G.icon+`<small>${s?'★'.repeat(s):'العب'}</small>`;b.setAttribute('aria-label','تحدي اليوم: '+G.name);b.onclick=()=>openGame(G,{daily:true,key:k,seed:k*97+i*7});dg.appendChild(b)});
+  const d=$('daily');
+  const DAYS=['أحد','إثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];let week='';
+  for(let back=6;back>=0;back--){const dt=new Date();dt.setDate(dt.getDate()-back);const kk=todayKey(dt),on=daily.done[kk]&&Object.keys(daily.done[kk]).length;
+    week+=`<span class="${on?'on ':''}${back===0?'today':''}"><i>${on?'🔥':''}</i>${back===0?'اليوم':DAYS[dt.getDay()]}</span>`}
+  const nDone=GAMES.filter(G=>doneToday[G.id]).length;
+  d.innerHTML=`<div class="top"><b>تحدي اليوم</b><span class="streak">🔥 ${streak} ${streak===1?'يوم':'أيام'}</span></div><small style="color:var(--muted)">لغز جديد كل يوم في كل لعبة. حلّ واحداً على الأقل يومياً لتحافظ على السلسلة.</small><div class="week">${week}</div>`;
+  let list=document.getElementById('dlist');if(!list){list=document.createElement('div');list.id='dlist';list.className='dlist';d.after(list)}list.innerHTML='';
+  GAMES.forEach((G,i)=>{const s=doneToday[G.id];const b=document.createElement('button');b.type='button';b.className='drow'+(s?' done':'');
+    b.innerHTML=`<span class="gi">${G.icon}</span><span class="t"><b></b><small></small></span><span class="go">${s?'★'.repeat(s)+'☆'.repeat(3-s):'العب'}</span>`;
+    b.querySelector('b').textContent=G.name;b.querySelector('small').textContent=s?(s<3?'أُنجز · أعد اللعب لتحصل على 3 نجوم':'أُنجز بإتقان'):'لم يُحل بعد';
+    b.setAttribute('aria-label','تحدي اليوم: '+G.name);b.onclick=()=>openGame(G,{daily:true,key:k,seed:k*97+i*7});list.appendChild(b)});
+  let sum=document.getElementById('dsum');if(!sum){sum=document.createElement('p');sum.id='dsum';sum.className='dsum';list.after(sum)}
+  sum.textContent=nDone===GAMES.length?'👑 أنهيت كل تحديات اليوم! عُد غداً لتحديات جديدة.':`أنجزت ${nDone} من ${GAMES.length} تحديات اليوم`;
+  $('dailyDot').hidden=nDone>0;
   let total=0;const cards=$('cards');cards.innerHTML='';
   GAMES.forEach(G=>{const p=G.progress();total+=p.stars;const c=document.createElement('button');c.type='button';c.className='gcard';
     c.innerHTML=`<span class="gi">${G.icon}</span><b></b><small></small><span class="prog"><span>المستوى ${p.level}</span><em>★ ${p.stars}</em></span>`;
@@ -687,16 +754,21 @@ function renderHub(){
   $('totalStars').textContent=total;
   const bs=$('badges');bs.innerHTML='';let got=0;
   ACH.forEach(([id,em,label])=>{const on=!!ach.got[id];if(on)got++;const el=document.createElement('div');el.className='badge'+(on?' got':'');el.innerHTML=`<span class="em">${em}</span><small></small>`;el.querySelector('small').textContent=label;bs.appendChild(el)});
-  $('achCount').textContent=got+' من '+ACH.length;
+  $('achCount').textContent=got+' من '+ACH.length;$('achBar').style.width=Math.round(got/ACH.length*100)+'%';
 }
+let hubTab='pGames';try{const t=localStorage.getItem('arcade-tab');if(['pDaily','pGames','pBadges'].includes(t))hubTab=t}catch(e){}
+function showTab(id){hubTab=id;try{localStorage.setItem('arcade-tab',id)}catch(e){}
+  ['pDaily','pGames','pBadges'].forEach(p=>{$(p).hidden=p!==id});
+  document.querySelectorAll('#tabbar [role=tab]').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===id));scrollTo(0,0)}
+document.querySelectorAll('#tabbar [role=tab]').forEach(b=>b.onclick=()=>{if(b.dataset.tab!==hubTab)snd('tap');showTab(b.dataset.tab)});
 function openGame(G,m){
   if(active&&active.stop)active.stop();active=G;mode=m||null;stage.innerHTML='';$('ctrl').innerHTML='';
   $('gTitle').textContent=G.name;$('help').textContent=G.help;$('dailyTag').hidden=!mode;$('lvlBtn').hidden=!!mode;
-  $('hub').hidden=true;$('play').hidden=false;scrollTo(0,0);G.start();
+  $('hub').hidden=true;$('tabbar').hidden=true;$('play').hidden=false;scrollTo(0,0);G.start();
 }
-function goHub(){if(active&&active.stop)active.stop();active=null;mode=null;stage.innerHTML='';$('play').hidden=true;$('hub').hidden=false;scrollTo(0,0);renderHub()}
+function goHub(){if(active&&active.stop)active.stop();active=null;mode=null;stage.innerHTML='';$('play').hidden=true;$('hub').hidden=false;$('tabbar').hidden=false;renderHub();showTab(hubTab)}
 $('back').onclick=goHub;
-renderHub();
+renderHub();showTab(hubTab);
 </script>
 
 </body>
