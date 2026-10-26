@@ -143,11 +143,13 @@ details summary{cursor:pointer;font-weight:600;font-size:.9rem}
       <label for="key">مفتاح Twelve Data (مجاني)</label>
       <input id="key" type="password" autocomplete="off" placeholder="الصق المفتاح هنا" dir="ltr">
       <p class="note">بدون مفتاح تعمل الصفحة ببيانات تجريبية. سجّل مجاناً في <a href="https://twelvedata.com/register" target="_blank" rel="noopener">twelvedata.com</a> ثم انسخ المفتاح من لوحة الحساب. يُحفظ على جوالك فقط.</p>
+      <p class="note" id="keyOk" role="status"></p>
     </div>
     <div>
       <label for="nkey">مفتاح Finnhub للأخبار ومواعيد الأرباح (مجاني، اختياري)</label>
       <input id="nkey" type="password" autocomplete="off" placeholder="الصق مفتاح Finnhub" dir="ltr">
       <p class="note">سجّل في <a href="https://finnhub.io/register" target="_blank" rel="noopener">finnhub.io</a> وانسخ المفتاح من الصفحة الرئيسية للحساب. بدونه يعمل التحليل الفني فقط.</p>
+      <p class="note" id="nkeyOk" role="status"></p>
     </div>
     <div>
       <label for="syms">الأسهم (افصل بفاصلة)</label>
@@ -270,7 +272,7 @@ details summary{cursor:pointer;font-weight:600;font-size:.9rem}
 <script>
 (function(){
 const $=id=>document.getElementById(id);
-const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:v}catch(e){return d}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:v}catch(e){return d}},set(k,v){try{localStorage.setItem(k,v);return true}catch(e){return false}}};
 
 /* ---------- settings ---------- */
 $('key').value=store.get('td_key','');
@@ -281,7 +283,12 @@ $('style').value=store.get('td_style','normal');
 $('mtf').checked=store.get('td_mtf','1')==='1';
 $('cap').value=store.get('td_cap','5000');$('risk').value=store.get('td_risk','1');
 ['cap','risk'].forEach(id=>$(id).addEventListener('input',()=>{store.set('td_'+id,$(id).value);sizeCalc();}));
-['key','nkey','syms','intv','style'].forEach(id=>$(id).addEventListener('change',()=>store.set('td_'+id,$(id).value.trim())));
+// save the moment the value changes (paste, typing), not only when the field loses focus
+function keyNote(id){const v=$(id).value.trim(),el=$(id+'Ok');if(!el)return;
+  if(!v){el.textContent='';return;}
+  const ok=store.get('td_'+id,'')===v;el.textContent=ok?'✓ محفوظ على هذا الجهاز':'تعذّر الحفظ: المتصفح يمنع التخزين (هل أنت في التصفح الخفي؟)';el.style.color=ok?'var(--buy)':'var(--sell)';}
+['key','nkey','syms','intv','style'].forEach(id=>['input','change'].forEach(ev=>$(id).addEventListener(ev,()=>{store.set('td_'+id,$(id).value.trim());if(id==='key'||id==='nkey')keyNote(id);})));
+keyNote('key');keyNote('nkey');
 
 /* ---------- market clock (NY session shown in local time) ---------- */
 function nyParts(d){
@@ -519,7 +526,7 @@ async function scan(){
   const key=$('key').value.trim(),intv=$('intv').value,style=$('style').value;
   const syms=[...new Set($('syms').value.toUpperCase().split(/[\s,،]+/).filter(Boolean))].slice(0,40);
   if(!syms.length){setStatus('أضف رمز سهم واحد على الأقل، مثل NVDA.');return;}
-  store.set('td_syms',$('syms').value.trim());
+  ['key','nkey','syms'].forEach(id=>store.set('td_'+id,$(id).value.trim()));keyNote('key');keyNote('nkey');
   const demo=!key;$('demoFlag').hidden=!demo;
   const nkey=demo?'':$('nkey').value.trim();let newsOk=true,newsErr='';
   stopFlag=false;selected=null;$('detail').hidden=true;$('noSel').hidden=false;$('selBadge').hidden=true;results={};render();syncPicker();$('scan').disabled=true;$('stop').hidden=false;
