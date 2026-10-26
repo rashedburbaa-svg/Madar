@@ -196,15 +196,6 @@ details summary{cursor:pointer;font-weight:600;font-size:.9rem}
       </div>
       <div style="text-align:center"><span class="pill" id="dPill"></span><span class="score" id="dScore"></span></div>
     </div>
-    <canvas id="chart" height="260" aria-label="رسم السعر مع إشارات الشراء والبيع"></canvas>
-    <div class="legend">
-      <span><i style="background:var(--ink)"></i>السعر</span>
-      <span><i style="background:var(--accent)"></i>متوسط 20</span>
-      <span><i style="background:var(--muted)"></i>متوسط 50</span>
-      <span style="color:var(--buy)">▲ شراء</span>
-      <span style="color:var(--sell)">▼ بيع</span>
-    </div>
-    <canvas id="rsi" height="90" aria-label="مؤشر القوة النسبية"></canvas>
     <div class="levels">
       <div class="lv"><span>دخول مقترح</span><b id="lEntry"></b></div>
       <div class="lv"><span>وقف خسارة</span><b id="lStop" style="color:var(--sell)"></b></div>
@@ -570,6 +561,7 @@ $('prevSym').onclick=()=>step(-1);$('nextSym').onclick=()=>step(1);
 function setup(cv){const dpr=window.devicePixelRatio||1,w=cv.clientWidth,h=+cv.getAttribute('height');
   cv.width=w*dpr;cv.height=h*dpr;cv.style.height=h+'px';const x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,w,h);return [x,w,h];}
 function draw(){
+  if(!$('chart'))return;
   const r=results[selected];if(!r)return;
   const N=Math.min(120,r.c.length),st=r.c.length-N;
   const C=r.c.slice(st),E20=r.e20.slice(st),E50=r.e50.slice(st),SG=r.sig.slice(st),RS=r.r.slice(st),B=r.bars.slice(st);
