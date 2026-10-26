@@ -126,7 +126,23 @@ details summary{cursor:pointer;font-weight:600;font-size:.9rem}
 .picker{display:grid;grid-template-columns:auto 1fr auto;gap:8px}
 .picker select{font:600 1rem var(--f-num);direction:ltr;text-align:center}
 .picker button{min-width:46px;font-size:1.1rem}
-.tabbar{position:fixed;inset:auto 0 0;z-index:20;display:grid;grid-template-columns:1fr 1fr;background:var(--surface);border-top:1px solid var(--line);
+.div-go{display:flex;align-items:flex-end}
+.div-go button{width:100%}
+.dv{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;text-align:start;width:100%}
+button.dv{cursor:pointer}
+button.dv:hover{border-color:var(--accent)}
+.dv .who{min-width:0;display:flex;flex-direction:column;gap:1px}
+.dv .who small{color:var(--muted);font-size:.75rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;direction:ltr;text-align:right}
+.dv .yld{text-align:center}
+.dv .yld b{display:block;font:700 1.15rem var(--f-num);color:var(--buy);direction:ltr}
+.dv .yld small,.dv .when small{display:block;color:var(--muted);font-size:.72rem}
+.dv .when{text-align:center;min-width:5.5rem}
+.dv .when b{display:block;font:600 .88rem var(--f-body);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tag{display:inline-block;font-size:.68rem;font-weight:600;padding:0 6px;border-radius:6px;margin-top:2px}
+.tag.ok{background:var(--buy-soft);color:var(--buy)}
+.tag.est{background:var(--wait-soft);color:var(--muted)}
+.tag.soon{background:var(--accent-soft);color:var(--accent)}
+.tabbar{position:fixed;inset:auto 0 0;z-index:20;display:grid;grid-template-columns:1fr 1fr 1fr;background:var(--surface);border-top:1px solid var(--line);
   padding:6px max(16px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
 .tabbar button{background:transparent;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:.8rem;color:var(--muted);padding:6px;position:relative}
 .tabbar svg{width:22px;height:22px}
@@ -295,11 +311,34 @@ details summary{cursor:pointer;font-weight:600;font-size:.9rem}
   </details>
   </main>
 
+  <main id="pg-div" class="page" hidden>
+  <section class="panel" aria-label="التوزيعات">
+    <div>
+      <h2>الأسهم الموزّعة للأرباح</h2>
+      <p class="note">تُجلب لأسهم القائمة في صفحة الفرص (أو القوائم الجاهزة التي اخترتها هناك). تحتاج مفتاح Finnhub، وتُحفظ النتائج يوماً كاملاً فلا تستهلك رصيداً عند فتحها مجدداً.</p>
+    </div>
+    <div class="row">
+      <div><label for="divSort">الترتيب</label>
+        <select id="divSort">
+          <option value="yield">أعلى نسبة توزيع</option>
+          <option value="next">أقرب موعد توزيع</option>
+          <option value="name">اسم الشركة</option>
+        </select></div>
+      <div class="div-go"><button class="primary" id="divGo" type="button">اجلب التوزيعات</button></div>
+    </div>
+    <div class="bar"><i id="divProg"></i></div>
+    <div class="status" id="divStatus" role="status"></div>
+  </section>
+  <div class="list" id="divList"><div class="empty">اضغط «اجلب التوزيعات» لعرض الأسهم التي توزع أرباحاً مع نسبة التوزيع وموعده.</div></div>
+  <p class="note">«تاريخ الاستحقاق» هو آخر يوم لشراء السهم لتستحق التوزيع القادم (Ex-Date). «متوقع» يعني أن الشركة لم تعلن الموعد بعد، فقُدّر من مواعيدها السابقة. تأكد من الموعد في زاد قبل الشراء.</p>
+  </main>
+
   <p class="warn">هذه أداة تحليل فني مساعدة وليست توصية استثمارية. الإشارات تخطئ أحياناً، ولا تخاطر بمال لا تتحمل خسارته.</p>
 </div>
 <nav class="tabbar" aria-label="الصفحات">
   <button type="button" data-pg="scan" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18h16M4 12h10M4 6h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>الفرص</button>
   <button type="button" data-pg="detail"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17l5-6 4 4 6-8 3 3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>التحليل<span class="badge" id="selBadge" hidden></span></button>
+  <button type="button" data-pg="div"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M14.6 9.2c-.5-.8-1.5-1.3-2.6-1.3-1.5 0-2.6.8-2.6 2s1.1 1.7 2.6 2 2.6.8 2.6 2-1.1 2-2.6 2c-1.1 0-2.1-.5-2.6-1.3M12 6.3v1.6M12 16.1v1.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>التوزيعات</button>
 </nav>
 
 <script>
@@ -773,18 +812,112 @@ function sizeCalc(){
   $('pNote').textContent=note;
 }
 
+/* ---------- dividends (Finnhub free endpoints; cached for a day) ---------- */
+let divData={},divRunning=false,divStop=false;
+try{divData=JSON.parse(store.get('td_div','{}'))||{};}catch(_){divData={};}
+const DIV_TTL=864e5;
+$('divSort').value=store.get('td_divSort','yield');
+$('divSort').addEventListener('change',()=>{store.set('td_divSort',$('divSort').value);drawDiv();});
+const dfmt=d=>d.toLocaleDateString('ar-u-nu-latn',{day:'numeric',month:'short',year:'numeric'});
+const pickNum=(...v)=>{for(const x of v){const n=parseFloat(x);if(isFinite(n)&&n>0)return n;}return 0;};
+function freqName(g){if(!g)return'';if(g<45)return'شهري';if(g<120)return'ربع سنوي';if(g<240)return'نصف سنوي';return'سنوي';}
+function nextDate(hist){
+  // hist: [{ex:Date,pay:Date|null,amt}] newest first
+  const today=new Date();today.setHours(0,0,0,0);
+  const fut=hist.filter(h=>h.ex>=today).sort((a,b)=>a.ex-b.ex)[0];
+  const past=hist.filter(h=>h.ex<today);
+  let gap=0;if(past.length>=2){const g=[];for(let i=0;i<Math.min(past.length-1,4);i++)g.push((past[i].ex-past[i+1].ex)/864e5);g.sort((a,b)=>a-b);gap=g[Math.floor(g.length/2)];}
+  if(fut)return{date:fut.ex,pay:fut.pay,amt:fut.amt,sure:true,gap};
+  if(past.length&&gap>20){let d=new Date(past[0].ex.getTime());while(d<today)d=new Date(d.getTime()+gap*864e5);
+    // an estimate more than one cycle late usually means payments stopped
+    if((today-past[0].ex)/864e5>gap*1.8)return{date:null,gap,stale:true};
+    return{date:d,pay:null,amt:past[0].amt,sure:false,gap};}
+  return{date:null,gap};
+}
+async function fhGet(path,key){
+  await throttle(fhCalls,50);
+  const r=await fetch('https://finnhub.io/api/v1/'+path+(path.includes('?')?'&':'?')+'token='+encodeURIComponent(key));
+  if(r.status===401){const e=new Error('key');e.code=401;throw e;}
+  if(r.status===403){const e=new Error('premium');e.code=403;throw e;}
+  if(r.status===429){const e=new Error('limit');e.code=429;throw e;}
+  return r.json();
+}
+let divDatesOff=false;
+async function fetchDiv(sym,key){
+  const out={t:Date.now(),name:'',yld:0,dps:0,hist:[]};
+  const m=await fhGet('stock/metric?symbol='+encodeURIComponent(sym)+'&metric=all',key);const mm=(m&&m.metric)||{};
+  out.yld=pickNum(mm.currentDividendYieldTTM,mm.dividendYieldIndicatedAnnual);
+  out.dps=pickNum(mm.dividendPerShareAnnual,mm.dividendPerShareTTM,mm.dividendsPerShareTTM);
+  try{const pr=await fhGet('stock/profile2?symbol='+encodeURIComponent(sym),key);out.name=(pr&&pr.name)||'';}catch(e){if(e.code===401)throw e;}
+  if(!divDatesOff&&(out.yld||out.dps)){
+    try{const d=await fhGet('stock/dividend2?symbol='+encodeURIComponent(sym),key);
+      const arr=Array.isArray(d)?d:(d&&(d.data||d.dividends))||[];
+      const d10=v=>v?String(v).slice(0,10):null;
+      out.hist=arr.map(x=>({ex:d10(x.exDate||x.date||x.ex_date),pay:d10(x.payDate||x.paymentDate||x.pay_date),amt:+(x.amount??x.adjustedAmount??x.dividend??0)})).filter(x=>x.ex).slice(0,12);
+    }catch(e){if(e.code===401)throw e;if(e.code===403)divDatesOff=true;}}
+  return out;
+}
+function divRows(){
+  const syms=symList();
+  return syms.map(s=>[s,divData[s]]).filter(([,d])=>d&&(d.yld>0||d.dps>0||(d.hist&&d.hist.length)))
+    .map(([s,d])=>{const hist=(d.hist||[]).map(h=>({ex:new Date(h.ex+'T00:00:00'),pay:h.pay?new Date(h.pay+'T00:00:00'):null,amt:h.amt})).filter(h=>!isNaN(h.ex)).sort((a,b)=>b.ex-a.ex);
+      return{s,name:d.name||s,yld:d.yld,dps:d.dps,nx:nextDate(hist)};});
+}
+function drawDiv(){
+  const L=$('divList'),rows=divRows(),srt=$('divSort').value;
+  if(!rows.length){L.innerHTML='';const e=document.createElement('div');e.className='empty';
+    e.textContent=Object.keys(divData).length?'لا توجد أسهم موزّعة للأرباح في القائمة الحالية.':'اضغط «اجلب التوزيعات» لعرض الأسهم التي توزع أرباحاً مع نسبة التوزيع وموعده.';L.appendChild(e);return;}
+  if(srt==='yield')rows.sort((a,b)=>b.yld-a.yld);
+  else if(srt==='next')rows.sort((a,b)=>(a.nx.date?a.nx.date.getTime():Infinity)-(b.nx.date?b.nx.date.getTime():Infinity)||b.yld-a.yld);
+  else rows.sort((a,b)=>a.name.localeCompare(b.name,'en'));
+  L.innerHTML='';const today=new Date();today.setHours(0,0,0,0);
+  rows.forEach(r=>{const el=document.createElement(results[r.s]?'button':'div');el.className='dv';if(results[r.s]){el.type='button';el.onclick=()=>show(r.s);}
+    const who=document.createElement('div');who.className='who';const sy=document.createElement('span');sy.className='sym';sy.textContent=r.s;
+    const nm=document.createElement('small');nm.textContent=r.name!==r.s?r.name:'';who.append(sy,nm);
+    const y=document.createElement('div');y.className='yld';const yb=document.createElement('b');yb.textContent=r.yld?r.yld.toFixed(2)+'%':'—';
+    const ys=document.createElement('small');ys.textContent=r.dps?'$'+r.dps.toFixed(2)+' سنوياً':'نسبة التوزيع';y.append(yb,ys);
+    const w=document.createElement('div');w.className='when';const wb=document.createElement('b');const ws=document.createElement('small');
+    if(r.nx.date){const days=Math.round((r.nx.date-today)/864e5);wb.textContent=dfmt(r.nx.date);
+      const t=document.createElement('span');t.className='tag '+(r.nx.sure?(days<=14?'soon':'ok'):'est');t.textContent=r.nx.sure?(days<=0?'اليوم':'بعد '+days+' يوم'):'متوقع';
+      ws.textContent=freqName(r.nx.gap);w.append(wb,t,ws);}
+    else{wb.textContent='—';ws.textContent=r.nx.stale?'توقّف التوزيع مؤخراً؟':divDatesOff?'الموعد غير متاح':'لا يوجد موعد';w.append(wb,ws);}
+    el.append(who,y,w);L.appendChild(el);});
+}
+$('divGo').onclick=async()=>{
+  if(divRunning){divStop=true;return;}
+  const key=$('nkey').value.trim();
+  if(!key){$('divStatus').textContent='أضف مفتاح Finnhub في صفحة الفرص أولاً، فهو مصدر بيانات التوزيعات.';return;}
+  const syms=symList();if(!syms.length){$('divStatus').textContent='أضف أسهماً أو اختر قائمة جاهزة في صفحة الفرص.';return;}
+  const need=syms.filter(s=>!divData[s]||Date.now()-divData[s].t>DIV_TTL);
+  divRunning=true;divStop=false;divDatesOff=false;$('divGo').textContent='إيقاف';let done=0,err='';
+  const tot=need.length;
+  for(const s of need){if(divStop)break;
+    $('divStatus').textContent='جلب توزيعات '+s+' ('+(done+1)+' من '+tot+') · حوالي '+Math.max(1,Math.ceil((tot-done)*3/50))+' د';
+    try{divData[s]=await fetchDiv(s,key);}
+    catch(e){if(e.code===401){err='مفتاح Finnhub غير صحيح.';break;}if(e.code===429){err='تجاوزت حد Finnhub المؤقت؛ أعد المحاولة بعد دقيقة.';break;}}
+    done++;$('divProg').style.width=(done/Math.max(1,tot)*100)+'%';
+    if(done%5===0){store.set('td_div',JSON.stringify(divData));drawDiv();}}
+  store.set('td_div',JSON.stringify(divData));
+  divRunning=false;$('divGo').textContent='اجلب التوزيعات';drawDiv();
+  const n=divRows().length;
+  $('divStatus').textContent=err||((divStop?'أُوقف الجلب · ':'')+n+' سهم يوزّع أرباحاً من '+syms.length+(tot<syms.length?' · '+(syms.length-tot)+' من الذاكرة المحفوظة':'')+(divDatesOff?' · مواعيد التوزيع غير متاحة في خطة Finnhub المجانية لحسابك؛ تظهر النسبة فقط':''));
+};
+
 /* ---------- pages ---------- */
 let page='scan';
+const PAGES=['scan','detail','div'];
+const pageFromHash=()=>{const h=location.hash.slice(1);return PAGES.includes(h)?h:'scan';};
 function go(p,fromHash){
-  page=p==='detail'?'detail':'scan';
-  $('pg-scan').hidden=page!=='scan';$('pg-detail').hidden=page!=='detail';
+  page=PAGES.includes(p)?p:'scan';
+  PAGES.forEach(x=>$('pg-'+x).hidden=page!==x);
+  if(page==='div')drawDiv();
   document.querySelectorAll('.tabbar button').forEach(b=>b.dataset.pg===page?b.setAttribute('aria-current','page'):b.removeAttribute('aria-current'));
   if(!fromHash&&location.hash!=='#'+page){try{history.pushState(null,'','#'+page);}catch(_){location.hash=page;}}
   window.scrollTo(0,0);
 }
 document.querySelectorAll('.tabbar button').forEach(b=>b.onclick=()=>go(b.dataset.pg));
-addEventListener('popstate',()=>go(location.hash==='#detail'?'detail':'scan',true));
-addEventListener('hashchange',()=>go(location.hash==='#detail'?'detail':'scan',true));
+addEventListener('popstate',()=>go(pageFromHash(),true));
+addEventListener('hashchange',()=>go(pageFromHash(),true));
 function syncPicker(){
   const P=$('pick'),list=sorted().map(e=>e[0]);P.innerHTML='';
   list.forEach(s=>{const o=document.createElement('option');o.value=s;const r=results[s];o.textContent=s+'  ·  '+r.label;P.appendChild(o);});
@@ -794,7 +927,7 @@ $('pick').onchange=()=>show($('pick').value,true);
 function step(d){const list=sorted().map(e=>e[0]);if(!list.length)return;let k=list.indexOf(selected);k=(k+d+list.length)%list.length;show(list[k],true);}
 $('prevSym').onclick=()=>step(-1);$('nextSym').onclick=()=>step(1);
 
-go(location.hash==='#detail'?'detail':'scan',true);
+go(pageFromHash(),true);
 if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
 /* open with a demo scan so the page shows what it does */
 if(!$('key').value){ $('demoFlag').hidden=false; scan(); }
