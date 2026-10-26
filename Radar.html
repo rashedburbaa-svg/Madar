@@ -28,10 +28,11 @@
   --buy:#3DC98A; --buy-soft:#123326; --sell:#F0705F; --sell-soft:#3A1D19; --wait:#A2AAA5; --wait-soft:#26302B;
   color-scheme:dark}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font:15px/1.6 var(--f-body);
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
-  padding-block:calc(env(safe-area-inset-top,0px) + 14px) calc(env(safe-area-inset-bottom,0px) + 40px)}
+  padding-block:calc(env(safe-area-inset-top,0px) + 14px) calc(env(safe-area-inset-bottom,0px) + 96px)}
 .wrap{max-width:680px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
 .num,.ltr{font-family:var(--f-num);direction:ltr;unicode-bidi:isolate;font-variant-numeric:tabular-nums}
 h1{font:700 1.55rem/1.25 var(--f-display);margin:0;text-wrap:balance}
@@ -101,6 +102,16 @@ details summary{cursor:pointer;font-weight:600;font-size:.9rem}
 .news a:hover{text-decoration:underline}
 .news small{color:var(--muted);font-size:.72rem;display:block;direction:ltr;text-align:left}
 .alert{background:var(--accent-soft);color:var(--accent);font-size:.82rem;font-weight:600;padding:8px 10px;border-radius:8px}
+.page{display:flex;flex-direction:column;gap:14px}
+.picker{display:grid;grid-template-columns:auto 1fr auto;gap:8px}
+.picker select{font:600 1rem var(--f-num);direction:ltr;text-align:center}
+.picker button{min-width:46px;font-size:1.1rem}
+.tabbar{position:fixed;inset:auto 0 0;z-index:20;display:grid;grid-template-columns:1fr 1fr;background:var(--surface);border-top:1px solid var(--line);
+  padding:6px max(16px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.tabbar button{background:transparent;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:.8rem;color:var(--muted);padding:6px;position:relative}
+.tabbar svg{width:22px;height:22px}
+.tabbar button[aria-current="page"]{color:var(--accent)}
+.badge{position:absolute;top:2px;inset-inline-start:calc(50% + 10px);font:600 .65rem var(--f-num);background:var(--accent);color:var(--surface);border-radius:999px;padding:1px 6px;direction:ltr}
 @media (max-width:420px){.levels{grid-template-columns:1fr 1fr 1fr}.lv b{font-size:.9rem}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -115,6 +126,7 @@ details summary{cursor:pointer;font-weight:600;font-size:.9rem}
     <div class="clock" id="clock"><span class="dot" id="mDot"></span><span id="mText">…</span></div>
   </header>
 
+  <main id="pg-scan" class="page">
   <section class="panel" aria-label="الإعدادات">
     <div>
       <label for="key">مفتاح Twelve Data (مجاني)</label>
@@ -166,7 +178,15 @@ details summary{cursor:pointer;font-weight:600;font-size:.9rem}
     </div>
     <div class="list" id="list"><div class="empty">اضغط «افحص الفرص» لبدء الفحص.</div></div>
   </section>
+  </main>
 
+  <main id="pg-detail" class="page" hidden>
+  <div class="picker">
+    <button type="button" id="prevSym" aria-label="السهم السابق">→</button>
+    <select id="pick" aria-label="اختر السهم"></select>
+    <button type="button" id="nextSym" aria-label="السهم التالي">←</button>
+  </div>
+  <div class="empty panel" id="noSel">لم تختر سهماً بعد. افحص الفرص في الصفحة الأولى ثم اضغط على أي سهم لترى تحليله هنا.</div>
   <section class="panel" id="detail" hidden aria-live="polite">
     <div class="detail-head">
       <div>
@@ -215,9 +235,14 @@ details summary{cursor:pointer;font-weight:600;font-size:.9rem}
     <p class="note">الأخبار تُقرأ من عناوين آخر 7 أيام وتُصنَّف بالكلمات المفتاحية، وأقصى أثر لها ±15 نقطة حتى لا تطغى على التحليل الفني. ويظهر تنبيه إذا كان إعلان الأرباح خلال 14 يوماً.</p>
     <p class="note">الخطة المجانية تسمح بـ 8 طلبات في الدقيقة و800 يومياً، لذلك تُفحص قائمة طويلة على دفعات تلقائياً.</p>
   </details>
+  </main>
 
   <p class="warn">هذه أداة تحليل فني مساعدة وليست توصية استثمارية. الإشارات تخطئ أحياناً، ولا تخاطر بمال لا تتحمل خسارته.</p>
 </div>
+<nav class="tabbar" aria-label="الصفحات">
+  <button type="button" data-pg="scan" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18h16M4 12h10M4 6h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>الفرص</button>
+  <button type="button" data-pg="detail"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17l5-6 4 4 6-8 3 3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>التحليل<span class="badge" id="selBadge" hidden></span></button>
+</nav>
 
 <script>
 (function(){
@@ -439,7 +464,7 @@ async function scan(){
   store.set('td_syms',$('syms').value.trim());
   const demo=!key;$('demoFlag').hidden=!demo;
   const nkey=demo?'':$('nkey').value.trim();let newsOk=true,newsErr='';
-  stopFlag=false;selected=null;$('detail').hidden=true;results={};render();$('scan').disabled=true;$('stop').hidden=false;
+  stopFlag=false;selected=null;$('detail').hidden=true;$('noSel').hidden=false;$('selBadge').hidden=true;results={};render();syncPicker();$('scan').disabled=true;$('stop').hidden=false;
   let done=0,fail=[];
   for(const s of syms){
     if(stopFlag)break;
@@ -449,7 +474,7 @@ async function scan(){
       const res=analyze(bars,style);
       if(nkey&&newsOk){try{applyNews(res,await fetchNews(s,nkey),STYLE[style]);}
         catch(ne){if(ne.message==='stopped')throw ne;if(ne.code===401){newsOk=false;newsErr='مفتاح Finnhub غير صحيح، الأخبار متوقفة.';}else if(ne.code===429){newsOk=false;newsErr='تجاوزت حد Finnhub مؤقتاً، الأخبار متوقفة لهذا الفحص.';}}}
-      results[s]=res;render();if(selected===s)show(s,true);
+      results[s]=res;render();syncPicker();if(selected===s)show(s,true);
     }catch(e){if(e.message==='stopped')break;
       if(e.code===401||/api ?key/i.test(e.message)){setStatus('المفتاح غير صحيح. انسخه من جديد من حسابك في Twelve Data.');break;}
       if(e.code===429&&/day|daily/i.test(e.message)){setStatus('انتهى رصيد اليوم المجاني (800 طلب). يتجدد بعد منتصف الليل بتوقيت غرينتش.');break;}
@@ -460,7 +485,8 @@ async function scan(){
   const n=Object.keys(results).length;
   if(!/المفتاح|رصيد/.test($('status').textContent))
     setStatus(stopFlag?'أُوقف الفحص.':'تم فحص '+n+' سهم'+(fail.length?' · لم يُعثر على: '+fail.join(', '):'')+' · آخر تحديث '+new Date().toLocaleTimeString('ar',{hour:'numeric',minute:'2-digit'})+(newsErr?' · '+newsErr:(!nkey&&!demo?' · أضف مفتاح Finnhub لتحليل الأخبار':'')));
-  if(n&&!selected){const top=sorted()[0];if(top)show(top[0]);}
+  syncPicker();
+  if(n&&!selected){const top=sorted()[0];if(top)show(top[0],true);}
 }
 $('scan').onclick=scan;
 $('stop').onclick=()=>{stopFlag=true;};
@@ -494,7 +520,8 @@ document.querySelectorAll('.tabs button').forEach(t=>t.onclick=()=>{filter=t.dat
 
 /* ---------- detail ---------- */
 function show(s,quiet){
-  selected=s;const r=results[s];if(!r)return;$('detail').hidden=false;
+  const r=results[s];if(!r)return;selected=s;$('detail').hidden=false;$('noSel').hidden=true;
+  $('selBadge').textContent=s;$('selBadge').hidden=false;$('pick').value=s;
   $('dSym').textContent=s;$('dPrice').textContent='$'+fmt(r.px);$('dTime').textContent='آخر شمعة: '+r.last;
   $('dPill').textContent=r.label;$('dPill').className='pill p-'+r.side;$('dScore').textContent=(r.score>0?'+':'')+r.score+' / 100';
   $('lEntry').textContent=fmt(r.lv.entry);$('lStop').textContent=fmt(r.lv.stop);$('lTarget').textContent=fmt(r.lv.target);
@@ -515,8 +542,31 @@ function show(s,quiet){
       a.href=x.url;a.target='_blank';a.rel='noopener';a.textContent=x.h;
       sm.textContent=(x.src||'')+' · '+new Date(x.t*1000).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
       d.append(a,sm);li.append(i2,d);NL.appendChild(li);});}
-  draw();if(quiet)return;$('detail').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
+  if(quiet){if(page==='detail')draw();return;}
+  go('detail');
 }
+
+/* ---------- pages ---------- */
+let page='scan';
+function go(p,fromHash){
+  page=p==='detail'?'detail':'scan';
+  $('pg-scan').hidden=page!=='scan';$('pg-detail').hidden=page!=='detail';
+  document.querySelectorAll('.tabbar button').forEach(b=>b.dataset.pg===page?b.setAttribute('aria-current','page'):b.removeAttribute('aria-current'));
+  if(!fromHash&&location.hash!=='#'+page){try{history.pushState(null,'','#'+page);}catch(_){location.hash=page;}}
+  window.scrollTo(0,0);
+  if(page==='detail')requestAnimationFrame(draw);
+}
+document.querySelectorAll('.tabbar button').forEach(b=>b.onclick=()=>go(b.dataset.pg));
+addEventListener('popstate',()=>go(location.hash==='#detail'?'detail':'scan',true));
+addEventListener('hashchange',()=>go(location.hash==='#detail'?'detail':'scan',true));
+function syncPicker(){
+  const P=$('pick'),list=sorted().map(e=>e[0]);P.innerHTML='';
+  list.forEach(s=>{const o=document.createElement('option');o.value=s;const r=results[s];o.textContent=s+'  ·  '+r.label;P.appendChild(o);});
+  P.disabled=!list.length;$('prevSym').disabled=$('nextSym').disabled=list.length<2;if(selected)P.value=selected;
+}
+$('pick').onchange=()=>show($('pick').value,true);
+function step(d){const list=sorted().map(e=>e[0]);if(!list.length)return;let k=list.indexOf(selected);k=(k+d+list.length)%list.length;show(list[k],true);}
+$('prevSym').onclick=()=>step(-1);$('nextSym').onclick=()=>step(1);
 function setup(cv){const dpr=window.devicePixelRatio||1,w=cv.clientWidth,h=+cv.getAttribute('height');
   cv.width=w*dpr;cv.height=h*dpr;cv.style.height=h+'px';const x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,w,h);return [x,w,h];}
 function draw(){
@@ -553,9 +603,11 @@ function draw(){
   x.beginPath();let s0=false;RS.forEach((v,i)=>{if(v==null)return;s0?x.lineTo(X(i),RY(v)):(x.moveTo(X(i),RY(v)),s0=true);});x.strokeStyle=acc;x.lineWidth=1.5;x.stroke();
   x.fillStyle=mut;x.fillText('RSI',w-padR+4,h-2);
 }
-let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(draw,150);});
-matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',draw);
+const redraw=()=>{if(page==='detail')draw();};
+let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(redraw,150);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',redraw);
 
+go(location.hash==='#detail'?'detail':'scan',true);
 /* open with a demo scan so the page shows what it does */
 if(!$('key').value){ $('demoFlag').hidden=false; scan(); }
 })();
