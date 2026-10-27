@@ -104,6 +104,8 @@ details summary{cursor:pointer;font-weight:600;font-size:.9rem}
 .news small{color:var(--muted);font-size:.72rem;display:block;direction:ltr;text-align:left}
 .alert{background:var(--accent-soft);color:var(--accent);font-size:.82rem;font-weight:600;padding:8px 10px;border-radius:8px}
 .page{display:flex;flex-direction:column;gap:14px}
+.halal-box{display:flex;flex-direction:column;gap:4px}
+.halal-box details summary{cursor:pointer}
 .presets{display:flex;gap:6px;flex-wrap:wrap}
 .presets button{padding:7px 11px;font-size:.82rem;border-radius:999px;background:transparent;border:1px solid var(--line);font-weight:500}
 .presets button[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
@@ -184,6 +186,15 @@ button.dv:hover{border-color:var(--accent)}
       <label for="syms">الأسهم (افصل بفاصلة)</label>
       <input id="syms" dir="ltr" value="NVDA, AAPL, MSFT, TSLA, AMZN, META, AMD, GOOGL">
       <p class="note" id="plan"></p>
+    </div>
+    <div class="halal-box">
+      <label class="check" for="halal"><input type="checkbox" id="halal" checked> الأسهم المتوافقة مع الشريعة فقط</label>
+      <p class="note" id="halalNote"></p>
+      <details>
+        <summary class="note">أضف أسهماً شرعية تعرفها</summary>
+        <input id="halalExtra" dir="ltr" placeholder="مثال: ODFL, FAST" aria-label="أسهم شرعية إضافية" style="margin-top:6px">
+        <p class="note">القائمة المدمجة تضم أكبر الأسهم في صندوقين شرعيين فقط. إن تحققت من سهم آخر (من زاد أو من جهة فتوى) فأضفه هنا ليدخل الفحص.</p>
+      </details>
     </div>
     <div class="row">
       <div><label for="mode">طريقة الفحص</label>
@@ -307,6 +318,7 @@ button.dv:hover{border-color:var(--accent)}
     <p class="note">الأخبار تُقرأ من عناوين آخر 7 أيام وتُصنَّف بالكلمات المفتاحية، وأقصى أثر لها ±15 نقطة حتى لا تطغى على التحليل الفني. ويظهر تنبيه إذا كان إعلان الأرباح خلال 14 يوماً.</p>
     <p class="note">بعدها تُضبط النقاط بثلاثة فلاتر: اتجاه السوق العام من SPY وQQQ (حتى −15 للشراء في سوق هابط)، والفريم الأعلى (+8 إن وافق، −15 إن عاكس، ولا تُسمّى الإشارة «قوية» إلا إذا وافق)، وسجل الإشارات السابقة للسهم نفسه (±8 إن كان النجاح 55% فأكثر أو 34% فأقل).</p>
     <p class="note">في طريقة المرحلتين: يُمسح كل سهم في القائمة بالفريم اليومي (طلب واحد لكل سهم)، ثم يُفحص أفضلها بالساعة والأربع ساعات والأسبوعي (3 طلبات إضافية لكل سهم) مع الأخبار. اتفاق الفريمات يرفع التقييم، واختلافها يخفّضه.</p>
+    <p class="note">فلتر الشريعة: يُبقي فقط الأسهم الموجودة ضمن أكبر ممتلكات صندوقين يتبعان مؤشرات شرعية: SPUS (مؤشر S&P 500 الشرعي، ممتلكات 22 أكتوبر 2026) وHLAL (مؤشر FTSE USA الشرعي، ممتلكات 31 أغسطس 2026)، إضافة إلى ما تضيفه أنت. المؤشران قد يختلفان في سهم واحد، فيظهر ذلك في صفحة التحليل. التوافق يتغيّر كل ربع سنة، وهذه ليست فتوى؛ تأكد من قائمة زاد الشرعية قبل الشراء.</p>
     <p class="note">الخطة المجانية تسمح بـ 8 طلبات في الدقيقة و800 يومياً، لذلك تُفحص قائمة طويلة على دفعات تلقائياً.</p>
   </details>
   </main>
@@ -330,6 +342,7 @@ button.dv:hover{border-color:var(--accent)}
     <div class="status" id="divStatus" role="status"></div>
   </section>
   <div class="list" id="divList"><div class="empty">اضغط «اجلب التوزيعات» لعرض الأسهم التي توزع أرباحاً مع نسبة التوزيع وموعده.</div></div>
+  <p class="note" id="purifyNote">أرباح الأسهم الشرعية قد تحتاج تطهيراً: نسبة صغيرة من دخل الشركة تأتي من مصادر غير مباحة (كفوائد الودائع)، فيُتصدَّق بما يقابلها من التوزيع. اعرف نسبة التطهير من زاد أو من جهة الفتوى.</p>
   <p class="note">«تاريخ الاستحقاق» هو آخر يوم لشراء السهم لتستحق التوزيع القادم (Ex-Date). «متوقع» يعني أن الشركة لم تعلن الموعد بعد، فقُدّر من مواعيدها السابقة. تأكد من الموعد في زاد قبل الشراء.</p>
   </main>
 
@@ -344,6 +357,7 @@ button.dv:hover{border-color:var(--accent)}
 <script>
 (function(){
 const $=id=>document.getElementById(id);
+var pageReady=false;
 const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:v}catch(e){return d}},set(k,v){try{localStorage.setItem(k,v);return true}catch(e){return false}}};
 
 /* ---------- settings ---------- */
@@ -364,6 +378,30 @@ keyNote('key');keyNote('nkey');
 $('mode').value=store.get('td_mode','two');$('deepN').value=store.get('td_deepN','10');
 ['mode','deepN'].forEach(id=>$(id).addEventListener('change',()=>{store.set('td_'+id,$(id).value);planNote();}));
 
+/* ---------- Shariah filter: holdings of two Shariah-index ETFs (largest positions only) ---------- */
+// SPUS = S&P 500 Shariah index, top 25 holdings as of 22 Oct 2026
+const SH_SP='NVDA AAPL MSFT GOOGL AVGO TSLA LLY MU AMD XOM JNJ ABBV CSCO PG MRK HD AMAT LRCX PANW TXN TMO CRWD IBM LIN GEV'.split(' ');
+// HLAL = FTSE USA Shariah index, top 50 holdings (N-PORT, 31 Aug 2026)
+const SH_FTSE='NVDA AAPL MSFT GOOGL AVGO META MU TSLA LLY AMD XOM JNJ CSCO INTC CVX LRCX MRK AMAT KO PG PANW GEV TXN SNDK KLAC CRM ABT MRVL GILD QCOM ADI T WELL PFE COP NOW UBER TJX WDC VRTX DELL DHR NEM ISRG ADBE GLW LIN STX MDT'.split(' ');
+const SP_SET=new Set(SH_SP),FT_SET=new Set(SH_FTSE);
+const normSym=s=>s==='GOOG'?'GOOGL':s;
+const extraSet=()=>new Set($('halalExtra').value.toUpperCase().split(/[\s,،]+/).filter(Boolean));
+function halalSrc(s){const k=normSym(s),a=SP_SET.has(k),b=FT_SET.has(k);
+  if(a&&b)return'both';if(a)return'sp';if(b)return'ftse';if(extraSet().has(s))return'user';return null;}
+function halalLabel(s){const h=halalSrc(s);
+  return h==='both'?'شرعي حسب S&P وFTSE':h==='sp'?'شرعي حسب S&P فقط':h==='ftse'?'شرعي حسب FTSE فقط (S&P يستبعده)':h==='user'?'شرعي حسب قائمتك':'';}
+$('halal').checked=store.get('td_halal','1')==='1';
+$('halalExtra').value=store.get('td_halalExtra','');
+function rawSyms(){return [...new Set($('syms').value.toUpperCase().split(/[\s,،]+/).filter(Boolean))];}
+function halalNote(){
+  const on=$('halal').checked,N=$('halalNote');$('purifyNote').hidden=!on;
+  if(!on){N.textContent='';return;}
+  const raw=rawSyms(),out=raw.filter(s=>!halalSrc(s));
+  N.textContent=out.length?'استُبعد '+out.length+' سهماً غير مدرج في القوائم الشرعية: '+out.slice(0,14).join(', ')+(out.length>14?'…':''):'كل أسهم القائمة مدرجة في القوائم الشرعية.';
+  N.style.color=out.length?'var(--accent)':'var(--buy)';}
+$('halal').addEventListener('change',()=>{store.set('td_halal',$('halal').checked?'1':'0');planNote();});
+$('halalExtra').addEventListener('input',()=>{store.set('td_halalExtra',$('halalExtra').value.trim());planNote();});
+
 /* ---------- ready-made lists (hand-picked groups, not official index membership) ---------- */
 const PRESETS=[
  ['كبرى S&P 500','AAPL MSFT NVDA AMZN GOOGL META BRK.B AVGO TSLA LLY JPM V UNH XOM MA COST HD PG JNJ WMT NFLX ABBV BAC CRM ORCL KO MRK CVX AMD PEP TMO ADBE LIN ACN MCD CSCO WFC ABT IBM GE PM DIS TXN QCOM INTU CAT NOW VZ AMGN ISRG'],
@@ -373,6 +411,7 @@ const PRESETS=[
  ['بنوك ومالية','JPM BAC WFC C GS MS SCHW AXP V MA PYPL BLK COF USB PNC'],
  ['طاقة','XOM CVX COP SLB EOG OXY PSX MPC VLO HAL DVN KMI'],
  ['صحة وأدوية','LLY UNH JNJ ABBV MRK PFE TMO ABT AMGN ISRG GILD VRTX REGN BMY CVS MDT'],
+ ['متوافقة مع الشريعة',[...new Set([...SH_SP,...SH_FTSE])].join(' ')],
 ];
 let picked=new Set((store.get('td_presets','')||'').split('|').filter(Boolean));
 function drawPresets(){const P=$('presets');P.innerHTML='';
@@ -389,11 +428,11 @@ const DAY_CAP=800;
 const usedKey=()=>'td_used_'+new Date().toISOString().slice(0,10);
 const used=()=>parseInt(store.get(usedKey(),'0'),10)||0;
 const addUsed=n=>store.set(usedKey(),String(used()+n));
-function symList(){return [...new Set($('syms').value.toUpperCase().split(/[\s,،]+/).filter(Boolean))].slice(0,300);}
+function symList(){let l=rawSyms();if($('halal').checked)l=l.filter(s=>halalSrc(s));return l.slice(0,300);}
 function planCalls(n){const two=$('mode').value==='two',deep=Math.min(+$('deepN').value,n);
   const htf=$('mtf').checked&&$('intv').value!=='1week';
   return two?2+n+deep*3:2+n*(htf?2:1);}
-function planNote(){const n=symList().length;if(!n){$('plan').textContent='';return;}
+function planNote(){halalNote();if(pageReady&&page==='div')drawDiv();const n=symList().length;if(!n){$('plan').textContent=rawSyms().length?'لا يبقى أي سهم بعد فلتر الشريعة؛ اختر قائمة «متوافقة مع الشريعة» أو أضف أسهماً تعرفها.':'';$('plan').style.color='var(--sell)';return;}
   const calls=planCalls(n),mins=Math.max(1,Math.ceil(calls/8)),left=Math.max(0,DAY_CAP-used());
   $('plan').textContent=n+' سهم · الفحص يأخذ حوالي '+mins+' دقيقة · يستهلك '+calls+' طلباً، والمتبقي لك اليوم '+left+' من '+DAY_CAP+'.'+(calls>left?' الرصيد لا يكفي للقائمة كلها؛ سيُفحص ما يسمح به الرصيد.':'')+(mins>3?' أبقِ التطبيق مفتوحاً أثناء الفحص.':'');
   $('plan').style.color=calls>left?'var(--sell)':'var(--muted)';}
@@ -759,7 +798,7 @@ document.querySelectorAll('.tabs button').forEach(t=>t.onclick=()=>{filter=t.dat
 function show(s,quiet){
   const r=results[s];if(!r)return;selected=s;$('detail').hidden=false;$('noSel').hidden=true;
   $('selBadge').textContent=s;$('selBadge').hidden=false;$('pick').value=s;
-  $('dSym').textContent=s;$('dPrice').textContent='$'+fmt(r.px);$('dTime').textContent='آخر شمعة: '+r.last;
+  $('dSym').textContent=s;$('dPrice').textContent='$'+fmt(r.px);$('dTime').textContent='آخر شمعة: '+r.last+(halalLabel(s)?' · '+halalLabel(s):'');
   $('dPill').textContent=r.label;$('dPill').className='pill p-'+r.side;$('dScore').textContent=(r.score>0?'+':'')+r.score+' / 100';
   $('lEntry').textContent=fmt(r.lv.entry);$('lStop').textContent=fmt(r.lv.stop);$('lTarget').textContent=fmt(r.lv.target);
   sizeCalc();
@@ -927,7 +966,7 @@ $('pick').onchange=()=>show($('pick').value,true);
 function step(d){const list=sorted().map(e=>e[0]);if(!list.length)return;let k=list.indexOf(selected);k=(k+d+list.length)%list.length;show(list[k],true);}
 $('prevSym').onclick=()=>step(-1);$('nextSym').onclick=()=>step(1);
 
-go(pageFromHash(),true);
+go(pageFromHash(),true);pageReady=true;
 if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
 /* open with a demo scan so the page shows what it does */
 if(!$('key').value){ $('demoFlag').hidden=false; scan(); }
