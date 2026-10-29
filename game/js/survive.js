@@ -39,7 +39,7 @@ const SurviveGame=(()=>{
     boss:{r:26,hp:520,spd:38,dps:28,col:'#b05cff',shoots:2.8,boss:true}
   };
   // enemy toughness grows gently; the weapon levels up with every wave so the two stay in step
-  const hpMul=w=>1+0.12*(w-1)+0.006*(w-1)*(w-1);
+  const hpMul=w=>1.1+0.2*(w-1)+0.012*(w-1)*(w-1);
   const wpn=w=>1+0.1*(w-1);
   // one boss per planet; the planet of a boss wave decides which one comes
   const BOSSES=[
@@ -52,8 +52,8 @@ const SurviveGame=(()=>{
   ];
   const bossFor=w=>BOSSES[(w-1)%BOSSES.length];
   function spawnBoss(B){
-    const x=W/2+(Math.random()-0.5)*160,y=-B.r-6,hp=B.hp*hpMul(wave)*0.75;
-    en.push({type:'boss',kind:B.kind,name:B.name,x,y,r:B.r,hp,max:hp,spd:B.spd,dps:B.dps*(1+Math.min(0.8,wave*0.025)),col:B.col,flash:0,oc:0,ph:Math.random()*9,boss:true,t1:2,t2:5,under:0,trail:[]});
+    const x=W/2+(Math.random()-0.5)*160,y=-B.r-6,hp=B.hp*hpMul(wave);
+    en.push({type:'boss',kind:B.kind,name:B.name,x,y,r:B.r,hp,max:hp,spd:B.spd,dps:B.dps*(1.2+Math.min(1.5,wave*0.05)),col:B.col,flash:0,oc:0,ph:Math.random()*9,boss:true,t1:2,t2:5,under:0,trail:[]});
   }
   // boss behaviour: movement plus its own attacks; returns the speed to move with this frame
   function bossAI(e,dt,dx,dy,d){
@@ -280,11 +280,11 @@ const SurviveGame=(()=>{
   function spawn(type){
     const T=TYPES[type],side=Math.floor(Math.random()*4),m=T.r+4;
     let x,y;if(side===0){x=Math.random()*W;y=-m}else if(side===1){x=W+m;y=Math.random()*H}else if(side===2){x=Math.random()*W;y=H+m}else{x=-m;y=Math.random()*H}
-    const hp=type==='boss'?T.hp*hpMul(wave)*0.75:T.hp*hpMul(wave);
-    en.push({type,x,y,r:T.r,hp,max:hp,spd:T.spd*(1+Math.min(0.5,wave*0.02))*(0.9+Math.random()*0.2),dps:T.dps*(1+Math.min(0.8,wave*0.025)),col:T.col,shoot:T.shoots?T.shoots*(0.5+Math.random()):0,flash:0,oc:0,ph:Math.random()*9,boss:!!T.boss});
+    const hp=type==='boss'?T.hp*hpMul(wave):T.hp*hpMul(wave);
+    en.push({type,x,y,r:T.r,hp,max:hp,spd:T.spd*(1+Math.min(0.6,wave*0.03))*(0.9+Math.random()*0.2),dps:T.dps*(1.05+Math.min(1.5,wave*0.05)),col:T.col,shoot:T.shoots?T.shoots*(0.5+Math.random()):0,flash:0,oc:0,ph:Math.random()*9,boss:!!T.boss});
   }
   function pickType(){const r=Math.random();
-    if(wave>=4&&r<0.12)return 'spitter';if(wave>=3&&r<0.26)return 'tank';if(wave>=2&&r<0.5)return 'runner';return 'grunt'}
+    if(wave>=3&&r<0.15)return 'spitter';if(wave>=2&&r<0.32)return 'tank';if(r<(wave>=2?0.6:0.1))return 'runner';return 'grunt'}
   function startWave(){
     setBiome(wave-1,true);
     const boss=wave%5===0?bossFor(wave):null;
@@ -341,7 +341,7 @@ const SurviveGame=(()=>{
     const ps=p.spd*(p.slow>0?0.5:1);p.x=Math.max(p.r,Math.min(W-p.r,p.x+mx*ps*dt));p.y=Math.max(p.r,Math.min(H-p.r,p.y+my*ps*dt));
     // spawning
     spawnT-=dt;
-    if(spawnT<=0&&en.length<80){const n=1+Math.floor(wave/6);for(let k=0;k<n;k++)spawn(pickType());spawnT=Math.max(0.4,0.95-0.04*wave)}
+    if(spawnT<=0&&en.length<110){const n=1+Math.floor(wave/4);for(let k=0;k<n;k++)spawn(pickType());spawnT=Math.max(0.3,0.95-0.06*wave)}
     // gun
     gun.cd-=dt*(buff.rapid>0?2:1);const tg=nearest();
     if(tg)p.aim=Math.atan2(tg.y-p.y,tg.x-p.x);
