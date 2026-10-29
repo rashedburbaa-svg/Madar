@@ -265,3 +265,5 @@ body{background:transparent}
 .dz{direction:ltr;overflow:hidden;border-radius:14px;max-width:100%}
 .dz.zoomed{overflow:auto;-webkit-overflow-scrolling:touch;max-height:46vh;outline:2px solid var(--gold);outline-offset:-2px}
 .dz canvas{border-radius:0}
+.cell.portal{background:radial-gradient(circle,rgba(180,122,255,.35),transparent 70%),var(--tile);box-shadow:inset 0 0 0 2px #b47aff}
+.cell.portal.lit{box-shadow:inset 0 0 0 2px #ff7ad9,0 0 10px rgba(255,122,217,.5)}

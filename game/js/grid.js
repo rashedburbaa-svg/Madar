@@ -8,19 +8,27 @@ const GridGame=(()=>{
   function build(level,seed){
     const n=sizeFor(level),R=rng(seed??level*7919+13),wrap=level>=10&&level%2===0,sol=new Array(n*n).fill(0),seen=new Array(n*n).fill(false);
     const src=Math.floor(n/2)*n+Math.floor(n/2),front=[src];seen[src]=true;
+    // wormhole pair (odd levels from 5): energy jumps between the two marked cells whatever their arms
+    let portal=null;if(level>=5&&level%2===1&&!wrap){const cells=shuffle([...Array(n*n).keys()].filter(i=>i!==src),R);
+      for(const a of cells){const b=cells.find(b=>b!==a&&Math.abs(a%n-b%n)+Math.abs(((a/n)|0)-((b/n)|0))>=n);if(b!=null){portal=[a,b];break}}}
     while(front.length){const idx=R()<(level<6?0.75:0.5)?front.length-1:Math.floor(R()*front.length);const c=front[idx],x=c%n,y=(c/n)|0;
       const opts=DIRS.filter(([,dx,dy])=>{const k=nb(x,y,dx,dy,n,wrap);return k>=0&&!seen[k]});
       if(!opts.length){front.splice(idx,1);continue}
-      const [b,dx,dy,ob]=opts[Math.floor(R()*opts.length)],nc=nb(x,y,dx,dy,n,wrap);sol[c]|=b;sol[nc]|=ob;seen[nc]=true;front.push(nc)}
+      const [b,dx,dy,ob]=opts[Math.floor(R()*opts.length)],nc=nb(x,y,dx,dy,n,wrap);
+      if(portal&&portal.includes(nc)){const other=portal[0]===nc?portal[1]:portal[0];if(seen[other])continue}
+      sol[c]|=b;sol[nc]|=ob;seen[nc]=true;front.push(nc);
+      if(portal&&portal.includes(nc)){const other=portal[0]===nc?portal[1]:portal[0];seen[other]=true;front.push(other)}}
     const r=sol.map(()=>Math.floor(R()*4)),locked=new Array(n*n).fill(false);
     if(level>=7){const k=Math.min(Math.floor(n*n*0.08),7);const cand=shuffle([...Array(n*n).keys()].filter(i=>i!==src),R).slice(0,k);cand.forEach(i=>{locked[i]=true;r[i]=0})}
     if(r.every((k,i)=>rotK(sol[i],k)===sol[i])){const i=[...Array(n*n).keys()].find(i=>!locked[i]&&i!==src&&rotK(sol[i],1)!==sol[i]);if(i!=null)r[i]=1}
-    return {n,sol,rot:r,src,locked,wrap,moves:0,hist:[],angle:r.map(k=>k*90),level};
+    if(portal)portal.forEach(i=>{locked[i]=false});
+    return {n,sol,rot:r,src,locked,wrap,portal,moves:0,hist:[],angle:r.map(k=>k*90),level};
   }
   const cur=i=>rotK(g.sol[i],g.rot[i]);
   function minRot(i){const c=cur(i);for(let k=0;k<4;k++)if(rotK(c,k)===g.sol[i])return k;return 0}
   function lit(){const n=g.n,L=new Set([g.src]),q=[g.src];while(q.length){const c=q.shift(),x=c%n,y=(c/n)|0,m=cur(c);
-    for(const [b,dx,dy,ob] of DIRS){if(!(m&b))continue;const nc=nb(x,y,dx,dy,n,g.wrap);if(nc<0)continue;if(!L.has(nc)&&(cur(nc)&ob)){L.add(nc);q.push(nc)}}}return L}
+    for(const [b,dx,dy,ob] of DIRS){if(!(m&b))continue;const nc=nb(x,y,dx,dy,n,g.wrap);if(nc<0)continue;if(!L.has(nc)&&(cur(nc)&ob)){L.add(nc);q.push(nc)}}
+    if(g.portal&&g.portal.includes(c)){const o=g.portal[0]===c?g.portal[1]:g.portal[0];if(!L.has(o)){L.add(o);q.push(o)}}}return L}
   function svg(mask,isSrc){
     const P={[N]:[50,0],[E]:[100,50],[S]:[50,100],[W]:[0,50]};
     const arms=[N,E,S,W].filter(b=>mask&b).map(b=>`<line class="arm" x1="50" y1="50" x2="${P[b][0]}" y2="${P[b][1]}"/>`).join('');
@@ -40,12 +48,13 @@ const GridGame=(()=>{
     clearOverlays();st=gState('grid',{hints:3});
     g=mode&&mode.daily?build(13,mode.seed):build(level);g.par=g.sol.reduce((a,_,i)=>a+minRot(i),0);
     board.className='gboard'+(g.wrap?' wrapmode':'');board.style.gridTemplateColumns=`repeat(${g.n},1fr)`;board.innerHTML='';
-    g.sol.forEach((m,i)=>{const c=document.createElement('button');c.type='button';c.className='cell'+(g.locked[i]?' locked':'');c.dataset.i=i;c.setAttribute('aria-label',g.locked[i]?'قطعة مقفلة':'قطعة');c.innerHTML=svg(m,i===g.src);c.firstChild.style.transform=`rotate(${g.angle[i]}deg)`;board.appendChild(c)});
+    g.sol.forEach((m,i)=>{const c=document.createElement('button');c.type='button';c.className='cell'+(g.locked[i]?' locked':'')+(g.portal&&g.portal.includes(i)?' portal':'');c.dataset.i=i;c.setAttribute('aria-label',g.locked[i]?'قطعة مقفلة':'قطعة');c.innerHTML=svg(m,i===g.src);c.firstChild.style.transform=`rotate(${g.angle[i]}deg)`;board.appendChild(c)});
     refresh();if(g.wrap&&!(mode&&mode.daily)&&!st.wrapSeen){st.wrapSeen=1;gSave('grid',st);toast('شبكة ملتفّة: الأطراف متصلة بالجهة المقابلة')}
+    if(g.portal&&!(mode&&mode.daily)&&!st.portalSeen){st.portalSeen=1;gSave('grid',st);toast('جديد: ثقب دودي 🌀 ينقل الطاقة بين الخانتين المحددتين')}
   }
   return {id:'grid',name:'شبكة المدار',desc:'دوّر القطع حتى تضيء الشبكة كلها',play,
     icon:'<svg viewBox="0 0 48 48"><g stroke="#3fbf9b" stroke-width="5" stroke-linecap="round" fill="none"><path d="M24 24V8M24 24h16M24 24v16M24 24H10"/></g><path fill="#f2b84b" d="M24 14c1.6 6.5 3.5 8.4 10 10-6.5 1.6-8.4 3.5-10 10-1.6-6.5-3.5-8.4-10-10 6.5-1.6 8.4-3.5 10-10z"/></svg>',
-    help:'اضغط أي قطعة لتدويرها، ووصّل كل الأنابيب بالنجمة حتى تضيء كل النقاط. زر «افحص» يلوّن بالأحمر القطع التي لا تتصل بجيرانها. القطع الداكنة مقفلة وفي مكانها الصحيح. اللوحة ذات الإطار الذهبي المتقطع «ملتفّة»: ما يخرج من طرف يدخل من الطرف المقابل.',
+    help:'اضغط أي قطعة لتدويرها، ووصّل كل الأنابيب بالنجمة حتى تضيء كل النقاط. زر «افحص» يلوّن بالأحمر القطع التي لا تتصل بجيرانها. القطع الداكنة مقفلة وفي مكانها الصحيح. اللوحة ذات الإطار الذهبي المتقطع «ملتفّة»: ما يخرج من طرف يدخل من الطرف المقابل. الخانتان ذاتا الحلقة البنفسجية 🌀 ثقب دودي: إذا وصلت الطاقة إلى إحداهما انتقلت إلى الأخرى مهما كان اتجاه أنابيبها. النجوم تُحسب بعدد حركاتك مقارنة بالحد الأدنى.',
     progress(){const s=gState('grid',{hints:3});return {level:s.level,stars:starTotal(s)}},
     start(){st=gState('grid',{hints:3});setStats([['s1','المستوى'],['s2','حركاتك'],['s3','الحد الأدنى','gold'],['s4','تلميحات']]);
       board=document.createElement('div');board.className='gboard';stage.appendChild(board);
