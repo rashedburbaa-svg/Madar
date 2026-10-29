@@ -1,6 +1,6 @@
 /* ================= hub ================= */
 
-const GAMES=[GridGame,SudokuGame,WordsGame,NonoGame,MinesGame,Game2048,GolfGame,DiffGame,MemoryGame];
+const GAMES=[SurviveGame,GridGame,SudokuGame,WordsGame,NonoGame,MinesGame,Game2048,GolfGame,DiffGame,MemoryGame];
 function renderHub(){
   drawPrefs();
   const k=todayKey(),doneToday=daily.done[k]||{},alive=daily.last===k||daily.last===yesterdayKey(),streak=alive?daily.streak:0;

@@ -208,3 +208,10 @@ canvas{display:block;width:100%;border-radius:14px;touch-action:none}
 .clist button.on{color:var(--gold);font-weight:600}
 @media (prefers-reduced-motion:reduce){.t2.new,.t2.mrg{animation:none}}
 @media (prefers-reduced-motion:reduce){.cell svg,.mc .in{transition:none}.hintflash,.shake{animation:none}}
+.upgrades{display:flex;flex-direction:column;gap:10px;width:min(320px,100%)}
+.upc{display:flex;align-items:center;gap:12px;text-align:start;padding:12px 14px;border-radius:14px;background:#132a2e;border:1px solid #2a464b;color:#fff;font:inherit;cursor:pointer}
+.upc:active{transform:scale(.98)}
+.upc .em{font-size:28px;line-height:1}
+.upc b{display:block;font-size:16px}
+.upc small{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+.upc i{margin-inline-start:auto;font-style:normal;color:#ff8a4c;font-size:13px;white-space:nowrap}
