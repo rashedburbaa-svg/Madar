@@ -24,6 +24,31 @@ const SurviveGame=(()=>{
     boss:{r:26,hp:520,spd:38,dps:28,col:'#ff4d6d',shoots:2.8,boss:true}
   };
   const hpMul=w=>1+0.22*(w-1)+0.02*(w-1)*(w-1);
+  // ground texture, painted once per run on an offscreen canvas at 2x for crispness
+  let bg=null;
+  function makeBg(){
+    const S=2,c=document.createElement('canvas');c.width=W*S;c.height=H*S;const g=c.getContext('2d');g.scale(S,S);const R=Math.random;
+    g.fillStyle='#34502b';g.fillRect(0,0,W,H);
+    const blot=(x,y,r,col,al)=>{const gr=g.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,col.replace('A',al));gr.addColorStop(1,col.replace('A',0));g.fillStyle=gr;g.beginPath();g.arc(x,y,r,0,6.283);g.fill()};
+    for(let k=0;k<160;k++){const c2=['rgba(70,105,52,A)','rgba(38,60,30,A)','rgba(84,118,58,A)','rgba(30,48,26,A)'][k%4];blot(R()*W,R()*H,20+R()*60,c2,0.35+R()*0.3)}
+    // a worn dirt trail crossing the field
+    const y0=H*(0.25+R()*0.5),y1=H*(0.25+R()*0.5);
+    for(const [w,col] of [[34,'rgba(92,74,48,.55)'],[22,'rgba(118,96,62,.6)'],[10,'rgba(136,112,74,.35)']]){g.strokeStyle=col;g.lineWidth=w;g.lineCap='round';g.beginPath();g.moveTo(-20,y0);g.bezierCurveTo(W*0.3,y0+(R()-0.5)*200,W*0.7,y1+(R()-0.5)*200,W+20,y1);g.stroke()}
+    for(let k=0;k<6;k++)blot(R()*W,R()*H,25+R()*35,'rgba(104,84,56,A)',0.55);
+    // grass blades
+    for(let k=0;k<1400;k++){const x=R()*W,y=R()*H,l=3+R()*5,an=-1.57+(R()-0.5)*0.9;g.strokeStyle=['#4f7a3a','#5f8c44','#2c4723','#6f9a4c','#3d6230'][k%5];g.globalAlpha=0.5+R()*0.5;g.lineWidth=0.8+R()*0.6;g.beginPath();g.moveTo(x,y);g.lineTo(x+Math.cos(an)*l,y+Math.sin(an)*l);g.stroke()}
+    g.globalAlpha=1;
+    // pebbles and rocks with shading
+    for(let k=0;k<34;k++){const x=R()*W,y=R()*H,r=k<6?6+R()*7:1.5+R()*3,sh=0.7+R()*0.3;
+      g.fillStyle='rgba(0,0,0,.28)';g.beginPath();g.ellipse(x+r*0.25,y+r*0.45,r,r*sh,0,0,6.283);g.fill();
+      const gr=g.createRadialGradient(x-r*0.35,y-r*0.35,r*0.1,x,y,r);gr.addColorStop(0,'#a9a59a');gr.addColorStop(1,'#5d5a52');g.fillStyle=gr;g.beginPath();g.ellipse(x,y,r,r*sh,R()*3,0,6.283);g.fill()}
+    // tiny wildflowers
+    for(let k=0;k<45;k++){g.fillStyle=['#e8e1a0','#f2f2f2','#c9a3e6','#f0b26a'][k%4];g.beginPath();g.arc(R()*W,R()*H,0.9+R()*0.8,0,6.283);g.fill()}
+    // vignette for depth
+    const v=g.createRadialGradient(W/2,H/2,Math.min(W,H)*0.35,W/2,H/2,Math.max(W,H)*0.75);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(0,0,0,.5)');g.fillStyle=v;g.fillRect(0,0,W,H);
+    bg=c;
+  }
+  const shadow=(x,y,r)=>{ctx.fillStyle='rgba(0,0,0,.32)';ctx.beginPath();ctx.ellipse(x+r*0.15,y+r*0.75,r*0.95,r*0.42,0,0,6.283);ctx.fill()};
   function resize(){const w=stage.clientWidth;cv.width=Math.round(w*devicePixelRatio);cv.height=Math.round(w*H/W*devicePixelRatio);cv.style.height=(w*H/W)+'px';ctx.setTransform(w/W*devicePixelRatio,0,0,w/W*devicePixelRatio,0,0)}
   function reset(){
     p={x:W/2,y:H/2,r:11,hp:100,max:100,spd:120,mag:40,aim:-Math.PI/2,hurt:0};
@@ -146,8 +171,8 @@ const SurviveGame=(()=>{
   }
   function stats(){setStat('s1',fmtTime(t));setStat('s2',wave);setStat('s3',kills);setStat('s4',fmtTime(Math.max(st.bestTime||0,over?0:t)))}
   function draw(){
-    ctx.fillStyle='#0f1f22';ctx.fillRect(0,0,W,H);
-    ctx.strokeStyle='#16292d';ctx.lineWidth=1;ctx.beginPath();for(let x=0;x<=W;x+=30){ctx.moveTo(x,0);ctx.lineTo(x,H)}for(let y=0;y<=H;y+=30){ctx.moveTo(0,y);ctx.lineTo(W,y)}ctx.stroke();
+    if(!bg)makeBg();ctx.drawImage(bg,0,0,W,H);
+    for(const e of en)shadow(e.x,e.y,e.r);if(!over)shadow(p.x,p.y,p.r);
     ctx.textAlign='center';ctx.textBaseline='middle';
     for(const d of drops){if(d.life<3&&Math.floor(d.life*6)%2)continue;ctx.font='18px sans-serif';ctx.fillText(DROPS[d.k],d.x,d.y)}
     for(const r of rings){ctx.strokeStyle=`rgba(159,232,255,${Math.max(0,r.l*2)})`;ctx.lineWidth=3;ctx.beginPath();ctx.arc(r.x,r.y,Math.min(r.r,r.R),0,6.283);ctx.stroke()}
@@ -185,7 +210,7 @@ const SurviveGame=(()=>{
     statT-=dt;if(statT<=0&&st){statT=0.25;stats()}
     draw();raf=requestAnimationFrame(step);
   }
-  function begin(){clearOverlays();reset();running=true;paused=false;last=performance.now();stats()}
+  function begin(){clearOverlays();reset();makeBg();running=true;paused=false;last=performance.now();stats()}
   function pause(){if(!running||paused||over)return;paused=true;joy=null;
     const o=document.createElement('div');o.className='overlay';o.innerHTML='<h3>متوقف مؤقتاً</h3><p></p><button class="btn main" type="button">متابعة</button>';
     o.querySelector('p').textContent=`${fmtTime(t)} · الموجة ${wave} · ${kills} عدو`;
