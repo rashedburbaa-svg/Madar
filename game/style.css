@@ -233,3 +233,6 @@ body{background:transparent}
 .ncell.f{background:radial-gradient(circle at 35% 30%,#ffe9a8,#f2b84b 70%)}
 .autofill{width:100%;margin:10px 0 0;gap:8px;animation:pop .25s ease}
 .autofill[hidden]{display:none}
+.upc[disabled]{opacity:.45;cursor:default}
+.overlay .gain{color:#bfefff;font-weight:700}
+.overlay.lab .upgrades{margin:4px 0}
