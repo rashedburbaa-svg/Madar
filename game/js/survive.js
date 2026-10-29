@@ -23,7 +23,9 @@ const SurviveGame=(()=>{
     spitter:{r:10,hp:28,spd:44,dps:10,col:'#b8c4cf',shoots:2.4},
     boss:{r:26,hp:520,spd:38,dps:28,col:'#b05cff',shoots:2.8,boss:true}
   };
-  const hpMul=w=>1+0.22*(w-1)+0.02*(w-1)*(w-1);
+  // enemy toughness grows gently; the weapon levels up with every wave so the two stay in step
+  const hpMul=w=>1+0.12*(w-1)+0.006*(w-1)*(w-1);
+  const wpn=w=>1+0.1*(w-1);
   // planet surfaces, painted once per wave on an offscreen canvas at 2x; the planet changes every wave
   const BIOMES=[
     {name:'سطح القمر',base:'#8b8b8e',blots:['rgba(160,160,164,A)','rgba(96,96,100,A)','rgba(176,176,180,A)','rgba(110,110,114,A)'],craters:22,crCol:[120,120,124],rock:['#b4b4b8','#5a5a5e'],dots:['#d8d8dc'],vig:.55,amb:'sparkle'},
@@ -154,8 +156,8 @@ const SurviveGame=(()=>{
   function spawn(type){
     const T=TYPES[type],side=Math.floor(Math.random()*4),m=T.r+4;
     let x,y;if(side===0){x=Math.random()*W;y=-m}else if(side===1){x=W+m;y=Math.random()*H}else if(side===2){x=Math.random()*W;y=H+m}else{x=-m;y=Math.random()*H}
-    const hp=type==='boss'?T.hp*(wave/5)*Math.pow(1.3,wave/5-1):T.hp*hpMul(wave);
-    en.push({type,x,y,r:T.r,hp,max:hp,spd:T.spd*(1+Math.min(0.5,wave*0.02))*(0.9+Math.random()*0.2),dps:T.dps*(1+wave*0.04),col:T.col,shoot:T.shoots?T.shoots*(0.5+Math.random()):0,flash:0,oc:0,ph:Math.random()*9,boss:!!T.boss});
+    const hp=type==='boss'?T.hp*hpMul(wave)*0.75:T.hp*hpMul(wave);
+    en.push({type,x,y,r:T.r,hp,max:hp,spd:T.spd*(1+Math.min(0.5,wave*0.02))*(0.9+Math.random()*0.2),dps:T.dps*(1+Math.min(0.8,wave*0.025)),col:T.col,shoot:T.shoots?T.shoots*(0.5+Math.random()):0,flash:0,oc:0,ph:Math.random()*9,boss:!!T.boss});
   }
   function pickType(){const r=Math.random();
     if(wave>=4&&r<0.12)return 'spitter';if(wave>=3&&r<0.26)return 'tank';if(wave>=2&&r<0.5)return 'runner';return 'grunt'}
@@ -170,8 +172,8 @@ const SurviveGame=(()=>{
     const opts=shuffle(avail().slice(),Math.random).slice(0,3);
     if(!opts.length){p.hp=p.max;wave++;startWave();return}
     paused=true;const o=document.createElement('div');o.className='overlay';
-    o.innerHTML='<h3 style="font-size:24px"></h3><p>اختر تطويراً واحداً</p><div class="upgrades"></div>';
-    o.querySelector('h3').textContent='أنهيت الموجة '+wave+' 🎉';
+    o.innerHTML='<h3 style="font-size:24px"></h3><p></p><div class="upgrades"></div>';
+    o.querySelector('h3').textContent='أنهيت الموجة '+wave+' 🎉';o.querySelector('p').textContent='🔫 سلاحك ارتقى للمستوى '+(wave+1)+' · اختر تطويراً واحداً';
     const box=o.querySelector('.upgrades');
     opts.forEach(u=>{const b=document.createElement('button');b.type='button';b.className='upc';
       b.innerHTML='<span class="em"></span><span><b></b><small></small></span><i></i>';
@@ -208,20 +210,20 @@ const SurviveGame=(()=>{
     p.x=Math.max(p.r,Math.min(W-p.r,p.x+mx*p.spd*dt));p.y=Math.max(p.r,Math.min(H-p.r,p.y+my*p.spd*dt));
     // spawning
     spawnT-=dt;
-    if(spawnT<=0&&en.length<130){const n=1+Math.floor(wave/4);for(let k=0;k<n;k++)spawn(pickType());spawnT=Math.max(0.22,0.95-0.07*wave)}
+    if(spawnT<=0&&en.length<80){const n=1+Math.floor(wave/6);for(let k=0;k<n;k++)spawn(pickType());spawnT=Math.max(0.4,0.95-0.04*wave)}
     // gun
     gun.cd-=dt*(buff.rapid>0?2:1);const tg=nearest();
     if(tg)p.aim=Math.atan2(tg.y-p.y,tg.x-p.x);
     if(gun.cd<=0&&tg){gun.cd=1/gun.rate;const n=gun.count,spr=0.16;
       for(let k=0;k<n;k++){const a=p.aim+(k-(n-1)/2)*spr;bl.push({x:p.x+Math.cos(a)*14,y:p.y+Math.sin(a)*14,vx:Math.cos(a)*gun.spd,vy:Math.sin(a)*gun.spd,pierce:gun.pierce,hit:new Set(),l:1.2})}}
     for(const b of bl){b.x+=b.vx*dt;b.y+=b.vy*dt;b.l-=dt;
-      for(const e of en){if(e.dead||b.hit.has(e))continue;if((e.x-b.x)**2+(e.y-b.y)**2<(e.r+3)**2){b.hit.add(e);hurt(e,gun.dmg);e.x+=b.vx*0.012;e.y+=b.vy*0.012;if(b.pierce--<=0){b.l=0;break}}}}
+      for(const e of en){if(e.dead||b.hit.has(e))continue;if((e.x-b.x)**2+(e.y-b.y)**2<(e.r+3)**2){b.hit.add(e);hurt(e,gun.dmg*wpn(wave));e.x+=b.vx*0.012;e.y+=b.vy*0.012;if(b.pierce--<=0){b.l=0;break}}}}
     // orbit blades
     orbA+=3.2*dt;
     if(orb){const R=48;for(let k=0;k<orb;k++){const a=orbA+k*6.283/orb,bx=p.x+Math.cos(a)*R,by=p.y+Math.sin(a)*R;
-      for(const e of en)if(!e.dead&&e.oc<=0&&(e.x-bx)**2+(e.y-by)**2<(e.r+8)**2){hurt(e,10+4*orb+gun.dmg*0.4);e.oc=0.35}}}
+      for(const e of en)if(!e.dead&&e.oc<=0&&(e.x-bx)**2+(e.y-by)**2<(e.r+8)**2){hurt(e,(10+4*orb+gun.dmg*0.4)*wpn(wave));e.oc=0.35}}}
     // shock pulse
-    if(pul){pulseT-=dt;if(pulseT<=0){pulseT=Math.max(1.4,4.2-0.5*pul);const R=70+18*pul,dmg=18+10*pul;rings.push({x:p.x,y:p.y,r:0,R,l:0.35});
+    if(pul){pulseT-=dt;if(pulseT<=0){pulseT=Math.max(1.4,4.2-0.5*pul);const R=70+18*pul,dmg=(18+10*pul)*wpn(wave);rings.push({x:p.x,y:p.y,r:0,R,l:0.35});
       for(const e of en){if(e.dead)continue;const dx=e.x-p.x,dy=e.y-p.y,d=Math.hypot(dx,dy);if(d<R+e.r){hurt(e,dmg);if(!e.boss&&d>0){e.x+=dx/d*28;e.y+=dy/d*28}}}}}
     // enemies
     const shielded=buff.shield>0;let touching=0;
@@ -319,7 +321,7 @@ const SurviveGame=(()=>{
   return {id:'survive',name:'صمود المدار',region(i,demo){setBiome(i,false);if(demo)for(const k of Object.keys(TYPES))spawn(k)},desc:'رائد فضاء ضد غزو الكائنات على كواكب المدار',noDaily:true,
     play(){intro()},
     icon:'<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="21" fill="#0a0c1c"/><circle cx="12" cy="10" r=".8" fill="#fff"/><circle cx="38" cy="8" r="1" fill="#fff"/><circle cx="41" cy="30" r=".7" fill="#fff"/><circle cx="35" cy="34" r="7" fill="#7ddc5a"/><ellipse cx="32.5" cy="33.5" rx="2.2" ry="1.4" fill="#0b0b14" transform="rotate(30 32.5 33.5)"/><ellipse cx="37.5" cy="33.5" rx="2.2" ry="1.4" fill="#0b0b14" transform="rotate(-30 37.5 33.5)"/><path d="M31 28l-3-5M39 28l3-5" stroke="#7ddc5a" stroke-width="1.4"/><circle cx="17" cy="21" r="8" fill="#e6ecf1" stroke="#0b1618" stroke-width="1.2"/><ellipse cx="19" cy="22.5" rx="4.6" ry="3.4" fill="#f0a030" transform="rotate(35 19 22.5)"/><path d="M22 26l6 5" stroke="#5ff2d6" stroke-width="2.4" stroke-linecap="round"/></svg>',
-    help:'أنت رائد فضاء على كواكب المدار وتهاجمك كائنات فضائية. حرّك إصبعك في أي مكان على الملعب لتتحرك، ومسدس الليزر يطلق وحده على أقرب كائن. كل 30 ثانية تنتهي موجة وتختار تطويراً وتنتقل إلى كوكب جديد: القمر، المريخ، يوروبا الجليدي، آيو البركاني، الكوكب الغريب، وحزام الكويكبات. الكائنات تُسقط أحياناً أدوات: ❤️ صحة، ⚡ إطلاق مضاعف، 🛡️ درع، 💣 قنبلة، ⬆️ تطوير فوري. كل خامس موجة يظهر زعيم فضائي. اصمد أطول وقت واكسر رقمك القياسي.',
+    help:'أنت رائد فضاء على كواكب المدار وتهاجمك كائنات فضائية. حرّك إصبعك في أي مكان على الملعب لتتحرك، ومسدس الليزر يطلق وحده على أقرب كائن. كل 30 ثانية تنتهي موجة ويرتقي سلاحك مستوى تلقائياً وتختار تطويراً وتنتقل إلى كوكب جديد: القمر، المريخ، يوروبا الجليدي، آيو البركاني، الكوكب الغريب، وحزام الكويكبات. الكائنات تُسقط أحياناً أدوات: ❤️ صحة، ⚡ إطلاق مضاعف، 🛡️ درع، 💣 قنبلة، ⬆️ تطوير فوري. كل خامس موجة يظهر زعيم فضائي. اصمد أطول وقت واكسر رقمك القياسي.',
     progress(){const s=gState('survive');return {level:s.bestWave||1,stars:starTotal(s)}},
     start(){
       st=gState('survive',{bestTime:0,bestWave:1,totalKills:0});reset();running=false;paused=true;
