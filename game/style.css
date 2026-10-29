@@ -257,3 +257,11 @@ body{background:transparent}
 .cwrap[open] summary{margin-bottom:8px}
 .nono.reveal .ncell{transition:background .45s ease}
 .nono.reveal .ncell:not(.f){background:transparent;box-shadow:none}
+.mcell.void{visibility:hidden;pointer-events:none}
+.mcell.moved{box-shadow:inset 0 0 0 2px #ffd34d;animation:pop .3s ease}
+.mcell.o{background:#0f1a33;box-shadow:inset 0 0 0 1px #1f2d52}
+.t2{position:relative;will-change:transform}
+.t2.pick{box-shadow:inset 0 0 0 3px #ffd34d}
+.dz{direction:ltr;overflow:hidden;border-radius:14px;max-width:100%}
+.dz.zoomed{overflow:auto;-webkit-overflow-scrolling:touch;max-height:46vh;outline:2px solid var(--gold);outline-offset:-2px}
+.dz canvas{border-radius:0}

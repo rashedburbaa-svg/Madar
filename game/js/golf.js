@@ -23,10 +23,21 @@ const GolfGame=(()=>{
       if(!ov(s,zS,6)&&!ov(s,zH,6))slopes.push(s)}}
     if(level>=6){tries=0;const n=level>=12?2:1;while(water.length<n&&tries++<200){const w={x:20+R()*(W-110),y:110+R()*(H-230),w:50+R()*50,h:30+R()*30};
       if(ov(w,zS,14)||ov(w,zH,14)||walls.some(o=>ov(w,o,8))||mills.some(o=>ov(w,o.box,6)))continue;water.push(w)}}
-    const par=2+Math.floor(nW/4)+(water.length?1:0)+(mills.length?1:0)+(movers.length?1:0);
-    return {level,start,hole,walls,sand,water,slopes,mills,movers,par};
+    // small planets that bend the ball's path, and wormhole pairs that teleport it
+    const wells=[],worms=[],farFrom=(x,y,m)=>Math.hypot(x-start.x,y-start.y)>m&&Math.hypot(x-hole.x,y-hole.y)>m&&!walls.some(o=>ov({x:x-m*0.4,y:y-m*0.4,w:m*0.8,h:m*0.8},o,0))&&!water.some(o=>ov({x:x-20,y:y-20,w:40,h:40},o,0))&&!mills.some(o=>ov({x:x-20,y:y-20,w:40,h:40},o.box,0));
+    if(level>=7){const n=level>=14?2:1;tries=0;while(wells.length<n&&tries++<300){const x=40+R()*(W-80),y=120+R()*(H-230);if(farFrom(x,y,80)&&!wells.some(o=>Math.hypot(o.x-x,o.y-y)<150))wells.push({x,y,r:12,R:72,str:0.075+R()*0.03})}}
+    if(level>=8&&level%2===0){tries=0;while(!worms.length&&tries++<300){const a={x:30+R()*(W-60),y:120+R()*(H-220)},b={x:30+R()*(W-60),y:70+R()*(H-200)};
+      if(Math.hypot(a.x-b.x,a.y-b.y)>140&&farFrom(a.x,a.y,40)&&farFrom(b.x,b.y,40)&&!wells.some(o=>Math.hypot(o.x-a.x,o.y-a.y)<o.R+15||Math.hypot(o.x-b.x,o.y-b.y)<o.R+15))worms.push({a,b,r:11})}}
+    const par=2+Math.floor(nW/4)+(water.length?1:0)+(mills.length?1:0)+(movers.length?1:0)+(wells.length?1:0);
+    return {level,start,hole,walls,sand,water,slopes,mills,movers,wells,worms,par};
   }
   const inR=(p,r)=>p.x>=r.x&&p.x<=r.x+r.w&&p.y>=r.y&&p.y<=r.y+r.h;
+  const baseF=()=>PLANETS[(L.level-1)%PLANETS.length].fric;
+  // pull towards each small planet; returns the planet if the ball touches its surface
+  function gravity(o){for(const w of (L.wells||[])){const dx=w.x-o.x,dy=w.y-o.y,d=Math.hypot(dx,dy);if(d<w.R&&d>0.01){const a=w.str*(1-d/w.R);o.vx+=dx/d*a;o.vy+=dy/d*a}
+    if(d<w.r+BR){const nx=-dx/(d||1),ny=-dy/(d||1);o.x=w.x+nx*(w.r+BR);o.y=w.y+ny*(w.r+BR);const dot=o.vx*nx+o.vy*ny;if(dot<0){o.vx-=1.7*dot*nx;o.vy-=1.7*dot*ny;return w}}}return null}
+  // a ball entering one mouth of a wormhole leaves from the other with the same velocity
+  function warp(o){for(const p of (L.worms||[]))for(const [a,b] of [[p.a,p.b],[p.b,p.a]]){if(o.wc>0)continue;if(Math.hypot(o.x-a.x,o.y-a.y)<p.r){const sp=Math.hypot(o.vx,o.vy)||1;o.x=b.x+o.vx/sp*(p.r+BR+2);o.y=b.y+o.vy/sp*(p.r+BR+2);o.wc=12;return true}}if(o.wc>0)o.wc--;return false}
   const BORDERS=[{x:-40,y:-40,w:W+80,h:40},{x:-40,y:H,w:W+80,h:40},{x:-40,y:0,w:40,h:H},{x:W,y:0,w:40,h:H}];
   function resize(){const w=stage.clientWidth;cv.width=Math.round(w*devicePixelRatio);cv.height=Math.round(w*H/W*devicePixelRatio);cv.style.height=(w*H/W)+'px';ctx.setTransform(w/W*devicePixelRatio,0,0,w/W*devicePixelRatio,0,0)}
   function pos(e){const r=cv.getBoundingClientRect();return {x:(e.clientX-r.left)/r.width*W,y:(e.clientY-r.top)/r.height*H}}
@@ -46,20 +57,21 @@ const GolfGame=(()=>{
         hitSeg(m.cx-c,m.cy-sn,m.cx+c,m.cy+sn,{x:-Math.sin(a)*tv*0.6*sg,y:Math.cos(a)*tv*0.6*sg})}});
     }
     if(!b.moving)return;
+    if(gravity(b))snd('hit');if(warp(b)){snd('rot');buzz(15)}
     L.slopes.forEach(sl=>{if(inR(b,sl)){b.vx+=sl.dx*0.07;b.vy+=sl.dy*0.07}});
-    const f=L.sand.some(r=>inR(b,r))?0.93:0.985;b.vx*=f;b.vy*=f;
+    const f=L.sand.some(r=>inR(b,r))?0.93:baseF();b.vx*=f;b.vy*=f;
     const dh=Math.hypot(b.x-L.hole.x,b.y-L.hole.y),sp=Math.hypot(b.vx,b.vy);
     if(dh<HR+3){b.vx+=(L.hole.x-b.x)*0.04;b.vy+=(L.hole.y-b.y)*0.04}
     const onSlope=L.slopes.some(sl=>inR(b,sl));
     if(dh<HR-2&&sp<5.5){b.sunk=true;b.moving=false;b.x=L.hole.x;b.y=L.hole.y;snd('sink');if(!b.cpu)buzz(40);if(b.cpu)toast('🤖 الكمبيوتر أدخل الكرة بـ '+b.strokes+(b.strokes===1?' ضربة':' ضربات'))}
     else if(L.water.some(r=>inR(b,r))){b.moving=false;b.strokes++;b.x=b.lx;b.y=b.ly;b.vx=b.vy=0;snd('splash');if(!b.cpu)buzz(80);toast(b.cpu?'🤖 الثقب الأسود ابتلع كرة الكمبيوتر! +1':'🕳️ ابتلعها الثقب الأسود! +1 ضربة');upd()}
-    else{b.slow=sp<0.5?(b.slow||0)+1:0;if((!onSlope&&sp<0.06)||b.slow>50){b.moving=false;b.vx=b.vy=0;b.slow=0}}
+    else{const inWell=(L.wells||[]).some(w=>Math.hypot(b.x-w.x,b.y-w.y)<w.R);b.slow=sp<0.5?(b.slow||0)+1:0;if((!onSlope&&!inWell&&sp<0.06)||b.slow>(inWell?90:50)){b.moving=false;b.vx=b.vy=0;b.slow=0}}
   }
 
   /* ---- prediction for the computer (same rules, moving parts at their future positions) ---- */
   function sim(x,y,vx,vy,T0){
     const col=(cx,cy,r,ex)=>{let dx=x-cx,dy=y-cy,d=Math.hypot(dx,dy);if(d<r){if(d===0){dx=-vx||0.01;dy=-vy||-1;d=Math.hypot(dx,dy)}const nx=dx/d,ny=dy/d;x=cx+nx*r;y=cy+ny*r;const dot=vx*nx+vy*ny;if(dot<0){vx-=(1+ex)*dot*nx;vy-=(1+ex)*dot*ny}}};
-    const rects=L.walls.concat(BORDERS);
+    const rects=L.walls.concat(BORDERS);let wc=0;
     for(let f=0;f<300;f++){
       const t=T0+f+1;
       const mv=L.movers.map(o=>{const s=Math.sin(t*o.spd+o.ph)*o.amp;return {x:o.horiz?o.bx+s:o.bx,y:o.horiz?o.by:o.by+s,w:o.w,h:o.h}});
@@ -69,13 +81,14 @@ const GolfGame=(()=>{
         for(const w of mv)col(Math.max(w.x,Math.min(x,w.x+w.w)),Math.max(w.y,Math.min(y,w.y+w.h)),BR,.8);
         for(const m of L.mills)for(let k=0;k<2;k++){const a=m.ang+m.spd*(t-T)+k*Math.PI/2,c=Math.cos(a)*m.len,sn=Math.sin(a)*m.len,ax=m.cx-c,ay=m.cy-sn,ux=2*c,uy=2*sn,q=Math.max(0,Math.min(1,((x-ax)*ux+(y-ay)*uy)/(ux*ux+uy*uy)));col(ax+ux*q,ay+uy*q,BR+3,.75)}
       }
+      const o={x,y,vx,vy,wc};gravity(o);warp(o);x=o.x;y=o.y;vx=o.vx;vy=o.vy;wc=o.wc;
       const p={x,y};L.slopes.forEach(sl=>{if(inR(p,sl)){vx+=sl.dx*0.07;vy+=sl.dy*0.07}});
-      const fr=L.sand.some(r=>inR(p,r))?0.93:0.985;vx*=fr;vy*=fr;
+      const fr=L.sand.some(r=>inR(p,r))?0.93:baseF();vx*=fr;vy*=fr;
       const dh=Math.hypot(x-L.hole.x,y-L.hole.y),sp=Math.hypot(vx,vy);
       if(dh<HR+3){vx+=(L.hole.x-x)*0.04;vy+=(L.hole.y-y)*0.04}
       if(dh<HR-2&&sp<5.5)return {sunk:true,f,d:0};
       if(L.water.some(r=>inR(p,r)))return {water:true,f,d:dh};
-      if(sp<0.06&&!L.slopes.some(sl=>inR(p,sl)))break;
+      if(sp<0.06&&!L.slopes.some(sl=>inR(p,sl))&&!(L.wells||[]).some(w=>Math.hypot(x-w.x,y-w.y)<w.R))break;
     }
     return {d:Math.hypot(x-L.hole.x,y-L.hole.y)};
   }
@@ -128,10 +141,10 @@ const GolfGame=(()=>{
   function rr(r,rad){ctx.beginPath();if(ctx.roundRect)ctx.roundRect(r.x,r.y,r.w,r.h,rad);else ctx.rect(r.x,r.y,r.w,r.h)}
   // each hole is played on a planet: the surface is painted once per hole on an offscreen canvas
   const PLANETS=[
-    {name:'القمر',ground:'#6c6f77',dust:'#9a9ca3',crater:[110,112,120],wall:'#2b3340',top:'#566377'},
-    {name:'المريخ',ground:'#94422a',dust:'#c97a4e',crater:[150,70,44],wall:'#3a2520',top:'#6a443a'},
-    {name:'الكوكب الغريب',ground:'#3d2c62',dust:'#7a5ab0',crater:[80,60,120],wall:'#171130',top:'#3d3270'},
-    {name:'حزام الكويكبات',ground:'#34302e',dust:'#625850',crater:[70,64,60],wall:'#121010',top:'#3a3532'}
+    {name:'القمر',fric:0.989,ground:'#6c6f77',dust:'#9a9ca3',crater:[110,112,120],wall:'#2b3340',top:'#566377'},
+    {name:'المريخ',fric:0.985,ground:'#94422a',dust:'#c97a4e',crater:[150,70,44],wall:'#3a2520',top:'#6a443a'},
+    {name:'الكوكب الغريب',fric:0.982,ground:'#3d2c62',dust:'#7a5ab0',crater:[80,60,120],wall:'#171130',top:'#3d3270'},
+    {name:'حزام الكويكبات',fric:0.987,ground:'#34302e',dust:'#625850',crater:[70,64,60],wall:'#121010',top:'#3a3532'}
   ];
   let course=null,planet=PLANETS[0];
   function makeCourse(level){
@@ -160,6 +173,11 @@ const GolfGame=(()=>{
         ctx.beginPath();ctx.moveTo(cx-Math.cos(a-0.7)*7,cy-Math.sin(a-0.7)*7);ctx.lineTo(cx,cy);ctx.lineTo(cx-Math.cos(a+0.7)*7,cy-Math.sin(a+0.7)*7);ctx.stroke()}ctx.restore()});
     L.sand.forEach(r=>{ctx.fillStyle=planet.dust;rr(r,14);ctx.fill();ctx.fillStyle='rgba(0,0,0,.12)';for(let k=0;k<8;k++){ctx.beginPath();ctx.arc(r.x+((k*37)%Math.max(1,r.w)),r.y+((k*23)%Math.max(1,r.h)),1.5,0,7);ctx.fill()}});
     L.water.forEach(r=>blackHole(r));
+    (L.wells||[]).forEach(w=>{ctx.setLineDash([3,6]);ctx.strokeStyle='rgba(159,232,255,.22)';ctx.lineWidth=1.2;for(let k=1;k<=3;k++){ctx.beginPath();ctx.arc(w.x,w.y,w.R*k/3+Math.sin(T*0.05+k)*1.5,0,7);ctx.stroke()}ctx.setLineDash([]);
+      const gr=ctx.createRadialGradient(w.x-4,w.y-4,1,w.x,w.y,w.r);gr.addColorStop(0,'#9fe8ff');gr.addColorStop(1,'#2a5a9a');ctx.fillStyle=gr;ctx.beginPath();ctx.arc(w.x,w.y,w.r,0,7);ctx.fill();
+      ctx.strokeStyle='rgba(255,255,255,.5)';ctx.lineWidth=1.2;ctx.beginPath();ctx.ellipse(w.x,w.y,w.r*1.6,w.r*0.45,-0.3,0,7);ctx.stroke()});
+    (L.worms||[]).forEach(p=>[p.a,p.b].forEach((m,j)=>{for(let k=0;k<3;k++){const a=T*0.08*(j?-1:1)+k*2.09;ctx.strokeStyle=k%2?'#ff7ad9':'#b47aff';ctx.lineWidth=2.2;ctx.beginPath();ctx.arc(m.x,m.y,p.r-k*2.5,a,a+3.6);ctx.stroke()}
+      ctx.fillStyle='#14062a';ctx.beginPath();ctx.arc(m.x,m.y,4,0,7);ctx.fill()}));
     L.walls.forEach(w=>{ctx.fillStyle=planet.wall;rr(w,4);ctx.fill();ctx.fillStyle=planet.top;rr({x:w.x,y:w.y,w:w.w,h:Math.min(w.h,4)},2);ctx.fill();ctx.fillStyle='rgba(255,255,255,.25)';const lng=w.w>w.h;for(let q=8;q<(lng?w.w:w.h)-4;q+=16){ctx.beginPath();ctx.arc(lng?w.x+q:w.x+w.w/2,lng?w.y+w.h/2+1:w.y+q,1,0,7);ctx.fill()}});
     L.movers.forEach(o=>{ctx.fillStyle='#5b6676';rr(o,4);ctx.fill();ctx.fillStyle='#f2b84b';rr({x:o.x,y:o.y,w:o.w,h:Math.min(o.h,3)},2);ctx.fill()});
     ctx.fillStyle='#05040c';ctx.beginPath();ctx.arc(L.hole.x,L.hole.y,HR,0,7);ctx.fill();ctx.strokeStyle=`rgba(95,242,214,${0.45+0.3*Math.sin(T*0.08)})`;ctx.lineWidth=2;ctx.beginPath();ctx.arc(L.hole.x,L.hole.y,HR+1.5,0,7);ctx.stroke();
@@ -180,14 +198,15 @@ const GolfGame=(()=>{
     if(ball&&!ball.sunk)drawBall(ball,ball.cpu?CCOL:'#fff');
   }
   function preview(vx,vy){
-    const pts=[];let x=ball.x,y=ball.y,bounces=0;const rects=L.walls.concat(BORDERS);
+    const pts=[];let x=ball.x,y=ball.y,bounces=0,wc=0;const rects=L.walls.concat(BORDERS);
     for(let f=0;f<220;f++){let hit=false;
       for(let s2=0;s2<3;s2++){x+=vx/3;y+=vy/3;
         for(const w of rects){const cx=Math.max(w.x,Math.min(x,w.x+w.w)),cy=Math.max(w.y,Math.min(y,w.y+w.h));let ddx=x-cx,ddy=y-cy,d=Math.hypot(ddx,ddy);
           if(d<BR){if(d===0){ddx=-vx||0.01;ddy=-vy||-1;d=Math.hypot(ddx,ddy)}const nx=ddx/d,ny=ddy/d;x=cx+nx*BR;y=cy+ny*BR;const dot=vx*nx+vy*ny;if(dot<0){vx-=1.8*dot*nx;vy-=1.8*dot*ny;hit=true}}}}
+      {const o={x,y,vx,vy,wc};if(gravity(o))hit=true;const jumped=warp(o);x=o.x;y=o.y;vx=o.vx;vy=o.vy;wc=o.wc;if(jumped)pts.push([x,y,true])}
       if(hit)bounces++;
       L.slopes.forEach(sl=>{if(inR({x,y},sl)){vx+=sl.dx*0.07;vy+=sl.dy*0.07}});
-      const fr=L.sand.some(r=>inR({x,y},r))?0.93:0.985;vx*=fr;vy*=fr;
+      const fr=L.sand.some(r=>inR({x,y},r))?0.93:baseF();vx*=fr;vy*=fr;
       if(f%3===0||hit)pts.push([x,y,hit]);
       if(bounces>=2||Math.hypot(vx,vy)<0.08||L.water.some(r=>inR({x,y},r))||Math.hypot(x-L.hole.x,y-L.hole.y)<HR)break}
     return pts;
@@ -213,13 +232,15 @@ const GolfGame=(()=>{
     clearOverlays();st=gState('golf');L=mode&&mode.daily?build(10,mode.seed):build(level);flagA=1;T=0;over=false;inFlight=false;cpu=null;drag=null;
     balls=vsOn()?[mkBall(false,-12),mkBall(true,12)]:[mkBall(false,0)];setTurn(0);upd();
     if(!mode||!mode.daily){if(L.slopes.length&&!st.seenSlope){st.seenSlope=1;gSave('golf',st);toast('جديد: المنحدرات تدفع الكرة باتجاه الأسهم')}
+      if(L.wells.length&&!st.seenWell){st.seenWell=1;gSave('golf',st);toast('جديد: الكوكب الصغير يجذب الكرة نحوه 🪐')}
+      if(L.worms.length&&!st.seenWorm){st.seenWorm=1;gSave('golf',st);toast('جديد: الثقب الدودي ينقل الكرة إلى فتحته الأخرى 🌀')}
       else if(L.mills.length&&!st.seenMill){st.seenMill=1;gSave('golf',st);toast('جديد: طاحونة دوّارة! انتظر اللحظة المناسبة')}
       else if(L.movers.length&&!st.seenMover){st.seenMover=1;gSave('golf',st);toast('جديد: حواجز متحركة')}
       else if(vsOn()&&!st.seenCpu){st.seenCpu=1;gSave('golf',st);toast('🤖 الكمبيوتر ينافسك! تتبادلان الضربات، والأقل ضربات يفوز')}}
   }
   return {id:'golf',name:'جولف المدار',desc:'العب ضد الكمبيوتر على نفس الحفرة',play,
     icon:'<svg viewBox="0 0 48 48"><circle cx="24" cy="38" r="7" fill="#0c1d14"/><path d="M24 38V8" stroke="#e8f1ee" stroke-width="2.5"/><path d="M24 8l13 5-13 5z" fill="#f2b84b"/><circle cx="12" cy="30" r="4.5" fill="#fff"/><circle cx="36" cy="30" r="4.5" fill="#ff8a4c"/></svg>',
-    help:'اسحب من أي مكان بعكس اتجاه الضربة (مثل المقلاع) ثم اترك. الكرة البرتقالية للكمبيوتر: تتبادلان الضربات على نفس الحفرة، ومن يُدخلها بضربات أقل يفوز، والكمبيوتر يصبح أدق مع المستويات. كل حفرة على كوكب مختلف. الغبار يبطئ الكرة، والثقب الأسود يبتلعها فتعود ويضيف ضربة، والمنحدرات تدفعها باتجاه الأسهم، والأذرع الدوّارة والحواجز المعدنية تتحرك. زر «ضد الكمبيوتر» يشغّل المنافس أو يوقفه.',
+    help:'اسحب من أي مكان بعكس اتجاه الضربة (مثل المقلاع) ثم اترك. الكرة البرتقالية للكمبيوتر: تتبادلان الضربات على نفس الحفرة، ومن يُدخلها بضربات أقل يفوز، والكمبيوتر يصبح أدق مع المستويات. كل حفرة على كوكب مختلف. الغبار يبطئ الكرة، والثقب الأسود يبتلعها فتعود ويضيف ضربة، والمنحدرات تدفعها باتجاه الأسهم، والأذرع الدوّارة والحواجز المعدنية تتحرك. الكوكب الصغير يجذب الكرة فيلوي مسارها، والثقب الدودي ينقلها من فتحة إلى الأخرى. الكرة تتدحرج أبعد على القمر وأقصر على الكوكب الغريب. زر «ضد الكمبيوتر» يشغّل المنافس أو يوقفه.',
     progress(){const s=gState('golf');return {level:s.level,stars:starTotal(s)}},
     start(){
       st=gState('golf');setStatsFor();
