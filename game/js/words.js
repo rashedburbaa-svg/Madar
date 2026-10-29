@@ -577,14 +577,19 @@ const WordsGame=(()=>{
 بوم|سفينة خشبية خليجية تقليدية`;
   const BANK=RAW.trim().split('\n').map(l=>{const [w,c]=l.split('|');return {w:[...w.trim().replace(/[أإآ]/g,'ا').replace(/ى/g,'ي')],c:c.trim()}});
   const ALPHA=[...'ابتثجحخدرزسشصطعفقكلمنهوية'];
-  let st,g,gridEl,barEl,padEl,listEl,hb,sel=0;
+  // topic puzzles draw only from these words; 'all' uses the whole bank
+  const TOPICS={all:['🌐 كل المواضيع',null],space:['🚀 الفضاء',new Set('مذنب كويكب مدار جاذبية تلسكوب مرصد عطارد الزهرة المشتري نبتون اورانوس كسوف خسوف سديم مركبة مكوك خوذة اكسجين شهاب فوهة هبوط انطلاق كون فضائي الثريا سهيل ارض فلكي قمري شمسية رائد اقمار غبار ثقب مسبار قمر شمس نجمة صاروخ فضاء كوكب مريخ زحل نيزك مجرة المريخ هلال بوصلة طائرة سحاب برق رعد'.split(' '))],animals:['🐪 الحيوانات',new Set('جمل صقر اسد فيل حصان غزال قطة سمكة نحلة فراشة عصفور حمامة بطة دولفين حوت سلحفاة ارنب ثعلب نمر زرافة حمار بقرة خروف ماعز دجاجة ديك نسر بومة ببغاء طاووس نملة عنكبوت ذبابة بعوضة ضفدع تمساح افعى قرد كنغر بطريق قرش اخطبوط محارة سلطعون ذئب دب فهد سنجاب فار ثعبان دلفين محار غراب نعامة جرادة عقرب'.split(' '))],food:['🍉 الطعام',new Set('قهوة تمر خبز حليب عسل تفاحة موز برتقال عنب بطيخ ليمون رمان قمح ارز شاي ملح سكر نعناع بقدونس طماطم خيار جزر بصل ثوم بطاطس فلفل مشمش خوخ كرز توت اناناس جوز لوز فستق كعكة بسكويت شوكولاتة مثلجات عصير لبن جبن زيت عدس مكبوس هريس سمبوسة لقيمات سحور فطور غداء عشاء موزة فراولة بطاطا باذنجان كوسا ملفوف خس فجل ذرة شعير حمص فول زيتون زبدة بيضة شوربة مجبوس مربى ماء'.split(' '))],kuwait:['⛵ الكويت والتراث',new Set('الكويت دانة سفينة دلة قهوة تمر نخلة جمل صقر رمل واحة قلعة نفط جمارك ميناء سوق تاجر دينار برج قارب مجداف شراع صياد شبكة جزيرة فيلكا خليج موجة ساحل خيمة فانوس غترة عباءة بشت مجلس ديوانية مكبوس هريس لقيمات رمضان عيد مسجد بخور عطر دشداشة نقصة قرقيعان سدو حناء عروس سندباد قرصان مرساة منارة غوص نوخذة بوم بحار صحراء شاطئ سهيل'.split(' '))],nature:['🌿 الطبيعة',new Set('مطر رمل جبل نهر واحة شجرة وردة سحابة ريح ثلج نار صيف ربيع خريف شتاء بحر بركان زلزال عاصفة برق رعد ضباب غيمة محيط بحيرة شلال غابة وادي كهف صخرة حصى تراب بذرة جذر غصن ورقة زهرة ياسمين جزيرة خليج موجة ساحل صحراء شاطئ سحاب فجر غروب ليل صباح'.split(' '))]},TORDER=Object.keys(TOPICS);
+  let st,g,gridEl,barEl,padEl,listEl,listWrap,secEl,hb,tb,sel=0;
   function gen(level,seed){
     const R=rng(seed??level*4241+19),want=Math.min(4+level,11),MAX=9;let best=null;
     const daily=mode&&mode.daily,key=o=>o.w.join('');
-    st.seen=st.seen||[];if(BANK.filter(o=>!st.seen.includes(key(o))).length<80)st.seen=st.seen.slice(Math.floor(st.seen.length*0.6));
+    const tp=daily?null:(TOPICS[st.topic]||TOPICS.all)[1],inTopic=o=>!tp||tp.has(key(o));
+    st.seen=st.seen||[];
+    if(tp){const left=BANK.filter(o=>inTopic(o)&&!st.seen.includes(key(o))).length;if(left<18)st.seen=st.seen.filter(k=>!tp.has(k))}
+    else if(BANK.filter(o=>!st.seen.includes(key(o))).length<80)st.seen=st.seen.slice(Math.floor(st.seen.length*0.6));
     const avoid=new Set(st.seen);
     for(let at=0;at<25;at++){
-      const pool=shuffle(BANK.filter(o=>o.w.length<=MAX&&!avoid.has(key(o))),R);
+      const pool=shuffle(BANK.filter(o=>o.w.length<=MAX&&inTopic(o)&&!avoid.has(key(o))),R);
       const fi=pool.findIndex(o=>o.w.length>=5&&o.w.length<=7),first=pool.splice(fi<0?0:fi,1)[0];
       const G=new Map(),K=(r,c)=>r*1000+c,placed=[];
       let bb={r0:100,r1:100,c0:100,c1:100+first.w.length-1};
@@ -615,27 +620,38 @@ const WordsGame=(()=>{
     const starts=[...new Set(placed.map(p=>p.cells[0]))].sort((a,b)=>a-b),num={};starts.forEach((s,k)=>num[s]=k+1);
     const entries=placed.map(p=>({num:num[p.cells[0]],dir:p.dir,cells:p.cells,ans:p.o.w,clue:p.o.c,solved:false}))
       .sort((a,b)=>a.dir===b.dir?a.num-b.num:(a.dir==='a'?-1:1));
-    g={level,W,H,sol,cur:new Array(W*H).fill(''),entries,num,mistakes:0,hints:0,over:false};
+    // secret word: its letters are hidden in marked cells and show up as you solve
+    let secret=null;const used=new Set(placed.map(p=>key(p.o)));
+    for(const o of shuffle(BANK.filter(o=>o.w.length>=3&&o.w.length<=Math.min(6,entries.length+1)&&!used.has(key(o))),R)){
+      const cells=[],taken=new Set();for(const ch of o.w){const cand=sol.map((v,i)=>v===ch&&!taken.has(i)?i:-1).filter(i=>i>=0);if(!cand.length)break;const i=cand[Math.floor(R()*cand.length)];taken.add(i);cells.push(i)}
+      if(cells.length===o.w.length){secret={w:o.w,c:o.c,cells};break}}
+    g={level,W,H,sol,cur:new Array(W*H).fill(''),entries,num,secret,mistakes:0,hints:0,over:false};
     placed.forEach(p=>{const k=key(p.o);if(!st.seen.includes(k))st.seen.push(k)});
-    if(daily)st.dg={seed,W,H,sol,entries,num};
+    if(daily)st.dg={seed,W,H,sol,entries,num,secret};
     gSave('words',st);
   }
   const locked=i=>g.entries.some(e=>e.solved&&e.cells.includes(i));
-  function persist(){if(mode&&mode.daily)return;st.cur={level:g.level,W:g.W,H:g.H,sol:g.sol,cur:g.cur,entries:g.entries,num:g.num,mistakes:g.mistakes,hints:g.hints};gSave('words',st)}
+  function persist(){if(mode&&mode.daily)return;st.cur={level:g.level,W:g.W,H:g.H,sol:g.sol,cur:g.cur,entries:g.entries,num:g.num,secret:g.secret,secretDone:g.secretDone,mistakes:g.mistakes,hints:g.hints};gSave('words',st)}
   function render(){
     const e=g.entries[sel],inw=new Set(e?e.cells:[]),curCell=e&&!e.solved?e.cells.find(i=>!g.cur[i]):undefined;
-    [...gridEl.children].forEach((el,i)=>{if(!g.sol[i])return;el.className='xc'+(inw.has(i)?' inw':'')+(i===curCell?' cur':'')+(locked(i)?' ok':'');el.querySelector('span').textContent=g.cur[i]||''});
+    const keys=new Set(g.secret?g.secret.cells:[]);
+    [...gridEl.children].forEach((el,i)=>{if(!g.sol[i])return;el.className='xc'+(inw.has(i)?' inw':'')+(i===curCell?' cur':'')+(locked(i)?' ok':'')+(keys.has(i)?' key':'');el.querySelector('span').textContent=g.cur[i]||''});
     if(e){barEl.innerHTML='';const b=document.createElement('b');b.textContent=e.num+' '+(e.dir==='a'?'أفقي':'عمودي');barEl.append(b,document.createTextNode(e.clue+' ('+e.ans.length+' حروف)'+(e.solved?' ✓':'')))}
     padEl.innerHTML='';
     if(e&&!e.solved){const R=rng(g.level*31+sel*7+e.num);const letters=e.ans.slice();while(letters.length<e.ans.length+3)letters.push(ALPHA[Math.floor(R()*ALPHA.length)]);
       shuffle(letters,R).forEach(ch=>{const k=document.createElement('button');k.type='button';k.textContent=ch;k.onclick=()=>input(ch);padEl.appendChild(k)});
       const d=document.createElement('button');d.type='button';d.className='del';d.textContent='⌫ حذف';d.onclick=del;padEl.appendChild(d)}
+    if(g.secret){const s2=g.secret;secEl.hidden=false;secEl.innerHTML='<b>🔑 الكلمة السرية</b><span class="sl"></span>';const sl=secEl.querySelector('.sl');
+      s2.cells.forEach(i=>{const d=document.createElement('i');d.textContent=locked(i)?g.sol[i]:'';sl.appendChild(d)});
+      if(!g.secretDone&&s2.cells.every(i=>locked(i))){g.secretDone=true;if(!(mode&&mode.daily)){st.hints++;gSave('words',st)}snd('ach');toast('🔑 الكلمة السرية: '+s2.w.join('')+(mode&&mode.daily?'':' · كسبت تلميحاً'),'ach')}
+      if(g.secretDone){const sm=document.createElement('small');sm.textContent=s2.c;secEl.appendChild(sm)}}else secEl.hidden=true;
+    listWrap.querySelector('summary').textContent='📋 كل التعريفات ('+g.entries.filter(x=>!x.solved).length+' متبقية)';
     listEl.innerHTML='';
     [['a','أفقي'],['d','عمودي']].forEach(([dir,label])=>{const col=document.createElement('div');const h=document.createElement('h4');h.textContent=label;col.appendChild(h);
       g.entries.forEach((x,k)=>{if(x.dir!==dir)return;const b=document.createElement('button');b.type='button';b.className=(x.solved?'sv ':'')+(k===sel?'on':'');b.textContent=x.num+'. '+x.clue;b.onclick=()=>{sel=k;snd('tap');render()};col.appendChild(b)});
       listEl.appendChild(col)});
     const done=g.entries.filter(x=>x.solved).length;
-    setStat('s1',mode&&mode.daily?'اليوم':g.level);setStat('s2',done+'/'+g.entries.length);setStat('s3',g.mistakes);setStat('s4',st.hints);hb.disabled=!st.hints||g.over;
+    setStat('s1',mode&&mode.daily?'اليوم':g.level);setStat('s2',done+'/'+g.entries.length);setStat('s3',g.mistakes);setStat('s4',st.hints);hb.disabled=!st.hints||g.over;tb.lastChild.textContent='الموضوع: '+(TOPICS[st.topic]||TOPICS.all)[0];tb.disabled=!!(mode&&mode.daily);
   }
   function nextOpen(){const n=g.entries.length;for(let k=1;k<=n;k++){const j=(sel+k)%n;if(!g.entries[j].solved){sel=j;return}}}
   function check(e){
@@ -654,11 +670,11 @@ const WordsGame=(()=>{
     finishLevel(WordsGame,st,g.level,s,{clean:help===0},'حللت الكلمات كلها!',`${g.entries.length} كلمات · أخطاء ${g.mistakes} · تلميحات ${g.hints}`+(earned?' · كسبت تلميحاً':''))}
   function play(level,fresh){
     clearOverlays();st=gState('words',{hints:3,cur:null});
-    if(mode&&mode.daily){const d=st.dg;if(d&&d.seed===mode.seed)g={level:6,W:d.W,H:d.H,sol:d.sol,cur:new Array(d.W*d.H).fill(''),entries:d.entries.map(e=>Object.assign({},e,{solved:false})),num:d.num,mistakes:0,hints:0,over:false};else gen(6,mode.seed)}
+    if(mode&&mode.daily){const d=st.dg;if(d&&d.seed===mode.seed)g={level:6,W:d.W,H:d.H,sol:d.sol,cur:new Array(d.W*d.H).fill(''),entries:d.entries.map(e=>Object.assign({},e,{solved:false})),num:d.num,secret:d.secret,mistakes:0,hints:0,over:false};else gen(6,mode.seed)}
     else if(!fresh&&st.cur&&st.cur.level===level)g=Object.assign({},st.cur,{cur:st.cur.cur.slice(),entries:st.cur.entries.map(e=>Object.assign({},e)),over:false});
     else gen(level);
     sel=Math.max(0,g.entries.findIndex(e=>!e.solved));
-    gridEl.innerHTML='';gridEl.style.gridTemplateColumns=`repeat(${g.W},minmax(0,1fr))`;gridEl.style.width=`min(100%, ${g.W*46}px)`;
+    gridEl.innerHTML='';gridEl.style.gridTemplateColumns=`repeat(${g.W},minmax(0,1fr))`;gridEl.style.width=`min(100%, ${g.W*42}px)`;
     const numAt={};g.entries.forEach(e=>numAt[e.cells[0]]=e.num);
     for(let i=0;i<g.W*g.H;i++){
       if(!g.sol[i]){const d=document.createElement('div');d.className='xc blank';gridEl.appendChild(d);continue}
@@ -668,13 +684,15 @@ const WordsGame=(()=>{
   }
   return {id:'words',name:'كلمات متقاطعة',desc:'حلّ التعريفات واملأ الشبكة بالعربي',play,
     icon:'<svg viewBox="0 0 48 48"><g fill="#e9f3ef"><rect x="18" y="4" width="12" height="12" rx="2"/><rect x="18" y="18" width="12" height="12" rx="2"/><rect x="4" y="18" width="12" height="12" rx="2"/><rect x="32" y="18" width="12" height="12" rx="2"/><rect x="18" y="32" width="12" height="12" rx="2"/></g><g font-family="sans-serif" font-size="9" font-weight="700" fill="#0b1618" text-anchor="middle"><text x="24" y="13.5">ك</text><text x="38" y="27.5">ل</text><text x="24" y="27.5">م</text><text x="10" y="27.5">ة</text><text x="24" y="41.5">ب</text></g></svg>',
-    help:'اختر كلمة بالضغط على خانتها أو على تعريفها في القائمة، ثم اضغط الحروف بالترتيب. الكلمات الأفقية تُقرأ من اليمين إلى اليسار، والعمودية من الأعلى للأسفل. اضغط الخانة المشتركة مرة ثانية لتبديل الاتجاه. «تلميح» يكشف حرفاً.',
+    help:'اختر كلمة بالضغط على خانتها أو على تعريفها في القائمة، ثم اضغط الحروف بالترتيب. الكلمات الأفقية تُقرأ من اليمين إلى اليسار، والعمودية من الأعلى للأسفل. اضغط الخانة المشتركة مرة ثانية لتبديل الاتجاه. «تلميح» يكشف حرفاً. الخانات ذات النقطة الذهبية تُخفي حروف «الكلمة السرية»، وكلما حللت كلماتها ظهرت حروفها، وكشفها كاملة يعطيك تلميحاً. «الموضوع» يختار ألغازاً من الفضاء أو الحيوانات أو الطعام أو الكويت والتراث أو الطبيعة.',
     progress(){const s=gState('words',{hints:3});return {level:s.level,stars:starTotal(s)}},
     start(){
       st=gState('words',{hints:3,cur:null});setStats([['s1','المستوى'],['s2','الكلمات','gold'],['s3','أخطاء'],['s4','تلميحات']]);
       gridEl=document.createElement('div');gridEl.className='xw';barEl=document.createElement('div');barEl.className='cluebar';
       padEl=document.createElement('div');padEl.className='lpad';listEl=document.createElement('div');listEl.className='clist';
-      stage.append(gridEl,barEl,padEl,listEl);stage.style.display='flex';stage.style.flexDirection='column';stage.style.gap='12px';
+      secEl=document.createElement('div');secEl.className='secret';
+      listWrap=document.createElement('details');listWrap.className='cwrap';listWrap.innerHTML='<summary></summary>';listWrap.appendChild(listEl);
+      stage.append(gridEl,secEl,barEl,padEl,listWrap);stage.style.display='flex';stage.style.flexDirection='column';stage.style.gap='12px';
       gridEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const i=+b.dataset.i;
         const hits=g.entries.map((x,k)=>x.cells.includes(i)?k:-1).filter(k=>k>=0);if(!hits.length)return;
         sel=hits.includes(sel)&&hits.length>1?hits.find(k=>k!==sel):(hits.find(k=>!g.entries[k].solved)??hits[0]);snd('tap');render()});
@@ -683,6 +701,7 @@ const WordsGame=(()=>{
         render();if(e.cells.every(k=>g.cur[k]))check(e);persist()});
       btn('الكلمة التالية',IC.list,()=>{nextOpen();snd('tap');render()});
       btn('إعادة',IC.reset,()=>play(g.level,true));
+      tb=btn('الموضوع',IC.list,()=>{if(mode&&mode.daily)return;st.topic=TORDER[(TORDER.indexOf(st.topic||'all')+1)%TORDER.length];st.cur=null;gSave('words',st);toast('الموضوع: '+TOPICS[st.topic][0]);play(g.level,true)});tb.style.flexBasis='100%';
       play(st.level);
     },
     stop(){stage.style.display='';stage.style.flexDirection='';stage.style.gap=''}};

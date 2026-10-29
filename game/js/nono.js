@@ -4,6 +4,10 @@ const NonoGame=(()=>{
   const sizeFor=l=>[5,5,6,6,7,7,8,8,9][l-1]||10;
   const runs=a=>{const r=[];let k=0;a.forEach(v=>{if(v===1)k++;else if(k){r.push(k);k=0}});if(k)r.push(k);return r.length?r:[0]};
   const PC={};
+  // hand-drawn pictures (each checked to be solvable by logic alone); filled cells take these colours when solved
+  const PICS={"قلب":[".R.R.","RRRRR","RRRRR",".RRR.","..R.."],"نجمة":["..Y..",".YYY.","YYYYY",".YYY.",".Y.Y."],"هلال":[".YYY.","YY...","Y....","YY...",".YYY."],"صاروخ صغير":["..W..",".WWW.",".WBW.","WWWWW",".R.R."],"كائن فضائي":["G....G",".GGGG.","G.GG.G","GGGGGG",".GGGG.",".G..G."],"زحل":["......","..OO..",".OOOO.","YYYYYY",".OOOO.","..OO.."],"صحن طائر":["......","..CC..",".CCCC.","KKKKKK",".YKKY.","..YY.."],"نخلة":["D.DDD.D",".DDDDD.","DD.N.DD","...N...","...N...","..NNN..","SSSSSSS"],"صاروخ":["...W...","..WWW..","..WBW..","..WWW..",".RWWWR.",".R.W.R.","..YOY.."],"نجم لامع":["...Y...","...Y...","YYYYYYY",".YYYYY.","..YYY..",".YY.YY.","YY...YY"],"الأرض":["..BBB..",".BGGBB.","BGGGBBB","BBGBBGB","BBBBGGB",".BBBGB.","..BBB.."],"قلب كبير":[".RR.RR.","RRRRRRR","RRRRRRR","RRRRRRR",".RRRRR.","..RRR..","...R..."],"سفينة بوم":["...W....","...WW...","...WWW..","...WWWW.","...N....","NNNNNNNN",".NNNNNN.","BBBBBBBB"],"رائد فضاء":["..WWWW..",".WWWWWW.",".WOOOOW.",".WOOOOW.","..WWWW..",".WWWWWW.","W.WWWW.W","..W..W.."],"أبراج الكويت":["...B....","..BBB...","..BBB...","...K..B.","...K.BBB","...K..K.","...K..K.","SSSSSSSS"],"فنجان قهوة":["..W.W.W.","...W.W..","NNNNNNN.","NNNNNNNN","NNNNNN.N","NNNNNNNN",".NNNNN..","WWWWWWW."],"كوكب زحل":[".........","...OOO...","..OOOOO..",".OOOOOOO.","YYYYYYYYY",".OOOOOOO.","..OOOOO..","...OOO...","........."],"وجه فضائي":[".G.....G.","..G...G..","..GGGGG..",".GGGGGGG.","GG..G..GG","GGGGGGGGG",".GGGGGGG.",".GG...GG.","..GGGGG.."],"صاروخ كبير":["....R....","...RRR...","...WWW...","..WWBWW..","..WWWWW..","..WWWWW..",".RWWWWWR.","RR.WWW.RR","...OYO..."],"نجمة كبيرة":["....YY....","....YY....","...YYYY...","YYYYYYYYYY",".YYYYYYYY.","..YYYYYY..","..YYYYYY..",".YYY..YYY.",".YY....YY.","YY......YY"],"جمل":["..........",".......NN.","......NNNN","..NN..NN..",".NNNNNNN..","NNNNNNNN..","N.NNNNNN..","..N....N..","..N....N..","..N....N.."]};
+  const PCOL={R:'#ff5d73',O:'#ff9a3c',Y:'#ffd34d',G:'#7ddc5a',D:'#3f9a4a',B:'#4aa8ff',C:'#7fe8ff',W:'#eef3f7',K:'#8a96a6',N:'#b07a48',S:'#e3c48a'};
+  const PNAMES=Object.keys(PICS);
   function placements(len,clue){
     const key=len+':'+clue.join(',');if(PC[key])return PC[key];const out=[];
     if(clue.length===1&&clue[0]===0)out.push(new Array(len).fill(0));
@@ -25,6 +29,10 @@ const NonoGame=(()=>{
   }
   function gen(level,seed){
     const R=rng(seed??level*3331+17),n=sizeFor(level);let sol,rc,cc;
+    const cands=PNAMES.filter(k=>PICS[k].length===n);
+    if(cands.length){const seen=mode&&mode.daily?[]:(st.pseen||[]),fresh=cands.filter(k=>!seen.includes(k)),pool=fresh.length?fresh:cands,name=pool[Math.floor(R()*pool.length)],rows=PICS[name];
+      sol=rows.join('').split('').map(ch=>ch==='.'?0:1);rc=Array.from({length:n},(_,r)=>runs(sol.slice(r*n,r*n+n)));cc=Array.from({length:n},(_,c)=>runs(Array.from({length:n},(_,r)=>sol[r*n+c])));
+      g={level,n,sol,rc,cc,pic:name,cur:new Array(n*n).fill(0),helps:0,time:0,over:false};return}
     for(let at=0;at<80;at++){const dens=0.52+R()*0.12;sol=Array.from({length:n*n},()=>R()<dens?1:0);
       rc=Array.from({length:n},(_,r)=>runs(sol.slice(r*n,r*n+n)));cc=Array.from({length:n},(_,c)=>runs(Array.from({length:n},(_,r)=>sol[r*n+c])));
       if(solvable(sol,n,rc,cc))break}
@@ -39,21 +47,24 @@ const NonoGame=(()=>{
     for(let c=0;c<n;c++)g.colEls[c].classList.toggle('done',same(runs(colOf(c).map(v=>v===1?1:0)),g.cc[c]))}
   function stats(){setStat('s1',mode&&mode.daily?'اليوم':g.level);setStat('s2',g.n+'×'+g.n);setStat('s3',g.helps);setStat('s4',fmtTime(g.time));
     fillB.classList.toggle('on',paint===1);xB.classList.toggle('on',paint===2)}
-  function persist(){if(mode&&mode.daily)return;st.cur={level:g.level,n:g.n,sol:g.sol,rc:g.rc,cc:g.cc,cur:g.cur,helps:g.helps,time:g.time};gSave('nono',st)}
+  function persist(){if(mode&&mode.daily)return;st.cur={level:g.level,n:g.n,sol:g.sol,rc:g.rc,cc:g.cc,pic:g.pic,cur:g.cur,helps:g.helps,time:g.time};gSave('nono',st)}
   function apply(i){if(drag.last===i)return;drag.last=i;if(g.cur[i]===drag.target)return;g.cur[i]=drag.target;snd(drag.target===1?'tap':'flip');buzz(5);drawCell(i);updClues()}
   function checkWin(){
     const n=g.n;for(let r=0;r<n;r++)if(!same(runs(g.cur.slice(r*n,r*n+n).map(v=>v===1?1:0)),g.rc[r]))return;
     for(let c=0;c<n;c++)if(!same(runs(colOf(c).map(v=>v===1?1:0)),g.cc[c]))return;
     g.over=true;clearInterval(timer);g.cur=g.cur.map(v=>v===1?1:0);g.cellEls.forEach((_,i)=>drawCell(i));
+    let title='اكتملت اللوحة!',extra='';
+    if(g.pic&&PICS[g.pic]){const flat=PICS[g.pic].join('');boardEl.classList.add('reveal');g.cellEls.forEach((el,i)=>{const ch=flat[i];if(ch&&ch!=='.'){el.style.background=PCOL[ch];el.style.transitionDelay=(((i/g.n)|0)+i%g.n)*25+'ms'}});
+      title='رسمت: '+g.pic+'!';if(!(mode&&mode.daily)){st.pseen=st.pseen||[];if(!st.pseen.includes(g.pic))st.pseen.push(g.pic)}extra=` · مجموعتك ${(st.pseen||[]).length}/${PNAMES.length} صورة`}
     const s=g.helps===0?3:g.helps<=2?2:1,daily=mode&&mode.daily,earned=!daily&&g.level%3===0;if(earned)st.hints++;st.cur=null;gSave('nono',st);
-    finishLevel(NonoGame,st,g.level,s,{clean:g.helps===0},'اكتملت اللوحة!',`الوقت ${fmtTime(g.time)} · مساعدات ${g.helps}`+(earned?' · كسبت تلميحاً':''));
+    setTimeout(()=>finishLevel(NonoGame,st,g.level,s,{clean:g.helps===0},title,`الوقت ${fmtTime(g.time)} · مساعدات ${g.helps}`+extra+(earned?' · كسبت تلميحاً':'')),g.pic?1500:0);
   }
   function play(level,fresh){
     clearOverlays();clearInterval(timer);st=gState('nono',{hints:3,cur:null});
     if(mode&&mode.daily)gen(7,mode.seed);
     else if(!fresh&&st.cur&&st.cur.level===level)g=Object.assign({},st.cur,{cur:st.cur.cur.slice(),over:false});
     else gen(level);
-    const n=g.n;boardEl.innerHTML='';boardEl.style.gridTemplateColumns=`auto repeat(${n},minmax(0,1fr))`;
+    const n=g.n;boardEl.innerHTML='';boardEl.classList.remove('reveal');boardEl.style.gridTemplateColumns=`auto repeat(${n},minmax(0,1fr))`;
     boardEl.appendChild(document.createElement('div'));g.colEls=[];g.rowEls=[];g.cellEls=[];
     for(let c=0;c<n;c++){const d=document.createElement('div');d.className='nclue-c';d.innerHTML=g.cc[c].map(v=>`<span>${v}</span>`).join('');boardEl.appendChild(d);g.colEls.push(d)}
     for(let r=0;r<n;r++){const d=document.createElement('div');d.className='nclue-r';d.innerHTML=g.rc[r].map(v=>`<span>${v}</span>`).join('');boardEl.appendChild(d);g.rowEls.push(d);
@@ -61,9 +72,9 @@ const NonoGame=(()=>{
     g.cellEls.forEach((_,i)=>drawCell(i));updClues();stats();persist();
     timer=setInterval(()=>{if(document.hidden||g.over)return;g.time++;setStat('s4',fmtTime(g.time));if(g.time%10===0)persist()},1000);
   }
-  return {id:'nono',name:'نونوجرام',desc:'أضئ الكوكبة المخفية بأرقام الصفوف والأعمدة',play,
+  return {id:'nono',name:'نونوجرام',desc:'اكشف صوراً مخفية من الفضاء والكويت بالأرقام',play,
     icon:'<svg viewBox="0 0 48 48"><g fill="#3fbf9b"><rect x="14" y="14" width="8" height="8" rx="1.5"/><rect x="24" y="14" width="8" height="8" rx="1.5"/><rect x="34" y="24" width="8" height="8" rx="1.5"/><rect x="14" y="34" width="8" height="8" rx="1.5"/><rect x="24" y="24" width="8" height="8" rx="1.5"/></g><g fill="#1d373b"><rect x="34" y="14" width="8" height="8" rx="1.5"/><rect x="14" y="24" width="8" height="8" rx="1.5"/><rect x="24" y="34" width="8" height="8" rx="1.5"/><rect x="34" y="34" width="8" height="8" rx="1.5"/></g><g fill="#f2b84b" font-family="sans-serif" font-size="7" font-weight="700" text-anchor="middle"><text x="18" y="10">2</text><text x="28" y="10">1</text><text x="38" y="10">1</text><text x="8" y="21">2</text></g></svg>',
-    help:'الأرقام فوق كل عمود وبجانب كل صف تخبرك بأطوال المجموعات الملوّنة فيه بالترتيب، وبين كل مجموعتين فراغ واحد على الأقل. «تلوين» يلوّن الخانات، و«علامة ✕» تضع إشارة على الخانات الفارغة لتتذكرها. اسحب إصبعك لتلوين عدة خانات معاً. الرقم يبهت عندما يكتمل صفه أو عموده.',
+    help:'خلف كل لوحة صورة مرسومة (صاروخ، كوكب، نخلة، أبراج الكويت…) تظهر ملوّنة عندما تحلّها، وتُضاف إلى مجموعتك. الأرقام فوق كل عمود وبجانب كل صف تخبرك بأطوال المجموعات الملوّنة فيه بالترتيب، وبين كل مجموعتين فراغ واحد على الأقل. «تلوين» يلوّن الخانات، و«علامة ✕» تضع إشارة على الخانات الفارغة لتتذكرها. اسحب إصبعك لتلوين عدة خانات معاً. الرقم يبهت عندما يكتمل صفه أو عموده.',
     progress(){const s=gState('nono',{hints:3});return {level:s.level,stars:starTotal(s)}},
     start(){
       st=gState('nono',{hints:3,cur:null});setStats([['s1','المستوى'],['s2','الحجم','gold'],['s3','مساعدات'],['s4','الوقت']]);paint=1;
