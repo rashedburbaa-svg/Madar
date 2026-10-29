@@ -32,7 +32,9 @@ function snd(type){
   try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();
     const seqs={tap:[[620,.04]],rot:[[430,.04]],ok:[[660,.07],[880,.09]],win:[[523,.11],[659,.11],[784,.12],[1047,.25]],err:[[170,.16]],splash:[[260,.1],[150,.2]],hit:[[240,.03]],flip:[[700,.03]],sink:[[880,.07],[660,.07],[990,.18]],ach:[[784,.09],[1175,.09],[1568,.22]]};
     let at=AC.currentTime;(seqs[type]||seqs.tap).forEach(([f,d])=>{const o=AC.createOscillator(),g=AC.createGain();o.type=type==='err'?'square':type==='splash'?'triangle':'sine';o.frequency.value=f;
-      g.gain.setValueAtTime(.0001,at);g.gain.exponentialRampToValueAtTime(type==='err'?.08:.16,at+.012);g.gain.exponentialRampToValueAtTime(.0001,at+d);o.connect(g);g.connect(AC.destination);o.start(at);o.stop(at+d+.03);at+=d*.85});
+      g.gain.setValueAtTime(.0001,at);g.gain.exponentialRampToValueAtTime(type==='err'?.08:.16,at+.012);g.gain.exponentialRampToValueAtTime(.0001,at+d);o.connect(g);g.connect(AC.destination);o.start(at);o.stop(at+d+.03);
+      if(type!=='err'&&type!=='tap'&&type!=='hit'){const o2=AC.createOscillator(),g2=AC.createGain();o2.type='triangle';o2.frequency.value=f*2;g2.gain.setValueAtTime(.0001,at);g2.gain.exponentialRampToValueAtTime(.045,at+.015);g2.gain.exponentialRampToValueAtTime(.0001,at+d*1.4);o2.connect(g2);g2.connect(AC.destination);o2.start(at);o2.stop(at+d*1.4+.03)}
+      at+=d*.85});
   }catch(e){}
 }
 function buzz(ms){if(prefs.vibe&&navigator.vibrate)try{navigator.vibrate(ms)}catch(e){}}
@@ -48,8 +50,9 @@ function btn(label,icon,fn,cls){const b=document.createElement('button');b.type=
 function clearOverlays(){stage.querySelectorAll('.overlay').forEach(o=>o.remove())}
 function winBox({title,text,stars,onNext,label}){
   const o=document.createElement('div');o.className='overlay';
-  o.innerHTML=`<h3></h3><div class="stars">${[1,2,3].map(k=>starSVG(k<=stars)).join('')}</div><p></p><button class="btn main" type="button"></button>`;
+  o.innerHTML=`<h3></h3><div class="stars">${[1,2,3].map(k=>starSVG(k<=stars)).join('')}</div><p></p><button class="btn main" type="button"></button><button class="btn share" type="button">📤 مشاركة النتيجة</button>`;
   o.querySelector('h3').textContent=title;o.querySelector('p').textContent=text;const b=o.querySelector('button');b.textContent=label||'المستوى التالي';
+  const gname=active?active.name:'';o.querySelector('.share').onclick=()=>shareResult({game:gname,title,text,stars});
   b.onclick=()=>{o.remove();onNext()};setTimeout(()=>{stage.appendChild(o);b.focus()},350);
 }
 
@@ -85,6 +88,7 @@ const ach=load('arcade-ach',{got:{},won:{}});
 function unlock(id){if(ach.got[id])return;ach.got[id]=Date.now();save('arcade-ach',ach);const a=ACH.find(x=>x[0]===id);if(a){snd('ach');buzz([30,40,30]);toast('🏅 وسام جديد: '+a[2],'ach')}}
 function onWin(id,level,stars,info){
   info=info||{};snd('win');buzz([20,30,60]);
+  addXP(10*stars+(mode&&mode.daily?20:0));mission('win',{id,stars,daily:!!(mode&&mode.daily)});
   ach.won[id]=true;save('arcade-ach',ach);
   unlock('first');if(stars===3)unlock('three');
   const tot=allStars();if(tot>=50)unlock('s50');if(tot>=150)unlock('s150');
@@ -105,6 +109,57 @@ function onWin(id,level,stars,info){
     unlock('daily1');if(daily.streak>=3)unlock('streak3');if(daily.streak>=7)unlock('streak7');
     if(GAMES.filter(G=>!G.noDaily).every(G=>daily.done[k][G.id]))unlock('dailyall')}
 }
+
+/* player rank: XP from every win, daily challenge and survival run */
+const RANKS=[[0,'متدرب فضاء','🧑‍🎓'],[150,'رائد مبتدئ','🧑‍🚀'],[400,'ملاح مداري','🛰️'],[900,'قائد مركبة','🚀'],[1800,'مستكشف المجرات','🌌'],[3500,'سيد الكواكب','🪐'],[6500,'قائد المدار','👑']];
+const prof=load('arcade-profile',{xp:-1});
+if(prof.xp<0){try{prof.xp=Object.keys(localStorage).filter(k=>k.startsWith('arcade-')).reduce((a,k)=>{try{return a+Object.values(JSON.parse(localStorage.getItem(k)).stars||{}).reduce((x,y)=>x+y,0)*10}catch(e){return a}},0)}catch(e){prof.xp=0}save('arcade-profile',prof)}
+function rankOf(xp){let i=0;while(i+1<RANKS.length&&xp>=RANKS[i+1][0])i++;return i}
+function addXP(n,why){if(!(n>0))return;const before=rankOf(prof.xp);prof.xp+=Math.round(n);save('arcade-profile',prof);const after=rankOf(prof.xp);
+  if(after>before){snd('ach');buzz([30,40,30,40]);toast(RANKS[after][2]+' رتبة جديدة: '+RANKS[after][1],'ach')}}
+function drawRank(){const el=$('rank');if(!el)return;const i=rankOf(prof.xp),cur=RANKS[i],nxt=RANKS[i+1];
+  const pct=nxt?Math.round((prof.xp-cur[0])/(nxt[0]-cur[0])*100):100;
+  el.innerHTML=`<span class="re">${cur[2]}</span><span class="rt"><b>${cur[1]}</b><small>${nxt?`${prof.xp} / ${nxt[0]} نقطة خبرة · التالية: ${nxt[1]}`:prof.xp+' نقطة خبرة · أعلى رتبة'}</small><i><u style="width:${pct}%"></u></i></span>`}
+
+/* weekly missions: three per week, the same for the whole week, with an XP reward */
+function weekKey(d){d=d||new Date();const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const day=(t.getUTCDay()+1)%7;t.setUTCDate(t.getUTCDate()-day);return t.getUTCFullYear()*10000+(t.getUTCMonth()+1)*100+t.getUTCDate()}
+const GNAMES={grid:'شبكة المدار',sudoku:'سودوكو',words:'الكلمات المتقاطعة',nono:'نونوجرام',mines:'حقل الكويكبات',g2048:'2048',golf:'جولف المدار',diff:'أوجد الاختلاف',memory:'الذاكرة'};
+function missionsFor(wk){const R=rng(wk*31+7),games=Object.keys(GNAMES),G=games[Math.floor(R()*games.length)];
+  const a=R()<0.5?{id:'wins',t:'اربح 12 مستوى في أي لعبة',n:12,xp:120}:{id:'stars3',t:'احصل على 3 نجوم في 6 مستويات',n:6,xp:140};
+  const b={id:'game_'+G,t:`اربح 4 مستويات في ${GNAMES[G]}`,n:4,xp:120};
+  const c=[{id:'variety',t:'اربح في 5 ألعاب مختلفة',n:5,xp:150},{id:'daily',t:'أنجز 5 تحديات يومية',n:5,xp:150},{id:'survive',t:'اصمد 3 دقائق في صمود المدار',n:180,xp:150,time:true}][Math.floor(R()*3)];
+  return [a,b,c]}
+const weekly=load('arcade-weekly',{wk:0,prog:{},seen:{},claimed:{}});
+function wkCheck(){const k=weekKey();if(weekly.wk!==k){weekly.wk=k;weekly.prog={};weekly.seen={};weekly.claimed={};save('arcade-weekly',weekly)}return missionsFor(k)}
+function mission(ev,d){const ms=wkCheck();let changed=false;
+  const bump=(id,v,max)=>{const m=ms.find(x=>x.id===id);if(!m||weekly.claimed[id])return;weekly.prog[id]=max?Math.max(weekly.prog[id]||0,v):(weekly.prog[id]||0)+v;changed=true;
+    if(weekly.prog[id]>=m.n){weekly.claimed[id]=1;addXP(m.xp);snd('ach');toast('✅ مهمة أسبوعية: '+m.t+' · +'+m.xp+' خبرة','ach')}};
+  if(ev==='win'){bump('wins',1);if(d.stars===3)bump('stars3',1);bump('game_'+d.id,1);if(!weekly.seen[d.id]){weekly.seen[d.id]=1;bump('variety',1)}if(d.daily)bump('daily',1)}
+  if(ev==='survive')bump('survive',Math.floor(d.time),true);
+  if(changed)save('arcade-weekly',weekly)}
+function drawMissions(){const host=$('missions');if(!host)return;const ms=wkCheck();
+  const left=7-((new Date().getDay()+1)%7);
+  host.innerHTML=`<div class="mhead"><b>🎯 مهام الأسبوع</b><small>تتجدد بعد ${left===1?'يوم':left===2?'يومين':left+' أيام'}</small></div>`+ms.map(m=>{const v=Math.min(m.n,weekly.prog[m.id]||0),done=!!weekly.claimed[m.id],pct=Math.round(v/m.n*100);
+    return `<div class="mrow${done?' done':''}"><span class="mt">${done?'✅ ':''}${m.t}</span><span class="mp">${m.time?fmtTime(v)+' / '+fmtTime(m.n):v+' / '+m.n} · +${m.xp}</span><i><u style="width:${pct}%"></u></i></div>`}).join('')}
+
+/* share a result as an image (WhatsApp, etc.) */
+async function shareResult(o){
+  try{const c=document.createElement('canvas');c.width=1080;c.height=1080;const g=c.getContext('2d');
+    const bgG=g.createLinearGradient(0,0,0,1080);bgG.addColorStop(0,'#0b1430');bgG.addColorStop(1,'#1d0f3a');g.fillStyle=bgG;g.fillRect(0,0,1080,1080);
+    const R=rng(o.title.length*97+7);for(let k=0;k<260;k++){g.fillStyle=`rgba(255,255,255,${0.2+R()*0.8})`;g.beginPath();g.arc(R()*1080,R()*1080,R()*2.4+0.4,0,7);g.fill()}
+    g.strokeStyle='rgba(95,242,214,.5)';g.lineWidth=6;g.beginPath();g.ellipse(540,520,430,120,-0.35,0,7);g.stroke();
+    g.fillStyle='#f2b84b';g.beginPath();g.arc(540,520,70,0,7);g.fill();
+    g.direction='rtl';g.textAlign='center';g.fillStyle='#fff';g.font='bold 76px sans-serif';g.fillText('قاعة المدار',540,150);
+    g.font='bold 58px sans-serif';g.fillStyle='#5ff2d6';g.fillText(o.game||'',540,250);
+    g.font='bold 64px sans-serif';g.fillStyle='#fff';g.fillText(o.title,540,740);
+    if(o.stars!=null){g.font='90px sans-serif';g.fillText('★'.repeat(o.stars)+'☆'.repeat(3-o.stars),540,850)}
+    g.font='44px sans-serif';g.fillStyle='#c9d6e3';g.fillText(o.text||'',540,o.stars!=null?940:840);
+    const ri=rankOf(prof.xp);g.font='40px sans-serif';g.fillStyle='#f2b84b';g.fillText(RANKS[ri][2]+' '+RANKS[ri][1],540,1030);
+    const blob=await new Promise(r=>c.toBlob(r,'image/png'));const file=new File([blob],'madar.png',{type:'image/png'});
+    const msg=`${o.game} · ${o.title} — قاعة المدار`;
+    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],text:msg});return}
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='madar.png';document.body.appendChild(a);a.click();a.remove();toast('حُفظت الصورة في التنزيلات')
+  }catch(e){if(e&&e.name!=='AbortError')toast('تعذّرت المشاركة')}}
 /* record + next */
 function finishLevel(G,st,level,stars,info,title,text){
   if(mode&&mode.daily){onWin(G.id,level,stars,info);winBox({title,text,stars,label:'رجوع إلى القاعة',onNext:goHub});return}

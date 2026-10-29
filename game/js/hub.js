@@ -2,7 +2,7 @@
 
 const GAMES=[SurviveGame,GridGame,SudokuGame,WordsGame,NonoGame,MinesGame,Game2048,GolfGame,DiffGame,MemoryGame];
 function renderHub(){
-  drawPrefs();
+  drawPrefs();drawRank();drawMissions();
   const k=todayKey(),doneToday=daily.done[k]||{},alive=daily.last===k||daily.last===yesterdayKey(),streak=alive?daily.streak:0;
   const d=$('daily');
   const DAYS=['أحد','إثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];let week='';

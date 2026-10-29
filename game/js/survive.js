@@ -420,13 +420,14 @@ const SurviveGame=(()=>{
     for(let k=0;k<30;k++){const a=Math.random()*6.28,s=60+Math.random()*160;parts.push({x:p.x,y:p.y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,l:0.8,col:'#3fd6c0'})}
     stats();
     const earned=crys+Math.floor(kills/5)+wave*2;st.crys=(st.crys||0)+earned;gSave('survive',st);
+    addXP(Math.floor(t/6)+bossKills*15);mission('survive',{time:t});
     snd('err');buzz([40,40,80]);
     const show=()=>{const o=document.createElement('div');o.className='overlay';
-      o.innerHTML='<h3></h3><p></p><p class="gain"></p><button class="btn main" type="button">جولة جديدة</button><button class="btn" type="button">🔬 مختبر المدار</button><button class="btn" type="button">رجوع إلى القاعة</button>';
-      o.querySelector('h3').textContent=rec?'رقم قياسي جديد! 🏆':'سقط رائد الفضاء';
+      o.innerHTML='<h3></h3><p></p><p class="gain"></p><button class="btn main" type="button">جولة جديدة</button><button class="btn" type="button">🔬 مختبر المدار</button><button class="btn" type="button">رجوع إلى القاعة</button><button class="btn share" type="button">📤 مشاركة النتيجة</button>';
+      o.querySelector('h3').textContent=rec?'رقم قياسي جديد! 🏆':'سقط رائد الفضاء';o.querySelector('.share').onclick=()=>shareResult({game:'صمود المدار',title:'صمدت '+fmtTime(t),text:`الموجة ${wave} · ${kills} كائن`});
       o.querySelector('p').textContent=`صمدت ${fmtTime(t)} · الموجة ${wave} · ${kills} عدو`+(rec?'':` · رقمك القياسي ${fmtTime(st.bestTime)}`);
       o.querySelector('.gain').textContent=`💎 +${earned} كريستالة · رصيدك ${st.crys}`;
-      const [b1,b2,b3]=o.querySelectorAll('button');b1.onclick=()=>begin();b2.onclick=()=>openLab(show);b3.onclick=()=>{o.remove();goHub()};stage.appendChild(o)};
+      const [b1,b2,b3]=o.querySelectorAll('button:not(.share)');b1.onclick=()=>begin();b2.onclick=()=>openLab(show);b3.onclick=()=>{o.remove();goHub()};stage.appendChild(o)};
     setTimeout(show,400);
   }
   function stats(){setStat('s1',fmtTime(t));setStat('s2',wave);setStat('s3',kills);setStat('s4',fmtTime(Math.max(st.bestTime||0,over?0:t)))}

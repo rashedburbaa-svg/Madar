@@ -273,3 +273,15 @@ body{background:transparent}
 .chr.on{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold) inset;background:#1f3530}
 .upc.evo{border-color:#ffd34d;background:linear-gradient(135deg,#3a3010,#1a2a2e);box-shadow:0 0 12px rgba(255,211,77,.35)}
 .upc.evo i{color:#ffd34d}
+/* hall: rank card, weekly missions, share button */
+.rank{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:8px 12px;margin-top:10px}
+.rank .re{font-size:26px}
+.rank .rt{flex:1;display:flex;flex-direction:column;gap:3px;min-width:0}
+.rank b{font-size:15px;color:var(--gold)}.rank small{font-size:12px;color:var(--muted)}
+.rank i,.mrow i{display:block;height:6px;border-radius:99px;background:var(--tile);overflow:hidden}.rank u,.mrow u{display:block;height:100%;background:linear-gradient(90deg,#5ff2d6,#f2b84b);border-radius:99px}
+.missions{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.mhead{display:flex;align-items:baseline;justify-content:space-between}.mhead b{font-size:16px}.mhead small{color:var(--muted);font-size:12px}
+.mrow{display:grid;grid-template-columns:1fr auto;gap:4px 8px;font-size:14px}.mrow i{grid-column:1/-1}.mrow .mp{color:var(--muted);font-size:12.5px;white-space:nowrap}
+.mrow.done .mt{color:var(--lit)}
+.overlay .btn.share{background:transparent;border-color:var(--line);font-size:14px}
+.mrow .mp{direction:ltr;unicode-bidi:isolate}
