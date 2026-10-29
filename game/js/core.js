@@ -76,7 +76,7 @@ const ACH=[
   ['first','🎉','أول فوز'],['three','⭐','أول 3 نجوم'],['s50','🌟','50 نجمة'],['s150','💫','150 نجمة'],
   ['grid10','🔗','الشبكة: المستوى 10'],['grid9','🧩','لوحة 9×9'],['wrap','🌀','أول شبكة ملتفّة'],['sud_clean','🧠','سودوكو بلا أخطاء'],
   ['sud_fast','⚡','سودوكو في أقل من 5 دقائق'],['sud10','🔢','سودوكو: المستوى 10'],['ace','🏆','ضربة واحدة في الجولف'],['under','🐦','تحت البار'],['beat_cpu','🤖','فوز على الكمبيوتر في الجولف'],
-  ['eagle_eye','🦅','اختلافات بلا أخطاء'],['diff_fast','⏱️','اختلافات في أقل من دقيقة'],['memory','🃏','ذاكرة مثالية'],['allfive','🎮','فوز في كل الألعاب'],
+  ['eagle_eye','🦅','اختلافات بلا أخطاء'],['diff_fast','⏱️','اختلافات في أقل من دقيقة'],['memory','🃏','ذاكرة مثالية'],['mem_cpu','🧠','فوز على الكمبيوتر في الذاكرة'],['allfive','🎮','فوز في كل الألعاب'],
   ['t2048','🔷','الوصول إلى 2048'],['mines_clean','☄️','حقل كويكبات بلا خسارة قلب'],['nono_clean','🖼️','نونوجرام بلا مساعدة'],['words_clean','📝','كلمات متقاطعة بلا أخطاء'],
   ['surv2','🛡️','الصمود دقيقتين'],['surv5','⚔️','الصمود 5 دقائق'],['surv_boss','👹','هزيمة أول زعيم'],['surv_k1000','💀','1000 عدو في الصمود'],['surv_all_boss','🌌','هزيمة زعماء الكواكب الستة'],['surv_lab','🔬','إكمال كل تطويرات المختبر'],
   ['daily1','📅','أول تحدي يومي'],['streak3','🔥','سلسلة 3 أيام'],['streak7','☄️','سلسلة 7 أيام'],['dailyall','👑','كل تحديات اليوم']
@@ -93,7 +93,7 @@ function onWin(id,level,stars,info){
   if(id==='sudoku'){if(info.clean)unlock('sud_clean');if(info.time<300)unlock('sud_fast');if(level>=10)unlock('sud10')}
   if(id==='golf'){if(info.strokes===1)unlock('ace');if(info.strokes<info.par)unlock('under');if(info.beatCpu)unlock('beat_cpu')}
   if(id==='diff'){if(info.mistakes===0&&info.hints===0)unlock('eagle_eye');if(info.time<60)unlock('diff_fast')}
-  if(id==='memory'&&info.perfect)unlock('memory');
+  if(id==='memory'){if(info.perfect)unlock('memory');if(info.beatCpu)unlock('mem_cpu')}
   if(id==='g2048'&&info.max>=2048)unlock('t2048');
   if(id==='mines'&&info.lives===3)unlock('mines_clean');
   if(id==='nono'&&info.clean)unlock('nono_clean');
