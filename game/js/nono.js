@@ -32,11 +32,11 @@ const NonoGame=(()=>{
     const cands=PNAMES.filter(k=>PICS[k].length===n);
     if(cands.length){const seen=mode&&mode.daily?[]:(st.pseen||[]),fresh=cands.filter(k=>!seen.includes(k)),pool=fresh.length?fresh:cands,name=pool[Math.floor(R()*pool.length)],rows=PICS[name];
       sol=rows.join('').split('').map(ch=>ch==='.'?0:1);rc=Array.from({length:n},(_,r)=>runs(sol.slice(r*n,r*n+n)));cc=Array.from({length:n},(_,c)=>runs(Array.from({length:n},(_,r)=>sol[r*n+c])));
-      g={level,n,sol,rc,cc,pic:name,cur:new Array(n*n).fill(0),helps:0,time:0,over:false};return}
+      g={level,n,sol,rc,cc,pic:name,cur:new Array(n*n).fill(0),helps:0,miss:0,time:0,over:false};return}
     for(let at=0;at<80;at++){const dens=0.52+R()*0.12;sol=Array.from({length:n*n},()=>R()<dens?1:0);
       rc=Array.from({length:n},(_,r)=>runs(sol.slice(r*n,r*n+n)));cc=Array.from({length:n},(_,c)=>runs(Array.from({length:n},(_,r)=>sol[r*n+c])));
       if(solvable(sol,n,rc,cc))break}
-    g={level,n,sol,rc,cc,cur:new Array(n*n).fill(0),helps:0,time:0,over:false};
+    g={level,n,sol,rc,cc,cur:new Array(n*n).fill(0),helps:0,miss:0,time:0,over:false};
   }
   const rowOf=(i)=>g.cur.slice(((i/g.n)|0)*g.n,((i/g.n)|0)*g.n+g.n);
   const colOf=(c)=>Array.from({length:g.n},(_,r)=>g.cur[r*g.n+c]);
@@ -45,10 +45,15 @@ const NonoGame=(()=>{
     el.className='ncell'+(v===1?' f':v===2?' x':'')+(c%5===0&&c>0?' b5c':'')+(r%5===0&&r>0?' b5r':'')}
   function updClues(){const n=g.n;for(let r=0;r<n;r++)g.rowEls[r].classList.toggle('done',same(runs(g.cur.slice(r*n,r*n+n).map(v=>v===1?1:0)),g.rc[r]));
     for(let c=0;c<n;c++)g.colEls[c].classList.toggle('done',same(runs(colOf(c).map(v=>v===1?1:0)),g.cc[c]))}
-  function stats(){setStat('s1',mode&&mode.daily?'اليوم':g.level);setStat('s2',g.n+'×'+g.n);setStat('s3',g.helps);setStat('s4',fmtTime(g.time));
+  function stats(){setStat('s1',mode&&mode.daily?'اليوم':g.level);setStat('s2',g.n+'×'+g.n);setStat('s3',(g.miss||0)+' من 3');setStat('s4',fmtTime(g.time));
     fillB.classList.toggle('on',paint===1);xB.classList.toggle('on',paint===2)}
-  function persist(){if(mode&&mode.daily)return;st.cur={level:g.level,n:g.n,sol:g.sol,rc:g.rc,cc:g.cc,pic:g.pic,cur:g.cur,helps:g.helps,time:g.time};gSave('nono',st)}
-  function apply(i){if(drag.last===i)return;drag.last=i;if(g.cur[i]===drag.target)return;g.cur[i]=drag.target;snd(drag.target===1?'tap':'flip');buzz(5);drawCell(i);updClues()}
+  function persist(){if(mode&&mode.daily)return;st.cur={level:g.level,n:g.n,sol:g.sol,rc:g.rc,cc:g.cc,pic:g.pic,cur:g.cur,helps:g.helps,miss:g.miss||0,time:g.time};gSave('nono',st)}
+  function apply(i){if(drag.last===i)return;drag.last=i;if(g.cur[i]===drag.target)return;
+    if(drag.target===1&&!g.sol[i]){g.cur[i]=2;drawCell(i);const el=g.cellEls[i];el.classList.add('bad');setTimeout(()=>el.classList.remove('bad'),700);
+      g.miss=(g.miss||0)+1;drag=null;snd('err');buzz([50,30,50]);updClues();stats();persist();
+      if(g.miss>=3){g.over=true;clearInterval(timer);st.cur=null;gSave('nono',st);loseBox({title:'ثلاثة أخطاء',text:'لوّنت 3 خانات فارغة. تبدأ اللوحة من جديد!',onRetry:()=>play(g.level,true)})}
+      else toast('✕ هذه الخانة فارغة · بقي لك '+(3-g.miss===1?'خطأ واحد':'خطآن'));return}
+    g.cur[i]=drag.target;snd(drag.target===1?'tap':'flip');buzz(5);drawCell(i);updClues()}
   function checkWin(){
     const n=g.n;for(let r=0;r<n;r++)if(!same(runs(g.cur.slice(r*n,r*n+n).map(v=>v===1?1:0)),g.rc[r]))return;
     for(let c=0;c<n;c++)if(!same(runs(colOf(c).map(v=>v===1?1:0)),g.cc[c]))return;
@@ -56,8 +61,8 @@ const NonoGame=(()=>{
     let title='اكتملت اللوحة!',extra='';
     if(g.pic&&PICS[g.pic]){const flat=PICS[g.pic].join('');boardEl.classList.add('reveal');g.cellEls.forEach((el,i)=>{const ch=flat[i];if(ch&&ch!=='.'){el.style.background=PCOL[ch];el.style.transitionDelay=(((i/g.n)|0)+i%g.n)*25+'ms'}});
       title='رسمت: '+g.pic+'!';if(!(mode&&mode.daily)){st.pseen=st.pseen||[];if(!st.pseen.includes(g.pic))st.pseen.push(g.pic)}extra=` · مجموعتك ${(st.pseen||[]).length}/${PNAMES.length} صورة`}
-    const s=g.helps===0?3:g.helps<=2?2:1,daily=mode&&mode.daily,earned=!daily&&g.level%3===0;if(earned)st.hints++;st.cur=null;gSave('nono',st);
-    setTimeout(()=>finishLevel(NonoGame,st,g.level,s,{clean:g.helps===0},title,`الوقت ${fmtTime(g.time)} · مساعدات ${g.helps}`+extra+(earned?' · كسبت تلميحاً':'')),g.pic?1500:0);
+    const help=g.helps+(g.miss||0),s=help===0?3:help<=2?2:1,daily=mode&&mode.daily,earned=!daily&&g.level%3===0;if(earned)st.hints++;st.cur=null;gSave('nono',st);
+    setTimeout(()=>finishLevel(NonoGame,st,g.level,s,{clean:help===0},title,`الوقت ${fmtTime(g.time)} · أخطاء ${g.miss||0} · مساعدات ${g.helps}`+extra+(earned?' · كسبت تلميحاً':'')),g.pic?1500:0);
   }
   function play(level,fresh){
     clearOverlays();clearInterval(timer);st=gState('nono',{hints:3,cur:null});
@@ -74,14 +79,14 @@ const NonoGame=(()=>{
   }
   return {id:'nono',name:'نونوجرام',desc:'اكشف صوراً مخفية من الفضاء والكويت بالأرقام',play,
     icon:'<svg viewBox="0 0 48 48"><g fill="#3fbf9b"><rect x="14" y="14" width="8" height="8" rx="1.5"/><rect x="24" y="14" width="8" height="8" rx="1.5"/><rect x="34" y="24" width="8" height="8" rx="1.5"/><rect x="14" y="34" width="8" height="8" rx="1.5"/><rect x="24" y="24" width="8" height="8" rx="1.5"/></g><g fill="#1d373b"><rect x="34" y="14" width="8" height="8" rx="1.5"/><rect x="14" y="24" width="8" height="8" rx="1.5"/><rect x="24" y="34" width="8" height="8" rx="1.5"/><rect x="34" y="34" width="8" height="8" rx="1.5"/></g><g fill="#f2b84b" font-family="sans-serif" font-size="7" font-weight="700" text-anchor="middle"><text x="18" y="10">2</text><text x="28" y="10">1</text><text x="38" y="10">1</text><text x="8" y="21">2</text></g></svg>',
-    help:'خلف كل لوحة صورة مرسومة (صاروخ، كوكب، نخلة، أبراج الكويت…) تظهر ملوّنة عندما تحلّها، وتُضاف إلى مجموعتك. الأرقام فوق كل عمود وبجانب كل صف تخبرك بأطوال المجموعات الملوّنة فيه بالترتيب، وبين كل مجموعتين فراغ واحد على الأقل. «تلوين» يلوّن الخانات، و«علامة ✕» تضع إشارة على الخانات الفارغة لتتذكرها. اسحب إصبعك لتلوين عدة خانات معاً. الرقم يبهت عندما يكتمل صفه أو عموده.',
+    help:'إذا لوّنت خانة فارغة تظهر ✕ حمراء ويُحسب خطأ، والخطأ الثالث يعيد اللوحة من البداية. خلف كل لوحة صورة مرسومة (صاروخ، كوكب، نخلة، أبراج الكويت…) تظهر ملوّنة عندما تحلّها، وتُضاف إلى مجموعتك. الأرقام فوق كل عمود وبجانب كل صف تخبرك بأطوال المجموعات الملوّنة فيه بالترتيب، وبين كل مجموعتين فراغ واحد على الأقل. «تلوين» يلوّن الخانات، و«علامة ✕» تضع إشارة على الخانات الفارغة لتتذكرها. اسحب إصبعك لتلوين عدة خانات معاً. الرقم يبهت عندما يكتمل صفه أو عموده.',
     progress(){const s=gState('nono',{hints:3});return {level:s.level,stars:starTotal(s)}},
     start(){
-      st=gState('nono',{hints:3,cur:null});setStats([['s1','المستوى'],['s2','الحجم','gold'],['s3','مساعدات'],['s4','الوقت']]);paint=1;
+      st=gState('nono',{hints:3,cur:null});setStats([['s1','المستوى'],['s2','الحجم','gold'],['s3','أخطاء'],['s4','الوقت']]);paint=1;
       boardEl=document.createElement('div');boardEl.className='nono';stage.appendChild(boardEl);
       boardEl.onpointerdown=e=>{const c=e.target.closest('.ncell');if(!c||g.over)return;e.preventDefault();const i=+c.dataset.i;drag={target:g.cur[i]===paint?0:paint,last:-1};apply(i);try{boardEl.setPointerCapture(e.pointerId)}catch(_){}};
       boardEl.onpointermove=e=>{if(!drag)return;const el=document.elementFromPoint(e.clientX,e.clientY),c=el&&el.closest&&el.closest('.ncell');if(c&&boardEl.contains(c))apply(+c.dataset.i)};
-      boardEl.onpointerup=boardEl.onpointercancel=()=>{if(!drag)return;drag=null;persist();checkWin()};
+      boardEl.onpointerup=boardEl.onpointercancel=()=>{if(!drag){if(g&&!g.over)checkWin();return}drag=null;persist();checkWin()};
       fillB=btn('تلوين',IC.pen,()=>{paint=1;snd('tap');stats()});
       xB=btn('علامة ✕',null,()=>{paint=2;snd('tap');stats()});
       btn('افحص',IC.check,()=>{if(g.over)return;const bad=g.cur.map((v,i)=>(v===1&&!g.sol[i])||(v===2&&g.sol[i])?i:-1).filter(i=>i>=0);
