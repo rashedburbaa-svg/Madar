@@ -1,0 +1,87 @@
+/* ================= game 8: nonogram ================= */
+const NonoGame=(()=>{
+  let st,g,boardEl,fillB,xB,drag=null,timer=0,paint=1;
+  const sizeFor=l=>[5,5,6,6,7,7,8,8,9][l-1]||10;
+  const runs=a=>{const r=[];let k=0;a.forEach(v=>{if(v===1)k++;else if(k){r.push(k);k=0}});if(k)r.push(k);return r.length?r:[0]};
+  const PC={};
+  function placements(len,clue){
+    const key=len+':'+clue.join(',');if(PC[key])return PC[key];const out=[];
+    if(clue.length===1&&clue[0]===0)out.push(new Array(len).fill(0));
+    else(function rec(idx,pos,arr){
+      if(idx===clue.length){const a=arr.slice();for(let k=pos;k<len;k++)a[k]=0;out.push(a);return}
+      let rest=0;for(let j=idx+1;j<clue.length;j++)rest+=clue[j]+1;
+      for(let s=pos;s+clue[idx]+rest<=len;s++){const a=arr.slice();for(let k=pos;k<s;k++)a[k]=0;for(let k=0;k<clue[idx];k++)a[s+k]=1;let nx=s+clue[idx];if(idx<clue.length-1){a[nx]=0;nx++}rec(idx+1,nx,a)}
+    })(0,0,new Array(len).fill(0));
+    return PC[key]=out;
+  }
+  function solvable(sol,n,rc,cc){
+    const K=new Array(n*n).fill(-1);let changed=true,guard=0;
+    const lineIdx=(t,a)=>Array.from({length:n},(_,b)=>t?b*n+a:a*n+b);
+    while(changed&&guard++<60){changed=false;
+      for(let t=0;t<2;t++)for(let a=0;a<n;a++){const idx=lineIdx(t,a),kn=idx.map(i=>K[i]);
+        const ps=placements(n,t?cc[a]:rc[a]).filter(p=>p.every((v,k)=>kn[k]===-1||kn[k]===v));if(!ps.length)return false;
+        for(let k=0;k<n;k++){if(kn[k]!==-1)continue;const v=ps[0][k];if(ps.every(p=>p[k]===v)){K[idx[k]]=v;changed=true}}}}
+    return K.every(v=>v!==-1);
+  }
+  function gen(level,seed){
+    const R=rng(seed??level*3331+17),n=sizeFor(level);let sol,rc,cc;
+    for(let at=0;at<80;at++){const dens=0.52+R()*0.12;sol=Array.from({length:n*n},()=>R()<dens?1:0);
+      rc=Array.from({length:n},(_,r)=>runs(sol.slice(r*n,r*n+n)));cc=Array.from({length:n},(_,c)=>runs(Array.from({length:n},(_,r)=>sol[r*n+c])));
+      if(solvable(sol,n,rc,cc))break}
+    g={level,n,sol,rc,cc,cur:new Array(n*n).fill(0),helps:0,time:0,over:false};
+  }
+  const rowOf=(i)=>g.cur.slice(((i/g.n)|0)*g.n,((i/g.n)|0)*g.n+g.n);
+  const colOf=(c)=>Array.from({length:g.n},(_,r)=>g.cur[r*g.n+c]);
+  const same=(a,b)=>a.length===b.length&&a.every((v,k)=>v===b[k]);
+  function drawCell(i){const n=g.n,r=(i/n)|0,c=i%n,v=g.cur[i],el=g.cellEls[i];
+    el.className='ncell'+(v===1?' f':v===2?' x':'')+(c%5===0&&c>0?' b5c':'')+(r%5===0&&r>0?' b5r':'')}
+  function updClues(){const n=g.n;for(let r=0;r<n;r++)g.rowEls[r].classList.toggle('done',same(runs(g.cur.slice(r*n,r*n+n).map(v=>v===1?1:0)),g.rc[r]));
+    for(let c=0;c<n;c++)g.colEls[c].classList.toggle('done',same(runs(colOf(c).map(v=>v===1?1:0)),g.cc[c]))}
+  function stats(){setStat('s1',mode&&mode.daily?'اليوم':g.level);setStat('s2',g.n+'×'+g.n);setStat('s3',g.helps);setStat('s4',fmtTime(g.time));
+    fillB.classList.toggle('on',paint===1);xB.classList.toggle('on',paint===2)}
+  function persist(){if(mode&&mode.daily)return;st.cur={level:g.level,n:g.n,sol:g.sol,rc:g.rc,cc:g.cc,cur:g.cur,helps:g.helps,time:g.time};gSave('nono',st)}
+  function apply(i){if(drag.last===i)return;drag.last=i;if(g.cur[i]===drag.target)return;g.cur[i]=drag.target;snd(drag.target===1?'tap':'flip');buzz(5);drawCell(i);updClues()}
+  function checkWin(){
+    const n=g.n;for(let r=0;r<n;r++)if(!same(runs(g.cur.slice(r*n,r*n+n).map(v=>v===1?1:0)),g.rc[r]))return;
+    for(let c=0;c<n;c++)if(!same(runs(colOf(c).map(v=>v===1?1:0)),g.cc[c]))return;
+    g.over=true;clearInterval(timer);g.cur=g.cur.map(v=>v===1?1:0);g.cellEls.forEach((_,i)=>drawCell(i));
+    const s=g.helps===0?3:g.helps<=2?2:1,daily=mode&&mode.daily,earned=!daily&&g.level%3===0;if(earned)st.hints++;st.cur=null;gSave('nono',st);
+    finishLevel(NonoGame,st,g.level,s,{clean:g.helps===0},'اكتملت اللوحة!',`الوقت ${fmtTime(g.time)} · مساعدات ${g.helps}`+(earned?' · كسبت تلميحاً':''));
+  }
+  function play(level,fresh){
+    clearOverlays();clearInterval(timer);st=gState('nono',{hints:3,cur:null});
+    if(mode&&mode.daily)gen(7,mode.seed);
+    else if(!fresh&&st.cur&&st.cur.level===level)g=Object.assign({},st.cur,{cur:st.cur.cur.slice(),over:false});
+    else gen(level);
+    const n=g.n;boardEl.innerHTML='';boardEl.style.gridTemplateColumns=`auto repeat(${n},minmax(0,1fr))`;
+    boardEl.appendChild(document.createElement('div'));g.colEls=[];g.rowEls=[];g.cellEls=[];
+    for(let c=0;c<n;c++){const d=document.createElement('div');d.className='nclue-c';d.innerHTML=g.cc[c].map(v=>`<span>${v}</span>`).join('');boardEl.appendChild(d);g.colEls.push(d)}
+    for(let r=0;r<n;r++){const d=document.createElement('div');d.className='nclue-r';d.innerHTML=g.rc[r].map(v=>`<span>${v}</span>`).join('');boardEl.appendChild(d);g.rowEls.push(d);
+      for(let c=0;c<n;c++){const b=document.createElement('button');b.type='button';b.dataset.i=r*n+c;b.setAttribute('aria-label','خانة');boardEl.appendChild(b);g.cellEls.push(b)}}
+    g.cellEls.forEach((_,i)=>drawCell(i));updClues();stats();persist();
+    timer=setInterval(()=>{if(document.hidden||g.over)return;g.time++;setStat('s4',fmtTime(g.time));if(g.time%10===0)persist()},1000);
+  }
+  return {id:'nono',name:'نونوجرام',desc:'ارسم الصورة المخفية بأرقام الصفوف والأعمدة',play,
+    icon:'<svg viewBox="0 0 48 48"><g fill="#3fbf9b"><rect x="14" y="14" width="8" height="8" rx="1.5"/><rect x="24" y="14" width="8" height="8" rx="1.5"/><rect x="34" y="24" width="8" height="8" rx="1.5"/><rect x="14" y="34" width="8" height="8" rx="1.5"/><rect x="24" y="24" width="8" height="8" rx="1.5"/></g><g fill="#1d373b"><rect x="34" y="14" width="8" height="8" rx="1.5"/><rect x="14" y="24" width="8" height="8" rx="1.5"/><rect x="24" y="34" width="8" height="8" rx="1.5"/><rect x="34" y="34" width="8" height="8" rx="1.5"/></g><g fill="#f2b84b" font-family="sans-serif" font-size="7" font-weight="700" text-anchor="middle"><text x="18" y="10">2</text><text x="28" y="10">1</text><text x="38" y="10">1</text><text x="8" y="21">2</text></g></svg>',
+    help:'الأرقام فوق كل عمود وبجانب كل صف تخبرك بأطوال المجموعات الملوّنة فيه بالترتيب، وبين كل مجموعتين فراغ واحد على الأقل. «تلوين» يلوّن الخانات، و«علامة ✕» تضع إشارة على الخانات الفارغة لتتذكرها. اسحب إصبعك لتلوين عدة خانات معاً. الرقم يبهت عندما يكتمل صفه أو عموده.',
+    progress(){const s=gState('nono',{hints:3});return {level:s.level,stars:starTotal(s)}},
+    start(){
+      st=gState('nono',{hints:3,cur:null});setStats([['s1','المستوى'],['s2','الحجم','gold'],['s3','مساعدات'],['s4','الوقت']]);paint=1;
+      boardEl=document.createElement('div');boardEl.className='nono';stage.appendChild(boardEl);
+      boardEl.onpointerdown=e=>{const c=e.target.closest('.ncell');if(!c||g.over)return;e.preventDefault();const i=+c.dataset.i;drag={target:g.cur[i]===paint?0:paint,last:-1};apply(i);try{boardEl.setPointerCapture(e.pointerId)}catch(_){}};
+      boardEl.onpointermove=e=>{if(!drag)return;const el=document.elementFromPoint(e.clientX,e.clientY),c=el&&el.closest&&el.closest('.ncell');if(c&&boardEl.contains(c))apply(+c.dataset.i)};
+      boardEl.onpointerup=boardEl.onpointercancel=()=>{if(!drag)return;drag=null;persist();checkWin()};
+      fillB=btn('تلوين',IC.pen,()=>{paint=1;snd('tap');stats()});
+      xB=btn('علامة ✕',null,()=>{paint=2;snd('tap');stats()});
+      btn('افحص',IC.check,()=>{if(g.over)return;const bad=g.cur.map((v,i)=>(v===1&&!g.sol[i])||(v===2&&g.sol[i])?i:-1).filter(i=>i>=0);
+        g.helps++;stats();persist();snd(bad.length?'err':'ok');toast(bad.length?bad.length+' خانة خاطئة باللون الأحمر':'لا توجد أخطاء حتى الآن');
+        bad.forEach(i=>g.cellEls[i].classList.add('bad'));setTimeout(()=>bad.forEach(i=>g.cellEls[i]&&g.cellEls[i].classList.remove('bad')),1600)});
+      btn('تلميح',IC.hint,()=>{if(g.over)return;if(!st.hints){toast('لا توجد تلميحات. تكسب واحداً كل 3 مستويات');return}
+        const want=i=>g.sol[i]?1:2,cand=g.cur.map((v,i)=>v!==want(i)&&(g.sol[i]||v===1)?i:-1).filter(i=>i>=0);if(!cand.length)return;
+        const i=cand[Math.floor(Math.random()*cand.length)];g.cur[i]=want(i);st.hints--;g.helps++;gSave('nono',st);drawCell(i);updClues();stats();persist();snd('ok');
+        g.cellEls[i].classList.add('hintflash');checkWin()});
+      btn('إعادة',IC.reset,()=>play(g.level,true));
+      play(st.level);
+    },
+    stop(){clearInterval(timer);if(g&&!g.over)persist()}};
+})();

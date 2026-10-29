@@ -1,0 +1,483 @@
+/* ================= game 9: Arabic crossword ================= */
+const WordsGame=(()=>{
+  const RAW=`قمر|يضيء السماء ليلاً
+شمس|النجم الذي تدور حوله الأرض
+بحر|ماء مالح واسع
+نخلة|شجرة التمر
+جمل|سفينة الصحراء
+صقر|طائر جارح يُستخدم في القنص
+الكويت|بلد الأبراج الثلاثة الشهيرة
+قلم|أداة للكتابة
+كتاب|خير جليس في الزمان
+مدرسة|مكان التعلّم
+طبيب|يعالج المرضى
+مطر|ماء ينزل من السحاب
+رمل|تتكوّن منه الكثبان
+دانة|لؤلؤة كبيرة نادرة
+سفينة|تبحر في الماء
+مطار|مكان هبوط الطائرات
+قهوة|مشروب يُقدَّم بالدلّة
+دلة|إبريق القهوة العربية
+تمر|ثمر النخيل
+خبز|يُصنع من الدقيق ويُخبز
+حليب|شراب أبيض من البقرة
+عسل|يصنعه النحل
+نحلة|حشرة تصنع العسل
+اسد|ملك الغابة
+فيل|أضخم حيوان بري
+حصان|يُسرج ويُركب في السباق
+غزال|حيوان رشيق سريع العدو
+قطة|حيوان أليف يموء
+سمكة|تعيش في الماء وتتنفس بالخياشيم
+وردة|زهرة جميلة لها أشواك
+شجرة|لها جذع وأغصان وأوراق
+جبل|أعلى من التل
+نهر|ماء عذب يجري
+واحة|مكان أخضر فيه ماء وسط الصحراء
+قلعة|حصن قديم
+باب|يُفتح ويُغلق
+مفتاح|يفتح القفل
+ساعة|تخبرك بالوقت
+هاتف|جهاز للاتصال
+حاسوب|جهاز يُبرمج ويعالج البيانات
+شاشة|نرى عليها الصورة
+نجمة|تتلألأ في السماء
+سحابة|تحمل المطر
+ريح|هواء متحرك
+ثلج|ماء متجمد
+نار|تحرق وتدفئ
+عين|نرى بها
+اذن|نسمع بها
+قلب|يضخ الدم في الجسم
+لسان|نتذوق به الطعام
+صيف|فصل الحر
+ربيع|فصل الزهور
+خريف|فصل تساقط الأوراق
+شتاء|فصل البرد
+رمضان|شهر الصيام
+عيد|يوم فرح بعد الصيام
+مسجد|بيت الصلاة
+كرة|تُركل في الملعب
+ملعب|مكان المباريات
+هدف|يسجله المهاجم في المرمى
+حكم|يدير المباراة بصفارته
+سباق|منافسة في السرعة
+بطل|الفائز بالمسابقة
+ذهب|معدن أصفر ثمين
+فضة|معدن أبيض ثمين
+حديد|معدن قوي يصدأ
+نفط|ثروة الخليج السوداء
+جمارك|جهة تفتش البضائع في المنافذ
+ميناء|مرفأ السفن
+شاحنة|سيارة نقل كبيرة
+سيارة|مركبة بأربع عجلات
+طريق|نسير عليه
+جسر|يعبر فوق النهر
+برج|بناء عالٍ جداً
+مدينة|أكبر من القرية
+قرية|بيوت قليلة في الريف
+سوق|مكان البيع والشراء
+تاجر|يبيع ويشتري
+دينار|عملة الكويت
+لعبة|نتسلى بها
+لغز|سؤال يحتاج تفكيراً
+فكرة|تخطر في البال
+حلم|نراه في النوم
+صباح|أول النهار
+ليل|يأتي بعد النهار
+فجر|أول ضوء الصباح
+غروب|مغيب الشمس
+بيت|نسكن فيه
+غرفة|جزء من البيت
+مطبخ|نطبخ فيه الطعام
+كرسي|نجلس عليه
+طاولة|نضع عليها الطعام
+سرير|ننام عليه
+مصباح|يضيء الغرفة
+نافذة|نطل منها على الخارج
+حديقة|فيها زهور وأشجار
+فراشة|حشرة ملوّنة الأجنحة
+عصفور|طائر صغير يغرد
+حمامة|طائر السلام
+بطة|طائر يسبح في البركة
+دولفين|حيوان بحري ذكي
+حوت|أضخم حيوان في البحر
+سلحفاة|بطيئة تحمل بيتها على ظهرها
+ارنب|حيوان بأذنين طويلتين
+ثعلب|حيوان معروف بالمكر
+نمر|قط كبير مخطط
+زرافة|أطول الحيوانات رقبة
+تفاحة|فاكهة حمراء أو خضراء
+موز|فاكهة صفراء طويلة
+برتقال|فاكهة يُعصر منها شراب
+عنب|عناقيد حلوة
+بطيخ|فاكهة صيفية كبيرة حمراء من الداخل
+ليمون|حامض أصفر
+رمان|فاكهة حباتها حمراء كثيرة
+قمح|يُطحن ليصبح دقيقاً
+ارز|حبوب بيضاء تُطبخ مع الطعام
+شاي|مشروب ساخن من الأوراق
+ملح|يضاف للطعام ليعطيه طعماً
+سكر|يحلّي الشاي
+معلم|يدرّس الطلاب
+طالب|يتعلم في المدرسة
+مهندس|يصمم المباني
+طيار|يقود الطائرة
+شرطي|يحفظ الأمن
+بحار|يعمل في السفن
+علم|راية الوطن
+وطن|الأرض التي ننتمي إليها
+صديق|رفيق وفيّ
+اسرة|الأب والأم والأبناء
+مكتبة|مكان الكتب
+رسالة|نرسلها إلى شخص
+بريد|ينقل الرسائل
+صورة|نلتقطها بالكاميرا
+لون|أحمر أو أزرق مثلاً
+احمر|لون الدم
+ازرق|لون السماء
+اخضر|لون العشب
+اصفر|لون الليمون
+ابيض|لون الثلج
+اسود|لون الليل
+مربع|شكل له أربعة أضلاع متساوية
+مثلث|شكل له ثلاثة أضلاع
+رقم|يُكتب به العدد
+مليون|ألف ألف
+دقيقة|ستون ثانية
+اسبوع|سبعة أيام
+شهر|ثلاثون يوماً تقريباً
+سنة|اثنا عشر شهراً
+قارب|سفينة صغيرة
+مجداف|يحرّك القارب
+شراع|قماش يدفع السفينة بالريح
+صياد|يصطاد السمك
+شبكة|يصطاد بها الصياد
+جزيرة|أرض يحيط بها الماء
+فيلكا|جزيرة كويتية شهيرة
+خليج|بحر يدخل في اليابسة
+موجة|ترتفع وتنكسر على الشاطئ
+ساحل|حافة البحر
+خيمة|بيت من قماش في البر
+فانوس|مصباح قديم يُحمل باليد
+بوصلة|تدلّك على الشمال
+خريطة|رسم يوضح الأماكن
+كنز|ذهب مدفون يبحث عنه القراصنة
+مغامرة|رحلة مليئة بالمفاجآت
+سلم|نصعد عليه درجة درجة
+حبل|يُربط به الشيء
+مظلة|تحمينا من المطر والشمس
+حذاء|نلبسه في القدم
+قميص|نلبسه على الجسم وله أزرار
+غترة|غطاء رأس الرجل الخليجي
+عباءة|ثوب واسع يُلبس فوق الملابس
+بشت|عباءة رجالية مطرزة للمناسبات
+مجلس|مكان استقبال الضيوف
+ديوانية|مكان اجتماع الرجال في الكويت
+مطرقة|أداة لدق المسامير
+مسمار|يُدق في الخشب
+منشار|يقطع الخشب
+فرشاة|ننظف بها الأسنان
+صابون|نغسل به أيدينا
+منشفة|نجفف بها الجسم
+مرآة|نرى فيها وجوهنا
+مشط|نسرّح به الشعر
+ثلاجة|تحفظ الطعام بارداً
+فرن|نخبز فيه الخبز
+ملعقة|نأكل بها الشوربة
+شوكة|أداة طعام لها أسنان
+سكين|تقطع الطعام
+صحن|نضع فيه الطعام
+كوب|نشرب فيه الماء
+ابريق|نصب منه الشاي
+وسادة|نضع عليها الرأس عند النوم
+بطانية|غطاء يدفئنا في الشتاء
+سجادة|تُفرش على الأرض
+ستارة|تغطي النافذة
+مكنسة|ننظف بها الأرض
+دراجة|مركبة بعجلتين نحرّكها بالأقدام
+حافلة|سيارة كبيرة تنقل الركاب
+قطار|يسير على سكة حديد
+صاروخ|ينطلق إلى الفضاء
+فضاء|ما وراء الغلاف الجوي
+كوكب|الأرض واحد منها
+مريخ|الكوكب الأحمر
+زحل|كوكب له حلقات
+نيزك|صخرة تسقط من السماء
+مجرة|درب التبانة واحدة منها
+بركان|جبل يقذف الحمم
+زلزال|اهتزاز الأرض
+عاصفة|رياح قوية
+برق|ضوء يلمع في السماء وقت المطر
+رعد|صوت يأتي بعد البرق
+ضباب|يحجب الرؤية في الصباح
+غيمة|سحابة
+محيط|أكبر من البحر
+بحيرة|ماء تحيط به اليابسة
+شلال|ماء يسقط من مكان عالٍ
+غابة|أشجار كثيرة متجاورة
+وادي|منخفض بين الجبال
+كهف|فتحة في الجبل
+صخرة|حجر كبير
+حصى|حجارة صغيرة
+تراب|نزرع فيه النبات
+بذرة|منها تنبت الشجرة
+جذر|جزء النبات تحت الأرض
+غصن|فرع من الشجرة
+ورقة|خضراء على الشجرة أو نكتب عليها
+زهرة|تفوح منها رائحة جميلة
+ياسمين|زهرة بيضاء عطرة
+نعناع|نبات يوضع في الشاي
+بقدونس|خضار ورقي في التبولة
+طماطم|خضار حمراء في السلطة
+خيار|خضار خضراء طويلة
+جزر|خضار برتقالية يحبها الأرنب
+بصل|يُدمع العين عند تقطيعه
+ثوم|له رائحة قوية
+بطاطس|تُقلى وتُصنع منها الشيبس
+فلفل|حار أو حلو
+مشمش|فاكهة برتقالية صغيرة
+خوخ|فاكهة ناعمة الملمس
+كرز|فاكهة حمراء صغيرة
+توت|فاكهة صغيرة حمراء أو سوداء
+اناناس|فاكهة استوائية لها تاج
+جوز|مكسرات تشبه الدماغ
+لوز|مكسرات بيضاوية
+فستق|مكسرات خضراء
+كعكة|حلوى عيد الميلاد
+بسكويت|حلوى مقرمشة
+شوكولاتة|حلوى بنية من الكاكاو
+مثلجات|حلوى باردة في الصيف
+عصير|شراب من الفاكهة
+لبن|حليب رائب
+جبن|يُصنع من الحليب
+زيت|نقلي به الطعام
+عدس|حبوب نطبخ منها الشوربة
+مكبوس|طبق كويتي من الأرز واللحم
+هريس|طبق رمضاني من القمح واللحم
+سمبوسة|معجنات رمضانية مثلثة
+لقيمات|حلوى كويتية بالشيرة
+حمار|حيوان يحمل الأثقال
+بقرة|تعطينا الحليب
+خروف|حيوان يعطينا الصوف
+ماعز|حيوان له قرون صغيرة ولحية
+دجاجة|تبيض لنا البيض
+ديك|يصيح في الفجر
+نسر|طائر جارح كبير
+بومة|طائر يسهر في الليل
+ببغاء|طائر يقلّد الكلام
+طاووس|طائر بذيل ملوّن جميل
+نملة|حشرة صغيرة نشيطة
+عنكبوت|ينسج بيتاً من الخيوط
+ذبابة|حشرة مزعجة
+بعوضة|تلسع وتسبب الحكة
+ضفدع|يقفز ويعيش قرب الماء
+تمساح|زاحف ضخم في الأنهار
+افعى|زاحف بلا أرجل
+قرد|حيوان يتسلق الأشجار
+كنغر|يحمل صغيره في جيب
+بطريق|طائر لا يطير يعيش في الجليد
+قرش|سمكة مفترسة كبيرة
+اخطبوط|له ثمانية أذرع
+محارة|بداخلها اللؤلؤ
+سلطعون|يمشي جانبياً
+طبل|آلة إيقاع نضربها
+عود|آلة موسيقية عربية
+ناي|آلة نفخ قديمة
+قصيدة|شعر من أبيات
+شاعر|يكتب الشعر
+رسام|يرسم اللوحات
+لوحة|عمل فني معلّق على الجدار
+مسرح|مكان التمثيل
+فيلم|نشاهده في السينما
+اغنية|كلام يُغنّى بلحن
+حكاية|قصة تُروى للأطفال
+جريدة|تنشر الأخبار يومياً
+مجلة|تصدر كل أسبوع أو شهر
+قاموس|كتاب معاني الكلمات
+حقيبة|نحمل فيها الكتب
+دفتر|نكتب فيه الواجبات
+ممحاة|تمسح أخطاء القلم الرصاص
+مسطرة|نرسم بها خطاً مستقيماً
+سبورة|يكتب عليها المعلم
+امتحان|اختبار آخر الفصل
+جامعة|بعد المدرسة الثانوية
+مستشفى|يُعالج فيه المرضى
+صيدلية|نشتري منها الدواء
+دواء|يأخذه المريض
+ممرضة|تساعد الطبيب
+اسعاف|سيارة تنقل المصابين
+بنك|نحفظ فيه المال
+محفظة|نضع فيها النقود
+ثروة|مال كثير
+رحلة|سفر للتنزه
+جواز|وثيقة السفر
+فندق|ننزل فيه في السفر
+تذكرة|نحتاجها لركوب الطائرة
+بوابة|باب كبير
+سياج|حاجز حول الحديقة
+مزرعة|نزرع فيها ونربي الحيوانات
+فلاح|يعمل في الزراعة
+حصاد|جمع المحصول
+بئر|نستخرج منه الماء
+خزان|يُحفظ فيه الماء
+مروحة|تحرّك الهواء
+مكيف|يبرّد الغرفة في الصيف
+مدفأة|تدفئ الغرفة
+كهرباء|تشغّل الأجهزة
+بطارية|تشحن الهاتف
+شاحن|نوصل به الهاتف لشحنه
+سماعة|نسمع بها الصوت
+انترنت|شبكة تربط العالم
+تطبيق|برنامج على الهاتف
+لاعب|يشارك في المباراة
+فريق|مجموعة لاعبين
+مدرب|يدرّب اللاعبين
+جائزة|يحصل عليها الفائز
+كاس|بطولة يرفعها الفائز
+ميدالية|تُعلّق على صدر البطل
+سباحة|رياضة في الماء
+ركض|رياضة على الأقدام
+شطرنج|لعبة فيها ملك ووزير
+دمعة|تنزل من العين عند البكاء
+ابتسامة|تظهر على الوجه عند الفرح
+شجاعة|عكس الخوف
+صبر|مفتاح الفرج
+كرم|صفة العربي مع الضيف
+امانة|حفظ الشيء لصاحبه
+صدق|عكس الكذب
+فرح|عكس الحزن
+سحور|وجبة قبل الفجر في رمضان
+فطور|أول وجبة في اليوم
+غداء|وجبة الظهر
+عشاء|وجبة الليل
+ضيف|يزورنا ونكرمه
+جار|يسكن بجانبنا
+خال|أخو الأم
+جدة|أم الأب أو الأم
+حفيد|ابن الابن
+عروس|المرأة في يوم زفافها
+حناء|تُنقش بها الأيدي في الأعراس
+بخور|يُحرق فتفوح منه رائحة طيبة
+عطر|رائحة جميلة في زجاجة
+دشداشة|ثوب الرجل الكويتي
+نقصة|عادة كويتية في رمضان لتبادل الأطباق
+قرقيعان|احتفال الأطفال في منتصف رمضان
+سدو|نسيج بدوي ملوّن
+ابرة|نخيط بها الملابس
+خيط|يُدخل في الإبرة
+جيب|نضع فيه أغراضاً صغيرة في الثوب
+خاتم|يُلبس في الإصبع
+عقد|يُلبس حول الرقبة
+نظارة|تساعدنا على الرؤية
+قبعة|تحمي الرأس من الشمس`;
+  const BANK=RAW.trim().split('\n').map(l=>{const [w,c]=l.split('|');return {w:[...w.trim().replace(/[أإآ]/g,'ا').replace(/ى/g,'ي')],c:c.trim()}});
+  const ALPHA=[...'ابتثجحخدرزسشصطعفقكلمنهوية'];
+  let st,g,gridEl,barEl,padEl,listEl,hb,sel=0;
+  function gen(level,seed){
+    const R=rng(seed??level*4241+19),want=Math.min(4+level,11),MAX=9;let best=null;
+    const daily=mode&&mode.daily,key=o=>o.w.join('');
+    if(!daily){st.seen=st.seen||[];if(BANK.filter(o=>!st.seen.includes(key(o))).length<60)st.seen=[]}
+    const avoid=new Set(daily?[]:st.seen);
+    for(let at=0;at<25;at++){
+      const pool=shuffle(BANK.filter(o=>o.w.length<=MAX&&!avoid.has(key(o))),R);
+      const fi=pool.findIndex(o=>o.w.length>=5&&o.w.length<=7),first=pool.splice(fi<0?0:fi,1)[0];
+      const G=new Map(),K=(r,c)=>r*1000+c,placed=[];
+      let bb={r0:100,r1:100,c0:100,c1:100+first.w.length-1};
+      const put=(o,r,c,dir)=>{const dr=dir==='d'?1:0,dc=dir==='a'?1:0;for(let k=0;k<o.w.length;k++)G.set(K(r+dr*k,c+dc*k),o.w[k]);placed.push({o,r,c,dir})};
+      put(first,100,100,'a');
+      const can=(o,r,c,dir)=>{const dr=dir==='d'?1:0,dc=dir==='a'?1:0,L=o.w.length;
+        if(G.has(K(r-dr,c-dc))||G.has(K(r+dr*L,c+dc*L)))return -1;let inter=0;
+        for(let k=0;k<L;k++){const rr=r+dr*k,cc=c+dc*k,ch=G.get(K(rr,cc));
+          if(ch!==undefined){if(ch!==o.w[k])return -1;inter++}
+          else if(G.has(K(rr+dc,cc+dr))||G.has(K(rr-dc,cc-dr)))return -1}
+        if(inter===L)return -1;
+        const r0=Math.min(bb.r0,r),r1=Math.max(bb.r1,r+dr*(L-1)),c0=Math.min(bb.c0,c),c1=Math.max(bb.c1,c+dc*(L-1));
+        if(r1-r0+1>MAX||c1-c0+1>MAX)return -1;return inter};
+      for(const o of pool){
+        if(placed.length>=want)break;
+        const opts=[];
+        for(const [key,ch] of G){const r=Math.floor(key/1000),c=key%1000;
+          for(let k=0;k<o.w.length;k++){if(o.w[k]!==ch)continue;for(const dir of ['a','d']){const sr=dir==='d'?r-k:r,sc=dir==='a'?c-k:c,v=can(o,sr,sc,dir);if(v>0)opts.push([v,sr,sc,dir])}}}
+        if(!opts.length)continue;
+        const mx=Math.max(...opts.map(x=>x[0])),top=opts.filter(x=>x[0]===mx),pick=top[Math.floor(R()*top.length)],[,r,c,dir]=pick;
+        put(o,r,c,dir);bb={r0:Math.min(bb.r0,r),r1:Math.max(bb.r1,r+(dir==='d'?o.w.length-1:0)),c0:Math.min(bb.c0,c),c1:Math.max(bb.c1,c+(dir==='a'?o.w.length-1:0))};
+      }
+      if(!best||placed.length>best.placed.length)best={placed,bb};
+      if(placed.length>=want)break;
+    }
+    const {placed,bb}=best,W=bb.c1-bb.c0+1,H=bb.r1-bb.r0+1,sol=new Array(W*H).fill('');
+    placed.forEach(p=>{p.cells=[];const dr=p.dir==='d'?1:0,dc=p.dir==='a'?1:0;for(let k=0;k<p.o.w.length;k++){const i=(p.r-bb.r0+dr*k)*W+(p.c-bb.c0+dc*k);sol[i]=p.o.w[k];p.cells.push(i)}});
+    const starts=[...new Set(placed.map(p=>p.cells[0]))].sort((a,b)=>a-b),num={};starts.forEach((s,k)=>num[s]=k+1);
+    const entries=placed.map(p=>({num:num[p.cells[0]],dir:p.dir,cells:p.cells,ans:p.o.w,clue:p.o.c,solved:false}))
+      .sort((a,b)=>a.dir===b.dir?a.num-b.num:(a.dir==='a'?-1:1));
+    g={level,W,H,sol,cur:new Array(W*H).fill(''),entries,num,mistakes:0,hints:0,over:false};
+    if(!daily){placed.forEach(p=>{const k=key(p.o);if(!st.seen.includes(k))st.seen.push(k)});gSave('words',st)}
+  }
+  const locked=i=>g.entries.some(e=>e.solved&&e.cells.includes(i));
+  function persist(){if(mode&&mode.daily)return;st.cur={level:g.level,W:g.W,H:g.H,sol:g.sol,cur:g.cur,entries:g.entries,num:g.num,mistakes:g.mistakes,hints:g.hints};gSave('words',st)}
+  function render(){
+    const e=g.entries[sel],inw=new Set(e?e.cells:[]),curCell=e&&!e.solved?e.cells.find(i=>!g.cur[i]):undefined;
+    [...gridEl.children].forEach((el,i)=>{if(!g.sol[i])return;el.className='xc'+(inw.has(i)?' inw':'')+(i===curCell?' cur':'')+(locked(i)?' ok':'');el.querySelector('span').textContent=g.cur[i]||''});
+    if(e){barEl.innerHTML='';const b=document.createElement('b');b.textContent=e.num+' '+(e.dir==='a'?'أفقي':'عمودي');barEl.append(b,document.createTextNode(e.clue+' ('+e.ans.length+' حروف)'+(e.solved?' ✓':'')))}
+    padEl.innerHTML='';
+    if(e&&!e.solved){const R=rng(g.level*31+sel*7+e.num);const letters=e.ans.slice();while(letters.length<e.ans.length+3)letters.push(ALPHA[Math.floor(R()*ALPHA.length)]);
+      shuffle(letters,R).forEach(ch=>{const k=document.createElement('button');k.type='button';k.textContent=ch;k.onclick=()=>input(ch);padEl.appendChild(k)});
+      const d=document.createElement('button');d.type='button';d.className='del';d.textContent='⌫ حذف';d.onclick=del;padEl.appendChild(d)}
+    listEl.innerHTML='';
+    [['a','أفقي'],['d','عمودي']].forEach(([dir,label])=>{const col=document.createElement('div');const h=document.createElement('h4');h.textContent=label;col.appendChild(h);
+      g.entries.forEach((x,k)=>{if(x.dir!==dir)return;const b=document.createElement('button');b.type='button';b.className=(x.solved?'sv ':'')+(k===sel?'on':'');b.textContent=x.num+'. '+x.clue;b.onclick=()=>{sel=k;snd('tap');render()};col.appendChild(b)});
+      listEl.appendChild(col)});
+    const done=g.entries.filter(x=>x.solved).length;
+    setStat('s1',mode&&mode.daily?'اليوم':g.level);setStat('s2',done+'/'+g.entries.length);setStat('s3',g.mistakes);setStat('s4',st.hints);hb.disabled=!st.hints||g.over;
+  }
+  function nextOpen(){const n=g.entries.length;for(let k=1;k<=n;k++){const j=(sel+k)%n;if(!g.entries[j].solved){sel=j;return}}}
+  function check(e){
+    if(e.cells.every(i=>g.cur[i]===g.sol[i])){
+      g.entries.forEach(x=>{if(!x.solved&&x.cells.every(i=>g.cur[i]===g.sol[i]))x.solved=true});snd('ok');buzz(20);
+      if(g.entries.every(x=>x.solved)){win();return}nextOpen();render();
+    }else{
+      g.mistakes++;snd('err');buzz(60);const cells=e.cells.filter(i=>!locked(i));
+      cells.forEach(i=>gridEl.children[i].classList.add('bad'));
+      setTimeout(()=>{cells.forEach(i=>{g.cur[i]=''});render();persist()},450);
+    }
+  }
+  function input(ch){const e=g.entries[sel];if(!e||e.solved||g.over)return;const i=e.cells.find(k=>!g.cur[k]);if(i==null)return;g.cur[i]=ch;snd('tap');render();if(e.cells.every(k=>g.cur[k]))check(e);persist()}
+  function del(){const e=g.entries[sel];if(!e||e.solved)return;const fill=e.cells.filter(i=>g.cur[i]&&!locked(i));if(!fill.length)return;g.cur[fill[fill.length-1]]='';snd('tap');render();persist()}
+  function win(){g.over=true;const help=g.mistakes+g.hints,s=help===0?3:help<=2?2:1,daily=mode&&mode.daily,earned=!daily&&g.level%2===0;if(earned)st.hints++;st.cur=null;gSave('words',st);render();
+    finishLevel(WordsGame,st,g.level,s,{clean:help===0},'حللت الكلمات كلها!',`${g.entries.length} كلمات · أخطاء ${g.mistakes} · تلميحات ${g.hints}`+(earned?' · كسبت تلميحاً':''))}
+  function play(level,fresh){
+    clearOverlays();st=gState('words',{hints:3,cur:null});
+    if(mode&&mode.daily)gen(6,mode.seed);
+    else if(!fresh&&st.cur&&st.cur.level===level)g=Object.assign({},st.cur,{cur:st.cur.cur.slice(),entries:st.cur.entries.map(e=>Object.assign({},e)),over:false});
+    else gen(level);
+    sel=Math.max(0,g.entries.findIndex(e=>!e.solved));
+    gridEl.innerHTML='';gridEl.style.gridTemplateColumns=`repeat(${g.W},minmax(0,1fr))`;gridEl.style.width=`min(100%, ${g.W*46}px)`;
+    const numAt={};g.entries.forEach(e=>numAt[e.cells[0]]=e.num);
+    for(let i=0;i<g.W*g.H;i++){
+      if(!g.sol[i]){const d=document.createElement('div');d.className='xc blank';gridEl.appendChild(d);continue}
+      const b=document.createElement('button');b.type='button';b.dataset.i=i;b.innerHTML=(numAt[i]?`<i>${numAt[i]}</i>`:'')+'<span></span>';gridEl.appendChild(b);
+    }
+    render();persist();
+  }
+  return {id:'words',name:'كلمات متقاطعة',desc:'حلّ التعريفات واملأ الشبكة بالعربي',play,
+    icon:'<svg viewBox="0 0 48 48"><g fill="#e9f3ef"><rect x="18" y="4" width="12" height="12" rx="2"/><rect x="18" y="18" width="12" height="12" rx="2"/><rect x="4" y="18" width="12" height="12" rx="2"/><rect x="32" y="18" width="12" height="12" rx="2"/><rect x="18" y="32" width="12" height="12" rx="2"/></g><g font-family="sans-serif" font-size="9" font-weight="700" fill="#0b1618" text-anchor="middle"><text x="24" y="13.5">ك</text><text x="38" y="27.5">ل</text><text x="24" y="27.5">م</text><text x="10" y="27.5">ة</text><text x="24" y="41.5">ب</text></g></svg>',
+    help:'اختر كلمة بالضغط على خانتها أو على تعريفها في القائمة، ثم اضغط الحروف بالترتيب. الكلمات الأفقية تُقرأ من اليمين إلى اليسار، والعمودية من الأعلى للأسفل. اضغط الخانة المشتركة مرة ثانية لتبديل الاتجاه. «تلميح» يكشف حرفاً.',
+    progress(){const s=gState('words',{hints:3});return {level:s.level,stars:starTotal(s)}},
+    start(){
+      st=gState('words',{hints:3,cur:null});setStats([['s1','المستوى'],['s2','الكلمات','gold'],['s3','أخطاء'],['s4','تلميحات']]);
+      gridEl=document.createElement('div');gridEl.className='xw';barEl=document.createElement('div');barEl.className='cluebar';
+      padEl=document.createElement('div');padEl.className='lpad';listEl=document.createElement('div');listEl.className='clist';
+      stage.append(gridEl,barEl,padEl,listEl);stage.style.display='flex';stage.style.flexDirection='column';stage.style.gap='12px';
+      gridEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const i=+b.dataset.i;
+        const hits=g.entries.map((x,k)=>x.cells.includes(i)?k:-1).filter(k=>k>=0);if(!hits.length)return;
+        sel=hits.includes(sel)&&hits.length>1?hits.find(k=>k!==sel):(hits.find(k=>!g.entries[k].solved)??hits[0]);snd('tap');render()});
+      hb=btn('تلميح',IC.hint,()=>{const e=g.entries[sel];if(!e||e.solved||g.over||!st.hints)return;
+        const i=e.cells.find(k=>g.cur[k]!==g.sol[k]);if(i==null)return;g.cur[i]=g.sol[i];st.hints--;g.hints++;gSave('words',st);snd('ok');
+        render();if(e.cells.every(k=>g.cur[k]))check(e);persist()});
+      btn('الكلمة التالية',IC.list,()=>{nextOpen();snd('tap');render()});
+      btn('إعادة',IC.reset,()=>play(g.level,true));
+      play(st.level);
+    },
+    stop(){stage.style.display='';stage.style.flexDirection='';stage.style.gap=''}};
+})();
