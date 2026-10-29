@@ -46,13 +46,14 @@ const NonoGame=(()=>{
   function updClues(){const n=g.n;for(let r=0;r<n;r++)g.rowEls[r].classList.toggle('done',same(runs(g.cur.slice(r*n,r*n+n).map(v=>v===1?1:0)),g.rc[r]));
     for(let c=0;c<n;c++)g.colEls[c].classList.toggle('done',same(runs(colOf(c).map(v=>v===1?1:0)),g.cc[c]))}
   function stats(){setStat('s1',mode&&mode.daily?'اليوم':g.level);setStat('s2',g.n+'×'+g.n);setStat('s3',(g.miss||0)+' من 3');setStat('s4',fmtTime(g.time));
-    fillB.classList.toggle('on',paint===1);xB.classList.toggle('on',paint===2)}
+    fillB.classList.toggle('on',paint===1);xB.classList.toggle('on',paint===2);fillB.setAttribute('aria-checked',paint===1);xB.setAttribute('aria-checked',paint===2)}
   function persist(){if(mode&&mode.daily)return;st.cur={level:g.level,n:g.n,sol:g.sol,rc:g.rc,cc:g.cc,pic:g.pic,cur:g.cur,helps:g.helps,miss:g.miss||0,time:g.time};gSave('nono',st)}
   function apply(i){if(drag.last===i)return;drag.last=i;if(g.cur[i]===drag.target)return;
-    if(drag.target===1&&!g.sol[i]){g.cur[i]=2;drawCell(i);const el=g.cellEls[i];el.classList.add('bad');setTimeout(()=>el.classList.remove('bad'),700);
+    const wrongFill=drag.target===1&&!g.sol[i],wrongX=drag.target===2&&g.sol[i];
+    if(wrongFill||wrongX){g.cur[i]=wrongFill?2:1;drawCell(i);const el=g.cellEls[i];el.classList.add('bad');setTimeout(()=>el.classList.remove('bad'),700);
       g.miss=(g.miss||0)+1;drag=null;snd('err');buzz([50,30,50]);updClues();stats();persist();
-      if(g.miss>=3){g.over=true;clearInterval(timer);st.cur=null;gSave('nono',st);loseBox({title:'ثلاثة أخطاء',text:'لوّنت 3 خانات فارغة. تبدأ اللوحة من جديد!',onRetry:()=>play(g.level,true)})}
-      else toast('✕ هذه الخانة فارغة · بقي لك '+(3-g.miss===1?'خطأ واحد':'خطآن'));return}
+      if(g.miss>=3){g.over=true;clearInterval(timer);st.cur=null;gSave('nono',st);loseBox({title:'ثلاثة أخطاء',text:'ثلاث خانات في غير مكانها. تبدأ اللوحة من جديد!',onRetry:()=>play(g.level,true)})}
+      else toast((wrongFill?'✕ هذه الخانة فارغة':'■ هذه الخانة من الصورة')+' · بقي لك '+(3-g.miss===1?'خطأ واحد':'خطآن'));return}
     g.cur[i]=drag.target;snd(drag.target===1?'tap':'flip');buzz(5);drawCell(i);updClues()}
   function checkWin(){
     const n=g.n;for(let r=0;r<n;r++)if(!same(runs(g.cur.slice(r*n,r*n+n).map(v=>v===1?1:0)),g.rc[r]))return;
@@ -79,7 +80,7 @@ const NonoGame=(()=>{
   }
   return {id:'nono',name:'نونوجرام',desc:'اكشف صوراً مخفية من الفضاء والكويت بالأرقام',play,
     icon:'<svg viewBox="0 0 48 48"><g fill="#3fbf9b"><rect x="14" y="14" width="8" height="8" rx="1.5"/><rect x="24" y="14" width="8" height="8" rx="1.5"/><rect x="34" y="24" width="8" height="8" rx="1.5"/><rect x="14" y="34" width="8" height="8" rx="1.5"/><rect x="24" y="24" width="8" height="8" rx="1.5"/></g><g fill="#1d373b"><rect x="34" y="14" width="8" height="8" rx="1.5"/><rect x="14" y="24" width="8" height="8" rx="1.5"/><rect x="24" y="34" width="8" height="8" rx="1.5"/><rect x="34" y="34" width="8" height="8" rx="1.5"/></g><g fill="#f2b84b" font-family="sans-serif" font-size="7" font-weight="700" text-anchor="middle"><text x="18" y="10">2</text><text x="28" y="10">1</text><text x="38" y="10">1</text><text x="8" y="21">2</text></g></svg>',
-    help:'إذا لوّنت خانة فارغة تظهر ✕ حمراء ويُحسب خطأ، والخطأ الثالث يعيد اللوحة من البداية. خلف كل لوحة صورة مرسومة (صاروخ، كوكب، نخلة، أبراج الكويت…) تظهر ملوّنة عندما تحلّها، وتُضاف إلى مجموعتك. الأرقام فوق كل عمود وبجانب كل صف تخبرك بأطوال المجموعات الملوّنة فيه بالترتيب، وبين كل مجموعتين فراغ واحد على الأقل. «تلوين» يلوّن الخانات، و«علامة ✕» تضع إشارة على الخانات الفارغة لتتذكرها. اسحب إصبعك لتلوين عدة خانات معاً. الرقم يبهت عندما يكتمل صفه أو عموده.',
+    help:'اختر من المفتاح فوق اللوحة: «صح» لتلوين خانات الصورة، أو «خطأ» لتحديد الخانات الفارغة بـ ✕. إذا لوّنت خانة فارغة، أو وضعت ✕ على خانة من الصورة، تُصحَّح فوراً ويُحسب خطأ، والخطأ الثالث يعيد اللوحة من البداية. خلف كل لوحة صورة مرسومة (صاروخ، كوكب، نخلة، أبراج الكويت…) تظهر ملوّنة عندما تحلّها، وتُضاف إلى مجموعتك. الأرقام فوق كل عمود وبجانب كل صف تخبرك بأطوال المجموعات الملوّنة فيه بالترتيب، وبين كل مجموعتين فراغ واحد على الأقل. «تلوين» يلوّن الخانات، و«علامة ✕» تضع إشارة على الخانات الفارغة لتتذكرها. اسحب إصبعك لتلوين عدة خانات معاً. الرقم يبهت عندما يكتمل صفه أو عموده.',
     progress(){const s=gState('nono',{hints:3});return {level:s.level,stars:starTotal(s)}},
     start(){
       st=gState('nono',{hints:3,cur:null});setStats([['s1','المستوى'],['s2','الحجم','gold'],['s3','أخطاء'],['s4','الوقت']]);paint=1;
@@ -87,8 +88,9 @@ const NonoGame=(()=>{
       boardEl.onpointerdown=e=>{const c=e.target.closest('.ncell');if(!c||g.over)return;e.preventDefault();const i=+c.dataset.i;drag={target:g.cur[i]===paint?0:paint,last:-1};apply(i);try{boardEl.setPointerCapture(e.pointerId)}catch(_){}};
       boardEl.onpointermove=e=>{if(!drag)return;const el=document.elementFromPoint(e.clientX,e.clientY),c=el&&el.closest&&el.closest('.ncell');if(c&&boardEl.contains(c))apply(+c.dataset.i)};
       boardEl.onpointerup=boardEl.onpointercancel=()=>{if(!drag){if(g&&!g.over)checkWin();return}drag=null;persist();checkWin()};
-      fillB=btn('تلوين',IC.pen,()=>{paint=1;snd('tap');stats()});
-      xB=btn('علامة ✕',null,()=>{paint=2;snd('tap');stats()});
+      const sw=document.createElement('div');sw.className='nswitch';sw.setAttribute('role','radiogroup');sw.setAttribute('aria-label','نوع الوضع');
+      sw.innerHTML='<button type="button" role="radio"><i class="sq"></i><span>صح: تلوين</span></button><button type="button" role="radio"><i class="xx">✕</i><span>خطأ: خانة فارغة</span></button>';
+      [fillB,xB]=sw.children;fillB.onclick=()=>{paint=1;snd('tap');stats()};xB.onclick=()=>{paint=2;snd('tap');stats()};stage.insertBefore(sw,boardEl);
       btn('افحص',IC.check,()=>{if(g.over)return;const bad=g.cur.map((v,i)=>(v===1&&!g.sol[i])||(v===2&&g.sol[i])?i:-1).filter(i=>i>=0);
         g.helps++;stats();persist();snd(bad.length?'err':'ok');toast(bad.length?bad.length+' خانة خاطئة باللون الأحمر':'لا توجد أخطاء حتى الآن');
         bad.forEach(i=>g.cellEls[i].classList.add('bad'));setTimeout(()=>bad.forEach(i=>g.cellEls[i]&&g.cellEls[i].classList.remove('bad')),1600)});
