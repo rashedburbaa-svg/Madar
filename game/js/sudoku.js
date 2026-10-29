@@ -1,7 +1,7 @@
 /* ================= game 2: sudoku ================= */
 const SudokuGame=(()=>{
   const DIFFS={auto:['تلقائي',null],easy:['سهل',42],medium:['متوسط',34],hard:['صعب',28],expert:['خبير',24]},ORDER=['auto','easy','medium','hard','expert'];
-  let st,p,boardEl,padEl,sel=-1,notesMode=false,nb2,db,timer=0;
+  let st,p,boardEl,padEl,afEl,filling=false,sel=-1,notesMode=false,nb2,db,timer=0;
   const peers=i=>{const r=(i/9)|0,c=i%9,br=r-r%3,bc=c-c%3,o=[];for(let k=0;k<9;k++){o.push(r*9+k,k*9+c,(br+((k/3)|0))*9+bc+k%3)}return o};
   function solve(b,limit,R){
     const rows=new Array(9).fill(0),cols=new Array(9).fill(0),box=new Array(9).fill(0);let count=0;
@@ -27,6 +27,10 @@ const SudokuGame=(()=>{
     const cnt=new Array(10).fill(0);p.cur.forEach((v,i)=>{if(v&&v===p.sol[i])cnt[v]++});
     [...padEl.children].forEach((b,k)=>{const left=9-cnt[k+1];b.disabled=left<=0;b.lastChild.textContent=left>0?left:''});
     setStat('s1',mode&&mode.daily?'اليوم':p.level);setStat('s2',fmtTime(p.time));setStat('s3',p.mistakes);setStat('s4',st.hints);
+    // when every unsolved cell needs the same digit, offer to fill them all at once
+    const left=[];for(let i=0;i<81;i++)if(p.cur[i]!==p.sol[i])left.push(i);
+    const one=!p.over&&!filling&&left.length>0&&left.every(i=>p.sol[i]===p.sol[left[0]]);
+    afEl.hidden=!one;if(one)afEl.lastChild.textContent=`تعبئة تلقائية: الرقم ${p.sol[left[0]]} في ${left.length===1?'خانة واحدة':left.length===2?'خانتين':left.length+' خانات'}`;
     nb2.classList.toggle('on',notesMode);db.lastChild.textContent='الصعوبة: '+DIFFS[st.diff][0];db.disabled=!!(mode&&mode.daily);
   }
   function put(d){
@@ -38,13 +42,19 @@ const SudokuGame=(()=>{
     render();persist();
     if(p.cur.every((v,i)=>v===p.sol[i]))finish();
   }
+  function autoFill(){
+    if(filling||p.over)return;const left=[];for(let i=0;i<81;i++)if(p.cur[i]!==p.sol[i])left.push(i);if(!left.length)return;
+    filling=true;afEl.hidden=true;let k=0;
+    const stepF=()=>{if(!boardEl.isConnected){filling=false;return}const i=left[k++];p.cur[i]=p.sol[i];p.notes[i]=0;sel=i;snd('ok');buzz(8);render();
+      if(k<left.length)setTimeout(stepF,140);else{filling=false;persist();if(p.cur.every((v,j)=>v===p.sol[j]))finish()}};
+    stepF()}
   function finish(){p.over=true;clearInterval(timer);const s=p.mistakes===0&&p.hints===0?3:p.mistakes+p.hints<=2?2:1;const daily=mode&&mode.daily;
     const earned=!daily&&p.level%2===0;if(earned)st.hints++;
     const key=daily?'daily':st.diff;const prevBest=st.bestTime[key];const rec=!prevBest||p.time<prevBest;if(rec)st.bestTime[key]=Math.floor(p.time);
     if(daily)st.dailyCur=null;else st.cur=null;gSave('sudoku',st);
     finishLevel(SudokuGame,st,p.level,s,{clean:p.mistakes===0&&p.hints===0,time:p.time},rec?'رقم قياسي!':'أحسنت!',`الوقت ${fmtTime(p.time)}`+(prevBest&&!rec?` · الأفضل ${fmtTime(prevBest)}`:'')+` · أخطاء ${p.mistakes}`+(earned?' · كسبت تلميحاً':''))}
   function play(level,fresh){
-    clearOverlays();clearInterval(timer);st=gState('sudoku',{hints:3,cur:null,dailyCur:null,diff:'auto',bestTime:{}});
+    clearOverlays();clearInterval(timer);filling=false;st=gState('sudoku',{hints:3,cur:null,dailyCur:null,diff:'auto',bestTime:{}});
     if(mode&&mode.daily){p=st.dailyCur&&st.dailyCur.daily===mode.key&&!st.dailyCur.over?st.dailyCur:generate(16,'medium',mode.seed);p.level=16}
     else if(!fresh&&st.cur&&st.cur.level===level&&st.cur.diff===st.diff&&!st.cur.over)p=st.cur;
     else p=generate(level,st.diff);
@@ -53,14 +63,15 @@ const SudokuGame=(()=>{
   }
   return {id:'sudoku',name:'سودوكو',desc:'شبكة النجوم: املأ 1-9 بدون تكرار',play,
     icon:'<svg viewBox="0 0 48 48"><rect x="6" y="6" width="36" height="36" rx="5" fill="none" stroke="#3a5853" stroke-width="2.5"/><path d="M18 6v36M30 6v36M6 18h36M6 30h36" stroke="#3a5853" stroke-width="2"/><text x="12" y="16" font-size="9" fill="#e8f1ee" font-family="sans-serif" text-anchor="middle">5</text><text x="24" y="28" font-size="9" fill="#3fbf9b" font-family="sans-serif" text-anchor="middle">3</text><text x="36" y="40" font-size="9" fill="#f2b84b" font-family="sans-serif" text-anchor="middle">9</text></svg>',
-    help:'كل صف وعمود ومربع 3×3 يحتوي الأرقام 1-9 مرة واحدة. اضغط خانة ثم رقماً. «ملاحظات» لكتابة الاحتمالات بنفسك، و«احتمالات» يكتبها كلها تلقائياً، وتُحذف وحدها كلما وضعت رقماً صحيحاً. «الصعوبة» تختار بين التلقائي (يصعب مع المستويات) أو مستوى ثابت.',
+    help:'كل صف وعمود ومربع 3×3 يحتوي الأرقام 1-9 مرة واحدة. عندما يتبقى رقم واحد فقط لم تكتمل خاناته يظهر زر «تعبئة تلقائية» ليضعه في كل خاناته دفعة واحدة. اضغط خانة ثم رقماً. «ملاحظات» لكتابة الاحتمالات بنفسك، و«احتمالات» يكتبها كلها تلقائياً، وتُحذف وحدها كلما وضعت رقماً صحيحاً. «الصعوبة» تختار بين التلقائي (يصعب مع المستويات) أو مستوى ثابت.',
     progress(){const s=gState('sudoku',{hints:3});return {level:s.level,stars:starTotal(s)}},
     start(){st=gState('sudoku',{hints:3,cur:null,dailyCur:null,diff:'auto',bestTime:{}});setStats([['s1','المستوى'],['s2','الوقت','gold'],['s3','أخطاء'],['s4','تلميحات']]);
       boardEl=document.createElement('div');boardEl.className='sboard';for(let i=0;i<81;i++){const c=document.createElement('button');c.type='button';c.dataset.i=i;boardEl.appendChild(c)}
       boardEl.onclick=e=>{const c=e.target.closest('button');if(!c)return;sel=+c.dataset.i;snd('tap');render()};
       padEl=document.createElement('div');padEl.className='pad';
       for(let d=1;d<=9;d++){const b=document.createElement('button');b.type='button';b.innerHTML=d+'<small></small>';b.onclick=()=>put(d);padEl.appendChild(b)}
-      stage.append(boardEl,padEl);
+      afEl=document.createElement('button');afEl.type='button';afEl.className='btn main autofill';afEl.hidden=true;afEl.innerHTML='<span aria-hidden="true">✨</span><span></span>';afEl.onclick=autoFill;
+      stage.append(boardEl,afEl,padEl);
       btn('مسح',IC.erase,()=>put(0));nb2=btn('ملاحظات',IC.pen,()=>{notesMode=!notesMode;render()});
       btn('تلميح',IC.hint,()=>{if(!st.hints||p.over)return;let i=sel>=0&&p.cur[sel]!==p.sol[sel]?sel:p.cur.findIndex((v,j)=>v!==p.sol[j]);if(i<0)return;
         st.hints--;p.hints++;sel=i;const m=notesMode;notesMode=false;p.cur[i]=0;put(p.sol[i]);notesMode=m;gSave('sudoku',st);render()});

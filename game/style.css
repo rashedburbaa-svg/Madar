@@ -231,3 +231,5 @@ body{background:transparent}
 .mcell.o{background:#0a1226}
 .mcell.boom{background:#7a2b2b}
 .ncell.f{background:radial-gradient(circle at 35% 30%,#ffe9a8,#f2b84b 70%)}
+.autofill{width:100%;margin:10px 0 0;gap:8px;animation:pop .25s ease}
+.autofill[hidden]{display:none}
