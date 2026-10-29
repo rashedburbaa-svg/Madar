@@ -1,6 +1,6 @@
 /* ================= game 5: memory ================= */
 const MemoryGame=(()=>{
-  const SYM=['🍎','🍋','🍇','🍉','🥝','🍒','🌙','⭐','🐪','🦅','🐬','🌴','⚓','🎯','🔑','🚀','🌵','🦋'];
+  const SYM=['🪐','🌍','🌙','☄️','🚀','🛸','👽','⭐','☀️','🛰️','🌌','👨‍🚀','🔭','🌠','🌑','📡','🪨','💫'];
   let st,g,boardEl,lock=false,pk;
   function build(level,seed){const R=rng(seed??level*541+3),pairs=Math.min(5+level,18),syms=shuffle(SYM.slice(),R).slice(0,pairs);
     return {level,pairs,cards:shuffle(syms.concat(syms),R).map(s=>({s,done:false})),open:[],moves:0,found:0}}
@@ -22,7 +22,7 @@ const MemoryGame=(()=>{
       b.innerHTML=`<div class="in"><div class="b"><svg viewBox="0 0 100 100"><ellipse cx="50" cy="50" rx="44" ry="18" fill="none" stroke="#3fbf9b" stroke-width="6" transform="rotate(-30 50 50)"/><path fill="#f2b84b" d="M50 28c2.6 13 9 19.4 22 22-13 2.6-19.4 9-22 22-2.6-13-9-19.4-22-22 13-2.6 19.4-9 22-22z"/></svg></div><div class="f">${c.s}</div></div>`;
       b.onclick=()=>flip(i);boardEl.appendChild(b)});fit();upd();
     const lv=mode&&mode.daily?8:level;if(lv<=4){lock=true;[...boardEl.children].forEach(b=>b.classList.add('up'));setTimeout(()=>{[...boardEl.children].forEach(b=>b.classList.remove('up'));lock=false},1200+lv*250)}}
-  return {id:'memory',name:'الذاكرة',desc:'اقلب البطاقات وطابق الأزواج',play,
+  return {id:'memory',name:'الذاكرة',desc:'اقلب البطاقات وطابق أزواج الكواكب والمركبات',play,
     icon:'<svg viewBox="0 0 48 48"><rect x="5" y="9" width="17" height="24" rx="3" fill="#16292d" stroke="#3fbf9b" stroke-width="2"/><rect x="26" y="15" width="17" height="24" rx="3" fill="#e9f3ef"/><path fill="#f2b84b" d="M34 20c1 4.5 2.4 5.9 7 7-4.6 1-6 2.4-7 7-1-4.6-2.4-6-7-7 4.6-1.1 6-2.5 7-7z"/></svg>',
     help:'اقلب بطاقتين في كل محاولة، وإذا تطابقتا تبقيان مفتوحتين. في المستويات الأولى ترى البطاقات لحظة في البداية، ثم يزيد عدد الأزواج وتختفي المساعدة. «نظرة سريعة» تكشف كل البطاقات لثانية مرة واحدة في كل مستوى، مقابل محاولتين.',
     progress(){const s=gState('memory');return {level:s.level,stars:starTotal(s)}},

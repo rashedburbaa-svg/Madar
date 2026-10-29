@@ -52,7 +52,7 @@ const GolfGame=(()=>{
     if(dh<HR+3){b.vx+=(L.hole.x-b.x)*0.04;b.vy+=(L.hole.y-b.y)*0.04}
     const onSlope=L.slopes.some(sl=>inR(b,sl));
     if(dh<HR-2&&sp<5.5){b.sunk=true;b.moving=false;b.x=L.hole.x;b.y=L.hole.y;snd('sink');if(!b.cpu)buzz(40);if(b.cpu)toast('🤖 الكمبيوتر أدخل الكرة بـ '+b.strokes+(b.strokes===1?' ضربة':' ضربات'))}
-    else if(L.water.some(r=>inR(b,r))){b.moving=false;b.strokes++;b.x=b.lx;b.y=b.ly;b.vx=b.vy=0;snd('splash');if(!b.cpu)buzz(80);toast(b.cpu?'🤖 كرة الكمبيوتر سقطت في الماء! +1':'سقطت في الماء! +1 ضربة');upd()}
+    else if(L.water.some(r=>inR(b,r))){b.moving=false;b.strokes++;b.x=b.lx;b.y=b.ly;b.vx=b.vy=0;snd('splash');if(!b.cpu)buzz(80);toast(b.cpu?'🤖 الثقب الأسود ابتلع كرة الكمبيوتر! +1':'🕳️ ابتلعها الثقب الأسود! +1 ضربة');upd()}
     else{b.slow=sp<0.5?(b.slow||0)+1:0;if((!onSlope&&sp<0.06)||b.slow>50){b.moving=false;b.vx=b.vy=0;b.slow=0}}
   }
 
@@ -126,26 +126,50 @@ const GolfGame=(()=>{
     draw();raf=requestAnimationFrame(step);
   }
   function rr(r,rad){ctx.beginPath();if(ctx.roundRect)ctx.roundRect(r.x,r.y,r.w,r.h,rad);else ctx.rect(r.x,r.y,r.w,r.h)}
+  // each hole is played on a planet: the surface is painted once per hole on an offscreen canvas
+  const PLANETS=[
+    {name:'القمر',ground:'#6c6f77',dust:'#9a9ca3',crater:[110,112,120],wall:'#2b3340',top:'#566377'},
+    {name:'المريخ',ground:'#94422a',dust:'#c97a4e',crater:[150,70,44],wall:'#3a2520',top:'#6a443a'},
+    {name:'الكوكب الغريب',ground:'#3d2c62',dust:'#7a5ab0',crater:[80,60,120],wall:'#171130',top:'#3d3270'},
+    {name:'حزام الكويكبات',ground:'#34302e',dust:'#625850',crater:[70,64,60],wall:'#121010',top:'#3a3532'}
+  ];
+  let course=null,planet=PLANETS[0];
+  function makeCourse(level){
+    planet=PLANETS[(level-1)%PLANETS.length];const S=2,c=document.createElement('canvas');c.width=W*S;c.height=H*S;const g=c.getContext('2d');g.scale(S,S);const R=rng(level*131+7),P=planet;
+    g.fillStyle=P.ground;g.fillRect(0,0,W,H);g.fillStyle='rgba(255,255,255,.035)';for(let y=0;y<H;y+=40)g.fillRect(0,y,W,20);
+    for(let k=0;k<220;k++){g.fillStyle=R()<0.5?'rgba(255,255,255,.07)':'rgba(0,0,0,.12)';g.beginPath();g.arc(R()*W,R()*H,0.6+R()*1.6,0,7);g.fill()}
+    const [cr,cg,cb]=P.crater;
+    for(let k=0;k<9;k++){const x=R()*W,y=R()*H,r=k<2?14+R()*12:4+R()*7;
+      g.fillStyle=`rgba(${cr+50},${cg+50},${cb+50},.35)`;g.beginPath();g.ellipse(x-r*0.08,y-r*0.1,r*1.08,r,0,0,7);g.fill();
+      const gr=g.createRadialGradient(x+r*0.25,y+r*0.25,1,x,y,r);gr.addColorStop(0,`rgba(${cr-45},${cg-45},${cb-45},.75)`);gr.addColorStop(1,`rgba(${cr-15},${cg-15},${cb-15},.6)`);g.fillStyle=gr;g.beginPath();g.ellipse(x,y,r,r*0.92,0,0,7);g.fill()}
+    const v=g.createRadialGradient(W/2,H/2,Math.min(W,H)*0.4,W/2,H/2,Math.max(W,H)*0.75);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(0,0,0,.35)');g.fillStyle=v;g.fillRect(0,0,W,H);
+    course=c;
+  }
+  function blackHole(r){ctx.save();rr(r,14);ctx.clip();
+    const cx=r.x+r.w/2,cy=r.y+r.h/2,m=Math.max(r.w,r.h);const gr=ctx.createRadialGradient(cx,cy,2,cx,cy,m*0.75);gr.addColorStop(0,'#000');gr.addColorStop(0.45,'#120624');gr.addColorStop(1,'#4b2390');ctx.fillStyle=gr;ctx.fillRect(r.x,r.y,r.w,r.h);
+    ctx.strokeStyle='rgba(190,140,255,.45)';ctx.lineWidth=1.5;for(let k=0;k<3;k++){const a=T*0.04+k*2.1;ctx.beginPath();ctx.ellipse(cx,cy,r.w*0.42-k*5,r.h*0.32-k*3,0,a,a+2.2);ctx.stroke()}
+    ctx.fillStyle='rgba(255,255,255,.7)';for(let k=0;k<6;k++){const a=T*0.03+k,d=(k*13%Math.max(8,m/2));ctx.fillRect(cx+Math.cos(a)*d,cy+Math.sin(a)*d*0.7,1.2,1.2)}
+    ctx.restore();ctx.strokeStyle='rgba(150,100,255,.6)';ctx.lineWidth=1.5;rr(r,14);ctx.stroke()}
   function drawBall(b,color){ctx.fillStyle='rgba(0,0,0,.25)';ctx.beginPath();ctx.arc(b.x+1.5,b.y+2,BR,0,7);ctx.fill();ctx.fillStyle=color;ctx.beginPath();ctx.arc(b.x,b.y,BR,0,7);ctx.fill();
     if(b===ball&&!over&&!b.moving){ctx.strokeStyle=b.cpu?'rgba(255,138,76,.7)':'rgba(255,255,255,.7)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(b.x,b.y,BR+4+Math.sin(T*.12)*1.5,0,7);ctx.stroke()}}
   function draw(){
-    ctx.fillStyle='#2f7d4f';ctx.fillRect(0,0,W,H);ctx.fillStyle='#338a57';for(let y=0;y<H;y+=40)ctx.fillRect(0,y,W,20);
-    L.slopes.forEach(sl=>{ctx.fillStyle='rgba(20,70,45,.55)';rr(sl,12);ctx.fill();ctx.save();ctx.beginPath();ctx.rect(sl.x,sl.y,sl.w,sl.h);ctx.clip();
+    if(!course||course.lv!==L.level){makeCourse(L.level);course.lv=L.level}ctx.drawImage(course,0,0,W,H);
+    L.slopes.forEach(sl=>{ctx.fillStyle='rgba(0,0,0,.28)';rr(sl,12);ctx.fill();ctx.save();ctx.beginPath();ctx.rect(sl.x,sl.y,sl.w,sl.h);ctx.clip();
       ctx.strokeStyle='rgba(255,255,255,.28)';ctx.lineWidth=3;const off=(T*0.6)%22;const a=Math.atan2(sl.dy,sl.dx);
       for(let i=-4;i<10;i++)for(let j=-2;j<5;j++){const cx=sl.x+sl.w/2+Math.cos(a)*(i*22+off-80)-Math.sin(a)*(j*22-40),cy=sl.y+sl.h/2+Math.sin(a)*(i*22+off-80)+Math.cos(a)*(j*22-40);
         ctx.beginPath();ctx.moveTo(cx-Math.cos(a-0.7)*7,cy-Math.sin(a-0.7)*7);ctx.lineTo(cx,cy);ctx.lineTo(cx-Math.cos(a+0.7)*7,cy-Math.sin(a+0.7)*7);ctx.stroke()}ctx.restore()});
-    L.sand.forEach(r=>{ctx.fillStyle='#e3cf98';rr(r,14);ctx.fill()});
-    L.water.forEach(r=>{ctx.fillStyle='#3f8fc9';rr(r,14);ctx.fill();ctx.strokeStyle='rgba(255,255,255,.35)';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(r.x+10,r.y+r.h/2+Math.sin(T*.05)*2);ctx.quadraticCurveTo(r.x+r.w/2,r.y+r.h/2-6,r.x+r.w-10,r.y+r.h/2);ctx.stroke()});
-    L.walls.forEach(w=>{ctx.fillStyle='#173b2a';rr(w,4);ctx.fill();ctx.fillStyle='#21503a';rr({x:w.x,y:w.y,w:w.w,h:Math.min(w.h,4)},2);ctx.fill()});
-    L.movers.forEach(o=>{ctx.fillStyle='#7a4a2b';rr(o,4);ctx.fill();ctx.fillStyle='#f2b84b';rr({x:o.x,y:o.y,w:o.w,h:Math.min(o.h,3)},2);ctx.fill()});
-    ctx.fillStyle='#0c1d14';ctx.beginPath();ctx.arc(L.hole.x,L.hole.y,HR,0,7);ctx.fill();
+    L.sand.forEach(r=>{ctx.fillStyle=planet.dust;rr(r,14);ctx.fill();ctx.fillStyle='rgba(0,0,0,.12)';for(let k=0;k<8;k++){ctx.beginPath();ctx.arc(r.x+((k*37)%Math.max(1,r.w)),r.y+((k*23)%Math.max(1,r.h)),1.5,0,7);ctx.fill()}});
+    L.water.forEach(r=>blackHole(r));
+    L.walls.forEach(w=>{ctx.fillStyle=planet.wall;rr(w,4);ctx.fill();ctx.fillStyle=planet.top;rr({x:w.x,y:w.y,w:w.w,h:Math.min(w.h,4)},2);ctx.fill();ctx.fillStyle='rgba(255,255,255,.25)';const lng=w.w>w.h;for(let q=8;q<(lng?w.w:w.h)-4;q+=16){ctx.beginPath();ctx.arc(lng?w.x+q:w.x+w.w/2,lng?w.y+w.h/2+1:w.y+q,1,0,7);ctx.fill()}});
+    L.movers.forEach(o=>{ctx.fillStyle='#5b6676';rr(o,4);ctx.fill();ctx.fillStyle='#f2b84b';rr({x:o.x,y:o.y,w:o.w,h:Math.min(o.h,3)},2);ctx.fill()});
+    ctx.fillStyle='#05040c';ctx.beginPath();ctx.arc(L.hole.x,L.hole.y,HR,0,7);ctx.fill();ctx.strokeStyle=`rgba(95,242,214,${0.45+0.3*Math.sin(T*0.08)})`;ctx.lineWidth=2;ctx.beginPath();ctx.arc(L.hole.x,L.hole.y,HR+1.5,0,7);ctx.stroke();
     {const live=balls.filter(b=>!b.sunk),dh=live.length?Math.min(...live.map(b=>Math.hypot(b.x-L.hole.x,b.y-L.hole.y))):0,tgt=dh<70?0:1;flagA+=(tgt-flagA)*0.15;
      if(flagA>0.02){ctx.save();ctx.globalAlpha=flagA;const lift=(1-flagA)*14;
       ctx.strokeStyle='#e8f1ee';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(L.hole.x,L.hole.y-lift);ctx.lineTo(L.hole.x,L.hole.y-34-lift);ctx.stroke();
       ctx.fillStyle='#f2b84b';ctx.beginPath();ctx.moveTo(L.hole.x,L.hole.y-34-lift);ctx.lineTo(L.hole.x+18,L.hole.y-28-lift);ctx.lineTo(L.hole.x,L.hole.y-22-lift);ctx.fill();ctx.restore()}
      else{ctx.strokeStyle='rgba(255,255,255,.55)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(L.hole.x,L.hole.y,HR+3,0,7);ctx.stroke()}}
-    L.mills.forEach(m=>{ctx.strokeStyle='#e8d9b8';ctx.lineWidth=6;ctx.lineCap='round';for(let k=0;k<2;k++){const a=m.ang+k*Math.PI/2,c=Math.cos(a)*m.len,s=Math.sin(a)*m.len;ctx.beginPath();ctx.moveTo(m.cx-c,m.cy-s);ctx.lineTo(m.cx+c,m.cy+s);ctx.stroke()}
-      ctx.fillStyle='#b5473a';ctx.beginPath();ctx.arc(m.cx,m.cy,6,0,7);ctx.fill();ctx.lineCap='butt'});
+    L.mills.forEach(m=>{ctx.strokeStyle='#c9d3dc';ctx.lineWidth=6;ctx.lineCap='round';for(let k=0;k<2;k++){const a=m.ang+k*Math.PI/2,c=Math.cos(a)*m.len,s=Math.sin(a)*m.len;ctx.beginPath();ctx.moveTo(m.cx-c,m.cy-s);ctx.lineTo(m.cx+c,m.cy+s);ctx.stroke()}
+      ctx.fillStyle='#5ff2d6';ctx.beginPath();ctx.arc(m.cx,m.cy,6,0,7);ctx.fill();ctx.lineCap='butt'});
     if(cpu&&cpu.plan&&ball){const p=cpu.plan,prog=Math.min(1,1-(cpu.fireAt-T)/AIM_DELAY),len=p.k*130*prog;
       ctx.strokeStyle='rgba(255,138,76,.9)';ctx.lineWidth=3;ctx.setLineDash([6,6]);ctx.beginPath();ctx.moveTo(ball.x,ball.y);ctx.lineTo(ball.x+Math.cos(p.a)*len*1.2,ball.y+Math.sin(p.a)*len*1.2);ctx.stroke();ctx.setLineDash([])}
     if(drag&&canPlay()){const dx=drag.sx-drag.x,dy=drag.sy-drag.y,len=Math.min(Math.hypot(dx,dy),130);if(len>6){const a=Math.atan2(dy,dx),k=len/130;
@@ -195,7 +219,7 @@ const GolfGame=(()=>{
   }
   return {id:'golf',name:'جولف المدار',desc:'العب ضد الكمبيوتر على نفس الحفرة',play,
     icon:'<svg viewBox="0 0 48 48"><circle cx="24" cy="38" r="7" fill="#0c1d14"/><path d="M24 38V8" stroke="#e8f1ee" stroke-width="2.5"/><path d="M24 8l13 5-13 5z" fill="#f2b84b"/><circle cx="12" cy="30" r="4.5" fill="#fff"/><circle cx="36" cy="30" r="4.5" fill="#ff8a4c"/></svg>',
-    help:'اسحب من أي مكان بعكس اتجاه الضربة (مثل المقلاع) ثم اترك. الكرة البرتقالية للكمبيوتر: تتبادلان الضربات على نفس الحفرة، ومن يُدخلها بضربات أقل يفوز، والكمبيوتر يصبح أدق مع المستويات. الرمل يبطئ الكرة، والماء يعيدها ويضيف ضربة، والمنحدرات تدفعها باتجاه الأسهم، والطواحين والحواجز البنية تتحرك. زر «ضد الكمبيوتر» يشغّل المنافس أو يوقفه.',
+    help:'اسحب من أي مكان بعكس اتجاه الضربة (مثل المقلاع) ثم اترك. الكرة البرتقالية للكمبيوتر: تتبادلان الضربات على نفس الحفرة، ومن يُدخلها بضربات أقل يفوز، والكمبيوتر يصبح أدق مع المستويات. كل حفرة على كوكب مختلف. الغبار يبطئ الكرة، والثقب الأسود يبتلعها فتعود ويضيف ضربة، والمنحدرات تدفعها باتجاه الأسهم، والأذرع الدوّارة والحواجز المعدنية تتحرك. زر «ضد الكمبيوتر» يشغّل المنافس أو يوقفه.',
     progress(){const s=gState('golf');return {level:s.level,stars:starTotal(s)}},
     start(){
       st=gState('golf');setStatsFor();

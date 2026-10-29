@@ -14,7 +14,7 @@ const MinesGame=(()=>{
   }
   function flood(i){const q=[i];while(q.length){const k=q.pop(),c=g.cells[k];if(c.o||c.m)continue;c.o=1;c.f=0;if(c.n===0)nb(k).forEach(j=>{if(!g.cells[j].o&&!g.cells[j].m&&!g.cells[j].f)q.push(j)})}}
   function open(i){const c=g.cells[i];if(c.o||c.f||g.over)return;
-    if(c.m){c.o=1;c.b=1;g.lives--;snd('err');buzz([60,40,60]);if(g.lives<=0){lose();return}toast('💥 لغم! بقي لك '+g.lives+(g.lives===1?' قلب':' قلبان'))}
+    if(c.m){c.o=1;c.b=1;g.lives--;snd('err');buzz([60,40,60]);if(g.lives<=0){lose();return}toast('💥 اصطدمت بكويكب! بقي لك '+g.lives+(g.lives===1?' قلب':' قلبان'))}
     else{flood(i);snd('flip')}}
   function toggleFlag(i){const c=g.cells[i];if(c.o||g.over)return;c.f=c.f?0:1;snd('tap');buzz(25);render()}
   function tap(i){
@@ -25,7 +25,7 @@ const MinesGame=(()=>{
     else open(i);
     render();checkWin();
   }
-  function lose(){g.over=true;clearInterval(timer);g.cells.forEach(c=>{if(c.m)c.o=1});render();loseBox({title:'انفجر اللغم الأخير',text:'خسرت قلوبك الثلاثة. حاول مرة أخرى!',onRetry:()=>play(g.level)})}
+  function lose(){g.over=true;clearInterval(timer);g.cells.forEach(c=>{if(c.m)c.o=1});render();loseBox({title:'اصطدمت بآخر كويكب',text:'خسرت قلوبك الثلاثة. حاول مرة أخرى!',onRetry:()=>play(g.level)})}
   function checkWin(){
     if(g.over||!g.cells.every(c=>c.m||c.o))return;
     g.over=true;clearInterval(timer);g.cells.forEach(c=>{if(c.m&&!c.o)c.f=1});render();
@@ -35,7 +35,7 @@ const MinesGame=(()=>{
   function render(){
     const flags=g.cells.filter(c=>c.f||(c.o&&c.m)).length;
     g.cells.forEach((c,i)=>{const b=boardEl.children[i];b.className='mcell'+(c.o?' o':'')+(c.b?' boom':'');
-      if(c.o){if(c.m)b.textContent=c.b?'💥':'💣';else{b.textContent=c.n||'';b.style.color=NUMC[c.n]||''}}else{b.textContent=c.f?'🚩':'';b.style.color=''}});
+      if(c.o){if(c.m)b.textContent=c.b?'💥':'☄️';else{b.textContent=c.n||'';b.style.color=NUMC[c.n]||''}}else{b.textContent=c.f?'🚩':'';b.style.color=''}});
     setStat('s1',mode&&mode.daily?'اليوم':g.level);setStat('s2',g.mines-flags);setStat('s3',g.lives+' ❤️');setStat('s4',fmtTime(g.time));
     fb.classList.toggle('on',flagMode);fb.lastChild.textContent=flagMode?'وضع العلم: يعمل':'وضع العلم';hb.disabled=!st.hints||g.over;
   }
@@ -46,12 +46,12 @@ const MinesGame=(()=>{
     g.cells.forEach((_,i)=>{const b=document.createElement('button');b.type='button';b.className='mcell';b.dataset.i=i;b.setAttribute('aria-label','خانة');boardEl.appendChild(b)});
     render();
   }
-  return {id:'mines',name:'كاسحة الألغام',desc:'افتح الحقل وتجنّب الألغام بالأرقام',play,
+  return {id:'mines',name:'حقل الكويكبات',desc:'امسح الفضاء وتجنّب الكويكبات بالأرقام',play,
     icon:'<svg viewBox="0 0 48 48"><rect x="4" y="4" width="40" height="40" rx="8" fill="#1d373b"/><g stroke="#e8f1ee" stroke-width="3" stroke-linecap="round"><path d="M20 12v20M10 22h20M13 15l14 14M27 15L13 29"/></g><circle cx="20" cy="22" r="7.5" fill="#0b1618"/><path d="M33 26v14M33 26l9 4-9 4" fill="#f2a09a" stroke="#f2a09a" stroke-width="2" stroke-linejoin="round"/></svg>',
-    help:'اضغط خانة لفتحها. الرقم يخبرك بعدد الألغام حولها في الخانات الثماني. ضغطة مطوّلة (أو «وضع العلم») تضع علماً 🚩 على اللغم. لديك 3 قلوب، والنجوم = القلوب المتبقية. اضغط رقماً اكتملت أعلامه لفتح ما حوله دفعة واحدة. «تلميح» يفتح خانة آمنة.',
+    help:'اضغط خانة لمسح الفضاء فيها. الرقم يخبرك بعدد الكويكبات ☄️ حولها في الخانات الثماني. ضغطة مطوّلة (أو «وضع العلم») تضع علماً 🚩 على الكويكب. لديك 3 قلوب، والنجوم = القلوب المتبقية. اضغط رقماً اكتملت أعلامه لفتح ما حوله دفعة واحدة. «تلميح» يفتح خانة آمنة.',
     progress(){const s=gState('mines',{hints:3});return {level:s.level,stars:starTotal(s)}},
     start(){
-      st=gState('mines',{hints:3});setStats([['s1','المستوى'],['s2','ألغام','gold'],['s3','قلوب'],['s4','الوقت']]);flagMode=false;
+      st=gState('mines',{hints:3});setStats([['s1','المستوى'],['s2','كويكبات','gold'],['s3','قلوب'],['s4','الوقت']]);flagMode=false;
       boardEl=document.createElement('div');boardEl.className='mboard2';stage.appendChild(boardEl);
       boardEl.addEventListener('pointerdown',e=>{const b=e.target.closest('.mcell');if(!b)return;lpFired=false;clearTimeout(lp);
         lp=setTimeout(()=>{const i=+b.dataset.i;if(g.started&&!g.cells[i].o&&!g.over){lpFired=true;toggleFlag(i)}},420)});

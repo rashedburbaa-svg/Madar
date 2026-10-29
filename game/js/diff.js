@@ -3,15 +3,16 @@ const DiffGame=(()=>{
   const W=400,H=260;let st,g,cA,cB,xA,xB,wrongMark=null,timer=0,cb,flicking=false;
   const col=c=>`hsl(${c.h} ${c.s}% ${c.l}%)`;
   const KINDS={
+    space:{bands:{sky:['planet','planet','star','star','comet','ufo','satellite','moonc'],ground:['rocket','astronaut','astronaut','rover','flagp','alien','alien','rocket']}},
     garden:{bands:{sky:['sun','cloud','cloud','bird','bird','butterfly'],ground:['tree','tree','flower','flower','flower','bush','mushroom','mushroom','butterfly']}},
     street:{bands:{sky:['cloud','cloud','bird','sun'],ground:['house','house','car','car','lamp','tree','sign','bush']}},
     room:{bands:{sky:['frame','frame','clock','shelfbook','window'],ground:['plant','lampr','chair','cup','books','plant','ball']}}
   };
-  const BASE={sun:22,cloud:22,bird:12,butterfly:12,tree:26,flower:13,bush:16,mushroom:13,house:30,car:24,lamp:20,sign:16,frame:20,clock:17,shelfbook:18,window:24,plant:18,lampr:20,chair:20,cup:12,books:16,ball:12};
-  const VAR={house:1,lamp:1,lampr:1,clock:1,mushroom:1,window:1,butterfly:1};
-  const FLIP={car:1,bird:1,chair:1,cup:1,sign:1};
+  const BASE={planet:22,star:12,comet:20,ufo:22,satellite:20,moonc:15,rocket:26,astronaut:18,rover:22,flagp:18,alien:15,sun:22,cloud:22,bird:12,butterfly:12,tree:26,flower:13,bush:16,mushroom:13,house:30,car:24,lamp:20,sign:16,frame:20,clock:17,shelfbook:18,window:24,plant:18,lampr:20,chair:20,cup:12,books:16,ball:12};
+  const VAR={planet:1,star:1,ufo:1,rocket:1,flagp:1,alien:1,house:1,lamp:1,lampr:1,clock:1,mushroom:1,window:1,butterfly:1};
+  const FLIP={comet:1,satellite:1,astronaut:1,rover:1,moonc:1,car:1,bird:1,chair:1,cup:1,sign:1};
   function build(level,seed){
-    const R=rng(seed??level*977+5),theme=['garden','street','room'][(level-1)%3],M=Math.min(9+level,20),D=Math.min(3+Math.floor(level/2),8),subtle=level>=7;
+    const R=rng(seed??level*977+5),theme=['space','garden','street','room'][(level-1)%4],M=Math.min(9+level,20),D=Math.min(3+Math.floor(level/2),8),subtle=level>=7;
     const hue=()=>[4,24,45,90,150,190,210,260,300,335][Math.floor(R()*10)];
     const objs=[];const bands=KINDS[theme].bands;let tries=0;
     while(objs.length<M&&tries++<900){
@@ -34,6 +35,11 @@ const DiffGame=(()=>{
     return {level,theme,A:objs,B,diffs,mistakes:0,hints:0,time:0,bgH:hue()};
   }
   function bg(ctx){
+    if(g.theme==='space'){const sk=ctx.createLinearGradient(0,0,0,150);sk.addColorStop(0,'#070a22');sk.addColorStop(1,'#20164a');ctx.fillStyle=sk;ctx.fillRect(0,0,W,H);
+      const R=rng(g.level*977+11);for(let k=0;k<80;k++){ctx.fillStyle=`rgba(255,255,255,${0.3+R()*0.7})`;ctx.fillRect(R()*W,R()*140,R()<0.15?2:1,R()<0.15?2:1)}
+      ctx.fillStyle='#8c8f97';ctx.beginPath();ctx.moveTo(0,148);ctx.quadraticCurveTo(W/2,128,W,148);ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.fill();
+      for(let k=0;k<7;k++){const x=R()*W,y=160+R()*90,r=6+R()*14;ctx.fillStyle='rgba(255,255,255,.18)';ctx.beginPath();ctx.ellipse(x-1,y-1,r,r*0.35,0,0,7);ctx.fill();ctx.fillStyle='rgba(40,40,50,.35)';ctx.beginPath();ctx.ellipse(x,y,r*0.9,r*0.3,0,0,7);ctx.fill()}
+      return}
     if(g.theme==='garden'){ctx.fillStyle='#bfe3f5';ctx.fillRect(0,0,W,H);ctx.fillStyle='#9fd38a';ctx.beginPath();ctx.ellipse(110,150,180,40,0,0,7);ctx.fill();ctx.fillStyle='#7cc46a';ctx.fillRect(0,140,W,H-140);ctx.fillStyle='#8fd07a';for(let i=0;i<W;i+=26)ctx.fillRect(i,150+(i%3)*25,12,3)}
     else if(g.theme==='street'){ctx.fillStyle='#cde8f7';ctx.fillRect(0,0,W,H);ctx.fillStyle='#d9d2c5';ctx.fillRect(0,135,W,95);ctx.fillStyle='#5c6166';ctx.fillRect(0,222,W,38);ctx.fillStyle='#e8e2c8';for(let i=10;i<W;i+=50)ctx.fillRect(i,239,26,4)}
     else{ctx.fillStyle=`hsl(${g.bgH} 35% 86%)`;ctx.fillRect(0,0,W,H);ctx.fillStyle='#b88a5e';ctx.fillRect(0,175,W,H-175);ctx.strokeStyle='#a2774f';ctx.lineWidth=1;for(let i=0;i<W;i+=50){ctx.beginPath();ctx.moveTo(i,175);ctx.lineTo(i-20,H);ctx.stroke()}ctx.fillStyle='#fff';ctx.fillRect(0,170,W,6)}
@@ -43,6 +49,25 @@ const DiffGame=(()=>{
     const circ=(x,y,r,f)=>{ctx.fillStyle=f;ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fill()};
     const rect=(x,y,w,h,f)=>{ctx.fillStyle=f;ctx.fillRect(x,y,w,h)};
     switch(o.kind){
+      case 'planet':circ(0,0,14,C);ctx.fillStyle='rgba(255,255,255,.22)';ctx.beginPath();ctx.ellipse(-2,-5,12,3,0,0,7);ctx.fill();ctx.fillStyle='rgba(0,0,0,.18)';ctx.beginPath();ctx.ellipse(1,5,12,3,0,0,7);ctx.fill();
+        if(o.v){ctx.strokeStyle='#efe2b4';ctx.lineWidth=2.5;ctx.beginPath();ctx.ellipse(0,0,24,6,-0.3,0,7);ctx.stroke()}break;
+      case 'star':{const n=o.v?6:5,f=`hsl(${o.c.h} 85% 75%)`;ctx.fillStyle=f;ctx.beginPath();for(let k=0;k<n*2;k++){const rr2=k%2?5:12,an=k*Math.PI/n-Math.PI/2;ctx.lineTo(Math.cos(an)*rr2,Math.sin(an)*rr2)}ctx.fill();break}
+      case 'comet':{ctx.globalAlpha=0.75;ctx.fillStyle=C;ctx.beginPath();ctx.moveTo(8,-6);ctx.lineTo(-24,0);ctx.lineTo(8,6);ctx.fill();ctx.globalAlpha=1;circ(8,0,6,'#f4f8ff');break}
+      case 'ufo':if(o.v){ctx.fillStyle='rgba(255,236,140,.35)';ctx.beginPath();ctx.moveTo(-8,3);ctx.lineTo(8,3);ctx.lineTo(16,26);ctx.lineTo(-16,26);ctx.fill()}
+        ctx.fillStyle='rgba(150,230,255,.9)';ctx.beginPath();ctx.ellipse(0,-4,8,7,0,Math.PI,0);ctx.fill();ctx.fillStyle=C;ctx.beginPath();ctx.ellipse(0,0,22,6.5,0,0,7);ctx.fill();[-11,0,11].forEach(x=>circ(x,1,2,'#ffe27a'));break;
+      case 'satellite':rect(-5,-5,10,10,'#d4d8de');rect(-22,-3,15,6,C);rect(7,-3,15,6,C);ctx.strokeStyle='rgba(0,0,0,.35)';ctx.lineWidth=1;[-17,-12,12,17].forEach(x=>{ctx.beginPath();ctx.moveTo(x,-3);ctx.lineTo(x,3);ctx.stroke()});
+        ctx.strokeStyle='#d4d8de';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(0,-5);ctx.lineTo(0,-12);ctx.stroke();circ(0,-13,2.5,'#d4d8de');break;
+      case 'moonc':ctx.fillStyle=`hsl(${o.c.h} 55% 82%)`;ctx.beginPath();ctx.arc(0,0,13,-Math.PI/2,Math.PI/2,true);ctx.ellipse(0,0,6,13,0,Math.PI/2,Math.PI*1.5,false);ctx.fill();break;
+      case 'rocket':if(o.v){ctx.fillStyle='#ffb347';ctx.beginPath();ctx.moveTo(-5,12);ctx.lineTo(5,12);ctx.lineTo(0,25);ctx.fill()}
+        ctx.fillStyle=C;ctx.beginPath();ctx.moveTo(-8,4);ctx.lineTo(-14,16);ctx.lineTo(-8,12);ctx.fill();ctx.beginPath();ctx.moveTo(8,4);ctx.lineTo(14,16);ctx.lineTo(8,12);ctx.fill();
+        ctx.fillStyle='#eef2f7';ctx.beginPath();ctx.moveTo(0,-22);ctx.quadraticCurveTo(8,-12,8,-6);ctx.lineTo(8,12);ctx.lineTo(-8,12);ctx.lineTo(-8,-6);ctx.quadraticCurveTo(-8,-12,0,-22);ctx.fill();
+        ctx.fillStyle=C;ctx.beginPath();ctx.moveTo(0,-22);ctx.quadraticCurveTo(6,-15,7,-11);ctx.lineTo(-7,-11);ctx.quadraticCurveTo(-6,-15,0,-22);ctx.fill();circ(0,-2,3.5,'#5fb8e8');break;
+      case 'astronaut':rect(-9,0,4,10,'#aab3bd');rect(-6,1,12,12,'#e8ecf0');rect(-5,13,4,7,'#e8ecf0');rect(1,13,4,7,'#e8ecf0');rect(6,3,6,3,'#e8ecf0');rect(-6,6,12,2,C);
+        circ(0,-6,7,'#f4f6f8');ctx.fillStyle='#f0a030';ctx.beginPath();ctx.ellipse(2,-6,4.2,3.2,0,0,7);ctx.fill();break;
+      case 'rover':rect(-16,-8,32,9,C);rect(-14,-12,18,3,'#2e4a7a');ctx.strokeStyle='#ccc';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(9,-8);ctx.lineTo(9,-18);ctx.stroke();rect(6,-21,7,4,'#ddd');[-11,0,11].forEach(x=>circ(x,4,5,'#333'));break;
+      case 'flagp':rect(-1,-20,2,32,'#cfd4da');rect(1,-20,17,11,C);if(o.v)circ(9.5,-14.5,2.4,'#fff');break;
+      case 'alien':circ(0,5,8,C);circ(0,-7,8,C);ctx.fillStyle='#111';ctx.beginPath();ctx.ellipse(-3,-7,2.4,3.4,0.3,0,7);ctx.fill();ctx.beginPath();ctx.ellipse(3,-7,2.4,3.4,-0.3,0,7);ctx.fill();
+        ctx.strokeStyle=C;ctx.lineWidth=1.5;(o.v?[-4,4]:[0]).forEach(x=>{ctx.beginPath();ctx.moveTo(x*0.6,-14);ctx.lineTo(x,-20);ctx.stroke();circ(x,-21,2,'#ffe27a')});break;
       case 'sun':circ(0,0,15,C);ctx.strokeStyle=C;ctx.lineWidth=3;for(let k=0;k<8;k++){const a=k*Math.PI/4;ctx.beginPath();ctx.moveTo(Math.cos(a)*19,Math.sin(a)*19);ctx.lineTo(Math.cos(a)*26,Math.sin(a)*26);ctx.stroke()}break;
       case 'cloud':{const f=`hsl(${o.c.h} 25% ${92-(o.c.l-48)/3}%)`;circ(-12,4,11,f);circ(2,-3,14,f);circ(16,4,10,f);rect(-12,4,28,10,f);break}
       case 'bird':ctx.strokeStyle=dark;ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(-11,-2);ctx.quadraticCurveTo(-5,-8,0,0);ctx.quadraticCurveTo(6,-9,12,-3);ctx.stroke();circ(9,0,2,C);break;
@@ -88,7 +113,7 @@ const DiffGame=(()=>{
       finishLevel(DiffGame,st,g.level,s,{mistakes:g.mistakes,hints:g.hints,time:g.time},'وجدتها كلها!',`الوقت ${fmtTime(g.time)} · أخطاء ${g.mistakes}`+(earned?' · كسبت تلميحاً':''))}}
   function play(level){clearOverlays();clearInterval(timer);st=gState('diff',{hints:3,bestTime:{}});g=mode&&mode.daily?build(9,mode.seed):build(level);g.flips=2;flicking=false;if(cb){cb.lastChild.textContent='قارن (2)';cb.disabled=false}draw();upd();
     timer=setInterval(()=>{if(document.hidden||g.over)return;g.time++;setStat('s4',fmtTime(g.time))},1000)}
-  return {id:'diff',name:'أوجد الاختلاف',desc:'حديقة وشارع وغرفة: اكتشف الفروق',play,
+  return {id:'diff',name:'أوجد الاختلاف',desc:'الفضاء والحديقة والشارع والغرفة: اكتشف الفروق',play,
     icon:'<svg viewBox="0 0 48 48"><rect x="4" y="8" width="18" height="32" rx="4" fill="#bfe3f5"/><rect x="26" y="8" width="18" height="32" rx="4" fill="#bfe3f5"/><rect x="4" y="26" width="18" height="14" rx="3" fill="#7cc46a"/><rect x="26" y="26" width="18" height="14" rx="3" fill="#7cc46a"/><circle cx="13" cy="24" r="5" fill="#3fbf9b"/><circle cx="35" cy="24" r="5" fill="#f2b84b"/></svg>',
     help:'الصورتان متشابهتان إلا في بعض التفاصيل: لون، أو حجم، أو شيء مفقود، أو نافذة مضيئة، أو سيارة بالاتجاه المعاكس. اضغط مكان الاختلاف في أي صورة. الضغط الخاطئ يُحسب خطأ. زر «قارن» يبدّل الصورة الأصلية بالمعدّلة بسرعة في مكانها، فتلاحظ ما يتغيّر (مرتان في كل مستوى).',
     progress(){const s=gState('diff',{hints:3});return {level:s.level,stars:starTotal(s)}},

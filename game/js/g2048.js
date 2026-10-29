@@ -1,5 +1,6 @@
 /* ================= game 6: 2048 ================= */
 const Game2048=(()=>{
+  const EMO2={2:'🪨',4:'🌑',8:'🌙',16:'🌍',32:'🪐',64:'⭐',128:'🌟',256:'☀️',512:'💫',1024:'🌌',2048:'🕳️',4096:'✨'};
   const PAL={2:['#20393b','#e8f1ee'],4:['#25474a','#e8f1ee'],8:['#2b6a5c','#fff'],16:['#2f866d','#fff'],32:['#36a583','#fff'],64:['#3fbf9b','#062019'],128:['#cdb35c','#2a1c00'],256:['#e2b552','#2a1c00'],512:['#f2b84b','#2a1c00'],1024:['#f59e42','#2a1c00'],2048:['#ff8a4c','#2a1c00'],4096:['#ff6f61','#fff']};
   const DIRN=['يسار ⬅️','يمين ➡️','أعلى ⬆️','أسفل ⬇️'];
   let st,g,boardEl,ub;
@@ -25,7 +26,7 @@ const Game2048=(()=>{
     if(boardEl.children.length!==n*n){boardEl.innerHTML='';for(let i=0;i<n*n;i++)boardEl.appendChild(document.createElement('div'))}
     const w=(boardEl.clientWidth||320)/n;
     g.cells.forEach((v,i)=>{const d=boardEl.children[i];d.className='t2'+(v===-1?' rock':'')+(i===news?' new':'')+(merged&&merged.includes(i)?' mrg':'');
-      if(v>0){const p=PAL[v]||['#c2477e','#fff'],dg=String(v).length;d.style.background=p[0];d.style.color=p[1];d.textContent=v;d.style.fontSize=Math.round(w*(dg<=2?.4:dg===3?.32:.25))+'px'}
+      if(v>0){const p=PAL[v]||['#c2477e','#fff'],dg=String(v).length;d.style.background=p[0];d.style.color=p[1];d.innerHTML=(EMO2[v]?'<i>'+EMO2[v]+'</i>':'')+v;d.style.fontSize=Math.round(w*(dg<=2?.4:dg===3?.32:.25))+'px'}
       else{d.style.background='';d.style.color='';d.textContent=''}});
     setStat('s1',mode&&mode.daily?'اليوم':g.level);setStat('s2',g.target);setStat('s3',maxTile());setStat('s4',g.moves);ub.disabled=!g.hist.length||g.over;
   }
@@ -53,7 +54,7 @@ const Game2048=(()=>{
     else build(level);
     boardEl.innerHTML='';render();persist();
   }
-  return {id:'g2048',name:'2048',desc:'ادمج الأرقام المتشابهة حتى تصل للهدف',play,
+  return {id:'g2048',name:'2048',desc:'ادمج الأجرام: من صخرة إلى كوكب إلى نجم',play,
     icon:'<svg viewBox="0 0 48 48"><rect x="5" y="5" width="18" height="18" rx="4" fill="#3fbf9b"/><rect x="25" y="5" width="18" height="18" rx="4" fill="#25474a"/><rect x="5" y="25" width="18" height="18" rx="4" fill="#25474a"/><rect x="25" y="25" width="18" height="18" rx="4" fill="#f2b84b"/><text x="14" y="18" font-size="10" font-weight="700" fill="#062019" font-family="sans-serif" text-anchor="middle">2</text><text x="34" y="38" font-size="8" font-weight="700" fill="#2a1c00" font-family="sans-serif" text-anchor="middle">2048</text></svg>',
     help:'اسحب بإصبعك يميناً أو يساراً أو لأعلى أو لأسفل، فتتحرك كل المربعات، وكل مربعين متساويين يندمجان في مربع واحد. الهدف يكبر مع المستويات، ومن المستوى 6 تصبح اللوحة 5×5 وفيها صخور ثابتة. «تلميح» يقترح أفضل اتجاه.',
     progress(){const s=gState('g2048');return {level:s.level,stars:starTotal(s)}},

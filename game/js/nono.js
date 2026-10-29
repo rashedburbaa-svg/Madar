@@ -61,7 +61,7 @@ const NonoGame=(()=>{
     g.cellEls.forEach((_,i)=>drawCell(i));updClues();stats();persist();
     timer=setInterval(()=>{if(document.hidden||g.over)return;g.time++;setStat('s4',fmtTime(g.time));if(g.time%10===0)persist()},1000);
   }
-  return {id:'nono',name:'نونوجرام',desc:'ارسم الصورة المخفية بأرقام الصفوف والأعمدة',play,
+  return {id:'nono',name:'نونوجرام',desc:'أضئ الكوكبة المخفية بأرقام الصفوف والأعمدة',play,
     icon:'<svg viewBox="0 0 48 48"><g fill="#3fbf9b"><rect x="14" y="14" width="8" height="8" rx="1.5"/><rect x="24" y="14" width="8" height="8" rx="1.5"/><rect x="34" y="24" width="8" height="8" rx="1.5"/><rect x="14" y="34" width="8" height="8" rx="1.5"/><rect x="24" y="24" width="8" height="8" rx="1.5"/></g><g fill="#1d373b"><rect x="34" y="14" width="8" height="8" rx="1.5"/><rect x="14" y="24" width="8" height="8" rx="1.5"/><rect x="24" y="34" width="8" height="8" rx="1.5"/><rect x="34" y="34" width="8" height="8" rx="1.5"/></g><g fill="#f2b84b" font-family="sans-serif" font-size="7" font-weight="700" text-anchor="middle"><text x="18" y="10">2</text><text x="28" y="10">1</text><text x="38" y="10">1</text><text x="8" y="21">2</text></g></svg>',
     help:'الأرقام فوق كل عمود وبجانب كل صف تخبرك بأطوال المجموعات الملوّنة فيه بالترتيب، وبين كل مجموعتين فراغ واحد على الأقل. «تلوين» يلوّن الخانات، و«علامة ✕» تضع إشارة على الخانات الفارغة لتتذكرها. اسحب إصبعك لتلوين عدة خانات معاً. الرقم يبهت عندما يكتمل صفه أو عموده.',
     progress(){const s=gState('nono',{hints:3});return {level:s.level,stars:starTotal(s)}},
