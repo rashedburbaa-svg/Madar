@@ -3,7 +3,7 @@ const SurviveGame=(()=>{
   // fixed arena in logical units; the canvas is scaled to the stage width
   const W=360,H=520,WAVE_LEN=30;
   let cv,ctx,raf=0,last=0,st,running=false,paused=true,over=false,joy=null,keys={},statT=0,hitSndT=0,buzzT=0;
-  let p,gun,orb,pul,en,bl,eb,drops,parts,rings,hz,crys,bossKills,t,wave,waveT,spawnT,kills,orbA,pulseT,buff,banner,lv,bossAlive,recordShown;
+  let p,gun,orb,pul,mis,drn,evo,misT,drnT,novaT,bhT,holes,ms,en,bl,eb,drops,parts,rings,hz,crys,bossKills,t,wave,waveT,spawnT,kills,orbA,pulseT,buff,banner,lv,bossAlive,recordShown;
   const UP=[
     {id:'dmg',em:'💥',name:'ليزر أقوى',d:'زيادة 25% في ضرر كل شعاع',max:8,apply:()=>gun.dmg*=1.25},
     {id:'rate',em:'🔫',name:'إطلاق أسرع',d:'زيادة 20% في سرعة الإطلاق',max:8,apply:()=>gun.rate*=1.2},
@@ -13,8 +13,23 @@ const SurviveGame=(()=>{
     {id:'pulse',em:'💫',name:'نبضة جاذبية',d:'نبضة تضرب الكائنات حولك وتدفعها',max:5,apply:()=>pul++},
     {id:'hp',em:'🧑‍🚀',name:'بدلة أقوى',d:'25 صحة إضافية وإصلاح كامل للبدلة',max:6,apply:()=>{p.max+=25;p.hp=p.max}},
     {id:'speed',em:'🚀',name:'دفع نفّاث',d:'زيادة 12% في سرعة الحركة',max:5,apply:()=>p.spd*=1.12},
-    {id:'magnet',em:'🧲',name:'مغناطيس',d:'تجذب الأدوات من مسافة أبعد',max:3,apply:()=>p.mag+=35}
+    {id:'magnet',em:'🧲',name:'مغناطيس',d:'تجذب الأدوات من مسافة أبعد',max:3,apply:()=>p.mag+=35},
+    {id:'missile',em:'🚀',name:'صواريخ موجّهة',d:'صاروخ إضافي يلاحق الكائنات وينفجر',max:5,apply:()=>mis++},
+    {id:'drone',em:'🛸',name:'طائرة مسيّرة',d:'طائرة صغيرة ترافقك وتطلق معك',max:3,apply:()=>drn++}
   ];
+  // fusions: two weapons that are strong enough merge into a super weapon (offered once, as a golden card)
+  const EVO=[
+    {id:'blackhole',em:'🕳️',name:'ثقب أسود',d:'دمج الأقمار ونبضة الجاذبية: ثقب يبتلع الكائنات القريبة',need:{orbit:4,pulse:3}},
+    {id:'nova',em:'🌟',name:'ليزر نوفا',d:'دمج الليزر القوي والأشعة الإضافية: حلقة من 16 شعاعاً كل 3 ثوانٍ',need:{dmg:4,multi:3}},
+    {id:'swarm',em:'🎆',name:'سرب الصواريخ',d:'دمج الصواريخ والمسيّرات: كل مسيّرة تطلق صواريخ أيضاً',need:{missile:3,drone:2}}
+  ];
+  // astronauts to choose from before a run
+  const CHARS={
+    scout:{name:'المستكشف',em:'🧑‍🚀',d:'متوازن في كل شيء',visor:['#ffd27a','#d46a00'],hp:1,dmg:1,rate:1,spd:1},
+    sniper:{name:'القنّاص',em:'🎯',d:'ضرر أعلى 60% وإطلاق أبطأ',visor:['#ff9aa8','#c0304a'],hp:0.85,dmg:1.6,rate:0.72,spd:1},
+    runner:{name:'العدّاء',em:'⚡',d:'أسرع 25% وصحة أقل',visor:['#9ff0ff','#1f8fb0'],hp:0.8,dmg:1,rate:1.1,spd:1.25},
+    tank:{name:'المدرّع',em:'🛡️',d:'صحة أكبر 50% وحركة أبطأ',visor:['#c8ff9a','#4a9a2a'],hp:1.5,dmg:1,rate:1,spd:0.85}
+  };
   const DROPS={heart:'❤️',rapid:'⚡',shield:'🛡️',bomb:'💣',chip:'⬆️',crys:'💎'};
   const TYPES={
     grunt:{r:9,hp:20,spd:52,dps:12,col:'#7ddc5a'},
@@ -250,15 +265,15 @@ const SurviveGame=(()=>{
     ctx.strokeStyle='#3a4652';ctx.lineWidth=5;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+Math.cos(a)*18,y+Math.sin(a)*18);ctx.stroke();
     ctx.strokeStyle='#5ff2d6';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x+Math.cos(a)*10,y+Math.sin(a)*10);ctx.lineTo(x+Math.cos(a)*18,y+Math.sin(a)*18);ctx.stroke();
     const gr=ctx.createRadialGradient(x-r*0.35,y-r*0.35,1,x,y,r);gr.addColorStop(0,'#ffffff');gr.addColorStop(1,p.hurt>0?'#ff8a8a':'#c9d3dc');ctx.fillStyle=gr;ctx.beginPath();ctx.arc(x,y,r,0,6.283);ctx.fill();ctx.strokeStyle='#0b1618';ctx.lineWidth=1.8;ctx.stroke();
-    const vx=x+Math.cos(a)*r*0.38,vy=y+Math.sin(a)*r*0.38,vg=ctx.createLinearGradient(vx-r*0.5,vy-r*0.5,vx+r*0.5,vy+r*0.5);vg.addColorStop(0,'#ffd27a');vg.addColorStop(1,'#d46a00');
+    const vx=x+Math.cos(a)*r*0.38,vy=y+Math.sin(a)*r*0.38,vg=ctx.createLinearGradient(vx-r*0.5,vy-r*0.5,vx+r*0.5,vy+r*0.5);const VC=(CHARS[st.char]||CHARS.scout).visor;vg.addColorStop(0,VC[0]);vg.addColorStop(1,VC[1]);
     ctx.fillStyle=vg;ctx.beginPath();ctx.ellipse(vx,vy,r*0.55,r*0.42,a,0,6.283);ctx.fill();ctx.fillStyle='rgba(255,255,255,.7)';ctx.beginPath();ctx.ellipse(vx-r*0.15,vy-r*0.15,r*0.18,r*0.08,a-0.6,0,6.283);ctx.fill();
   }
   const shadow=(x,y,r)=>{ctx.fillStyle='rgba(0,0,0,.32)';ctx.beginPath();ctx.ellipse(x+r*0.15,y+r*0.75,r*0.95,r*0.42,0,0,6.283);ctx.fill()};
   function resize(){const w=stage.clientWidth;cv.width=Math.round(w*devicePixelRatio);cv.height=Math.round(w*H/W*devicePixelRatio);cv.style.height=(w*H/W)+'px';ctx.setTransform(w/W*devicePixelRatio,0,0,w/W*devicePixelRatio,0,0)}
   function reset(){
-    const mx=100+15*mlv('hp');
-    p={x:W/2,y:H/2,r:11,hp:mx,max:mx,spd:120*(1+0.06*mlv('spd')),mag:40+20*mlv('mag'),aim:-Math.PI/2,hurt:0,slow:0,rev:mlv('revive')};
-    gun={dmg:10*(1+0.1*mlv('dmg')),rate:2.2*(1+0.08*mlv('rate')),count:1,pierce:0,spd:380,cd:0};orb=mlv('moon');pul=0;orbA=0;pulseT=3;
+    const C=CHARS[st.char]||CHARS.scout,mx=Math.round((100+15*mlv('hp'))*C.hp);
+    p={x:W/2,y:H/2,r:11,hp:mx,max:mx,spd:120*(1+0.06*mlv('spd'))*C.spd,mag:40+20*mlv('mag'),aim:-Math.PI/2,hurt:0,slow:0,rev:mlv('revive')};
+    gun={dmg:10*(1+0.1*mlv('dmg'))*C.dmg,rate:2.2*(1+0.08*mlv('rate'))*C.rate,count:1,pierce:0,spd:380,cd:0};orb=mlv('moon');pul=0;mis=0;drn=0;evo={};misT=1;drnT=0.5;novaT=3;bhT=4;holes=[];ms=[];orbA=0;pulseT=3;
     en=[];bl=[];eb=[];drops=[];parts=[];rings=[];hz=[];crys=0;bossKills=0;t=0;wave=1;waveT=0;spawnT=0.6;kills=0;
     buff={rapid:0,shield:3*mlv('shield')};banner={txt:'الموجة 1',sub:BIOMES[0].name,t:2.2};lv={};bossAlive=false;recordShown=false;over=false;
   }
@@ -280,17 +295,19 @@ const SurviveGame=(()=>{
   function avail(){return UP.filter(u=>(lv[u.id]||0)<u.max)}
   function applyUp(u){lv[u.id]=(lv[u.id]||0)+1;u.apply()}
   function chooseUpgrade(){
-    const opts=shuffle(avail().slice(),Math.random).slice(0,3+mlv('choice'));
+    let opts=shuffle(avail().slice(),Math.random).slice(0,3+mlv('choice'));
+    const ready=EVO.filter(x=>!evo[x.id]&&Object.entries(x.need).every(([k,v])=>(lv[k]||0)>=v));
+    if(ready.length){const x=ready[0];opts=[{id:x.id,em:x.em,name:'✨ دمج: '+x.name,d:x.d,max:1,evo:true,apply:()=>{evo[x.id]=1;unlock('surv_evo')}}].concat(opts.slice(0,Math.max(1,opts.length-1)))}
     if(!opts.length){p.hp=p.max;wave++;startWave();return}
     paused=true;const o=document.createElement('div');o.className='overlay';
     o.innerHTML='<h3 style="font-size:24px"></h3><p></p><div class="upgrades"></div>';
     o.querySelector('h3').textContent='أنهيت الموجة '+wave+' 🎉';o.querySelector('p').textContent='🔫 سلاحك ارتقى للمستوى '+(wave+1)+' · اختر تطويراً واحداً';
     const box=o.querySelector('.upgrades');
     opts.forEach(u=>{const b=document.createElement('button');b.type='button';b.className='upc';
-      b.innerHTML='<span class="em"></span><span><b></b><small></small></span><i></i>';
+      b.innerHTML='<span class="em"></span><span><b></b><small></small></span><i></i>';if(u.evo)b.classList.add('evo');
       b.querySelector('.em').textContent=u.em;b.querySelector('b').textContent=u.name;b.querySelector('small').textContent=u.d;
-      b.querySelector('i').textContent=(lv[u.id]||0)+1+'/'+u.max;
-      b.onclick=()=>{applyUp(u);snd('ok');o.remove();wave++;startWave();paused=false;last=performance.now()};box.appendChild(b)});
+      b.querySelector('i').textContent=u.evo?'سلاح خارق':(lv[u.id]||0)+1+'/'+u.max;
+      b.onclick=()=>{if(u.evo)u.apply();else applyUp(u);snd('ok');o.remove();wave++;startWave();paused=false;last=performance.now()};box.appendChild(b)});
     stage.appendChild(o);snd('win');buzz([20,30,40]);
   }
   function nearest(){let b=null,bd=1e9;for(const e of en){if(e.under>0)continue;if(e.x<-5||e.x>W+5||e.y<-5||e.y>H+5)continue;const d=(e.x-p.x)**2+(e.y-p.y)**2;if(d<bd){bd=d;b=e}}return b}
@@ -339,6 +356,21 @@ const SurviveGame=(()=>{
     // shock pulse
     if(pul){pulseT-=dt;if(pulseT<=0){pulseT=Math.max(1.4,4.2-0.5*pul);const R=70+18*pul,dmg=(18+10*pul)*wpn(wave);rings.push({x:p.x,y:p.y,r:0,R,l:0.35});
       for(const e of en){if(e.dead||e.under>0)continue;const dx=e.x-p.x,dy=e.y-p.y,d=Math.hypot(dx,dy);if(d<R+e.r){hurt(e,dmg);if(!e.boss&&d>0){e.x+=dx/d*28;e.y+=dy/d*28}}}}}
+    // homing missiles (and, with the swarm fusion, from every drone too)
+    if(mis){misT-=dt;if(misT<=0){misT=Math.max(0.9,2.4-0.25*mis);const srcs=[[p.x,p.y]];if(evo.swarm)for(let k=0;k<drn;k++){const a=orbA*0.6+k*6.283/drn;srcs.push([p.x+Math.cos(a)*30,p.y+Math.sin(a)*30])}
+      const live=en.filter(e=>!e.dead&&!(e.under>0));if(live.length)srcs.forEach(([sx,sy])=>{for(let k=0;k<mis;k++){const tg=live[Math.floor(Math.random()*live.length)];const a=Math.atan2(tg.y-sy,tg.x-sx)+(Math.random()-0.5)*1.4;ms.push({x:sx,y:sy,vx:Math.cos(a)*150,vy:Math.sin(a)*150,tg,l:3})}})}}
+    for(const m of ms){if(!m.tg||m.tg.dead){m.tg=nearest()}if(m.tg){const dx=m.tg.x-m.x,dy=m.tg.y-m.y,d=Math.hypot(dx,dy)||1;m.vx+=dx/d*620*dt;m.vy+=dy/d*620*dt}
+      const sp=Math.hypot(m.vx,m.vy);if(sp>260){m.vx*=260/sp;m.vy*=260/sp}m.x+=m.vx*dt;m.y+=m.vy*dt;m.l-=dt;if(Math.random()<0.6)parts.push({x:m.x,y:m.y,vx:0,vy:0,l:0.25,col:'#ffb347'});
+      if(m.tg&&(m.tg.x-m.x)**2+(m.tg.y-m.y)**2<(m.tg.r+4)**2){m.l=0;rings.push({x:m.x,y:m.y,r:0,R:34,l:0.25});for(const e of en)if(!e.dead&&(e.x-m.x)**2+(e.y-m.y)**2<(34+e.r)**2)hurt(e,22*wpn(wave))}}
+    ms=ms.filter(m=>m.l>0);
+    // drones circle you and shoot the nearest alien
+    if(drn){drnT-=dt;if(drnT<=0){drnT=0.55;const tg=nearest();if(tg)for(let k=0;k<drn;k++){const a=orbA*0.6+k*6.283/drn,dx0=p.x+Math.cos(a)*30,dy0=p.y+Math.sin(a)*30,aa=Math.atan2(tg.y-dy0,tg.x-dx0);
+      bl.push({x:dx0,y:dy0,vx:Math.cos(aa)*360,vy:Math.sin(aa)*360,pierce:0,hit:new Set(),l:1,dr:1})}}}
+    // fusion weapons
+    if(evo.nova){novaT-=dt;if(novaT<=0){novaT=3;for(let k=0;k<16;k++){const a=k*0.3927;bl.push({x:p.x,y:p.y,vx:Math.cos(a)*340,vy:Math.sin(a)*340,pierce:2,hit:new Set(),l:1.1,nova:1})}snd('hit')}}
+    if(evo.blackhole){bhT-=dt;if(bhT<=0){bhT=6;const tg=nearest();if(tg)holes.push({x:tg.x,y:tg.y,l:3.2})}
+      for(const h of holes){h.l-=dt;for(const e of en){if(e.dead||e.under>0)continue;const dx=h.x-e.x,dy=h.y-e.y,d=Math.hypot(dx,dy)||1;if(d<110){if(!e.boss){e.x+=dx/d*Math.min(d,90*dt);e.y+=dy/d*Math.min(d,90*dt)}if(d<40)hurt(e,30*wpn(wave)*dt)}}}
+      holes=holes.filter(h=>h.l>0)}
     // enemies
     const shielded=buff.shield>0;let touching=0;
     for(const e of en){if(e.dead)continue;e.flash-=dt;e.oc-=dt;
@@ -406,12 +438,16 @@ const SurviveGame=(()=>{
     for(const r of rings){ctx.strokeStyle=`rgba(159,232,255,${Math.max(0,r.l*2)})`;ctx.lineWidth=3;ctx.beginPath();ctx.arc(r.x,r.y,Math.min(r.r,r.R),0,6.283);ctx.stroke()}
     for(const h of hz){if(h.k==='lava'){const al=Math.min(1,h.l),gr=ctx.createRadialGradient(h.x,h.y,1,h.x,h.y,h.r);gr.addColorStop(0,`rgba(255,220,120,${al})`);gr.addColorStop(0.5,`rgba(255,90,20,${al*0.9})`);gr.addColorStop(1,'rgba(120,20,0,0)');ctx.fillStyle=gr;ctx.beginPath();ctx.arc(h.x,h.y,h.r,0,6.283);ctx.fill()}
       else{ctx.strokeStyle=`rgba(255,170,90,${Math.max(0.15,1-h.r/h.R)})`;ctx.lineWidth=5;ctx.beginPath();ctx.arc(h.x,h.y,h.r,0,6.283);ctx.stroke();ctx.strokeStyle='rgba(255,240,200,.6)';ctx.lineWidth=1.5;ctx.stroke()}}
+    for(const h of holes){const gr=ctx.createRadialGradient(h.x,h.y,2,h.x,h.y,40);gr.addColorStop(0,'#000');gr.addColorStop(0.6,'rgba(40,10,80,.85)');gr.addColorStop(1,'rgba(120,60,220,0)');ctx.fillStyle=gr;ctx.beginPath();ctx.arc(h.x,h.y,40,0,6.283);ctx.fill();
+      ctx.strokeStyle='rgba(200,150,255,.6)';ctx.lineWidth=1.5;for(let k=0;k<3;k++){const a=t*4+k*2.1;ctx.beginPath();ctx.arc(h.x,h.y,14+k*7,a,a+2);ctx.stroke()}}
     for(const e of en){
       drawAlien(e);
       if(!e.boss&&e.max>60&&e.hp<e.max){ctx.fillStyle='#00000088';ctx.fillRect(e.x-e.r,e.y-e.r-7,e.r*2,3);ctx.fillStyle='#ff4d6d';ctx.fillRect(e.x-e.r,e.y-e.r-7,e.r*2*e.hp/e.max,3)}
     }
     for(const b of eb){const bc=b.k==='ice'?['rgba(160,225,255,.35)','#a8e6ff']:b.k==='fire'?['rgba(255,120,40,.35)','#ff8a3c']:['rgba(157,255,90,.3)','#9dff5a'];ctx.fillStyle=bc[0];ctx.beginPath();ctx.arc(b.x,b.y,7,0,6.283);ctx.fill();ctx.fillStyle=bc[1];ctx.beginPath();ctx.arc(b.x,b.y,4,0,6.283);ctx.fill();ctx.fillStyle='#efffd8';ctx.beginPath();ctx.arc(b.x,b.y,1.6,0,6.283);ctx.fill()}
-    {const lc=buff.rapid>0?'255,110,220':'95,242,214';ctx.lineCap='round';for(const b of bl){const tx=b.x-b.vx*0.03,ty=b.y-b.vy*0.03;ctx.strokeStyle=`rgba(${lc},.35)`;ctx.lineWidth=6;ctx.beginPath();ctx.moveTo(tx,ty);ctx.lineTo(b.x,b.y);ctx.stroke();ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(tx,ty);ctx.lineTo(b.x,b.y);ctx.stroke()}}
+    {const lc=buff.rapid>0?'255,110,220':'95,242,214';ctx.lineCap='round';for(const b of bl){const tx=b.x-b.vx*0.03,ty=b.y-b.vy*0.03;ctx.strokeStyle=b.nova?'rgba(255,220,120,.45)':b.dr?'rgba(159,232,255,.35)':`rgba(${lc},.35)`;ctx.lineWidth=6;ctx.beginPath();ctx.moveTo(tx,ty);ctx.lineTo(b.x,b.y);ctx.stroke();ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(tx,ty);ctx.lineTo(b.x,b.y);ctx.stroke()}}
+    for(const m of ms){const a=Math.atan2(m.vy,m.vx);ctx.save();ctx.translate(m.x,m.y);ctx.rotate(a);ctx.fillStyle='#e6ecf1';ctx.fillRect(-6,-2,10,4);ctx.fillStyle='#ff5d73';ctx.beginPath();ctx.moveTo(4,-2);ctx.lineTo(8,0);ctx.lineTo(4,2);ctx.fill();ctx.restore()}
+    for(let k=0;k<drn;k++){const a=orbA*0.6+k*6.283/drn,x=p.x+Math.cos(a)*30,y=p.y+Math.sin(a)*30;ctx.fillStyle='#c9d3dc';ctx.beginPath();ctx.ellipse(x,y,7,3.2,0,0,6.283);ctx.fill();ctx.fillStyle='rgba(120,230,255,.9)';ctx.beginPath();ctx.ellipse(x,y-1.5,3,2.4,0,3.14,6.283);ctx.fill();ctx.fillStyle=Math.floor(t*6+k)%2?'#ff5d73':'#ffe14d';ctx.fillRect(x-0.8,y+1.5,1.6,1.6)}
     if(orb){ctx.strokeStyle='rgba(159,232,255,.18)';ctx.lineWidth=1;ctx.beginPath();ctx.arc(p.x,p.y,48,0,6.283);ctx.stroke();
       for(let k=0;k<orb;k++){const a=orbA+k*6.283/orb,bx=p.x+Math.cos(a)*48,by=p.y+Math.sin(a)*48,gr=ctx.createRadialGradient(bx-2,by-2,0.5,bx,by,6);gr.addColorStop(0,'#f4f6ff');gr.addColorStop(1,'#7f8aa6');
         ctx.fillStyle=gr;ctx.beginPath();ctx.arc(bx,by,6,0,6.283);ctx.fill();ctx.fillStyle='rgba(60,70,90,.45)';ctx.beginPath();ctx.arc(bx+1.5,by+1,1.6,0,6.283);ctx.arc(bx-2,by+2,1,0,6.283);ctx.fill()}}
@@ -451,14 +487,17 @@ const SurviveGame=(()=>{
     o.querySelector('button').onclick=()=>{o.remove();paused=false;last=performance.now()};stage.appendChild(o)}
   function intro(){
     const o=document.createElement('div');o.className='overlay';
-    o.innerHTML='<h3>صمود المدار</h3><p></p><button class="btn main" type="button">ابدأ</button><button class="btn" type="button"></button>';
+    o.innerHTML='<h3>صمود المدار</h3><p></p><div class="chars"></div><button class="btn main" type="button">ابدأ</button><button class="btn" type="button"></button>';
+    const cb=o.querySelector('.chars');Object.entries(CHARS).forEach(([k,c])=>{const b=document.createElement('button');b.type='button';b.className='chr'+((st.char||'scout')===k?' on':'');
+      b.innerHTML='<span class="em"></span><b></b><small></small>';b.querySelector('.em').textContent=c.em;b.querySelector('b').textContent=c.name;b.querySelector('small').textContent=c.d;
+      b.onclick=()=>{st.char=k;gSave('survive',st);snd('tap');cb.querySelectorAll('.chr').forEach(x=>x.classList.toggle('on',x===b))};cb.appendChild(b)});
     o.querySelector('p').textContent=st.bestTime?`رقمك القياسي ${fmtTime(st.bestTime)} · أعلى موجة ${st.bestWave}`:'حرّك إصبعك على الملعب للمشي، وسلاحك يطلق وحده';
-    const [b1,b2]=o.querySelectorAll('button');b1.onclick=()=>begin();b2.textContent='🔬 مختبر المدار · 💎 '+(st.crys||0);b2.onclick=()=>openLab(intro);stage.appendChild(o)}
+    const [b1,b2]=o.querySelectorAll(':scope > .btn');b1.onclick=()=>begin();b2.textContent='🔬 مختبر المدار · 💎 '+(st.crys||0);b2.onclick=()=>openLab(intro);stage.appendChild(o)}
   const toLocal=ev=>{const r=cv.getBoundingClientRect();return [(ev.clientX-r.left)*W/r.width,(ev.clientY-r.top)*H/r.height]};
-  return {id:'survive',name:'صمود المدار',region(i,demo){setBiome(i,false);if(demo){for(const k of ['grunt','runner','tank','spitter'])spawn(k);spawnBoss(BOSSES[i%BOSSES.length])}},lab(){openLab(intro)},desc:'رائد فضاء ضد غزو الكائنات على كواكب المدار',noDaily:true,
+  return {id:'survive',name:'صمود المدار',region(i,demo){setBiome(i,false);if(demo){for(const k of ['grunt','runner','tank','spitter'])spawn(k);spawnBoss(BOSSES[i%BOSSES.length])}},lab(){openLab(intro)},demoWeapons(){evo={blackhole:1,nova:1,swarm:1};mis=2;drn=2;orb=2},desc:'رائد فضاء ضد غزو الكائنات على كواكب المدار',noDaily:true,
     play(){intro()},
     icon:'<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="21" fill="#0a0c1c"/><circle cx="12" cy="10" r=".8" fill="#fff"/><circle cx="38" cy="8" r="1" fill="#fff"/><circle cx="41" cy="30" r=".7" fill="#fff"/><circle cx="35" cy="34" r="7" fill="#7ddc5a"/><ellipse cx="32.5" cy="33.5" rx="2.2" ry="1.4" fill="#0b0b14" transform="rotate(30 32.5 33.5)"/><ellipse cx="37.5" cy="33.5" rx="2.2" ry="1.4" fill="#0b0b14" transform="rotate(-30 37.5 33.5)"/><path d="M31 28l-3-5M39 28l3-5" stroke="#7ddc5a" stroke-width="1.4"/><circle cx="17" cy="21" r="8" fill="#e6ecf1" stroke="#0b1618" stroke-width="1.2"/><ellipse cx="19" cy="22.5" rx="4.6" ry="3.4" fill="#f0a030" transform="rotate(35 19 22.5)"/><path d="M22 26l6 5" stroke="#5ff2d6" stroke-width="2.4" stroke-linecap="round"/></svg>',
-    help:'أنت رائد فضاء على كواكب المدار وتهاجمك كائنات فضائية. حرّك إصبعك في أي مكان على الملعب لتتحرك، ومسدس الليزر يطلق وحده على أقرب كائن. كل 30 ثانية تنتهي موجة ويرتقي سلاحك مستوى تلقائياً وتختار تطويراً وتنتقل إلى كوكب جديد: القمر، المريخ، يوروبا الجليدي، آيو البركاني، الكوكب الغريب، وحزام الكويكبات. الكائنات تُسقط أحياناً أدوات: ❤️ صحة، ⚡ إطلاق مضاعف، 🛡️ درع، 💣 قنبلة، ⬆️ تطوير فوري. كل خامس موجة يظهر زعيم خاص بالكوكب: حارس الفوهة، دودة الرمال، تنين الجليد، ملك الحمم، الطاغية الأخطبوطي، والسفينة الأم. اجمع الكريستالات 💎 من الكائنات والزعماء، وبعد كل جولة اشترِ بها من «مختبر المدار» تطويرات دائمة تبقى معك في كل الجولات. اصمد أطول وقت واكسر رقمك القياسي.',
+    help:'أنت رائد فضاء على كواكب المدار وتهاجمك كائنات فضائية. حرّك إصبعك في أي مكان على الملعب لتتحرك، ومسدس الليزر يطلق وحده على أقرب كائن. كل 30 ثانية تنتهي موجة ويرتقي سلاحك مستوى تلقائياً وتختار تطويراً وتنتقل إلى كوكب جديد: القمر، المريخ، يوروبا الجليدي، آيو البركاني، الكوكب الغريب، وحزام الكويكبات. الكائنات تُسقط أحياناً أدوات: ❤️ صحة، ⚡ إطلاق مضاعف، 🛡️ درع، 💣 قنبلة، ⬆️ تطوير فوري. كل خامس موجة يظهر زعيم خاص بالكوكب: حارس الفوهة، دودة الرمال، تنين الجليد، ملك الحمم، الطاغية الأخطبوطي، والسفينة الأم. قبل كل جولة اختر رائدك: المستكشف المتوازن، أو القنّاص، أو العدّاء، أو المدرّع. من التطويرات صواريخ موجّهة وطائرات مسيّرة، وإذا قوي سلاحان معاً يظهر كرت ذهبي لدمجهما في سلاح خارق: ثقب أسود، أو ليزر نوفا، أو سرب صواريخ. اجمع الكريستالات 💎 من الكائنات والزعماء، وبعد كل جولة اشترِ بها من «مختبر المدار» تطويرات دائمة تبقى معك في كل الجولات. اصمد أطول وقت واكسر رقمك القياسي.',
     progress(){const s=gState('survive');return {level:s.bestWave||1,stars:starTotal(s)}},
     start(){
       st=gState('survive',{bestTime:0,bestWave:1,totalKills:0});reset();running=false;paused=true;
