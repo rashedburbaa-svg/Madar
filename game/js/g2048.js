@@ -68,7 +68,7 @@ const Game2048=(()=>{
   function setPower(k){if(g.over||!st.pw[k])return;g.power=g.power===k?null:k;g.pick=null;render();if(g.power)toast(k==='bomb'?'💣 اضغط الجِرم الذي تريد تفجيره':'🔄 اضغط جِرمين لتبديلهما')}
   function startTimed(){clearOverlays();clearInterval(tick);setStats([['s1','الوقت المتبقي'],['s2','النقاط','gold'],['s3','أكبر جِرم'],['s4','أفضل نتيجة']]);const R0=rng(Date.now()%100000);g={level:0,n:4,target:0,cells:new Array(16).fill(0),base:0,R:R0,moves:0,undos:0,hints:0,hist:[],over:false,timed:true,tleft:120,score:0};spawn();spawn();
     boardEl.innerHTML='';render();toast('⏱️ دقيقتان: اجمع أكبر نقاط بالدمج');
-    tick=setInterval(()=>{if(document.hidden||g.over||!g.timed)return;g.tleft--;setStat('s1','⏱️ '+fmtTime(g.tleft));if(g.tleft<=10&&g.tleft>0)snd('tap');if(g.tleft<=0)endTimed('انتهى الوقت')},1000)}
+    tick=setInterval(()=>{if(document.hidden||gPaused||g.over||!g.timed)return;g.tleft--;setStat('s1','⏱️ '+fmtTime(g.tleft));if(g.tleft<=10&&g.tleft>0)snd('tap');if(g.tleft<=0)endTimed('انتهى الوقت')},1000)}
   function endTimed(why){if(g.over)return;g.over=true;clearInterval(tick);const rec=g.score>(st.timeBest||0);if(rec)st.timeBest=g.score;gSave('g2048',st);render();
     if(rec&&g.score>0){snd('win');buzz([20,30,60])}else snd('err');
     const o=document.createElement('div');o.className='overlay';o.innerHTML='<h3></h3><p></p><button class="btn main" type="button">جولة جديدة</button><button class="btn" type="button">رجوع إلى المستويات</button>';

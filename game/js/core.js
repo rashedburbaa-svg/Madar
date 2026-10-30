@@ -43,7 +43,7 @@ $('sndBtn').onclick=()=>{prefs.sound=!prefs.sound;save('arcade-prefs',prefs);dra
 $('vibBtn').onclick=()=>{prefs.vibe=!prefs.vibe;save('arcade-prefs',prefs);drawPrefs();buzz(40)};
 
 /* screen helpers */
-const stage=$('stage');let active=null,mode=null;
+const stage=$('stage');let active=null,mode=null,gPaused=false,curLevel=null;
 function setStats(items){$('stats').innerHTML=items.map(([id,label,cls])=>`<div class="stat ${cls||''}"><b id="${id}">-</b><small>${label}</small></div>`).join('')}
 function setStat(id,v){const e=$(id);if(e)e.textContent=v}
 function btn(label,icon,fn,cls){const b=document.createElement('button');b.type='button';b.className='btn '+(cls||'');b.innerHTML=(icon||'')+'<span></span>';b.lastChild.textContent=label;b.onclick=fn;$('ctrl').appendChild(b);return b}
@@ -178,6 +178,16 @@ function openPicker(){
   o.querySelector('.btn').onclick=()=>o.remove();stage.appendChild(o);o.scrollTop=0;
 }
 $('lvlBtn').onclick=openPicker;
+/* pause menu: continue, forfeit (start this level again / end the run) or back to the hall */
+$('pauseBtn').onclick=()=>{if(!active||document.querySelector('.hmodal'))return;snd('tap');gPaused=true;if(active.pauseExt)active.pauseExt();
+  const m=document.createElement('div');m.className='hmodal';
+  m.innerHTML='<div class="hbox pbox"><h3>⏸ متوقف مؤقتاً</h3><button class="btn main" type="button">▶ استمرار</button><button class="btn" type="button">🏳️ انسحاب</button><button class="btn" type="button">🏠 العودة للقاعة</button></div>';
+  const [bc,bf,bh]=m.querySelectorAll('button'),G=active;
+  const resume=()=>{m.remove();gPaused=false;if(G.resumeExt)G.resumeExt()};
+  bc.onclick=resume;m.onclick=e=>{if(e.target===m)resume()};
+  bf.onclick=()=>{m.remove();gPaused=false;snd('err');if(G.forfeit&&G.forfeit())return;clearOverlays();G.play(mode&&mode.daily?1:(curLevel||gState(G.id).level),true);toast('🏳️ انسحبت · بدأ المستوى من جديد')};
+  bh.onclick=()=>{m.remove();gPaused=false;goHub()};
+  document.body.appendChild(m);bc.focus()};
 /* how-to-play sits behind the ? button instead of under the game */
 $('helpBtn').onclick=()=>{const t=$('help').textContent;if(!t)return;snd('tap');const m=document.createElement('div');m.className='hmodal';
   m.innerHTML='<div class="hbox"><h3>طريقة اللعب</h3><p></p><button class="btn main" type="button">فهمت</button></div>';m.querySelector('p').textContent=t;

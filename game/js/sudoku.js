@@ -83,7 +83,7 @@ const SudokuGame=(()=>{
     else if(!fresh&&st.cur&&st.cur.level===level&&st.cur.diff===st.diff&&!st.cur.over)p=st.cur;
     else p=generate(level,st.diff);
     p.n=p.n||9;layout();persist();sel=p.cur.findIndex(v=>!v);notesMode=false;render();
-    timer=setInterval(()=>{if(document.hidden||p.over)return;p.time+=1;setStat('s2',fmtTime(p.time));if(Math.floor(p.time)%5===0)persist()},1000);
+    timer=setInterval(()=>{if(document.hidden||gPaused||p.over)return;p.time+=1;setStat('s2',fmtTime(p.time));if(Math.floor(p.time)%5===0)persist()},1000);
   }
   return {id:'sudoku',name:'سودوكو',desc:'شبكة النجوم: املأ 1-9 بدون تكرار',play,
     icon:'<svg viewBox="0 0 48 48"><rect x="6" y="6" width="36" height="36" rx="5" fill="none" stroke="#3a5853" stroke-width="2.5"/><path d="M18 6v36M30 6v36M6 18h36M6 30h36" stroke="#3a5853" stroke-width="2"/><text x="12" y="16" font-size="9" fill="#e8f1ee" font-family="sans-serif" text-anchor="middle">5</text><text x="24" y="28" font-size="9" fill="#3fbf9b" font-family="sans-serif" text-anchor="middle">3</text><text x="36" y="40" font-size="9" fill="#f2b84b" font-family="sans-serif" text-anchor="middle">9</text></svg>',

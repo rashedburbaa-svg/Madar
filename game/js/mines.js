@@ -17,7 +17,7 @@ const MinesGame=(()=>{
     const safe=new Set([first,...nb(first)]);
     shuffle([...Array(g.cells.length).keys()].filter(i=>!safe.has(i)&&!g.cells[i].v),g.R).slice(0,g.mines).forEach(i=>g.cells[i].m=1);
     g.cells.forEach((c,i)=>c.n=nb(i).filter(j=>g.cells[j].m).length);g.started=true;
-    clearInterval(timer);timer=setInterval(()=>{if(document.hidden||g.over)return;g.time++;setStat('s4',fmtTime(g.time))},1000);
+    clearInterval(timer);timer=setInterval(()=>{if(document.hidden||gPaused||g.over)return;g.time++;setStat('s4',fmtTime(g.time))},1000);
   }
   function flood(i){const q=[i];while(q.length){const k=q.pop(),c=g.cells[k];if(c.o||c.m||c.v)continue;c.o=1;c.f=0;if(c.n===0)nb(k).forEach(j=>{if(!g.cells[j].o&&!g.cells[j].m&&!g.cells[j].f)q.push(j)})}}
   // from level 10 an unflagged asteroid drifts to a neighbouring hidden cell every few moves; the numbers around it update

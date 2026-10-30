@@ -153,7 +153,7 @@ const DiffGame=(()=>{
       const key=mode&&mode.daily?'daily':'l'+g.level;const prev=st.bestTime[key];if(!prev||g.time<prev){st.bestTime[key]=g.time;gSave('diff',st)}
       finishLevel(DiffGame,st,g.level,s,{mistakes:g.mistakes,hints:g.hints,time:g.time},'وجدتها كلها!',`الوقت ${fmtTime(g.time)} · أخطاء ${g.mistakes}`+(earned?' · كسبت تلميحاً':''))}}
   function play(level){clearOverlays();clearInterval(timer);st=gState('diff',{hints:3,bestTime:{}});g=mode&&mode.daily?build(9,mode.seed):build(level);g.flips=2;flicking=false;if(cb){cb.lastChild.textContent='قارن (2)';cb.disabled=false}draw();upd();
-    timer=setInterval(()=>{if(document.hidden||g.over)return;g.time++;setStat('s4',fmtTime(g.time))},1000)}
+    timer=setInterval(()=>{if(document.hidden||gPaused||g.over)return;g.time++;setStat('s4',fmtTime(g.time))},1000)}
   return {id:'diff',name:'أوجد الاختلاف',desc:'الفضاء ومحطة الفضاء والسوق والشاطئ وغيرها: اكتشف الفروق',play,
     icon:'<svg viewBox="0 0 48 48"><rect x="4" y="8" width="18" height="32" rx="4" fill="#bfe3f5"/><rect x="26" y="8" width="18" height="32" rx="4" fill="#bfe3f5"/><rect x="4" y="26" width="18" height="14" rx="3" fill="#7cc46a"/><rect x="26" y="26" width="18" height="14" rx="3" fill="#7cc46a"/><circle cx="13" cy="24" r="5" fill="#3fbf9b"/><circle cx="35" cy="24" r="5" fill="#f2b84b"/></svg>',
     help:'الصورتان متشابهتان إلا في بعض التفاصيل: لون، أو حجم، أو شيء مفقود، أو نافذة مضيئة، أو سيارة بالاتجاه المعاكس. اضغط مكان الاختلاف في أي صورة. الضغط الخاطئ يُحسب خطأ. «تكبير» يضاعف حجم الصورتين، فاسحب داخل أي صورة لتتنقل فيها وتتحرك الأخرى معها. زر «قارن» يبدّل الصورة الأصلية بالمعدّلة بسرعة في مكانها، فتلاحظ ما يتغيّر (مرتان في كل مستوى).',
