@@ -14,7 +14,7 @@
 <script>if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));</script>
 <title>قاعة المدار</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@500;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="style.css?v=c9c67d5a">
+<link rel="stylesheet" href="style.css?v=0edd104e">
 </head>
 <body style="padding-top:env(safe-area-inset-top,0px)">
 
@@ -48,6 +48,7 @@
       <button class="icon" id="back" type="button" aria-label="رجوع إلى القاعة"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
       <h2 id="gTitle">لعبة</h2>
       <span class="tag" id="dailyTag" hidden>تحدي اليوم</span>
+      <button class="icon" id="helpBtn" type="button" aria-label="طريقة اللعب">?</button>
       <button class="icon" id="lvlBtn" type="button" aria-label="اختيار المستوى"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg></button>
     </div>
     <div class="stats" id="stats"></div>
@@ -74,7 +75,7 @@
 </nav>
 <div class="toast" id="toast" hidden></div>
 
-<script src="js/core.js?v=eba37633"></script>
+<script src="js/core.js?v=f5b4e0c0"></script>
 <script src="js/grid.js?v=9bd099be"></script>
 <script src="js/sudoku.js?v=db8b6462"></script>
 <script src="js/golf.js?v=0243faa4"></script>

@@ -178,3 +178,7 @@ function openPicker(){
   o.querySelector('.btn').onclick=()=>o.remove();stage.appendChild(o);o.scrollTop=0;
 }
 $('lvlBtn').onclick=openPicker;
+/* how-to-play sits behind the ? button instead of under the game */
+$('helpBtn').onclick=()=>{const t=$('help').textContent;if(!t)return;snd('tap');const m=document.createElement('div');m.className='hmodal';
+  m.innerHTML='<div class="hbox"><h3>طريقة اللعب</h3><p></p><button class="btn main" type="button">فهمت</button></div>';m.querySelector('p').textContent=t;
+  const close=()=>m.remove();m.querySelector('button').onclick=close;m.onclick=e=>{if(e.target===m)close()};document.body.appendChild(m);m.querySelector('button').focus()};
