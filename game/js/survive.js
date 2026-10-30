@@ -501,7 +501,10 @@ const SurviveGame=(()=>{
     help:'أنت رائد فضاء على كواكب المدار وتهاجمك كائنات فضائية. حرّك إصبعك في أي مكان على الملعب لتتحرك، ومسدس الليزر يطلق وحده على أقرب كائن. كل 30 ثانية تنتهي موجة ويرتقي سلاحك مستوى تلقائياً وتختار تطويراً وتنتقل إلى كوكب جديد: القمر، المريخ، يوروبا الجليدي، آيو البركاني، الكوكب الغريب، وحزام الكويكبات. الكائنات تُسقط أحياناً أدوات: ❤️ صحة، ⚡ إطلاق مضاعف، 🛡️ درع، 💣 قنبلة، ⬆️ تطوير فوري. كل خامس موجة يظهر زعيم خاص بالكوكب: حارس الفوهة، دودة الرمال، تنين الجليد، ملك الحمم، الطاغية الأخطبوطي، والسفينة الأم. قبل كل جولة اختر رائدك: المستكشف المتوازن، أو القنّاص، أو العدّاء، أو المدرّع. من التطويرات صواريخ موجّهة وطائرات مسيّرة، وإذا قوي سلاحان معاً يظهر كرت ذهبي لدمجهما في سلاح خارق: ثقب أسود، أو ليزر نوفا، أو سرب صواريخ. اجمع الكريستالات 💎 من الكائنات والزعماء، وبعد كل جولة اشترِ بها من «مختبر المدار» تطويرات دائمة تبقى معك في كل الجولات. اصمد أطول وقت واكسر رقمك القياسي.',
     progress(){const s=gState('survive');return {level:s.bestWave||1,stars:starTotal(s)}},
     start(){
-      st=gState('survive',{bestTime:0,bestWave:1,totalKills:0});reset();running=false;paused=true;
+      st=gState('survive',{bestTime:0,bestWave:1,totalKills:0});
+      // one-time gift of crystals (given once per device, on the next visit)
+      if(!st.gift1){st.gift1=1;st.crys=(st.crys||0)+1000;gSave('survive',st);setTimeout(()=>{snd('ach');toast('🎁 هدية: 💎 1000 كريستالة في مختبر المدار','ach')},400)}
+      reset();running=false;paused=true;
       setStats([['s1','الوقت'],['s2','الموجة','gold'],['s3','الأعداء'],['s4','الرقم القياسي']]);$('lvlBtn').hidden=true;
       cv=document.createElement('canvas');stage.appendChild(cv);ctx=cv.getContext('2d');resize();
       this.rs=()=>resize();addEventListener('resize',this.rs);
