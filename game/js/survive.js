@@ -290,7 +290,7 @@ const SurviveGame=(()=>{
     let x,y;if(side===0){x=Math.random()*W;y=-m}else if(side===1){x=W+m;y=Math.random()*H}else if(side===2){x=Math.random()*W;y=H+m}else{x=-m;y=Math.random()*H}
     // from wave 3 some aliens are elite: bigger, three times tougher, harder hitting, and they drop more
     const elite=type!=='boss'&&wave>=3&&Math.random()<Math.min(0.25,0.03*wave),hp=T.hp*hpMul(wave)*(elite?3:1);
-    en.push({type,x,y,r:T.r*(elite?1.35:1),elite,hp,max:hp,spd:T.spd*(1+Math.min(0.8,wave*0.04))*(0.9+Math.random()*0.2),tgB:ch&&ch.type==='beacon'&&Math.random()<0.5?1:0,dps:T.dps*(1.05+Math.min(2.5,wave*0.08))*(elite?1.5:1),col:T.col,shoot:T.shoots?T.shoots*(0.5+Math.random()):0,flash:0,oc:0,ph:Math.random()*9,boss:!!T.boss});
+    en.push({type,x,y,r:T.r*(elite?1.35:1),elite,hp,max:hp,spd:T.spd*(1+Math.min(0.8,wave*0.04))*(0.9+Math.random()*0.2),tgB:ch&&ch.type==='beacon'&&Math.random()<0.3?1:0,dps:T.dps*(1.05+Math.min(2.5,wave*0.08))*(elite?1.5:1),col:T.col,shoot:T.shoots?T.shoots*(0.5+Math.random()):0,flash:0,oc:0,ph:Math.random()*9,boss:!!T.boss});
   }
   function pickType(){const r=Math.random();
     if(wave>=3&&r<0.15)return 'spitter';if(wave>=2&&r<0.32)return 'tank';if(r<(wave>=2?0.6:0.1))return 'runner';return 'grunt'}
@@ -310,7 +310,7 @@ const SurviveGame=(()=>{
     const keys=Object.keys(CH),type=keys[(wave*3+(st.runs||0))%keys.length];ch={type,prog:0,t:0};
     if(type==='kill')ch.need=10+wave*4;
     if(type==='gather'){ch.need=5;ch.star=null}
-    if(type==='beacon'){const hp=220+wave*40;ch.b={x:W/2,y:H/2+60,hp,max:hp};en.forEach(e=>{if(!e.boss&&Math.random()<0.5)e.tgB=1})}
+    if(type==='beacon'){const hp=1800+wave*260;ch.b={x:W/2,y:H/2+60,hp,max:hp,warned:0};en.forEach(e=>{if(!e.boss&&Math.random()<0.3)e.tgB=1})}
     if(type==='zone'){ch.zx=60+Math.random()*(W-120);ch.zy=90+Math.random()*(H-180);ch.zr=330}
     if(type==='meteor')ch.mt=1.5;
     ch.text=chText()}
@@ -458,7 +458,7 @@ const SurviveGame=(()=>{
     for(const q of parts){q.x+=q.vx*dt;q.y+=q.vy*dt;q.vx*=0.92;q.vy*=0.92;q.l-=dt}
     for(const r of rings){r.r+=(r.R/0.35)*dt;r.l-=dt}
     en=en.filter(e=>!e.dead);bl=bl.filter(b=>b.l>0&&b.x>-20&&b.x<W+20&&b.y>-20&&b.y<H+20);eb=eb.filter(b=>b.l>0);
-    drops=drops.filter(d=>d.life>0);parts=parts.filter(q=>q.l>0);rings=rings.filter(r=>r.l>0);
+    drops=drops.filter(d=>d.life>0);parts=parts.filter(q=>q.l>0);if(parts.length>350)parts.splice(0,parts.length-350);if(eb.length>160)eb.splice(0,eb.length-160);rings=rings.filter(r=>r.l>0);
     buff.rapid=Math.max(0,buff.rapid-dt);buff.shield=Math.max(0,buff.shield-dt);p.hurt-=dt;if(banner.t>0)banner.t-=dt;
     if(t>=60&&!ach.won.survive){ach.won.survive=true;save('arcade-ach',ach);if(GAMES.every(G=>ach.won[G.id]))unlock('allfive')}
     if(t>=120)unlock('surv2');if(t>=300)unlock('surv5');
@@ -469,6 +469,7 @@ const SurviveGame=(()=>{
       if(c.type==='meteor'){c.mt-=dt;if(c.mt<=0){c.mt=Math.max(0.5,1.3-wave*0.03);const near=Math.random()<0.6;hz.push({k:'meteor',x:near?p.x+(Math.random()-0.5)*70:30+Math.random()*(W-60),y:near?p.y+(Math.random()-0.5)*70:60+Math.random()*(H-100),r:34,warn:1.3,l:1.6})}}
       if(c.type==='zone'){c.zr=Math.max(85,330-(c.t/WAVE_LEN)*260);if(Math.hypot(p.x-c.zx,p.y-c.zy)>c.zr)hitP(p.max*0.14*dt)}
       if(c.type==='still'){p.stillT=ml<0.15?(p.stillT||0)+dt:0;if(p.stillT>1.2)hitP(p.max*0.12*dt)}
+      if(c.type==='beacon'&&!c.b.warned&&c.b.hp<c.b.max*0.3){c.b.warned=1;snd('err');toast('⚠️ المولّد في خطر! دافع عنه','ach')}
       if(c.type==='beacon'&&c.b.hp<=0){c.b.hp=0;deathWhy='beacon';p.hp=0;p.rev=0}}
     if(p.hp<=0&&p.rev){p.rev=0;p.hp=p.max/2;buff.shield=3;rings.push({x:p.x,y:p.y,r:0,R:160,l:0.5});en.forEach(e=>{if(e.dead||e.boss)return;const dx=e.x-p.x,dy=e.y-p.y,dd=Math.hypot(dx,dy)||1;if(dd<160){e.x+=dx/dd*60;e.y+=dy/dd*60}});eb=[];snd('ach');toast('💖 فرصة ثانية! نهضت من جديد','ach')}
     if(p.hp<=0){p.hp=0;die();return}
@@ -558,12 +559,17 @@ const SurviveGame=(()=>{
     if(joy){ctx.strokeStyle='#ffffff40';ctx.lineWidth=2;ctx.beginPath();ctx.arc(joy.ox,joy.oy,40,0,6.283);ctx.stroke();
       const dx=joy.x-joy.ox,dy=joy.y-joy.oy,L=Math.hypot(dx,dy),k=L>40?40/L:1;ctx.fillStyle='#ffffff55';ctx.beginPath();ctx.arc(joy.ox+dx*k,joy.oy+dy*k,16,0,6.283);ctx.fill()}
   }
+  let errShown=0;
   function step(now){
+    raf=requestAnimationFrame(step);
+    try{frame(now)}catch(e){console.error(e);if(!errShown){errShown=1;toast('⚠️ حدث خلل بسيط وتم تجاوزه')}}
+  }
+  function frame(now){
     const dt=Math.min(0.05,(now-last)/1000||0);last=now;
     if(bgFade>0)bgFade-=dt;if(!paused||!running)stepAmb(dt);
     if(running&&!paused){const sp=st.speed||1;for(let k=0;k<sp&&running&&!paused;k++)update(dt)}else if(over){for(const q of parts){q.x+=q.vx*dt;q.y+=q.vy*dt;q.l-=dt}parts=parts.filter(q=>q.l>0)}
     statT-=dt;if(statT<=0&&st){statT=0.25;stats()}
-    draw();raf=requestAnimationFrame(step);
+    draw();
   }
   function begin(){clearOverlays();reset();setBiome(0);running=true;paused=false;last=performance.now();stats()}
   function pause(){if(!running||paused||over)return;paused=true;joy=null;
