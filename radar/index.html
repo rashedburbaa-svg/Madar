@@ -104,6 +104,12 @@ details summary{cursor:pointer;font-weight:600;font-size:.9rem}
 .news small{color:var(--muted);font-size:.72rem;display:block;direction:ltr;text-align:left}
 .alert{background:var(--accent-soft);color:var(--accent);font-size:.82rem;font-weight:600;padding:8px 10px;border-radius:8px}
 .page{display:flex;flex-direction:column;gap:14px}
+.keys summary{cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font:600 .95rem var(--f-display);list-style:none}
+.keys summary::-webkit-details-marker{display:none}
+.keys summary::after{content:'▾';color:var(--muted);transition:transform .2s}
+.keys[open] summary::after{transform:rotate(180deg)}
+.keys summary .note{font:500 .8rem var(--f-body);flex:1;text-align:end}
+.keys-body{display:flex;flex-direction:column;gap:12px;margin-top:12px}
 .halal-box{display:flex;flex-direction:column;gap:4px}
 .halal-box details summary{cursor:pointer}
 .presets{display:flex;gap:6px;flex-wrap:wrap}
@@ -174,6 +180,9 @@ button.dv:hover{border-color:var(--accent)}
 
   <main id="pg-scan" class="page">
   <section class="panel" aria-label="الإعدادات">
+    <details class="keys" id="keysBox">
+    <summary><span>مفاتيح البيانات</span><span class="note" id="keysSum"></span></summary>
+    <div class="keys-body">
     <div>
       <label for="key">مفتاح Twelve Data (مجاني)</label>
       <input id="key" type="password" autocomplete="off" placeholder="الصق المفتاح هنا" dir="ltr">
@@ -186,6 +195,8 @@ button.dv:hover{border-color:var(--accent)}
       <p class="note">سجّل في <a href="https://finnhub.io/register" target="_blank" rel="noopener">finnhub.io</a> وانسخ المفتاح من الصفحة الرئيسية للحساب. بدونه يعمل التحليل الفني فقط.</p>
       <p class="note" id="nkeyOk" role="status"></p>
     </div>
+    </div>
+    </details>
     <div>
       <label>قوائم جاهزة (اختر واحدة أو أكثر)</label>
       <div class="presets" id="presets"></div>
@@ -385,6 +396,12 @@ function keyNote(id){const v=$(id).value.trim(),el=$(id+'Ok');if(!el)return;
   const ok=store.get('td_'+id,'')===v;el.textContent=ok?'✓ محفوظ على هذا الجهاز':'تعذّر الحفظ: المتصفح يمنع التخزين (هل أنت في التصفح الخفي؟)';el.style.color=ok?'var(--buy)':'var(--sell)';}
 ['key','nkey','syms','intv','style'].forEach(id=>['input','change'].forEach(ev=>$(id).addEventListener(ev,()=>{store.set('td_'+id,$(id).value.trim());if(id==='key'||id==='nkey')keyNote(id);})));
 keyNote('key');keyNote('nkey');
+// keys stay folded away once saved; the box opens by itself only when the price key is missing
+function keysSum(){const a=!!$('key').value.trim(),b=!!$('nkey').value.trim(),S=$('keysSum');
+  S.textContent=a&&b?'✓ المفتاحان محفوظان':a?'✓ Twelve Data محفوظ · Finnhub غير مضاف':'غير مضافة: الصفحة تعمل ببيانات تجريبية';
+  S.style.color=a?'var(--buy)':'var(--accent)';}
+keysSum();$('keysBox').open=!$('key').value.trim();
+['key','nkey'].forEach(id=>$(id).addEventListener('input',keysSum));
 $('mode').value=store.get('td_mode','two');$('deepN').value=store.get('td_deepN','10');
 ['mode','deepN'].forEach(id=>$(id).addEventListener('change',()=>{store.set('td_'+id,$(id).value);planNote();}));
 
