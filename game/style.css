@@ -298,3 +298,4 @@ body{background:transparent}
 .hbox p{margin:0;line-height:1.8;color:var(--fg);font-size:14.5px;text-align:start}
 .pbox{min-width:260px}.pbox .btn{width:100%}
 .pbox .btn,.hbox .btn{flex:none;min-height:48px}
+.scode{width:100%;box-sizing:border-box;border-radius:10px;border:1px solid var(--line);background:var(--tile);color:var(--fg);padding:8px;font:12px monospace;direction:ltr;resize:vertical}

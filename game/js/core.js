@@ -188,6 +188,32 @@ $('pauseBtn').onclick=()=>{if(!active||document.querySelector('.hmodal'))return;
   bf.onclick=()=>{m.remove();gPaused=false;snd('err');if(G.forfeit&&G.forfeit())return;clearOverlays();G.play(mode&&mode.daily?1:(curLevel||gState(G.id).level),true);toast('🏳️ انسحبت · بدأ المستوى من جديد')};
   bh.onclick=()=>{m.remove();gPaused=false;goHub()};
   document.body.appendChild(m);bc.focus()};
+/* backup: every arcade-* key packed into one code that can be sent anywhere and restored on any device */
+async function packSave(){const data={};for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith('arcade-'))data[k]=localStorage.getItem(k)}
+  const raw=new TextEncoder().encode(JSON.stringify(data));let bytes=raw,tag='MADAR1:';
+  if(window.CompressionStream){bytes=new Uint8Array(await new Response(new Blob([raw]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer());tag='MADAR1z:'}
+  let bin='';bytes.forEach(b=>bin+=String.fromCharCode(b));return tag+btoa(bin)}
+async function unpackSave(code){code=(code||'').trim().replace(/\s+/g,'');const z=code.startsWith('MADAR1z:');if(!z&&!code.startsWith('MADAR1:'))throw 0;
+  const bin=atob(code.slice(z?8:7)),bytes=Uint8Array.from(bin,c=>c.charCodeAt(0));
+  const raw=z?new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer()):bytes;
+  const data=JSON.parse(new TextDecoder().decode(raw));if(typeof data!=='object')throw 0;return data}
+$('saveBtn').onclick=()=>{snd('tap');const m=document.createElement('div');m.className='hmodal';
+  m.innerHTML=`<div class="hbox"><h3>💾 حفظ التقدّم ونقله</h3><p>احفظ نسخة من كل تقدّمك (المستويات والنجوم والأوسمة والكريستالات) في رسالة لنفسك، واسترجعها على أي هاتف.</p>
+    <button class="btn main" type="button" data-a="out">📤 إرسال نسخة احتياطية</button>
+    <textarea class="scode" placeholder="الصق هنا رمز النسخة الاحتياطية لاسترجاعها" rows="3"></textarea>
+    <button class="btn" type="button" data-a="in">📥 استرجاع من الرمز</button><button class="btn" type="button" data-a="x">إغلاق</button></div>`;
+  const ta=m.querySelector('textarea');m.onclick=e=>{if(e.target===m)m.remove()};
+  m.querySelector('[data-a=x]').onclick=()=>m.remove();
+  m.querySelector('[data-a=out]').onclick=async()=>{try{const code=await packSave();const msg='نسخة احتياطية من قاعة المدار ('+new Date().toLocaleDateString('ar')+'):\n'+code;
+      if(navigator.share){try{await navigator.share({text:msg});return}catch(e){if(e&&e.name==='AbortError')return}}
+      if(navigator.clipboard){await navigator.clipboard.writeText(code);toast('نُسخ الرمز، احفظه في رسالة لنفسك')}else{ta.value=code;ta.select();toast('انسخ الرمز الظاهر واحفظه')}}catch(e){toast('تعذّر إنشاء النسخة')}};
+  m.querySelector('[data-a=in]').onclick=async()=>{const code=ta.value.match(/MADAR1z?:[A-Za-z0-9+/=\s]+/);if(!code){toast('الصق رمزاً يبدأ بـ MADAR1');return}
+    try{const data=await unpackSave(code[0]);const keys=Object.keys(data).filter(k=>k.startsWith('arcade-'));if(!keys.length)throw 0;
+      if(!confirmBox)return;confirmBox('سيُستبدل تقدّمك الحالي بالنسخة المسترجعة. متابعة؟',()=>{Object.keys(localStorage).filter(k=>k.startsWith('arcade-')).forEach(k=>localStorage.removeItem(k));keys.forEach(k=>localStorage.setItem(k,data[k]));toast('✅ تم الاسترجاع');setTimeout(()=>location.reload(),700)})}
+    catch(e){toast('الرمز غير صحيح أو ناقص')}};
+  document.body.appendChild(m)};
+function confirmBox(text,yes){const m=document.createElement('div');m.className='hmodal';m.style.zIndex=40;m.innerHTML='<div class="hbox"><p></p><button class="btn main" type="button">نعم</button><button class="btn" type="button">لا</button></div>';
+  m.querySelector('p').textContent=text;const [a,b]=m.querySelectorAll('button');a.onclick=()=>{m.remove();yes()};b.onclick=()=>m.remove();document.body.appendChild(m)}
 /* how-to-play sits behind the ? button instead of under the game */
 $('helpBtn').onclick=()=>{const t=$('help').textContent;if(!t)return;snd('tap');const m=document.createElement('div');m.className='hmodal';
   m.innerHTML='<div class="hbox"><h3>طريقة اللعب</h3><p></p><button class="btn main" type="button">فهمت</button></div>';m.querySelector('p').textContent=t;
