@@ -43,8 +43,11 @@ const NonoGame=(()=>{
   const same=(a,b)=>a.length===b.length&&a.every((v,k)=>v===b[k]);
   function drawCell(i){const n=g.n,r=(i/n)|0,c=i%n,v=g.cur[i],el=g.cellEls[i];
     el.className='ncell'+(v===1?' f':v===2?' x':'')+(c%5===0&&c>0?' b5c':'')+(r%5===0&&r>0?' b5r':'')}
-  function updClues(){const n=g.n;for(let r=0;r<n;r++)g.rowEls[r].classList.toggle('done',same(runs(g.cur.slice(r*n,r*n+n).map(v=>v===1?1:0)),g.rc[r]));
-    for(let c=0;c<n;c++)g.colEls[c].classList.toggle('done',same(runs(colOf(c).map(v=>v===1?1:0)),g.cc[c]))}
+  // a row or column whose numbers are complete gets ✕ in its remaining cells (wrong fills are corrected on the spot, so a complete line is always right)
+  function updClues(){const n=g.n,mark=[];
+    for(let r=0;r<n;r++){const ok=same(runs(g.cur.slice(r*n,r*n+n).map(v=>v===1?1:0)),g.rc[r]);g.rowEls[r].classList.toggle('done',ok);if(ok)for(let c=0;c<n;c++)mark.push(r*n+c)}
+    for(let c=0;c<n;c++){const ok=same(runs(colOf(c).map(v=>v===1?1:0)),g.cc[c]);g.colEls[c].classList.toggle('done',ok);if(ok)for(let r=0;r<n;r++)mark.push(r*n+c)}
+    if(g.over)return;mark.forEach(i=>{if(g.cur[i]===0&&!g.sol[i]){g.cur[i]=2;drawCell(i);g.cellEls[i].classList.add('auto')}})}
   function stats(){setStat('s1',mode&&mode.daily?'اليوم':g.level);setStat('s2',g.n+'×'+g.n);setStat('s3',(g.miss||0)+' من 3');setStat('s4',fmtTime(g.time));
     fillB.classList.toggle('on',paint===1);xB.classList.toggle('on',paint===2);fillB.setAttribute('aria-checked',paint===1);xB.setAttribute('aria-checked',paint===2)}
   function persist(){if(mode&&mode.daily)return;st.cur={level:g.level,n:g.n,sol:g.sol,rc:g.rc,cc:g.cc,pic:g.pic,cur:g.cur,helps:g.helps,miss:g.miss||0,time:g.time};gSave('nono',st)}
@@ -80,7 +83,7 @@ const NonoGame=(()=>{
   }
   return {id:'nono',name:'نونوجرام',desc:'اكشف صوراً مخفية من الفضاء والكويت بالأرقام',play,
     icon:'<svg viewBox="0 0 48 48"><g fill="#3fbf9b"><rect x="14" y="14" width="8" height="8" rx="1.5"/><rect x="24" y="14" width="8" height="8" rx="1.5"/><rect x="34" y="24" width="8" height="8" rx="1.5"/><rect x="14" y="34" width="8" height="8" rx="1.5"/><rect x="24" y="24" width="8" height="8" rx="1.5"/></g><g fill="#1d373b"><rect x="34" y="14" width="8" height="8" rx="1.5"/><rect x="14" y="24" width="8" height="8" rx="1.5"/><rect x="24" y="34" width="8" height="8" rx="1.5"/><rect x="34" y="34" width="8" height="8" rx="1.5"/></g><g fill="#f2b84b" font-family="sans-serif" font-size="7" font-weight="700" text-anchor="middle"><text x="18" y="10">2</text><text x="28" y="10">1</text><text x="38" y="10">1</text><text x="8" y="21">2</text></g></svg>',
-    help:'اختر من المفتاح فوق اللوحة: «صح» لتلوين خانات الصورة، أو «خطأ» لتحديد الخانات الفارغة بـ ✕. إذا لوّنت خانة فارغة، أو وضعت ✕ على خانة من الصورة، تُصحَّح فوراً ويُحسب خطأ، والخطأ الثالث يعيد اللوحة من البداية. خلف كل لوحة صورة مرسومة (صاروخ، كوكب، نخلة، أبراج الكويت…) تظهر ملوّنة عندما تحلّها، وتُضاف إلى مجموعتك. الأرقام فوق كل عمود وبجانب كل صف تخبرك بأطوال المجموعات الملوّنة فيه بالترتيب، وبين كل مجموعتين فراغ واحد على الأقل. «تلوين» يلوّن الخانات، و«علامة ✕» تضع إشارة على الخانات الفارغة لتتذكرها. اسحب إصبعك لتلوين عدة خانات معاً. الرقم يبهت عندما يكتمل صفه أو عموده.',
+    help:'اختر من المفتاح فوق اللوحة: «صح» لتلوين خانات الصورة، أو «خطأ» لتحديد الخانات الفارغة بـ ✕. عندما تكتمل أرقام صف أو عمود تُوضع ✕ تلقائياً في باقي خاناته. إذا لوّنت خانة فارغة، أو وضعت ✕ على خانة من الصورة، تُصحَّح فوراً ويُحسب خطأ، والخطأ الثالث يعيد اللوحة من البداية. خلف كل لوحة صورة مرسومة (صاروخ، كوكب، نخلة، أبراج الكويت…) تظهر ملوّنة عندما تحلّها، وتُضاف إلى مجموعتك. الأرقام فوق كل عمود وبجانب كل صف تخبرك بأطوال المجموعات الملوّنة فيه بالترتيب، وبين كل مجموعتين فراغ واحد على الأقل. «تلوين» يلوّن الخانات، و«علامة ✕» تضع إشارة على الخانات الفارغة لتتذكرها. اسحب إصبعك لتلوين عدة خانات معاً. الرقم يبهت عندما يكتمل صفه أو عموده.',
     progress(){const s=gState('nono',{hints:3});return {level:s.level,stars:starTotal(s)}},
     start(){
       st=gState('nono',{hints:3,cur:null});setStats([['s1','المستوى'],['s2','الحجم','gold'],['s3','أخطاء'],['s4','الوقت']]);paint=1;
