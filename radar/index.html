@@ -115,6 +115,14 @@ details summary{cursor:pointer;font-weight:600;font-size:.9rem}
 .tf span{display:block;font-size:.72rem;color:var(--muted)}
 .tf b{display:block;font-size:.85rem}
 .tag-deep{background:var(--accent-soft);color:var(--accent)}
+.harm{display:flex;flex-direction:column;gap:8px;background:var(--bg);border-radius:12px;padding:10px}
+.harm-h{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.harm-h b{font:600 .95rem var(--f-display)}
+.harm-pts{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;direction:ltr}
+.harm-pts div{text-align:center;background:var(--surface);border-radius:8px;padding:4px 2px;min-width:0}
+.harm-pts span{display:block;font:700 .72rem var(--f-num);color:var(--accent)}
+.harm-pts b{display:block;font:500 .78rem var(--f-num);overflow:hidden;text-overflow:ellipsis}
+.harm .lv{background:var(--surface)}
 .check{display:flex;align-items:center;gap:8px;font-size:.9rem;color:var(--ink);margin:0;flex-wrap:wrap}
 .check input{width:20px;height:20px;accent-color:var(--accent)}
 .check .note{display:inline}
@@ -301,6 +309,7 @@ button.dv:hover{border-color:var(--accent)}
       <h2>الأشكال الفنية</h2>
       <div class="pats" id="dPats"></div>
       <p class="note" id="dSR"></p>
+      <div class="harm" id="dHarm" hidden></div>
     </div>
     <div class="sec">
       <h2>الأخبار (آخر 7 أيام)</h2>
@@ -318,6 +327,7 @@ button.dv:hover{border-color:var(--accent)}
     <p class="note">الأخبار تُقرأ من عناوين آخر 7 أيام وتُصنَّف بالكلمات المفتاحية، وأقصى أثر لها ±15 نقطة حتى لا تطغى على التحليل الفني. ويظهر تنبيه إذا كان إعلان الأرباح خلال 14 يوماً.</p>
     <p class="note">بعدها تُضبط النقاط بثلاثة فلاتر: اتجاه السوق العام من SPY وQQQ (حتى −15 للشراء في سوق هابط)، والفريم الأعلى (+8 إن وافق، −15 إن عاكس، ولا تُسمّى الإشارة «قوية» إلا إذا وافق)، وسجل الإشارات السابقة للسهم نفسه (±8 إن كان النجاح 55% فأكثر أو 34% فأقل).</p>
     <p class="note">في طريقة المرحلتين: يُمسح كل سهم في القائمة بالفريم اليومي (طلب واحد لكل سهم)، ثم يُفحص أفضلها بالساعة والأربع ساعات والأسبوعي (3 طلبات إضافية لكل سهم) مع الأخبار. اتفاق الفريمات يرفع التقييم، واختلافها يخفّضه.</p>
+    <p class="note">الهارمونيك: يبني الرادار مسار القمم والقيعان (X وA وB وC) ثم يقيس نسب فيبوناتشي بينها ويطابقها مع أنماط جارتلي وبات والفراشة والكراب وAB=CD بهامش ±6%. عند وصول السعر إلى منطقة الانعكاس (D) يُضاف ±9، وإذا ارتد منها ±16، وإن كان يقترب منها فقط يُعرض للتنبيه دون نقاط.</p>
     <p class="note">فلتر الشريعة: يُبقي فقط الأسهم الموجودة ضمن أكبر ممتلكات صندوقين يتبعان مؤشرات شرعية: SPUS (مؤشر S&P 500 الشرعي، ممتلكات 22 أكتوبر 2026) وHLAL (مؤشر FTSE USA الشرعي، ممتلكات 31 أغسطس 2026)، إضافة إلى ما تضيفه أنت. المؤشران قد يختلفان في سهم واحد، فيظهر ذلك في صفحة التحليل. التوافق يتغيّر كل ربع سنة، وهذه ليست فتوى؛ تأكد من قائمة زاد الشرعية قبل الشراء.</p>
     <p class="note">الخطة المجانية تسمح بـ 8 طلبات في الدقيقة و800 يومياً، لذلك تُفحص قائمة طويلة على دفعات تلقائياً.</p>
   </details>
@@ -514,7 +524,7 @@ function analyze(bars,styleKey){
   P.list.forEach(p=>{sc+=p.pts;});
   const tech=Math.max(-100,Math.min(100,Math.round(sc)));
   const chg=c.length>1?(px/c[i-1]-1)*100:0;
-  const res={bars,c,e20,e50,r,sig,tech,score:tech,why,px,chg,R,hiVol,A,pats:P.list,sup:P.sup,resi:P.res,last:bars[i].t,news:null,earn:null,newsPts:0,htf:null,bt:backtest(bars,sig,at)};
+  const res={bars,c,e20,e50,r,sig,tech,score:tech,why,px,chg,R,hiVol,A,pats:P.list,sup:P.sup,resi:P.res,harm:P.harm,last:bars[i].t,news:null,earn:null,newsPts:0,htf:null,bt:backtest(bars,sig,at)};
   classify(res,S);return res;
 }
 /* replay past signals with the same stop/target rules */
@@ -570,6 +580,80 @@ function classify(res,S){
   res.lv=lv;
 }
 
+/* ---------- harmonic patterns (XABCD on a zigzag of confirmed swings) ---------- */
+// ranges: b = AB/XA, c = BC/AB, d = AD/XA (D's retracement or extension of XA), cd = CD/BC
+const HARM=[
+  {n:'جارتلي',b:[.618,.618],c:[.382,.886],d:[.786,.786],cd:[1.13,1.618]},
+  {n:'بات',b:[.382,.5],c:[.382,.886],d:[.886,.886],cd:[1.618,2.618]},
+  {n:'بات بديل',b:[.33,.382],c:[.382,.886],d:[1.13,1.13],cd:[2,3.618]},
+  {n:'فراشة',b:[.786,.786],c:[.382,.886],d:[1.27,1.618],cd:[1.618,2.618]},
+  {n:'كراب',b:[.382,.618],c:[.382,.886],d:[1.618,1.618],cd:[2.24,3.618]},
+  {n:'كراب عميق',b:[.886,.886],c:[.382,.886],d:[1.618,1.618],cd:[2,3.618]},
+];
+const TOL=.06;
+const inR=(v,r)=>v>=r[0]*(1-TOL)&&v<=r[1]*(1+TOL);
+function zigzag(B,th){
+  // classic zigzag: a swing is confirmed once price reverses from it by at least th; the open leg's extreme is returned separately
+  const n=B.length,s0=Math.max(0,n-180),z=[];let up=null,hi={j:s0,v:B[s0].h},lo={j:s0,v:B[s0].l},ext=null;
+  for(let k=s0;k<n;k++){const b=B[k];
+    if(up===null){if(b.h>hi.v)hi={j:k,v:b.h};if(b.l<lo.v)lo={j:k,v:b.l};
+      if(hi.v-lo.v>=th){if(hi.j>lo.j){z.push({...lo,t:-1});up=true;ext={...hi};}else{z.push({...hi,t:1});up=false;ext={...lo};}}
+      continue;}
+    if(up){if(b.h>ext.v)ext={j:k,v:b.h};else if(ext.v-b.l>=th){z.push({...ext,t:1});up=false;ext={j:k,v:b.l};}}
+    else{if(b.l<ext.v)ext={j:k,v:b.l};else if(b.h-ext.v>=th){z.push({...ext,t:-1});up=true;ext={j:k,v:b.h};}}}
+  return{z,ext:ext&&{...ext,t:up?1:-1}};
+}
+function findHarmonic(B,A){
+  const n=B.length,i=n-1,{z,ext}=zigzag(B,2*A);
+  // two readings: the open leg is D (pattern forming / just touched), or D is the last confirmed swing (already bounced)
+  const tries=[];
+  if(z.length>=4&&ext)tries.push([...z.slice(-4),ext]);
+  if(z.length>=5&&i-z[z.length-1].j<=10)tries.push(z.slice(-5));
+  let out=null;
+  for(const [X,Ap,Bp,C,Dp] of tries){
+    if(C.t===Dp.t||X.t===Ap.t)continue;
+    const r=evalHarm(B,A,X,Ap,Bp,C,Dp);if(r&&(!out||r.score>out.score))out=r;}
+  return out;
+}
+function evalHarm(B,A,X,Ap,Bp,C,Dp){
+  const n=B.length,i=n-1,bull=C.t>0,D=Dp.v,Dj=Dp.j;
+  if(i-C.j>40)return null;
+  const XA=Math.abs(Ap.v-X.v),AB=Math.abs(Ap.v-Bp.v),BC=Math.abs(C.v-Bp.v),CD=Math.abs(C.v-D);
+  if(!XA||!AB||!BC)return null;
+  const rb=AB/XA,rc=BC/AB,rd=Math.abs(Ap.v-D)/XA,rcd=CD/BC,px=B[i].c;
+  const dPrice=r=>bull?Ap.v-r*XA:Ap.v+r*XA;      // price where D sits for a given XA ratio
+  let best=null;
+  for(const P of HARM){
+    if(!inR(rb,P.b)||!inR(rc,P.c))continue;
+    const lo=P.d[0]*(1-TOL),hi=P.d[1]*(1+TOL);
+    const pz=[dPrice(lo),dPrice(hi)].sort((a,b)=>a-b);  // potential reversal zone
+    let state;
+    if(rd>hi+.12)state='broken';                  // price ran well past the zone
+    else if(rd>=lo&&rcd>=P.cd[0]*(1-TOL)){
+      // D reached the zone; confirmed once price closes back away from D
+      const bounced=bull?px>D+.3*A:px<D-.3*A;state=bounced?'done':'inzone';}
+    else if(rd<lo){const gap=bull?px-pz[1]:pz[0]-px;state=gap<=1.5*A&&gap>=0?'near':null;}
+    if(!state||state==='broken')continue;
+    const score=(state==='done'?3:state==='inzone'?2:1)-Math.abs(rb-(P.b[0]+P.b[1])/2);
+    if(!best||score>best.score)best={P,state,pz,score};
+  }
+  // AB=CD on its own when no XABCD fits: BC retraces 0.618–0.786 of AB and CD ≈ AB
+  if(!best&&inR(rc,[.618,.786])){
+    const tgt=bull?C.v-AB:C.v+AB,pz=[tgt-.1*AB,tgt+.1*AB].sort((a,b)=>a-b);
+    const ratio=CD/AB;let state=null;
+    if(ratio>=.9&&ratio<=1.15){state=(bull?px>D+.3*A:px<D-.3*A)?'done':'inzone';}
+    else if(ratio<.9){const gap=bull?px-pz[1]:pz[0]-px;if(gap>=0&&gap<=1.5*A)state='near';}
+    if(state)best={P:{n:'AB=CD'},state,pz,score:0,abcd:true};
+  }
+  if(!best)return null;
+  const AD=Math.abs(Ap.v-D),dir=bull?1:-1;
+  const stopRef=best.abcd?D-dir*.618*AB:(bull?Math.min(D,best.pz[0]):Math.max(D,best.pz[1]));
+  return{name:best.P.n,bull,state:best.state,pz:best.pz,X:X.v,A:Ap.v,B:Bp.v,C:C.v,D,
+    rb,rc,rd,rcd,abcd:!!best.abcd,
+    stop:stopRef-dir*.5*A,
+    t1:D+dir*.382*AD,t2:D+dir*.618*AD,dAgo:i-Dj,score:best.score};
+}
+
 /* ---------- chart & candle patterns ---------- */
 function findPatterns(B,A,hiVol){
   const n=B.length,i=n-1,list=[];
@@ -615,7 +699,13 @@ function findPatterns(B,A,hiVol){
   // proximity to levels
   if(supBelow&&px-supBelow.v<=A)add('قرب الدعم',5,'السعر قريب من دعم '+fmt(supBelow.v)+': مخاطرة الشراء أقل');
   if(resAbove&&resAbove.v-px<=A&&!list.some(p=>p.name==='اختراق مقاومة'))add('قرب المقاومة',-5,'السعر قريب من مقاومة '+fmt(resAbove.v)+': قد يرتد منها');
-  return {list,sup:supBelow?supBelow.v:null,res:resAbove?resAbove.v:null};
+  // harmonic pattern
+  const hm=findHarmonic(B,A);
+  if(hm){const side=hm.bull?'شرائي':'بيعي',sg=hm.bull?1:-1,z=fmt(hm.pz[0])+'–'+fmt(hm.pz[1]);
+    if(hm.state==='done')add('هارمونيك '+hm.name+' '+side,sg*16,'اكتمل نمط '+hm.name+' '+side+' في منطقة الانعكاس '+z+' وارتد السعر منها');
+    else if(hm.state==='inzone')add('هارمونيك '+hm.name+' '+side,sg*9,'السعر داخل منطقة انعكاس '+hm.name+' '+z+'؛ انتظر شمعة ارتداد للتأكيد');
+    else add(hm.name+' قيد التكوّن',0,'نمط '+hm.name+' '+side+' يقترب من منطقة الانعكاس '+z+'؛ راقبها');}
+  return {list,sup:supBelow?supBelow.v:null,res:resAbove?resAbove.v:null,harm:hm};
 }
 
 /* ---------- news ---------- */
@@ -820,6 +910,22 @@ function show(s,quiet){
   if(!r.pats.length){const s3=document.createElement('span');s3.className='note';s3.textContent='لا يوجد شكل فني واضح على آخر شمعة.';PB.appendChild(s3);}
   r.pats.forEach(p=>{const b=document.createElement('span');b.className='pat p-'+p.side;b.textContent=p.name+(p.pts?' '+(p.pts>0?'+':'')+p.pts:'');b.title=p.why;PB.appendChild(b);});
   $('dSR').textContent=(r.pats.length?r.pats.map(p=>p.why).join('. ')+'. ':'')+'الدعم الأقرب: '+(r.sup?fmt(r.sup):'—')+' · المقاومة الأقرب: '+(r.resi?fmt(r.resi):'—');
+  const H=r.harm,HB=$('dHarm');HB.hidden=!H;HB.innerHTML='';
+  if(H){const st={done:['اكتمل وارتد','ok'],inzone:['داخل منطقة الانعكاس','soon'],near:['يقترب من المنطقة','est']}[H.state];
+    const head=document.createElement('div');head.className='harm-h';
+    const t=document.createElement('b');t.textContent=(H.abcd?'نمط ':'هارمونيك ')+H.name+' '+(H.bull?'شرائي':'بيعي');
+    const tg=document.createElement('span');tg.className='tag '+st[1];tg.textContent=st[0];head.append(t,tg);
+    const pts=document.createElement('div');pts.className='harm-pts';
+    (H.abcd?[['A',H.A],['B',H.B],['C',H.C],['D',H.D]]:[['X',H.X],['A',H.A],['B',H.B],['C',H.C],['D',H.D]]).forEach(([k,v])=>{
+      const c=document.createElement('div');const a=document.createElement('span');a.textContent=k;const b=document.createElement('b');b.textContent=fmt(v);c.append(a,b);pts.appendChild(c);});
+    const lv=document.createElement('div');lv.className='levels';
+    [['منطقة الانعكاس',fmt(H.pz[0])+'–'+fmt(H.pz[1]),''],['هدف 1 / 2',fmt(H.t1)+' / '+fmt(H.t2),'var(--buy)'],['إلغاء النمط',fmt(H.stop),'var(--sell)']].forEach(([k,v,c])=>{
+      const d=document.createElement('div');d.className='lv';const a=document.createElement('span');a.textContent=k;const b=document.createElement('b');b.textContent=v;if(c)b.style.color=c;d.append(a,b);lv.appendChild(d);});
+    const rt=document.createElement('p');rt.className='note num';rt.style.textAlign='left';
+    rt.textContent=H.abcd?'BC/AB '+H.rc.toFixed(3)+'  ·  CD/AB '+(Math.abs(H.C-H.D)/Math.abs(H.A-H.B)).toFixed(3):'AB/XA '+H.rb.toFixed(3)+'  ·  BC/AB '+H.rc.toFixed(3)+'  ·  AD/XA '+H.rd.toFixed(3);
+    const nt=document.createElement('p');nt.className='note';
+    nt.textContent='الأهداف عند 38.2% و61.8% من مسافة AD، والنمط يُلغى إذا أغلق السعر بعد مستوى الإلغاء.'+(((H.bull?1:-1)*Math.sign(r.score))<0?' تنبيه: النمط يعاكس اتجاه بقية المؤشرات، فهو انعكاس محتمل وليس مؤكداً.':'');
+    HB.append(head,pts,lv,rt,nt);}
   const NL=$('dNews');NL.innerHTML='';$('dEarn').hidden=!r.earn;
   if(r.earn)$('dEarn').textContent='إعلان الأرباح '+r.earn+' ('+(r.earnDays<=0?'اليوم':'بعد '+r.earnDays+' يوم')+'). الإشارات الفنية أضعف قبل الأرباح؛ فكّر في تصغير الكمية.';
   if(r.news==null){$('dNewsSum').textContent=$('key').value.trim()?'أضف مفتاح Finnhub في الإعدادات لعرض الأخبار.':'الأخبار لا تظهر في الوضع التجريبي.';}
