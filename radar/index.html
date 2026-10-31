@@ -129,6 +129,8 @@ details summary{cursor:pointer;font-weight:600;font-size:.9rem}
 .harm-pts span{display:block;font:700 .72rem var(--f-num);color:var(--accent)}
 .harm-pts b{display:block;font:500 .78rem var(--f-num);overflow:hidden;text-overflow:ellipsis}
 .harm .lv{background:var(--surface)}
+.harm-svg{display:block;width:100%;height:auto;background:var(--surface);border-radius:8px;direction:ltr}
+.harm-svg text{font:500 9px var(--f-num)}
 .check{display:flex;align-items:center;gap:8px;font-size:.9rem;color:var(--ink);margin:0;flex-wrap:wrap}
 .check input{width:20px;height:20px;accent-color:var(--accent)}
 .check .note{display:inline}
@@ -668,7 +670,38 @@ function evalHarm(B,A,X,Ap,Bp,C,Dp){
   return{name:best.P.n,bull,state:best.state,pz:best.pz,X:X.v,A:Ap.v,B:Bp.v,C:C.v,D,
     rb,rc,rd,rcd,abcd:!!best.abcd,
     stop:stopRef-dir*.5*A,
-    t1:D+dir*.382*AD,t2:D+dir*.618*AD,dAgo:i-Dj,score:best.score};
+    t1:D+dir*.382*AD,t2:D+dir*.618*AD,dAgo:i-Dj,score:best.score,
+    pts:[X,Ap,Bp,C,Dp].map(p=>({j:p.j,v:p.v}))};
+}
+/* drawing of the pattern over the candles since X: legs, reversal zone, targets and cancel level */
+function harmSvg(r,H){
+  const B=r.bars,n=B.length,P=H.pts.slice(H.abcd?1:0),k=P.length;
+  const W=340,Ht=200,pl=4,pr=56,pt=14,pb=14,j0=Math.max(0,P[0].j-4),seg=B.slice(j0),N=n-j0;
+  let lo=Infinity,hi=-Infinity;
+  seg.forEach(b=>{lo=Math.min(lo,b.l);hi=Math.max(hi,b.h);});
+  [H.pz[0],H.pz[1],H.t2,H.stop].forEach(v=>{lo=Math.min(lo,v);hi=Math.max(hi,v);});
+  const pad=(hi-lo)*.05;lo-=pad;hi+=pad;
+  const x=j=>pl+(j-j0+.5)*(W-pl-pr)/N,y=v=>pt+(hi-v)/(hi-lo)*(Ht-pt-pb),f=v=>v.toFixed(1);
+  const cw=Math.max(1,(W-pl-pr)/N*.6),col=H.bull?'var(--buy)':'var(--sell)',xy=p=>f(x(p.j))+','+f(y(p.v));
+  let s='<svg class="harm-svg" viewBox="0 0 '+W+' '+Ht+'" role="img" aria-label="رسم النمط على الشموع">';
+  const zx=x(P[k-2].j);
+  s+='<rect x="'+f(zx)+'" y="'+f(y(H.pz[1]))+'" width="'+f(W-pr-zx)+'" height="'+f(Math.max(2,y(H.pz[0])-y(H.pz[1])))+'" fill="var(--accent-soft)"/>';
+  seg.forEach((b,i)=>{const X=x(j0+i),c=b.c>=b.o?'var(--buy)':'var(--sell)';
+    s+='<line x1="'+f(X)+'" x2="'+f(X)+'" y1="'+f(y(b.h))+'" y2="'+f(y(b.l))+'" stroke="'+c+'" stroke-width=".7" opacity=".45"/>';
+    s+='<rect x="'+f(X-cw/2)+'" y="'+f(y(Math.max(b.o,b.c)))+'" width="'+f(cw)+'" height="'+f(Math.max(.8,Math.abs(y(b.o)-y(b.c))))+'" fill="'+c+'" opacity=".45"/>';});
+  if(!H.abcd)s+='<polygon points="'+xy(P[0])+' '+xy(P[1])+' '+xy(P[2])+'" fill="'+col+'" opacity=".14"/>';
+  s+='<polygon points="'+xy(P[k-3])+' '+xy(P[k-2])+' '+xy(P[k-1])+'" fill="'+col+'" opacity=".14"/>';
+  s+='<polyline points="'+P.map(xy).join(' ')+'" fill="none" stroke="'+col+'" stroke-width="1.8" stroke-linejoin="round"/>';
+  const xd=x(P[k-1].j);
+  [[H.t1,'T1','var(--buy)'],[H.t2,'T2','var(--buy)'],[H.stop,'SL','var(--sell)']].forEach(([v,l,c])=>{
+    s+='<line x1="'+f(xd)+'" x2="'+(W-pr)+'" y1="'+f(y(v))+'" y2="'+f(y(v))+'" stroke="'+c+'" stroke-width="1" stroke-dasharray="3 3"/>';
+    s+='<text x="'+(W-pr+3)+'" y="'+f(y(v)+3)+'" fill="'+c+'">'+l+' '+fmt(v)+'</text>';});
+  s+='<text x="'+(W-pr+3)+'" y="'+f((y(H.pz[0])+y(H.pz[1]))/2+3)+'" fill="var(--accent)">PRZ</text>';
+  const names=H.abcd?['A','B','C','D']:['X','A','B','C','D'];
+  P.forEach((p,i)=>{const nb=i<k-1?P[i+1]:P[i-1],top=p.v>nb.v,X=x(p.j),Y=y(p.v);
+    s+='<circle cx="'+f(X)+'" cy="'+f(Y)+'" r="2.6" fill="'+col+'"/>';
+    s+='<text x="'+f(X)+'" y="'+f(top?Y-5:Y+12)+'" text-anchor="middle" font-weight="700" fill="var(--ink)">'+names[i]+'</text>';});
+  return s+'</svg>';
 }
 
 /* ---------- chart & candle patterns ---------- */
@@ -942,7 +975,8 @@ function show(s,quiet){
     rt.textContent=H.abcd?'BC/AB '+H.rc.toFixed(3)+'  ·  CD/AB '+(Math.abs(H.C-H.D)/Math.abs(H.A-H.B)).toFixed(3):'AB/XA '+H.rb.toFixed(3)+'  ·  BC/AB '+H.rc.toFixed(3)+'  ·  AD/XA '+H.rd.toFixed(3);
     const nt=document.createElement('p');nt.className='note';
     nt.textContent='الأهداف عند 38.2% و61.8% من مسافة AD، والنمط يُلغى إذا أغلق السعر بعد مستوى الإلغاء.'+(((H.bull?1:-1)*Math.sign(r.score))<0?' تنبيه: النمط يعاكس اتجاه بقية المؤشرات، فهو انعكاس محتمل وليس مؤكداً.':'');
-    HB.append(head,pts,lv,rt,nt);}
+    const fig=document.createElement('div');fig.innerHTML=harmSvg(r,H);
+    HB.append(head,fig,pts,lv,rt,nt);}
   const NL=$('dNews');NL.innerHTML='';$('dEarn').hidden=!r.earn;
   if(r.earn)$('dEarn').textContent='إعلان الأرباح '+r.earn+' ('+(r.earnDays<=0?'اليوم':'بعد '+r.earnDays+' يوم')+'). الإشارات الفنية أضعف قبل الأرباح؛ فكّر في تصغير الكمية.';
   if(r.news==null){$('dNewsSum').textContent=$('key').value.trim()?'أضف مفتاح Finnhub في الإعدادات لعرض الأخبار.':'الأخبار لا تظهر في الوضع التجريبي.';}
