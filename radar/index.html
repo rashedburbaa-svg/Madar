@@ -625,7 +625,12 @@ function zigzag(B,th){
   return{z,ext:ext&&{...ext,t:up?1:-1}};
 }
 function findHarmonic(B,A){
-  const n=B.length,i=n-1,{z,ext}=zigzag(B,2*A);
+  // try the usual swing size first, then finer and coarser swings
+  for(const m of [2,1.5,3]){const r=findHarmonicAt(B,A,m);if(r)return r;}
+  return null;
+}
+function findHarmonicAt(B,A,m){
+  const n=B.length,i=n-1,{z,ext}=zigzag(B,m*A);
   // two readings: the open leg is D (pattern forming / just touched), or D is the last confirmed swing (already bounced)
   const tries=[];
   if(z.length>=4&&ext)tries.push([...z.slice(-4),ext]);
@@ -633,10 +638,10 @@ function findHarmonic(B,A){
   let out=null;
   for(const [X,Ap,Bp,C,Dp] of tries){
     if(C.t===Dp.t||X.t===Ap.t)continue;
-    const r=evalHarm(B,A,X,Ap,Bp,C,Dp);if(r&&(!out||r.score>out.score))out=r;}
+    const r=evalHarm(B,A,X,Ap,Bp,C,Dp,m===2);if(r&&(!out||r.score>out.score))out=r;}
   return out;
 }
-function evalHarm(B,A,X,Ap,Bp,C,Dp){
+function evalHarm(B,A,X,Ap,Bp,C,Dp,abcdOk){
   const n=B.length,i=n-1,bull=C.t>0,D=Dp.v,Dj=Dp.j;
   if(i-C.j>40)return null;
   const XA=Math.abs(Ap.v-X.v),AB=Math.abs(Ap.v-Bp.v),BC=Math.abs(C.v-Bp.v),CD=Math.abs(C.v-D);
@@ -659,7 +664,7 @@ function evalHarm(B,A,X,Ap,Bp,C,Dp){
     if(!best||score>best.score)best={P,state,pz,score};
   }
   // AB=CD on its own when no XABCD fits: BC retraces 0.618–0.786 of AB and CD ≈ AB
-  if(!best&&inR(rc,[.618,.786])){
+  if(!best&&abcdOk&&inR(rc,[.618,.786])){
     const tgt=bull?C.v-AB:C.v+AB,pz=[tgt-.1*AB,tgt+.1*AB].sort((a,b)=>a-b);
     const ratio=CD/AB;let state=null;
     if(ratio>=.9&&ratio<=1.15){state=(bull?px>D+.3*A:px<D-.3*A)?'done':'inzone';}
@@ -675,16 +680,35 @@ function evalHarm(B,A,X,Ap,Bp,C,Dp){
     t1:D+dir*.382*AD,t2:D+dir*.618*AD,dAgo:i-Dj,score:best.score,
     pts:[X,Ap,Bp,C,Dp].map(p=>({j:p.j,v:p.v}))};
 }
+/* closest pattern to the latest five swings when nothing matches within tolerance */
+function nearestHarm(B,A){
+  const {z,ext}=zigzag(B,2*A);
+  const cand=z.length>=4&&ext?[...z.slice(-4),ext]:z.length>=5?z.slice(-5):null;
+  if(!cand)return null;
+  const [X,Ap,Bp,C,Dp]=cand,bull=C.t>0;
+  const XA=Math.abs(Ap.v-X.v),AB=Math.abs(Ap.v-Bp.v),BC=Math.abs(C.v-Bp.v);
+  if(!XA||!AB||!BC)return null;
+  const rb=AB/XA,rc=BC/AB,rd=Math.abs(Ap.v-Dp.v)/XA;
+  const dev=(v,r)=>v<r[0]?(r[0]-v)/r[0]:v>r[1]?(v-r[1])/r[1]:0;
+  let best=null;
+  // D may still be travelling, so only an overshoot past the zone counts against it
+  for(const P of HARM){const e=dev(rb,P.b)+dev(rc,P.c)+(rd>P.d[1]?dev(rd,P.d):0);if(!best||e<best.e)best={P,e};}
+  const dPrice=r=>bull?Ap.v-r*XA:Ap.v+r*XA;
+  const pz=[dPrice(best.P.d[0]*(1-TOL)),dPrice(best.P.d[1]*(1+TOL))].sort((a,b)=>a-b);
+  return{name:best.P.n,bull,state:'none',fit:Math.round(100/(1+2*best.e)),pz,X:X.v,A:Ap.v,B:Bp.v,C:C.v,D:Dp.v,
+    rb,rc,rd,abcd:false,pts:cand.map(p=>({j:p.j,v:p.v}))};
+}
 /* drawing of the pattern over the candles since X: legs, reversal zone, targets and cancel level */
 function harmSvg(r,H){
   const B=r.bars,n=B.length,P=H.pts.slice(H.abcd?1:0),k=P.length;
   const W=340,Ht=200,pl=4,pr=56,pt=14,pb=14,j0=Math.max(0,P[0].j-4),seg=B.slice(j0),N=n-j0;
   let lo=Infinity,hi=-Infinity;
   seg.forEach(b=>{lo=Math.min(lo,b.l);hi=Math.max(hi,b.h);});
-  [H.pz[0],H.pz[1],H.t2,H.stop].forEach(v=>{lo=Math.min(lo,v);hi=Math.max(hi,v);});
+  const none=H.state==='none';
+  (none?[H.pz[0],H.pz[1]]:[H.pz[0],H.pz[1],H.t2,H.stop]).forEach(v=>{lo=Math.min(lo,v);hi=Math.max(hi,v);});
   const pad=(hi-lo)*.05;lo-=pad;hi+=pad;
   const x=j=>pl+(j-j0+.5)*(W-pl-pr)/N,y=v=>pt+(hi-v)/(hi-lo)*(Ht-pt-pb),f=v=>v.toFixed(1);
-  const cw=Math.max(1,(W-pl-pr)/N*.6),col=H.bull?'var(--buy)':'var(--sell)',xy=p=>f(x(p.j))+','+f(y(p.v));
+  const cw=Math.max(1,(W-pl-pr)/N*.6),col=none?'var(--accent)':H.bull?'var(--buy)':'var(--sell)',xy=p=>f(x(p.j))+','+f(y(p.v));
   let s='<svg class="harm-svg" viewBox="0 0 '+W+' '+Ht+'" role="img" aria-label="رسم النمط على الشموع">';
   const zx=x(P[k-2].j);
   s+='<rect x="'+f(zx)+'" y="'+f(y(H.pz[1]))+'" width="'+f(W-pr-zx)+'" height="'+f(Math.max(2,y(H.pz[0])-y(H.pz[1])))+'" fill="var(--accent-soft)"/>';
@@ -695,7 +719,7 @@ function harmSvg(r,H){
   s+='<polygon points="'+xy(P[k-3])+' '+xy(P[k-2])+' '+xy(P[k-1])+'" fill="'+col+'" opacity=".14"/>';
   s+='<polyline points="'+P.map(xy).join(' ')+'" fill="none" stroke="'+col+'" stroke-width="1.8" stroke-linejoin="round"/>';
   const xd=x(P[k-1].j);
-  [[H.t1,'T1','var(--buy)'],[H.t2,'T2','var(--buy)'],[H.stop,'SL','var(--sell)']].forEach(([v,l,c])=>{
+  (none?[]:[[H.t1,'T1','var(--buy)'],[H.t2,'T2','var(--buy)'],[H.stop,'SL','var(--sell)']]).forEach(([v,l,c])=>{
     s+='<line x1="'+f(xd)+'" x2="'+(W-pr)+'" y1="'+f(y(v))+'" y2="'+f(y(v))+'" stroke="'+c+'" stroke-width="1" stroke-dasharray="3 3"/>';
     s+='<text x="'+(W-pr+3)+'" y="'+f(y(v)+3)+'" fill="'+c+'">'+l+' '+fmt(v)+'</text>';});
   s+='<text x="'+(W-pr+3)+'" y="'+f((y(H.pz[0])+y(H.pz[1]))/2+3)+'" fill="var(--accent)">PRZ</text>';
@@ -757,7 +781,8 @@ function findPatterns(B,A,hiVol){
     if(hm.state==='done')add('هارمونيك '+hm.name+' '+side,sg*16,'اكتمل نمط '+hm.name+' '+side+' في منطقة الانعكاس '+z+' وارتد السعر منها');
     else if(hm.state==='inzone')add('هارمونيك '+hm.name+' '+side,sg*9,'السعر داخل منطقة انعكاس '+hm.name+' '+z+'؛ انتظر شمعة ارتداد للتأكيد');
     else add(hm.name+' قيد التكوّن',0,'نمط '+hm.name+' '+side+' يقترب من منطقة الانعكاس '+z+'؛ راقبها');}
-  return {list,sup:supBelow?supBelow.v:null,res:resAbove?resAbove.v:null,harm:hm};
+  // no full match: keep the closest candidate for the drawing only (it adds no points)
+  return {list,sup:supBelow?supBelow.v:null,res:resAbove?resAbove.v:null,harm:hm||nearestHarm(B,A)};
 }
 
 /* ---------- news ---------- */
@@ -962,21 +987,25 @@ function show(s,quiet){
   if(!r.pats.length){const s3=document.createElement('span');s3.className='note';s3.textContent='لا يوجد شكل فني واضح على آخر شمعة.';PB.appendChild(s3);}
   r.pats.forEach(p=>{const b=document.createElement('span');b.className='pat p-'+p.side;b.textContent=p.name+(p.pts?' '+(p.pts>0?'+':'')+p.pts:'');b.title=p.why;PB.appendChild(b);});
   $('dSR').textContent=(r.pats.length?r.pats.map(p=>p.why).join('. ')+'. ':'')+'الدعم الأقرب: '+(r.sup?fmt(r.sup):'—')+' · المقاومة الأقرب: '+(r.resi?fmt(r.resi):'—');
-  const H=r.harm,HB=$('dHarm');HB.hidden=!H;HB.innerHTML='';
-  if(H){const st={done:['اكتمل وارتد','ok'],inzone:['داخل منطقة الانعكاس','soon'],near:['يقترب من المنطقة','est']}[H.state];
+  const H=r.harm,HB=$('dHarm');HB.hidden=false;HB.innerHTML='';
+  if(!H){const p=document.createElement('p');p.className='note';p.textContent='الهارمونيك: لا توجد قمم وقيعان واضحة بما يكفي لرسم نمط على هذا الفريم (الحركة الأخيرة ضيقة).';HB.appendChild(p);}
+  if(H){const none=H.state==='none',past=none&&(H.bull?r.px<H.pz[0]:r.px>H.pz[1]);
+    const st={done:['اكتمل وارتد','ok'],inzone:['داخل منطقة الانعكاس','soon'],near:['يقترب من المنطقة','est'],none:['أقرب نمط: '+H.name+' · تطابق '+H.fit+'%','est']}[H.state];
     const head=document.createElement('div');head.className='harm-h';
-    const t=document.createElement('b');t.textContent=(H.abcd?'نمط ':'هارمونيك ')+H.name+' '+(H.bull?'شرائي':'بيعي');
+    const t=document.createElement('b');t.textContent=none?'لا يوجد نمط هارمونيك مكتمل الآن':(H.abcd?'نمط ':'هارمونيك ')+H.name+' '+(H.bull?'شرائي':'بيعي');
     const tg=document.createElement('span');tg.className='tag '+st[1];tg.textContent=st[0];head.append(t,tg);
     const pts=document.createElement('div');pts.className='harm-pts';
     (H.abcd?[['A',H.A],['B',H.B],['C',H.C],['D',H.D]]:[['X',H.X],['A',H.A],['B',H.B],['C',H.C],['D',H.D]]).forEach(([k,v])=>{
       const c=document.createElement('div');const a=document.createElement('span');a.textContent=k;const b=document.createElement('b');b.textContent=fmt(v);c.append(a,b);pts.appendChild(c);});
     const lv=document.createElement('div');lv.className='levels';
-    [['منطقة الانعكاس',fmt(H.pz[0])+'–'+fmt(H.pz[1]),''],['هدف 1 / 2',fmt(H.t1)+' / '+fmt(H.t2),'var(--buy)'],['إلغاء النمط',fmt(H.stop),'var(--sell)']].forEach(([k,v,c])=>{
+    (none?[['منطقة D المطلوبة',fmt(H.pz[0])+'–'+fmt(H.pz[1]),'var(--accent)'],['السعر الآن',fmt(r.px),''],[past?'تجاوزها بـ':'المسافة إليها',(Math.min(Math.abs(r.px-H.pz[0]),Math.abs(r.px-H.pz[1]))/r.px*100).toFixed(1)+'%','']]
+      :[['منطقة الانعكاس',fmt(H.pz[0])+'–'+fmt(H.pz[1]),''],['هدف 1 / 2',fmt(H.t1)+' / '+fmt(H.t2),'var(--buy)'],['إلغاء النمط',fmt(H.stop),'var(--sell)']]).forEach(([k,v,c])=>{
       const d=document.createElement('div');d.className='lv';const a=document.createElement('span');a.textContent=k;const b=document.createElement('b');b.textContent=v;if(c)b.style.color=c;d.append(a,b);lv.appendChild(d);});
     const rt=document.createElement('p');rt.className='note num';rt.style.textAlign='left';
     rt.textContent=H.abcd?'BC/AB '+H.rc.toFixed(3)+'  ·  CD/AB '+(Math.abs(H.C-H.D)/Math.abs(H.A-H.B)).toFixed(3):'AB/XA '+H.rb.toFixed(3)+'  ·  BC/AB '+H.rc.toFixed(3)+'  ·  AD/XA '+H.rd.toFixed(3);
     const nt=document.createElement('p');nt.className='note';
-    nt.textContent='الأهداف عند 38.2% و61.8% من مسافة AD، والنمط يُلغى إذا أغلق السعر بعد مستوى الإلغاء.'+(((H.bull?1:-1)*Math.sign(r.score))<0?' تنبيه: النمط يعاكس اتجاه بقية المؤشرات، فهو انعكاس محتمل وليس مؤكداً.':'');
+    nt.textContent=none?'نسب القمم والقيعان الحالية لا تطابق أي نمط ضمن الهامش المسموح، لذلك لا يدخل في التقييم.'+(past?' السعر تجاوز المنطقة المظللة التي كان يجب أن يرتد منها نمط '+H.name+'، فلا يُعتد به.':' المنطقة المظللة هي حيث يجب أن تصل النقطة D ليكتمل نمط '+H.name+'؛ راقبها.')
+      :'الأهداف عند 38.2% و61.8% من مسافة AD، والنمط يُلغى إذا أغلق السعر بعد مستوى الإلغاء.'+(((H.bull?1:-1)*Math.sign(r.score))<0?' تنبيه: النمط يعاكس اتجاه بقية المؤشرات، فهو انعكاس محتمل وليس مؤكداً.':'');
     const fig=document.createElement('div');fig.innerHTML=harmSvg(r,H);
     HB.append(head,fig,pts,lv,rt,nt);}
   const NL=$('dNews');NL.innerHTML='';$('dEarn').hidden=!r.earn;
