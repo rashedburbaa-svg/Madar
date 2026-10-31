@@ -300,3 +300,6 @@ body{background:transparent}
 .pbox .btn,.hbox .btn{flex:none;min-height:48px}
 .scode{width:100%;box-sizing:border-box;border-radius:10px;border:1px solid var(--line);background:var(--tile);color:var(--fg);padding:8px;font:12px monospace;direction:ltr;resize:vertical}
 .ncell.auto.x::after{animation:pop .25s ease}
+.nono.n15 .nclue-c{font-size:9px;line-height:1.15;letter-spacing:-.3px}.nono.n15 .nclue-r{font-size:9.5px;gap:3px;padding-inline:2px 4px}
+.nono.n20 .nclue-c{font-size:7.5px;letter-spacing:-.6px}.nono.n20 .nclue-r{font-size:8.5px;gap:2px}
+.nono.n15 .ncell.x::after{font-size:8px}.nono.n20 .ncell.x::after{font-size:7px}
