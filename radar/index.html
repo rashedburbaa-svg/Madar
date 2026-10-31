@@ -101,6 +101,8 @@ details summary{cursor:pointer;font-weight:600;font-size:.9rem}
 .news i{width:8px;height:8px;border-radius:50%;margin-top:7px;background:var(--wait)}
 .news a{color:var(--ink);text-decoration:none;font-size:.88rem;line-height:1.45;direction:ltr;text-align:left;display:block;overflow-wrap:anywhere}
 .news a:hover{text-decoration:underline}
+.news a.ar{direction:rtl;text-align:right;font-size:.92rem}
+.news small.en{color:var(--muted);font-size:.72rem;direction:ltr;text-align:left;overflow-wrap:anywhere}
 .news small{color:var(--muted);font-size:.72rem;display:block;direction:ltr;text-align:left}
 .alert{background:var(--accent-soft);color:var(--accent);font-size:.82rem;font-weight:600;padding:8px 10px;border-radius:8px}
 .page{display:flex;flex-direction:column;gap:14px}
@@ -982,14 +984,36 @@ function show(s,quiet){
   if(r.news==null){$('dNewsSum').textContent=$('key').value.trim()?'أضف مفتاح Finnhub في الإعدادات لعرض الأخبار.':'الأخبار لا تظهر في الوضع التجريبي.';}
   else if(!r.news.length){$('dNewsSum').textContent='لا توجد أخبار لهذا السهم خلال آخر 7 أيام.';}
   else{const pos=r.news.filter(x=>x.tone>0).length,neg=r.news.filter(x=>x.tone<0).length;
-    $('dNewsSum').textContent=r.news.length+' خبر · '+pos+' إيجابي · '+neg+' سلبي · أثرها على التقييم '+(r.newsPts>0?'+':'')+r.newsPts+'. العناوين بالإنجليزية والتصنيف تقريبي بالكلمات المفتاحية.';
-    r.news.slice(0,8).forEach(x=>{const li=document.createElement('li'),i2=document.createElement('i'),d=document.createElement('div'),a=document.createElement('a'),sm=document.createElement('small');
+    $('dNewsSum').textContent=r.news.length+' خبر · '+pos+' إيجابي · '+neg+' سلبي · أثرها على التقييم '+(r.newsPts>0?'+':'')+r.newsPts+'. العناوين مترجمة آلياً (الأصل الإنجليزي تحتها)، والتصنيف تقريبي بالكلمات المفتاحية.';
+    const rows=[];
+    r.news.slice(0,8).forEach(x=>{const li=document.createElement('li'),i2=document.createElement('i'),d=document.createElement('div'),a=document.createElement('a'),en=document.createElement('small'),sm=document.createElement('small');
       i2.style.background=x.tone>0?'var(--buy)':x.tone<0?'var(--sell)':'var(--wait)';
-      a.href=x.url;a.target='_blank';a.rel='noopener';a.textContent=x.h;
+      a.href=x.url;a.target='_blank';a.rel='noopener';en.className='en';
       sm.textContent=(x.src||'')+' · '+new Date(x.t*1000).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
-      d.append(a,sm);li.append(i2,d);NL.appendChild(li);});}
+      setHead(a,en,x.h,trCache[x.h]);rows.push([a,en,x.h]);
+      d.append(a,en,sm);li.append(i2,d);NL.appendChild(li);});
+    // translate the headlines not yet in the cache, then fill them in if this stock is still on screen
+    rows.filter(([,,h])=>!trCache[h]).forEach(([a,en,h])=>toAr(h).then(t=>{if(t&&selected===s)setHead(a,en,h,t);}));}
   if(quiet)return;
   go('detail');
+}
+
+/* ---------- headline translation (free endpoints, no key; results cached on the device) ---------- */
+let trCache={};try{trCache=JSON.parse(store.get('td_tr','{}'))||{};}catch(_){trCache={};}
+function setHead(a,en,h,t){
+  if(t){a.textContent=t;a.lang='ar';a.className='ar';en.textContent=h;en.hidden=false;}
+  else{a.textContent=h;a.lang='en';a.className='';en.textContent='';en.hidden=true;}}
+async function toAr(t){
+  if(trCache[t])return trCache[t];
+  let out=null;
+  try{const r=await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ar&dt=t&q='+encodeURIComponent(t));
+    const j=await r.json();out=((j&&j[0])||[]).map(x=>x&&x[0]||'').join('').trim()||null;}catch(_){}
+  if(!out){try{const r=await fetch('https://api.mymemory.translated.net/get?langpair=en|ar&q='+encodeURIComponent(t));
+    const j=await r.json(),s=j&&j.responseData&&j.responseData.translatedText;
+    if(s&&/[؀-ۿ]/.test(s)&&!/MYMEMORY|QUERY LENGTH/i.test(s))out=s.trim();}catch(_){}}
+  if(out){trCache[t]=out;const ks=Object.keys(trCache);if(ks.length>400)ks.slice(0,ks.length-400).forEach(k=>delete trCache[k]);
+    store.set('td_tr',JSON.stringify(trCache));}
+  return out;
 }
 
 /* ---------- position size ---------- */
