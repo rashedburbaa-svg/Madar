@@ -611,3 +611,7 @@ body.colfull .tabbar{background:rgba(10,14,30,.92)}
 .cscene .cre.gone{opacity:0;pointer-events:none}
 .cscene .cre.hit .cflip{animation:chit .15s linear}
 @keyframes chit{50%{filter:brightness(2.4) saturate(.3)}}
+.cscene .glowp,.cbc .glowp{animation:cglowp 2.4s ease-in-out infinite}
+@keyframes cglowp{50%{opacity:.45}}
+.radar{transform-box:fill-box;transform-origin:center;animation:crad 2.4s linear infinite}
+@keyframes crad{50%{transform:scaleX(-1)}}

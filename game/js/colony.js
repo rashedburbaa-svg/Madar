@@ -122,12 +122,13 @@ function _lattice(x0,w0,x1,w1,y0,y1,n,c){let s=`<path d="M${x0} ${y0} L${x1} ${y
   return s+`<path d="${p}" stroke="${c}" stroke-width=".8" fill="none" opacity=".85"/>`}
 function art(id,L){L=Math.max(0,L);switch(id){
 case 'hq':{let s=_sh(40,9);
-  if(L>=3)s+=_box(-48,0,16,10,7)+_win(-46,-7,3,5,3,2.5);
-  if(L>=5)s+=_box(30,0,12,26,7)+_win(32,-23,2,5,3,3)+_win(32,-16,2,5,3,3)+_win(32,-9,2,5,3,3);
+  if(L>=4)s+=_box(-48,0,16,10,7)+_win(-46,-7,3,5,3,2.5);
+  if(L>=7)s+=_box(30,0,12,26,7)+_win(32,-23,2,5,3,3)+_win(32,-16,2,5,3,3)+_win(32,-9,2,5,3,3);
   s+=_box(-30,0,58,13,10)+`<rect x="-28" y="-10" width="54" height="4" fill="#0b1830"/>${_win(-26,-9.5,9,6,4,3,'#5ff2d6')}<rect x="-6" y="-7" width="10" height="7" fill="#26324a"/><rect x="-5" y="-6" width="8" height="6" fill="#ffd36a" opacity=".85"/>`;
   s+=`<ellipse cx="4" cy="-18" rx="27" ry="4.5" fill="#7c8aa0"/><path d="M-22 -18 A26 25 0 0 1 30 -18 Z" fill="url(#kDome)"/><path d="M4 -43 A9 25 0 0 0 -5 -18 M4 -43 A9 25 0 0 1 13 -18 M-19 -28 Q4 -33 27 -28" stroke="#6e7f98" stroke-width=".7" fill="none" opacity=".8"/><ellipse cx="-6" cy="-32" rx="6" ry="3.2" fill="#fff" opacity=".55" transform="rotate(-30 -6 -32)"/>`;
   s+=`<path d="M4 -43 V-58" stroke="#c9d3dc" stroke-width="1.6"/><path d="M4 -52 l7 -4" stroke="#c9d3dc" stroke-width="1"/><ellipse cx="12" cy="-57" rx="4" ry="2" fill="url(#kDish)" transform="rotate(-30 12 -57)"/><circle cx="4" cy="-59" r="1.8" fill="#ff5d73" class="blink"/>`;
   if(L>=7)s+=`<ellipse cx="4" cy="-18" rx="31" ry="6" fill="none" stroke="#ffd34d" stroke-width="1.2" opacity=".8"/>`;
+  if(L>=10)s+=`<g transform="translate(-44 12)"><ellipse rx="15" ry="4.4" fill="#3a4250"/><ellipse rx="11" ry="3" fill="none" stroke="#ffd34d" stroke-width="1"/><g transform="translate(1 -7)"><path d="M-9 0 L7 -2.4 L11 0 L7 2.4Z" fill="#eef2f6"/><path d="M-9 -1 L-12 -4 L-10 0 L-12 4 L-9 1Z" fill="#9aa4b2"/><circle cx="4" cy="-1" r="1.1" fill="#7fe8ff"/></g></g><path d="M20 -34 V-52 M26 -30 V-46" stroke="#c9d3dc" stroke-width="1.3"/><circle cx="20" cy="-53" r="1.8" fill="#5ff2d6" class="blink"/><circle cx="26" cy="-47" r="1.5" fill="#ffd34d" class="blink"/><path d="M4 -60 L-10 -120 L18 -120Z" fill="#5ff2d6" opacity=".08" class="glowp"/>`;
   return s}
 case 'mine':{let s=_sh(34,8);
   s+=`<path d="M14 0 L20 -9 L27 -12 L34 -5 L36 0Z" fill="url(#kRock)"/><path d="M18 -4 l3 -5 l3 4Z M28 -6 l2 -4 l2 4Z" fill="#7fe8ff" opacity=".9"/><path d="M24 -2 l2 -4 l2 4Z" fill="#b47aff"/>`;
@@ -136,6 +137,8 @@ case 'mine':{let s=_sh(34,8);
   s+=_box(-26,-6,14,11,6)+`<path d="M-24 -13 h9 M-24 -11 h9 M-24 -9 h9" stroke="#4a5262" stroke-width=".8"/><circle cx="-14" cy="-15" r="1.3" fill="#ffd34d" class="blink"/>`;
   s+=_lattice(-6,14,-1,4,-6,-52,6,'#c7cfd8')+`<rect x="-3" y="-56" width="8" height="5" fill="#ff9a3c"/><path d="M1 -51 V-2" stroke="#8a93a2" stroke-width="1.6"/><path d="M-1 -2 l2 5 l2 -5Z" fill="#9aa4b2"/>`;
   if(L>=4)s+=`<circle cx="-34" cy="-20" r="6" fill="url(#kLamp)"/><path d="M-34 -20 V0" stroke="#7a8494" stroke-width="1.2"/><rect x="-36" y="-22" width="4" height="2.5" fill="#ffe9a8"/>`;
+  if(L>=7)s+=_lattice(30,10,33,4,0,-38,5,'#aeb8c4')+`<rect x="31" y="-42" width="7" height="5" fill="#ff9a3c"/><g transform="translate(-30 9)"><path d="M-9 -7 l2 -4 h8 l1 4" fill="#8a6a5a"/><rect x="-9" y="-7" width="11" height="6" fill="#ffb02e"/><path d="M2 -7 h5 l3 3 v3 h-8z" fill="#e8962a"/><rect x="3" y="-6" width="3" height="2" fill="#7fe8ff"/><circle cx="-5" cy="0" r="2" fill="#222"/><circle cx="6" cy="0" r="2" fill="#222"/></g>`;
+  if(L>=10)s+=`<g transform="translate(-46 0)"><rect x="-6" y="-28" width="12" height="28" fill="url(#kCylH)"/><ellipse cx="0" cy="-28" rx="6" ry="2" fill="#dfe6ee"/><rect x="-4" y="-22" width="8" height="13" rx="2" fill="#7fe8ff" class="glowp"/><path d="M6 -14 h10" stroke="#8a93a2" stroke-width="2"/><circle cx="0" cy="-15" r="9" fill="url(#kLamp)" opacity=".5"/></g>`;
   return s}
 case 'solar':{const n=Math.min(6,1+Math.ceil(L/2)),rows=n>3?2:1,per=Math.ceil(n/rows);let s=_sh(36,8);
   s+=_box(-36,0,8,9,5)+`<circle cx="-32" cy="-6" r="1" fill="#7ddc5a" class="blink"/>`;
@@ -144,6 +147,8 @@ case 'solar':{const n=Math.min(6,1+Math.ceil(L/2)),rows=n>3?2:1,per=Math.ceil(n/
       s+=`<path d="M${x+7} ${y} V${y-7}" stroke="#7a8494" stroke-width="1.4"/><path d="M${x} ${y-6} L${x+15} ${y-6} L${x+19} ${y-17} L${x+4} ${y-17}Z" fill="url(#kSolar)" stroke="#c9d6e6" stroke-width=".7"/>`+
         `<path d="M${x+5} ${y-6} L${x+9} ${y-17} M${x+10} ${y-6} L${x+14} ${y-17} M${x+1.3} ${y-9.7} H${x+16.3} M${x+2.7} ${y-13.3} H${x+17.7}" stroke="#9fc4ff" stroke-width=".35" opacity=".8"/>`+
         `<path d="M${x+3} ${y-7} L${x+8} ${y-16}" stroke="#fff" stroke-width="1.6" opacity=".22"/>`}}
+  if(L>=4)s+=_box(28,2,12,8,5)+'<rect x="30" y="-4" width="2" height="4" fill="#7ddc5a"/><rect x="33" y="-4" width="2" height="4" fill="#7ddc5a"/><rect x="36" y="-4" width="2" height="4" fill="#ffd34d" class="blink"/>';
+  if(L>=10)s+=`<g transform="translate(44 0)">${_lattice(-3,6,-1,2,0,-48,5,'#c7cfd8')}<circle cx="0" cy="-50" r="12" fill="url(#kLamp)"/><circle cx="0" cy="-50" r="4.5" fill="#fff3c0" class="glowp"/></g>`;
   return s}
 case 'farm':{let s=_sh(36,8);
   s+=`<rect x="24" y="-17" width="10" height="17" fill="url(#kCylH)"/><ellipse cx="29" cy="-17" rx="5" ry="2" fill="#dfe6ee"/><ellipse cx="29" cy="0" rx="5" ry="2" fill="#5a6575"/><path d="M24 -8 h10" stroke="#5a6575" stroke-width=".6"/>`;
@@ -152,7 +157,9 @@ case 'farm':{let s=_sh(36,8);
   for(let i=0;i<6;i++){const x=-24+i*7.5;s+=`<circle cx="${x}" cy="-7" r="3.2" fill="#3fa654"/><circle cx="${x+1}" cy="-10" r="2.6" fill="#5fd06a"/><circle cx="${x+4}" cy="-12" r="2" fill="#7ddc5a"/>`}
   s+=`<path d="M-30 -3 A25 24 0 0 1 20 -3 Z" fill="url(#kGlass)" stroke="#d8fff0" stroke-width=".8"/><path d="M-20 -8.5 A25 24 0 0 1 30 -8.5" stroke="#d8fff0" stroke-width=".7" fill="none" opacity=".7"/><path d="M-5 -27 L5 -32.5" stroke="#d8fff0" stroke-width=".7"/>`;
   s+=`<path d="M-22 -3 A6 24 0 0 1 -18 -19 M-12 -3 A4 24 0 0 1 -10 -24 M0 -3 V-27 M12 -3 A4 24 0 0 0 10 -24" stroke="#d8fff0" stroke-width=".55" fill="none" opacity=".75"/><path d="M-22 -16 Q-12 -26 0 -26" stroke="#fff" stroke-width="2" fill="none" opacity=".35" stroke-linecap="round"/>`;
-  if(L>=5)s+=`<circle cx="-34" cy="-3" r="3" fill="#5fd06a"/><circle cx="-36" cy="-6" r="2.4" fill="#7ddc5a"/>`;
+  if(L>=4)s+=`<circle cx="-34" cy="-3" r="3" fill="#5fd06a"/><circle cx="-36" cy="-6" r="2.4" fill="#7ddc5a"/>`;
+  if(L>=7)s+=`<g transform="translate(-36 8) scale(.55)"><rect x="-24" y="-3" width="48" height="3" fill="#8d97a6"/><path d="M-22 -3 A22 20 0 0 1 22 -3Z" fill="url(#kGlass)" stroke="#d8fff0" stroke-width="1.2"/><circle cx="-8" cy="-8" r="4" fill="#5fd06a"/><circle cx="4" cy="-9" r="4.4" fill="#3fa654"/><circle cx="13" cy="-7" r="3" fill="#7ddc5a"/></g>`;
+  if(L>=10)s+=`<g transform="translate(44 0)"><rect x="-6" y="-42" width="12" height="42" fill="url(#kGlass)" stroke="#d8fff0" stroke-width=".8"/>${[0,1,2,3,4].map(k=>`<rect x="-5" y="${-39+k*8}" width="10" height="3" fill="${k%2?'#3fa654':'#5fd06a'}"/>`).join('')}<path d="M-7 -42 h14" stroke="#c7cfd8" stroke-width="2"/><circle cx="0" cy="-45" r="2" fill="#ff9ad6" class="blink"/></g>`;
   return s}
 case 'habitat':{const n=Math.min(3,1+Math.floor(L/3)),top=L>=8;let s=_sh(14+n*12,8),mods='';
   const mod=(cx,cy,w)=>`<rect x="${cx-w/2}" y="${cy-12}" width="${w}" height="12" rx="6" fill="url(#kCyl)" stroke="#5a6575" stroke-width=".5"/><ellipse cx="${cx+w/2-3}" cy="${cy-6}" rx="2.6" ry="5.4" fill="#8e9aa8"/>`+
@@ -161,6 +168,8 @@ case 'habitat':{const n=Math.min(3,1+Math.floor(L/3)),top=L>=8;let s=_sh(14+n*12
   const W=22,gap=4,tot=n*W+(n-1)*gap;
   for(let k=0;k<n;k++){const cx=-tot/2+W/2+k*(W+gap);if(k)mods+=`<rect x="${cx-W/2-gap-1}" y="-9" width="${gap+2}" height="5" fill="#8e9aa8"/>`;mods+=mod(cx,-2,W)}
   if(top)mods+=`<rect x="-3" y="-17" width="6" height="4" fill="#8e9aa8"/>`+mod(0,-15,20);
+  if(L>=4)mods+=`<path d="M-6 -14 v-8" stroke="#c9d3dc" stroke-width="1"/><circle cx="-6" cy="-23" r="1.4" fill="#ff5d73" class="blink"/>`;
+  if(L>=10)mods+=`<path d="M${-tot/2} -1 H${tot/2}" stroke="#ffd36a" stroke-width="1.4" stroke-dasharray="1 3" stroke-linecap="round" class="glowp"/><g transform="translate(0 -30)"><path d="M-8 0 A8 7 0 0 1 8 0Z" fill="url(#kGlass)" stroke="#d8fff0" stroke-width=".7"/><circle cx="-2" cy="-2" r="2" fill="#5fd06a"/><circle cx="3" cy="-2.5" r="2" fill="#7ddc5a"/></g>`;
   return s+mods}
 case 'radio':{let s=_sh(22,6);
   s+=`<path d="M0 -56 L-22 0 M0 -56 L22 0" stroke="#8a93a2" stroke-width=".4" opacity=".7"/>`;
@@ -169,12 +178,18 @@ case 'radio':{let s=_sh(22,6);
   s+=`<g transform="translate(-3 -44) rotate(-28)"><path d="M-11 0 A11 5 0 0 0 11 0 Z" fill="url(#kDish)" stroke="#7a8494" stroke-width=".6"/><path d="M-11 0 A11 2.6 0 0 1 11 0" fill="#b8c4d2"/><path d="M0 -1 V-9" stroke="#8a93a2" stroke-width="1"/><circle cx="0" cy="-9.5" r="1.4" fill="#5a6475"/></g>`;
   s+=`<circle cx="0" cy="-57" r="2" fill="#ff5d73" class="blink"/>`;
   if(L)s+=`<path d="M8 -58 a7 7 0 0 1 0 10 M12 -61 a12 12 0 0 1 0 16" stroke="#5ff2d6" stroke-width="1.3" fill="none" class="wave"/>`;
+  if(L>=4)s+=`<g transform="translate(3 -24) rotate(32) scale(.7)"><path d="M-11 0 A11 5 0 0 0 11 0 Z" fill="url(#kDish)" stroke="#7a8494" stroke-width=".6"/><path d="M0 -1 V-8" stroke="#8a93a2"/><circle cx="0" cy="-8.5" r="1.3" fill="#5a6475"/></g>`;
+  if(L>=7)s+=`<ellipse cx="0" cy="-18" rx="6" ry="1.8" fill="none" stroke="#5ff2d6" stroke-width="1.1" class="blink"/><ellipse cx="0" cy="-34" rx="4" ry="1.3" fill="none" stroke="#5ff2d6" stroke-width="1.1" class="blink"/><ellipse cx="0" cy="-48" rx="2.6" ry="1" fill="none" stroke="#5ff2d6" stroke-width="1"/>`;
+  if(L>=10)s+=`<g transform="translate(26 0)"><path d="M-3 0 L0 -12 L3 0Z" fill="#8a93a2"/><g transform="translate(0 -14) rotate(-35)"><path d="M-15 0 A15 7 0 0 0 15 0Z" fill="url(#kDish)" stroke="#7a8494" stroke-width=".7"/><path d="M0 -1 V-12" stroke="#8a93a2"/><circle cx="0" cy="-12.5" r="1.8" fill="#5ff2d6" class="blink"/></g></g><path d="M0 -58 L-9 -150 L9 -150Z" fill="#5ff2d6" opacity=".1" class="glowp"/>`;
   return s}
 case 'obs':{let s=_sh(26,7);
   s+=`<rect x="-18" y="-15" width="36" height="15" fill="url(#kCylH)"/><ellipse cx="0" cy="0" rx="18" ry="3" fill="#5a6575"/><rect x="-14" y="-10" width="5" height="10" fill="#26324a"/><rect x="-13" y="-9" width="3" height="9" fill="#ffd36a" opacity=".8"/>`;
   s+=`<ellipse cx="0" cy="-15" rx="19" ry="3.2" fill="#7c8aa0"/><path d="M-18 -15 A18 18 0 0 1 18 -15 Z" fill="url(#kDome)"/>`;
   s+=`<path d="M-3 -32.8 L4 -32.6 L5 -15 L-1 -15Z" fill="#141b2e"/><g transform="translate(2 -22) rotate(-38)"><rect x="-2" y="-3.5" width="22" height="7" rx="2" fill="url(#kCyl)" stroke="#5a6575" stroke-width=".5"/><rect x="18" y="-4.3" width="4" height="8.6" rx="1" fill="#5a6575"/><circle cx="22" cy="0" r="2.6" fill="#7fe8ff" opacity=".8"/></g>`;
   s+=`<ellipse cx="-8" cy="-26" rx="4" ry="2" fill="#fff" opacity=".6" transform="rotate(-35 -8 -26)"/>`;
+  if(L>=4)s+=`<rect x="-16" y="-2" width="8" height="2" fill="#8a93a2"/><rect x="-15" y="0" width="6" height="2" fill="#6a7486"/><circle cx="-17" cy="-12" r="1.3" fill="#ffd34d" class="blink"/><circle cx="-6" cy="-12" r="1.3" fill="#ffd34d" class="blink"/>`;
+  if(L>=7)s+=`<g transform="translate(28 2) scale(.55)"><rect x="-18" y="-15" width="36" height="15" fill="url(#kCylH)"/><ellipse cx="0" cy="-15" rx="19" ry="3.2" fill="#7c8aa0"/><path d="M-18 -15 A18 18 0 0 1 18 -15 Z" fill="url(#kDome)"/><path d="M0 -24 L16 -38" stroke="#8f99a8" stroke-width="5" stroke-linecap="round"/></g>`;
+  if(L>=10)s+=`<path d="M-18 -15 A18 18 0 0 1 18 -15" stroke="#ffd34d" stroke-width="1.4" fill="none"/><path d="M17 -36 L80 -150" stroke="#ff9a3c" stroke-width="1.3" opacity=".7" class="glowp"/><circle cx="80" cy="-150" r="2.2" fill="#ffd34d" class="blink"/>`;
   return s}
 case 'def':{let s=_sh(30,8);
   s+=`<path d="M-30 -2 A30 34 0 0 1 30 -2 Z" fill="url(#kShield)" stroke="#9fe8ff" stroke-width=".8" stroke-opacity=".5" class="shieldarc"/>`;
@@ -182,7 +197,9 @@ case 'def':{let s=_sh(30,8);
   s+=`<path d="M-19 -3 H21" stroke="#ffd34d" stroke-width="2.2" stroke-dasharray="3 3"/><path d="M-5 -12 v12 M6 -12 v12" stroke="#434b5a" stroke-width=".6"/>`;
   s+=`<ellipse cx="2" cy="-16" rx="12" ry="3" fill="#434b5a"/><path d="M-9 -16 C-9 -27 13 -27 13 -16Z" fill="url(#kDome)"/>`;
   s+=`<path d="M8 -22 L28 -32 M9 -19 L29 -29" stroke="#5a6575" stroke-width="3" stroke-linecap="round"/><path d="M8 -22 L28 -32 M9 -19 L29 -29" stroke="#c7cfd8" stroke-width="1.2" stroke-linecap="round"/><circle cx="-2" cy="-20" r="1.8" fill="#ff5d73" class="blink"/>`;
-  if(L>=5)s+=`<path d="M-24 -1 l-6 -14 h5 l5 14Z" fill="url(#kMs)"/><circle cx="-27" cy="-16" r="2" fill="#9fe8ff"/>`;
+  if(L>=4)s+=`<path d="M-24 -1 l-6 -14 h5 l5 14Z" fill="url(#kMs)"/><circle cx="-27" cy="-16" r="2" fill="#9fe8ff"/>`;
+  if(L>=7)s+=`<g transform="translate(26 -2)"><path d="M0 0 V-16" stroke="#8a93a2" stroke-width="1.4"/><g transform="translate(0 -18)"><path class="radar" d="M-8 0 A8 3.2 0 0 0 8 0Z" fill="url(#kDish)" stroke="#7a8494" stroke-width=".5"/></g><circle cx="0" cy="-20" r="1.2" fill="#5ff2d6" class="blink"/></g>`;
+  if(L>=10)s+=`<path d="M-36 -2 A36 42 0 0 1 36 -2 Z" fill="url(#kShield)" stroke="#9fe8ff" stroke-width="1.6" stroke-opacity=".9" class="shieldarc"/><path d="M-4 -21 L-22 -32 M-3 -18 L-21 -29" stroke="#5a6575" stroke-width="3" stroke-linecap="round"/><path d="M-4 -21 L-22 -32 M-3 -18 L-21 -29" stroke="#c7cfd8" stroke-width="1.2" stroke-linecap="round"/>`;
   return s}
 case 'tower':{const t=tierOf(Math.max(1,L));return _sh(16,5)+_lattice(-9,18,-6,12,0,-34,4,'#aeb8c4')+_box(-11,-32,22,7,6)+`<g transform="translate(3 -44) rotate(-20) scale(1.5)">${HEAD[t]}</g>`+(L>=4?'<circle cx="-8" cy="-36" r="1.6" fill="#ff5d73" class="blink"/>':'')}
 case 'wall':{const st=fenceStyle(Math.max(1,L)),h=st.h*1.8;let s=_sh(40,6);
@@ -193,6 +210,9 @@ case 'wall':{const st=fenceStyle(Math.max(1,L)),h=st.h*1.8;let s=_sh(40,6);
   return s}
 case 'dock':{const S=k=>col.ship[k],fly=col.done;let s=_sh(48,10);
   if(L>0){s+=_lattice(-44,6,-43,4,0,-46,5,'#aeb8c4')+_lattice(36,6,37,4,0,-46,5,'#aeb8c4')+`<path d="M-44 -46 H42 V-43 H-44Z" fill="url(#kMf)"/><path d="M-6 -43 V-30" stroke="#8a93a2" stroke-width=".8"/><path d="M-9 -30 h6 l-3 4Z" fill="#ffd34d"/>`}
+  if(L>=4)s+=`<g transform="translate(-56 0)"><rect x="-5" y="-20" width="10" height="20" rx="5" fill="url(#kCylH)"/><rect x="-5" y="-11" width="10" height="2" fill="#ff5d73"/></g><g transform="translate(-46 2)"><rect x="-4" y="-14" width="8" height="14" rx="4" fill="url(#kCylH)"/></g>`;
+  if(L>=7)s+=`<path d="M-44 -46 H42" stroke="#ffd34d" stroke-width="1" stroke-dasharray="3 3"/><circle cx="-44" cy="-49" r="1.8" fill="#ff5d73" class="blink"/><circle cx="42" cy="-49" r="1.8" fill="#ff5d73" class="blink"/>`;
+  if(L>=10)s+=`<path d="M-42 -44 L-22 2 L-8 2Z M40 -44 L20 2 L6 2Z" fill="#fff3c0" opacity=".14"/>`;
   s+=`<g transform="rotate(${fly?0:-12}) translate(0 ${fly?-6:-4})">`;
   s+=`<path d="M-30 -2 L-38 4 L-34 -6Z M-30 -14 L-38 -22 L-33 -11Z" fill="${S('hull')?'#9aa6b4':'#4c5059'}"/>`;
   s+=`<path d="M-30 -14 C-10 -17 18 -16 30 -8 L33 -6 L30 -4 C18 3 -10 3 -30 0Z" fill="url(#${S('hull')?'kHull':'kHullD'})" stroke="#2a2e3a" stroke-width=".7"/>`;
