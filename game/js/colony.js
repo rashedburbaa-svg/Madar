@@ -94,7 +94,7 @@ function questCheck(){let changed=false;while(col.q<QUESTS.length&&QUESTS[col.q]
     toast('✅ '+Object.entries(Q.r).map(([k,n])=>'+'+n+' '+RES[k][1]).join(' '),'ach');col.q++;changed=true;addXP(25)}
   if(changed)colSave();return changed}
 function storyBox(title,text,label,fn){const m=document.createElement('div');m.className='hmodal';m.style.zIndex=40;
-  m.innerHTML='<div class="hbox cstory"><div class="cav">🤖</div><h3></h3><p></p><button class="btn main" type="button"></button></div>';
+  m.innerHTML='<div class="hbox cstory"><div class="cav">'+(typeof ART!=='undefined'&&ART.najm?'<img class="najm" src="'+ART.najm+'" alt="نجم">':'🤖')+'</div><h3></h3><p></p><button class="btn main" type="button"></button></div>';
   m.querySelector('h3').textContent=title;m.querySelector('p').textContent=text;const b=m.querySelector('button');b.textContent=label;b.onclick=()=>{m.remove();fn&&fn()};document.body.appendChild(m);b.focus();return m}
 function chapterDone(){if(col.done)return;col.done=1;colSave();
   const m=storyBox('المركبة جاهزة! 🚀','اكتمل الفصل الأول. افتح خريطة المجرة 🌌 وابدأ الفصل الثاني.','لنستكشف',()=>galaxyBox());celebrate(m.querySelector('.hbox'))}

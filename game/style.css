@@ -742,3 +742,7 @@ body.colfull .tabbar{background:rgba(10,14,30,.92)}
 #splash .splt h1{font-family:var(--display);font-size:38px;margin:0;letter-spacing:.5px}#splash .splt h1 span{color:#ffd34d}
 #splash .splt p{margin:6px 0 0;opacity:.85;font-size:14px;animation:festp 1.2s ease-in-out infinite alternate}
 .cstory .shero{width:calc(100% + 32px);margin:-16px -16px 10px;height:210px;object-fit:cover;object-position:50% 40%;border-radius:18px 18px 0 0;display:block}
+.cstory .najm{width:96px;height:96px;border-radius:50%;object-fit:cover;box-shadow:0 0 0 3px #5ff2d655,0 0 26px #5ff2d655;animation:najmf 3s ease-in-out infinite}
+@keyframes najmf{50%{transform:translateY(-5px)}}
+.toast .tnajm{width:34px;height:34px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-inline-end:8px;box-shadow:0 0 0 2px #5ff2d677;float:right}
+.toast:has(.tnajm){display:flex;align-items:center;gap:8px;text-align:start}.toast .tnajm{float:none;flex:none;margin:0}

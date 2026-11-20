@@ -6,7 +6,7 @@ function rng(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(see
 function shuffle(a,R){for(let i=a.length-1;i>0;i--){const j=Math.floor(R()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 const toastQ=[];let toastBusy=false;
 function toast(t,cls){toastQ.push([t,cls]);if(!toastBusy)nextToast()}
-function nextToast(){const it=toastQ.shift();const el=$('toast');if(!it){el.hidden=true;toastBusy=false;return}toastBusy=true;el.textContent=it[0];el.className='toast '+(it[1]||'');el.hidden=false;setTimeout(nextToast,it[1]?2600:1700)}
+function nextToast(){const it=toastQ.shift();const el=$('toast');if(!it){el.hidden=true;toastBusy=false;return}toastBusy=true;el.textContent=it[0];if(typeof ART!=='undefined'&&ART.najm&&it[0].startsWith('🤖 نجم:')){el.textContent='';const im=new Image();im.src=ART.najm;im.alt='';im.className='tnajm';const sp=document.createElement('span');sp.textContent=it[0].replace('🤖 نجم:','نجم:');el.append(im,sp)}el.className='toast '+(it[1]||'');el.hidden=false;setTimeout(nextToast,it[1]?2600:1700)}
 const STAR='M50 6c5 28 16 39 44 44-28 5-39 16-44 44-5-28-16-39-44-44 28-5 39-16 44-44z';
 const starSVG=on=>`<svg viewBox="0 0 100 100"><path class="${on?'on':'off'}" d="${STAR}"/></svg>`;
 const fmtTime=s=>{s=Math.max(0,Math.floor(s));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
