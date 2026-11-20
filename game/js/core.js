@@ -53,7 +53,18 @@ function winBox({title,text,stars,onNext,label}){
   o.innerHTML=`<h3></h3><div class="stars">${[1,2,3].map(k=>starSVG(k<=stars)).join('')}</div><p></p><button class="btn main" type="button"></button><button class="btn share" type="button">📤 مشاركة النتيجة</button>`;
   o.querySelector('h3').textContent=title;o.querySelector('p').textContent=text;const b=o.querySelector('button');b.textContent=label||'المستوى التالي';
   const gname=active?active.name:'';o.querySelector('.share').onclick=()=>shareResult({game:gname,title,text,stars});
-  b.onclick=()=>{o.remove();onNext()};setTimeout(()=>{stage.appendChild(o);b.focus()},350);
+  b.onclick=()=>{o.remove();onNext()};setTimeout(()=>{stage.appendChild(o);b.focus();celebrate(o)},350);
+}
+/* win celebration: a short burst of coloured stars and sparks over the result box */
+function celebrate(host){
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  try{const c=document.createElement('canvas');c.className='confetti';host.appendChild(c);const w=host.clientWidth,h=host.clientHeight,dp=Math.min(2,devicePixelRatio||1);c.width=w*dp;c.height=h*dp;const x=c.getContext('2d');x.scale(dp,dp);
+    const cols=['#ffd34d','#5ff2d6','#ff7ab6','#9fe8ff','#b47aff','#ff9a3c'],P=[];
+    for(let k=0;k<90;k++){const a=-Math.PI/2+(Math.random()-0.5)*2.4,sp=180+Math.random()*320;P.push({x:w/2,y:h*0.42,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:2+Math.random()*4,c:cols[k%cols.length],rot:Math.random()*6,vr:(Math.random()-0.5)*10,star:k%3===0})}
+    let t0=performance.now(),lt=t0;const step=now=>{const dt=Math.min(0.05,(now-lt)/1000);lt=now;const T=(now-t0)/1000;x.clearRect(0,0,w,h);
+      for(const q of P){q.vy+=520*dt;q.vx*=0.985;q.x+=q.vx*dt;q.y+=q.vy*dt;q.rot+=q.vr*dt;x.globalAlpha=Math.max(0,1-T/1.8);x.fillStyle=q.c;x.save();x.translate(q.x,q.y);x.rotate(q.rot);
+        if(q.star){x.beginPath();for(let i=0;i<10;i++){const rr=i%2?q.r*0.45:q.r*1.3,aa=i*Math.PI/5;x.lineTo(Math.cos(aa)*rr,Math.sin(aa)*rr)}x.fill()}else x.fillRect(-q.r,-q.r*0.5,q.r*2,q.r);x.restore()}
+      if(T<1.8&&c.isConnected)requestAnimationFrame(step);else c.remove()};requestAnimationFrame(step)}catch(e){}
 }
 
 function loseBox({title,text,onRetry}){

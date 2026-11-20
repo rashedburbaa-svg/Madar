@@ -31,9 +31,10 @@ const GridGame=(()=>{
     if(g.portal&&g.portal.includes(c)){const o=g.portal[0]===c?g.portal[1]:g.portal[0];if(!L.has(o)){L.add(o);q.push(o)}}}return L}
   function svg(mask,isSrc){
     const P={[N]:[50,0],[E]:[100,50],[S]:[50,100],[W]:[0,50]};
-    const arms=[N,E,S,W].filter(b=>mask&b).map(b=>`<line class="arm" x1="50" y1="50" x2="${P[b][0]}" y2="${P[b][1]}"/>`).join('');
+    const ln=(c,b)=>`<line class="${c}" x1="50" y1="50" x2="${P[b][0]}" y2="${P[b][1]}"/>`,bs=[N,E,S,W].filter(b=>mask&b);
+    const arms=bs.map(b=>ln('case',b)).join('')+bs.map(b=>ln('arm',b)).join('')+bs.map(b=>ln('flow',b)).join('');
     const leaf=[N,E,S,W].filter(b=>mask&b).length===1;
-    return `<svg viewBox="0 0 100 100" aria-hidden="true">${arms}${isSrc?'<path class="gstar" d="M50 22c3 17 11 25 28 28-17 3-25 11-28 28-3-17-11-25-28-28 17-3 25-11 28-28z"/>':leaf?'<circle class="node" cx="50" cy="50" r="17"/>':'<circle class="hub" cx="50" cy="50" r="9"/>'}</svg>`;
+    return `<svg viewBox="0 0 100 100" aria-hidden="true">${arms}${isSrc?'<path class="gstar" d="M50 22c3 17 11 25 28 28-17 3-25 11-28 28-3-17-11-25-28-28 17-3 25-11 28-28z"/>':leaf?'<circle class="node" cx="50" cy="50" r="19"/><circle class="nodehl" cx="44" cy="44" r="6"/>':'<circle class="hubc" cx="50" cy="50" r="15"/><circle class="hub" cx="50" cy="50" r="9"/>'}</svg>`;
   }
   function refresh(){const L=lit();[...board.children].forEach((c,i)=>c.classList.toggle('lit',L.has(i)));
     setStat('s1',mode&&mode.daily?'اليوم':g.level);setStat('s2',g.moves);setStat('s3',g.par);setStat('s4',st.hints);

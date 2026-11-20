@@ -346,7 +346,7 @@ const SurviveGame=(()=>{
   function hurt(e,d){e.hp-=d;e.flash=0.08;if(e.hp<=0&&!e.dead)kill(e)}
   function kill(e){
     e.dead=true;kills++;st.totalKills=(st.totalKills||0)+1;if(ch&&ch.type==='kill')ch.prog++;
-    for(let k=0;k<(e.boss?24:7);k++){const a=Math.random()*6.28,s=40+Math.random()*120;parts.push({x:e.x,y:e.y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,l:0.5,col:e.col})}
+    for(let k=0;k<(e.boss?40:11);k++){const a=Math.random()*6.28,s=40+Math.random()*150;parts.push({x:e.x,y:e.y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,l:0.35+Math.random()*0.35,col:k%4?e.col:'#fff',s:1.2+Math.random()*2.6})}parts.push({x:e.x,y:e.y,vx:0,vy:0,l:0.22,col:'#ffffff',s:e.r*1.3,pop:1})
     const now=performance.now();if(now-hitSndT>90){snd('hit');hitSndT=now}
     if(e.boss){drop(e.x-12,e.y,'chip');drop(e.x+12,e.y,'chip');drop(e.x,e.y+12,'heart');unlock('surv_boss');bossAlive=en.some(x=>x.boss&&!x.dead);
       bossKills++;crys+=20;toast('👑 هزمت '+(e.name||'الزعيم')+' · 💎 +20','ach');st.bossDone=st.bossDone||{};if(e.kind)st.bossDone[e.kind]=1;gSave('survive',st);if(BOSSES.every(B=>st.bossDone[B.kind]))unlock('surv_all_boss')}
@@ -532,7 +532,8 @@ const SurviveGame=(()=>{
     if(orb){ctx.strokeStyle='rgba(159,232,255,.18)';ctx.lineWidth=1;ctx.beginPath();ctx.arc(p.x,p.y,48,0,6.283);ctx.stroke();
       for(let k=0;k<orb;k++){const a=orbA+k*6.283/orb,bx=p.x+Math.cos(a)*48,by=p.y+Math.sin(a)*48,gr=ctx.createRadialGradient(bx-2,by-2,0.5,bx,by,6);gr.addColorStop(0,'#f4f6ff');gr.addColorStop(1,'#7f8aa6');
         ctx.fillStyle=gr;ctx.beginPath();ctx.arc(bx,by,6,0,6.283);ctx.fill();ctx.fillStyle='rgba(60,70,90,.45)';ctx.beginPath();ctx.arc(bx+1.5,by+1,1.6,0,6.283);ctx.arc(bx-2,by+2,1,0,6.283);ctx.fill()}}
-    for(const q of parts){ctx.globalAlpha=Math.max(0,q.l*1.6);ctx.fillStyle=q.col;ctx.beginPath();ctx.arc(q.x,q.y,2.5,0,6.283);ctx.fill()}ctx.globalAlpha=1;
+    ctx.globalCompositeOperation='lighter';for(const q of parts){const al=Math.max(0,Math.min(1,q.l*1.6));if(q.pop){ctx.globalAlpha=al*1.6>1?1:al*1.6;const rr=q.s*(1.25-q.l*2),gp=ctx.createRadialGradient(q.x,q.y,0,q.x,q.y,Math.max(1,rr));gp.addColorStop(0,'rgba(255,255,255,.9)');gp.addColorStop(1,'rgba(255,255,255,0)');ctx.fillStyle=gp;ctx.beginPath();ctx.arc(q.x,q.y,Math.max(1,rr),0,6.283);ctx.fill();continue}
+      const sz=(q.s||2.5)*(0.5+al*0.6);ctx.globalAlpha=al*0.35;ctx.fillStyle=q.col;ctx.beginPath();ctx.arc(q.x,q.y,sz*2.2,0,6.283);ctx.fill();ctx.globalAlpha=al;ctx.beginPath();ctx.arc(q.x,q.y,sz,0,6.283);ctx.fill()}ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
     if(beamTg&&!over){ctx.lineCap='round';ctx.strokeStyle='rgba(95,242,214,.35)';ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(beamTg.x,beamTg.y);ctx.stroke();ctx.strokeStyle='#e8fffb';ctx.lineWidth=2;ctx.stroke()}
     for(const b of bolts){ctx.strokeStyle=`rgba(255,250,200,${b.l*5})`;ctx.lineWidth=2.5;ctx.beginPath();b.pts.forEach(([x,y],k)=>{if(!k){ctx.moveTo(x,y);return}const [px,py]=b.pts[k-1];const mx2=(x+px)/2+(Math.random()-0.5)*14,my2=(y+py)/2+(Math.random()-0.5)*14;ctx.lineTo(mx2,my2);ctx.lineTo(x,y)});ctx.stroke()}
     if(!over){
@@ -541,6 +542,8 @@ const SurviveGame=(()=>{
       drawAstronaut();
     }
     drawAmb();
+    if(p.hurt>0&&!over){const k=Math.min(1,p.hurt*4),vg=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*0.3,W/2,H/2,Math.max(W,H)*0.7);vg.addColorStop(0,'rgba(255,40,60,0)');vg.addColorStop(1,`rgba(255,40,60,${0.45*k})`);ctx.fillStyle=vg;ctx.fillRect(0,0,W,H)}
+    {const sh=p.hurt>0&&!over&&!matchMedia('(prefers-reduced-motion: reduce)').matches?Math.min(1,p.hurt*5)*3:0,tf=sh?`translate(${((Math.random()-0.5)*sh).toFixed(1)}px,${((Math.random()-0.5)*sh).toFixed(1)}px)`:'';if(cv.style.transform!==tf)cv.style.transform=tf}
     if(ch&&ch.type==='dark'&&!over){const g2=ctx.createRadialGradient(p.x,p.y,40,p.x,p.y,125);g2.addColorStop(0,'rgba(0,0,0,0)');g2.addColorStop(1,'rgba(0,0,0,.94)');ctx.fillStyle=g2;ctx.fillRect(0,0,W,H)}
     if(ch){ctx.font='bold 12px sans-serif';const tx=chProgress()+' · '+ch.text;ctx.lineWidth=3;ctx.strokeStyle='#000';ctx.strokeText(tx,W/2,40);ctx.fillStyle='#ffd34d';ctx.fillText(tx,W/2,40)}
     // HUD: health, wave progress, buffs

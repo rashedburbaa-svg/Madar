@@ -304,3 +304,71 @@ body{background:transparent}
 .nono.n20 .nclue-c{font-size:7.5px;letter-spacing:-.6px}.nono.n20 .nclue-r{font-size:8.5px;gap:2px}
 .nono.n15 .ncell.x::after{font-size:8px}.nono.n20 .ncell.x::after{font-size:7px}
 .sboard{grid-template-rows:repeat(9,1fr)}.sboard.s6{grid-template-rows:repeat(6,1fr)}.sc{min-height:0;min-width:0}
+
+/* 2048 celestial tiles */
+.b2048{background:radial-gradient(circle at 50% 30%,#18244a,#0a1022 80%);border-color:#28346a;box-shadow:inset 0 2px 18px rgba(0,0,0,.5)}
+.t2{background:rgba(255,255,255,.04);box-shadow:inset 0 0 0 1px rgba(255,255,255,.05)}
+.t2[data-v]{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;box-shadow:inset 0 1px 0 rgba(255,255,255,.18),inset 0 -6px 12px rgba(0,0,0,.35),0 3px 8px rgba(0,0,0,.4)}
+.t2 .art{width:64%;height:64%;flex:none;filter:drop-shadow(0 2px 3px rgba(0,0,0,.45))}
+.t2 b{line-height:1;margin-top:-2%;text-shadow:0 1px 0 rgba(0,0,0,.6),0 0 8px rgba(0,0,0,.5);font-weight:800}
+.t2.hot{box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 0 14px color-mix(in srgb,var(--tg) 45%,transparent),0 3px 8px rgba(0,0,0,.4)}
+.t2.mrg .art{animation:spin2 .35s ease}
+@keyframes spin2{from{transform:scale(.6) rotate(-40deg)}to{transform:none}}
+@media (prefers-reduced-motion:reduce){.t2.mrg .art{animation:none}}
+.t2.rock{background:radial-gradient(circle at 50% 40%,#2a2422,#120f0e 85%)!important;display:grid;place-items:center}
+.t2 .art.boulder{width:84%;height:84%}
+
+/* شبكة المدار: energy conduits */
+.gboard{background:radial-gradient(circle at 50% 40%,#142046,#080d1e 85%);padding:4px;box-shadow:inset 0 2px 16px rgba(0,0,0,.6)}
+.cell{background:linear-gradient(150deg,#16223f,#0e1630);box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
+.cell.locked{background:linear-gradient(150deg,#1d1a2a,#110f1a)}
+.case{stroke:#070b18;stroke-width:26;stroke-linecap:round}
+.hubc{fill:#070b18}
+.arm{stroke:#38598a;stroke-width:13}
+.hub{fill:#38598a}
+.lit .arm{stroke:#5ff2d6}.lit .hub{fill:#bffcf0}
+.lit svg{filter:drop-shadow(0 0 5px rgba(95,242,214,.7))}
+.flow{stroke:#fff;stroke-width:4;stroke-linecap:round;stroke-dasharray:5 15;opacity:0}
+.lit .flow{opacity:.85;animation:gflow .9s linear infinite}
+@keyframes gflow{to{stroke-dashoffset:20}}
+.node{fill:#22314f;stroke:#070b18;stroke-width:6}.lit .node{fill:#ffcf5a;stroke:#fff1b8;stroke-width:4}
+.nodehl{fill:#fff;opacity:.12}.lit .nodehl{opacity:.6}
+.gstar{fill:#ffd36a;filter:drop-shadow(0 0 6px #ffb43a)}
+@media (prefers-reduced-motion:reduce){.lit .flow{animation:none}}
+/* حقل الكويكبات: rocky closed cells, dark open space */
+.mboard2 .mcell{background:radial-gradient(circle at 30% 28%,rgba(255,255,255,.16) 0 9%,transparent 10%),radial-gradient(circle at 68% 66%,rgba(0,0,0,.28) 0 13%,transparent 14%),radial-gradient(circle at 30% 72%,rgba(0,0,0,.2) 0 7%,transparent 8%),linear-gradient(150deg,#6a6f86,#363b52 70%,#2a2e40);box-shadow:inset 0 2px 0 rgba(255,255,255,.18),inset 0 -3px 0 rgba(0,0,0,.35);color:#fff}
+.mboard2 .mcell:nth-child(3n){background:radial-gradient(circle at 64% 30%,rgba(0,0,0,.25) 0 11%,transparent 12%),radial-gradient(circle at 34% 62%,rgba(255,255,255,.1) 0 8%,transparent 9%),linear-gradient(150deg,#666a7f,#33384d 70%,#282c3d)}
+.mboard2 .mcell:nth-child(4n+1){background:radial-gradient(circle at 50% 50%,rgba(0,0,0,.22) 0 15%,transparent 16%),radial-gradient(circle at 24% 26%,rgba(255,255,255,.14) 0 7%,transparent 8%),linear-gradient(150deg,#6f6c80,#3a3850 70%,#2b2a3c)}
+.mboard2 .mcell.o{background:radial-gradient(circle at 50% 50%,#0f1834,#070b1a);box-shadow:inset 0 2px 6px rgba(0,0,0,.7),inset 0 0 0 1px #1c2850;text-shadow:0 0 8px currentColor}
+.mboard2 .mcell.boom{background:radial-gradient(circle at 50% 50%,#ff8a4c,#7a1d12 75%);box-shadow:0 0 14px rgba(255,110,60,.7)}
+.mboard2{background:radial-gradient(circle at 50% 40%,#121b3c,#070b1a 85%);padding:5px;border-radius:12px}
+.mboard2 .mcell.moved{box-shadow:inset 0 0 0 2px #ffd34d}
+/* shared depth: buttons, stat cards, game cards, result box */
+.btn{background:linear-gradient(180deg,#183136,#0e1f23);box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 2px 6px rgba(0,0,0,.28)}
+.btn.main{background:linear-gradient(180deg,#6af5dc,#2fae8c);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 4px 14px rgba(63,191,155,.35)}
+.btn.on{box-shadow:inset 0 0 0 1px var(--gold),0 0 12px rgba(242,184,75,.25)}
+.stat{background:linear-gradient(180deg,rgba(26,46,52,.92),rgba(13,26,30,.92));box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
+.gcard{background:linear-gradient(160deg,rgba(28,48,56,.95),rgba(13,24,30,.95));box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 4px 12px rgba(0,0,0,.25);transition:transform .15s,border-color .15s}
+.gcard:active{transform:scale(.98)}
+.gcard svg{filter:drop-shadow(0 2px 6px rgba(63,191,155,.35))}
+.overlay{background:radial-gradient(circle at 50% 35%,rgba(30,40,80,.94),rgba(6,10,22,.96) 75%)}
+.overlay h3{text-shadow:0 0 18px rgba(255,211,77,.35)}
+.overlay .stars svg{animation:starin .45s cubic-bezier(.2,1.6,.4,1) both}
+.overlay .stars svg:nth-child(2){animation-delay:.15s}.overlay .stars svg:nth-child(3){animation-delay:.3s}
+@keyframes starin{from{transform:scale(0) rotate(-90deg);opacity:0}to{transform:none;opacity:1}}
+.confetti{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:6}
+@media (prefers-reduced-motion:reduce){.overlay .stars svg{animation:none}}
+/* سودوكو: star-glass board */
+.sboard{background:#3a4a7a;border-color:#6d7fb8;box-shadow:0 6px 22px rgba(0,0,0,.45),0 0 0 1px rgba(150,170,255,.08)}
+.sc{background:linear-gradient(160deg,#141d3c,#0d1430);color:#7fe8d8;text-shadow:0 0 6px rgba(95,242,214,.35)}
+.sc.g{color:#f1f4ff;text-shadow:none}
+.sc.peer{background:linear-gradient(160deg,#1b2a52,#132044)}.sc.same{background:linear-gradient(160deg,#25406a,#1b3158)}.sc.sel{background:linear-gradient(160deg,#2f5a88,#244873);box-shadow:inset 0 0 0 2px #ffd34d}
+.sc.bR{box-shadow:inset -2px 0 0 #6d7fb8}.sc.bB{box-shadow:inset 0 -2px 0 #6d7fb8}.sc.bR.bB{box-shadow:inset -2px 0 0 #6d7fb8,inset 0 -2px 0 #6d7fb8}
+.sc.sel.bR,.sc.sel.bB{box-shadow:inset 0 0 0 2px #ffd34d}
+/* الكلمات المتقاطعة: lit tiles */
+.xc{background:linear-gradient(160deg,#22305a,#161f40);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 2px 4px rgba(0,0,0,.35)}
+.xc.blank{box-shadow:none;background:transparent}
+.xc.inw{background:linear-gradient(160deg,#245a62,#17404a)}
+.xc.ok{color:#7ff5de;text-shadow:0 0 8px rgba(95,242,214,.5)}
+/* نونوجرام: soft board */
+.ncell{background:#141c38;box-shadow:inset 0 0 0 .5px #26305a}
