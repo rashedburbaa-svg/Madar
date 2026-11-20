@@ -666,3 +666,4 @@ body.colfull .tabbar{background:rgba(10,14,30,.92)}
 @keyframes carm{to{transform:rotate(-8deg)}}
 .cscene .cre .ul{animation:cul 1.2s steps(1) infinite}.cscene .cre .u1{animation-delay:.24s}.cscene .cre .u2{animation-delay:.48s}.cscene .cre .u3{animation-delay:.72s}.cscene .cre .u4{animation-delay:.96s}
 @keyframes cul{0%{opacity:1}50%{opacity:.2}}
+.cscene .cre.idle .lg,.cscene .cre.idle .ooze{animation-play-state:paused}

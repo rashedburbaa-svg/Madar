@@ -368,12 +368,24 @@ function towersRaw(half){let s='';const L=col.b.tower||0,n=towerN(),t=tierOf(L);
 /* creatures move under script control so the towers can aim at them */
 const CHP={alien:3,bug:2,blob:7,beast:12,ufo:9};
 function creaturesSVG(){const n=Math.min(ROAM.length,3+Math.floor(col.b.hq/2)+(col.b.def?1:0)+Math.floor((col.b.tower||0)/3));let s='';
-  for(let i=0;i<n;i++){const [t,path]=ROAM[i];s+=`<path id="rp${i}" d="${path}" fill="none" stroke="none"/><g class="cre" data-i="${i}" data-cre="${t}" role="button" tabindex="0" aria-label="كائن فضائي"><g class="cflip"><g transform="scale(${t==='ufo'?1.2:1.05})"><ellipse cx="0" cy="${CTOP[t]/2}" rx="${t==='beast'?30:20}" ry="${-CTOP[t]/2+4}" fill="transparent"/>${CRE[t]}</g></g><g class="hpb" opacity="0"><rect x="-12" y="${Math.round(CTOP[t]*(t==='ufo'?1.2:1.05))-7}" width="24" height="3.4" rx="1.7" fill="#0008"/><rect class="hpf" x="-12" y="${Math.round(CTOP[t]*(t==='ufo'?1.2:1.05))-7}" width="24" height="3.4" rx="1.7" fill="#7ddc5a"/></g></g>`}
+  for(let i=0;i<n;i++){const t=ROAM[i][0];s+=`<g class="cre" data-i="${i}" data-cre="${t}" role="button" tabindex="0" aria-label="كائن فضائي"><g class="cflip"><g transform="scale(${t==='ufo'?1.2:1.05})"><ellipse cx="0" cy="${CTOP[t]/2}" rx="${t==='beast'?30:20}" ry="${-CTOP[t]/2+4}" fill="transparent"/>${CRE[t]}</g></g><g class="hpb" opacity="0"><rect x="-12" y="${Math.round(CTOP[t]*(t==='ufo'?1.2:1.05))-7}" width="24" height="3.4" rx="1.7" fill="#0008"/><rect class="hpf" x="-12" y="${Math.round(CTOP[t]*(t==='ufo'?1.2:1.05))-7}" width="24" height="3.4" rx="1.7" fill="#7ddc5a"/></g></g>`}
   return s+'<g id="cshots"></g>'}
-const BT={cr:[],tw:[],shots:[],raf:0,last:0};
+const BT={cr:[],tw:[],shots:[],raf:0,last:0,pos:{}};
+/* free roaming: each creature picks its own destinations outside the fence, wanders, pauses, sometimes tests the fence */
+const SPEED={alien:15,bug:28,beast:10,blob:7,ufo:32};
+const fenceR=(x,y)=>Math.hypot((x-FEN.cx)/FEN.rx,(y-FEN.cy)/FEN.ry);
+function okSpot(t,x,y){if(t==='ufo')return x>-100&&x<460&&y>150&&y<300;return x>-95&&x<455&&y>300&&y<770&&fenceR(x,y)>1.1}
+function spawnPt(t){for(let k=0;k<60;k++){const x=-95+Math.random()*550,y=t==='ufo'?150+Math.random()*150:300+Math.random()*470;if(okSpot(t,x,y))return {x,y,t}}return {x:-80,y:700,t}}
+function pickTarget(c){if(c.t!=='ufo'&&Math.random()<0.25){const a=Math.random()*Math.PI*2,x=FEN.cx+Math.cos(a)*FEN.rx*1.13,y=FEN.cy+Math.sin(a)*FEN.ry*1.13;if(okSpot(c.t,x,y)){c.tx=x;c.ty=y;return}}
+  for(let k=0;k<30;k++){const r=c.t==='ufo'?200:40+Math.random()*130,a=Math.random()*Math.PI*2,x=c.x+Math.cos(a)*r,y=c.y+Math.sin(a)*r*(c.t==='ufo'?0.3:0.7);if(okSpot(c.t,x,y)){c.tx=x;c.ty=y;return}}const p=spawnPt(c.t);c.tx=p.x;c.ty=p.y}
+function stepCreature(c,dt){if(c.wait>0){c.wait-=dt;c.el.classList.add('idle');return}c.el.classList.remove('idle');
+  const dx=c.tx-c.x,dy=c.ty-c.y,d=Math.hypot(dx,dy);if(d<3){c.wait=c.t==='ufo'?0.3+Math.random():0.6+Math.random()*2.6;pickTarget(c);return}
+  let nx=c.x+dx/d*c.sp*dt,ny=c.y+dy/d*c.sp*dt;
+  if(c.t!=='ufo'&&fenceR(nx,ny)<1.1){const a=Math.atan2((ny-FEN.cy)/FEN.ry,(nx-FEN.cx)/FEN.rx),side=((dx*-Math.sin(a)+dy*Math.cos(a))>=0?1:-1)*0.04;nx=FEN.cx+Math.cos(a+side)*FEN.rx*1.1;ny=FEN.cy+Math.sin(a+side)*FEN.ry*1.1}
+  if(Math.abs(nx-c.x)>0.05)c.face=nx>c.x?1:-1;c.x=nx;c.y=ny}
 function battleInit(){const svg=$('cscene');BT.cr=[];BT.tw=[];BT.shots=[];if(!svg)return;
-  svg.querySelectorAll('.cre').forEach(el=>{const i=+el.dataset.i,[t,,dur]=ROAM[i],p=$('rp'+i);if(!p)return;const max=CHP[t]+Math.floor(col.b.hq/3);
-    BT.cr.push({el,t,p,len:p.getTotalLength(),dur,off:i*3.7,hp:max,max,dead:0,x:0,y:0,flip:el.querySelector('.cflip'),hpb:el.querySelector('.hpb'),hpf:el.querySelector('.hpf')})});
+  svg.querySelectorAll('.cre').forEach(el=>{const i=+el.dataset.i,t=ROAM[i][0],max=CHP[t]+Math.floor(col.b.hq/3),keep=BT.pos[i],p=keep&&keep.t===t?keep:spawnPt(t);
+    const c={el,t,i,hp:max,max,dead:0,x:p.x,y:p.y,tx:p.x,ty:p.y,wait:Math.random()*2,face:1,sp:SPEED[t]*(0.8+Math.random()*0.4),flip:el.querySelector('.cflip'),hpb:el.querySelector('.hpb'),hpf:el.querySelector('.hpf')};pickTarget(c);BT.cr.push(c)});
   const L=col.b.tower||0,tier=tierOf(L);
   svg.querySelectorAll('.tow:not(.wg)').forEach(el=>{const i=+el.dataset.t,[x,y]=fp(TDEG[i]*Math.PI/180);BT.tw.push({x:x+2*1.4,y:y-26*1.4,head:el.querySelector('.thead'),tier,dmg:1+Math.floor(L/2)+(tier==='plasma'?2:0),cd:i*0.37,rate:tier==='gun'?0.45:tier==='laser'?1.1:1.6,range:tier==='plasma'?240:200,ox:2,oy:-26,ang:0})});
   svg.querySelectorAll('.wgun').forEach(el=>{const d=+el.dataset.deg,[x,y]=fp(d*Math.PI/180),h=fenceStyle(col.b.wall).h+5;BT.tw.push({x,y:y-h,head:el.querySelector('.thead'),tier:'gun',dmg:1,cd:d/180,rate:0.9,range:150,ox:0,oy:-h,ang:0})});
@@ -383,9 +395,8 @@ function svgEl(tag,attrs){const e=document.createElementNS('http://www.w3.org/20
 function battleTick(now){BT.raf=requestAnimationFrame(battleTick);const dt=Math.min(0.05,(now-BT.last)/1000);BT.last=now;
   if($('hub').hidden||$('pColony').hidden||document.hidden||!$('cscene'))return;const calm=matchMedia('(prefers-reduced-motion: reduce)').matches;
   for(const c of BT.cr){if(!c.el.isConnected)continue;
-    if(c.dead){if(now>c.dead){c.dead=0;c.hp=c.max;c.el.style.opacity='';c.el.classList.remove('gone')}else continue}
-    const q=calm?crPos(c,0):crPos(c,now);c.x=q.x;c.y=q.y;c.el.setAttribute('transform',`translate(${q.x.toFixed(1)} ${q.y.toFixed(1)})`);
-    const dir=(q.fwd?1:-1)*(c.p.getPointAtLength(c.len).x>c.p.getPointAtLength(0).x?1:-1);c.flip.setAttribute('transform',dir<0?'scale(-1 1)':'')}
+    if(c.dead){if(now>c.dead){c.dead=0;c.hp=c.max;const p=spawnPt(c.t);c.x=p.x;c.y=p.y;pickTarget(c);c.el.classList.remove('gone')}else continue}
+    if(!calm)stepCreature(c,dt);BT.pos[c.i]={x:c.x,y:c.y,t:c.t};c.el.setAttribute('transform',`translate(${c.x.toFixed(1)} ${c.y.toFixed(1)})`);c.flip.setAttribute('transform',c.face<0?'scale(-1 1)':'')}
   if(calm)return;
   for(const w of BT.tw){w.cd-=dt;let best=null,bd=1e9;for(const c of BT.cr){if(c.dead||!c.el.isConnected)continue;const d=Math.hypot(c.x-w.x,c.y-12-w.y);if(d<w.range&&d<bd){bd=d;best=c}}
     if(!best)continue;const ang=Math.atan2(best.y-12-w.y,best.x-w.x)*180/Math.PI;w.ang+=((ang-w.ang+540)%360-180)*Math.min(1,dt*8);w.head.setAttribute('transform',`translate(${w.ox} ${w.oy}) rotate(${w.ang.toFixed(1)})`);
