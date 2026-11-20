@@ -432,24 +432,34 @@ let sheetId=null;
 function openSheet(id){sheetId=id;let m=$('csheet');if(!m){m=document.createElement('div');m.id='csheet';m.className='csheet';m.innerHTML='<div class="csb"></div><div class="csp" role="dialog" aria-modal="true"><button class="csx" type="button" aria-label="إغلاق">✕</button><div class="csc"></div></div>';document.body.appendChild(m);
     m.querySelector('.csb').onclick=closeSheet;m.querySelector('.csx').onclick=closeSheet}
   renderSheet();m.hidden=false;requestAnimationFrame(()=>m.classList.add('on'))}
-function renderSheet(){const m=$('csheet');if(!m||!sheetId)return;const c=m.querySelector('.csc');c.innerHTML=cardHTML(sheetId);bindActions(c)}
+function renderSheet(){const m=$('csheet');if(!m||!sheetId)return;const c=m.querySelector('.csc');
+  if(sheetId==='list'){c.innerHTML=listHTML();c.querySelectorAll('[data-open]').forEach(r=>r.onclick=e=>{if(e.target.closest('[data-up]'))return;snd('tap');openSheet(r.dataset.open)})}else c.innerHTML=cardHTML(sheetId);bindActions(c)}
+/* every building in one list: you choose what to build next */
+function listHTML(){let h=`<h3 class="lh">🏗️ المباني <small>${col.build?'البناء مشغول: '+BLD[col.build.id].name:'اختر ما تريد تطويره'}</small></h3><div class="blist">`;
+  for(const id of BORDER){const B=BLD[id],L=col.b[id],locked=B.req&&col.b.hq<B.req,max=L>=(B.max||10),needHq=!locked&&!max&&id!=='hq'&&L>col.b.hq,c=upCost(id),ok=!locked&&!max&&!needHq&&canPay(c)&&!col.build;
+    const st=locked?`🔒 القيادة ${B.req}`:max?'✔️ الأعلى':col.build&&col.build.id===id?'🏗️ قيد البناء':needHq?`🔒 القيادة ${L}`:costHTML(c);
+    h+=`<div class="brow${ok?' ok':''}" data-open="${id}" role="button" tabindex="0"><span class="bi"><svg viewBox="-52 -64 104 76">${art(id,Math.max(1,L))}</svg></span><span class="bt"><b>${B.name}</b><small>${L?`مستوى ${L} <i class="tchip" style="--t:${TINT[L]||'#d6dee8'}">${TNAME[L]}</i>`:'غير مبني'}</small><span class="bc">${st}</span></span>${!locked&&!max&&!needHq&&!(col.build&&col.build.id===id)?`<button class="btn${ok?' main':''}" type="button" data-up="${id}">${L?'⬆️ '+(L+1):'🏗️'}</button>`:''}</div>`}
+  return h+'</div>'}
 function closeSheet(){const m=$('csheet');sheetId=null;if(!m)return;m.classList.remove('on');setTimeout(()=>{if(!sheetId)m.hidden=true},250)}
 function rankChip(){try{const i=rankOf(prof.xp);return `<span class="crk">${RANKS[i][2]} ${RANKS[i][1]}</span>`}catch(e){return ''}}
 function renderColony(){const host=$('colony');if(!host)return;accrue();raidCheck();questCheck();const Q=QUESTS[col.q];
-  let h=`<div class="cscene-wrap">${sceneSVG()}</div><div class="ctop"><div class="cres">${resBar()}</div><div class="crow">${rankChip()}${col.intro&&chestReady()?'<button class="cchestb" type="button" aria-label="مكافأة اليوم">🎁</button>':''}</div></div><div class="cbot"><button class="ccall" type="button" hidden>⤓ جمع الكل</button>${raidSoon()?`<div class="craid"><span>⚠️ غارة بعد <b data-raid>${fmtDur((col.raid.at-Date.now())/1000)}</b></span><button class="btn" type="button" data-go="survive">🛡️ دافع</button></div>`:''}`;
+  let h=`<div class="cscene-wrap">${sceneSVG()}</div><div class="ctop"><div class="cres">${resBar()}</div><div class="crow">${rankChip()}${col.intro&&chestReady()?'<button class="cchestb" type="button" aria-label="مكافأة اليوم">🎁</button>':''}</div></div><div class="cbot"><div class="cbrow"><button class="cbtn" type="button" data-list aria-label="كل المباني">🏗️ المباني</button><button class="ccall" type="button" hidden>⤓ جمع الكل</button></div>${raidSoon()?`<div class="craid"><span>⚠️ غارة بعد <b data-raid>${fmtDur((col.raid.at-Date.now())/1000)}</b></span><button class="btn" type="button" data-go="survive">🛡️ دافع</button></div>`:''}`;
   if(col.build){const B=BLD[col.build.id],left=(col.build.end-Date.now())/1000,pc=Math.min(100,100-left/col.build.len*100);
     h+=`<div class="cbuild"><span>🏗️ <b>${B.name}</b> ← ${col.b[col.build.id]+1}</span><span class="ct" data-t>${fmtDur(left)}</span><button class="btn" type="button" data-rush aria-label="إنهاء الآن">⚡ 💎 <span data-rc>${Math.max(1,Math.ceil(left/60))}</span></button><i><u data-p style="width:${pc}%"></u></i></div>`}
-  if(Q)h+=`<button class="qt" type="button" data-to="${Q.go?'g:'+Q.go:'b:'+Q.b}"><span class="qi">🎯</span><b></b><span class="qr">${Object.entries(Q.r).map(([k,n])=>'+'+n+' '+RES[k][1]).join(' ')}</span><i class="qa" aria-hidden="true">‹</i></button>`;
+  if(Q&&col.qhide)h+=`<button class="qmini" type="button" data-qshow aria-label="إظهار الهدف">🎯</button>`;
+  else if(Q)h+=`<div class="qwrap"><button class="qhide" type="button" data-qhide aria-label="إخفاء الهدف">✕</button><button class="qt" type="button" data-to="${Q.go?'g:'+Q.go:'b:'+Q.b}"><span class="qi">🎯</span><b></b><span class="qr">${Object.entries(Q.r).map(([k,n])=>'+'+n+' '+RES[k][1]).join(' ')}</span><i class="qa" aria-hidden="true">‹</i></button></div>`;
   else h+=`<div class="qt"><span class="qi">🚀</span><b>الفصل الثاني قريباً</b></div>`;
   h+='</div><div class="czoom"><button type="button" data-z="in" aria-label="تكبير">＋</button><button type="button" data-z="out" aria-label="تصغير">－</button><button type="button" data-z="fit" aria-label="عرض الكل">⤢</button></div>';host.innerHTML=h;
-  if(Q)host.querySelector('.qt b').textContent=Q.t;
+  {const qb=host.querySelector('.qt b');if(Q&&qb)qb.textContent=Q.t}
   host.querySelectorAll('[data-z]').forEach(b=>b.onclick=()=>{snd('tap');const z=b.dataset.z;if(z==='fit'){cam.z=1;cam.x=180;cam.y=null;camView()}else camZoom(z==='in'?1.3:1/1.3)});camBind();battleInit();
   bindActions(host);const rb=host.querySelector('[data-rush]');if(rb)rb.onclick=rush;
   host.querySelectorAll('.cb').forEach(g=>{const go=()=>{if(camDrag)return;snd('tap');g.classList.remove('tap');void g.getBoundingClientRect();g.classList.add('tap');openSheet(g.dataset.b)};g.onclick=go;g.onkeydown=e=>{if(e.key==='Enter')go()}});
   host.querySelectorAll('.tow').forEach(t=>{const go=()=>{if(camDrag)return;snd('tap');openSheet('tower')};t.onclick=go;t.onkeydown=e=>{if(e.key==='Enter')go()}});
   host.querySelectorAll('.cre').forEach(c=>{const go=()=>{if(camDrag)return;snd('tap');if(col.b.def){const G=GAMES.find(x=>x.id==='survive');closeSheet();if(G)openGame(G)}else{toast('👾 ابنِ منظومة الدفاع لصدّهم');focusB('def')}};c.onclick=go;c.onkeydown=e=>{if(e.key==='Enter')go()}});
   host.querySelectorAll('.bub').forEach(b=>{const go=e=>{if(camDrag)return;e&&e.stopPropagation();collect(b.dataset.c)};b.onclick=go;b.onkeydown=e=>{if(e.key==='Enter')go(e)}});
-  const ca=host.querySelector('.ccall');if(ca)ca.onclick=collectAll;const cb=host.querySelector('.cchestb');if(cb)cb.onclick=()=>{snd('tap');chestBox()};
+  const ca=host.querySelector('.ccall');if(ca)ca.onclick=collectAll;
+  const lb=host.querySelector('[data-list]');if(lb)lb.onclick=()=>{snd('tap');openSheet('list')};
+  const qh=host.querySelector('[data-qhide]');if(qh)qh.onclick=()=>{col.qhide=1;colSave();snd('tap');renderColony()};const qs=host.querySelector('[data-qshow]');if(qs)qs.onclick=()=>{col.qhide=0;colSave();snd('tap');renderColony()};const cb=host.querySelector('.cchestb');if(cb)cb.onclick=()=>{snd('tap');chestBox()};
   updBubbles();raidShow();
   renderSheet();colSave();
   if(!col.intro){col.intro=1;colSave();storyBox('تحطّمت المركبة!','ابنِ المستعمرة وأصلح المركبة. كل فوز في الألعاب يجلب موارد.','لنبدأ')}
@@ -491,7 +501,7 @@ function nightLights(){if(phase()==='day')return '';let s='<rect class="nightvei
   return s}
 
 /* --- guide: a bouncing arrow over where the current objective is done --- */
-function guideSVG(){const Q=QUESTS[col.q];if(!Q)return '';const id=Q.b||GAMEOF[Q.go];if(!id||!SLOT[id])return '';const B=BLD[id];const tgt=(B&&B.req&&col.b.hq<B.req)?'hq':id;const [x,y,sc]=SLOT[tgt];
+function guideSVG(){const Q=QUESTS[col.q];if(!Q||col.qhide)return '';const id=Q.b||GAMEOF[Q.go];if(!id||!SLOT[id])return '';const B=BLD[id];const tgt=(B&&B.req&&col.b.hq<B.req)?'hq':id;const [x,y,sc]=SLOT[tgt];
   return `<g class="guide" transform="translate(${x} ${y-(tgt==='wall'?52:80*sc)})" aria-hidden="true"><g class="gbounce"><path d="M-9 -16 h18 v10 h8 L0 8 L-17 -6 h8Z" fill="#ffd34d" stroke="#7a5a10" stroke-width="1.4" stroke-linejoin="round"/></g></g>`}
 
 /* --- daily chest: 7-day streak --- */
