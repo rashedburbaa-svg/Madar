@@ -62,25 +62,25 @@ function colonyReward(id,stars,info){const bid=GAMEOF[id];if(!bid)return;accrue(
 
 /* chapter one: guided objectives told by «نجم», the ship's assistant */
 const QUESTS=[
-  {t:'طوّر منجم المعادن إلى المستوى 2',ok:()=>col.b.mine>=2,r:{e:120},say:'القائد؟ أنا نجم، مساعد المركبة. تحطّمنا، لكن الطاقم بخير. نحتاج معادن أولاً.'},
+  {b:'mine',t:'طوّر منجم المعادن إلى المستوى 2',ok:()=>col.b.mine>=2,r:{e:120},say:'القائد؟ أنا نجم، مساعد المركبة. تحطّمنا، لكن الطاقم بخير. نحتاج معادن أولاً.'},
   {t:'أصلح شبكة الطاقة: اربح مستوى في «شبكة المدار»',ok:()=>(col.wins.grid||0)>=1,r:{m:150},go:'grid',say:'الشبكة الكهربائية تضررت في الهبوط. وصّل القطع لتضيء المستعمرة.'},
-  {t:'طوّر مركز القيادة إلى المستوى 2',ok:()=>col.b.hq>=2,r:{f:150},say:'مركز قيادة أكبر يعني مخازن أكبر ومبانيَ جديدة.'},
+  {b:'hq',t:'طوّر مركز القيادة إلى المستوى 2',ok:()=>col.b.hq>=2,r:{f:150},say:'مركز قيادة أكبر يعني مخازن أكبر ومبانيَ جديدة.'},
   {t:'امسح حقل التعدين: اربح مستوى في «حقل الكويكبات»',ok:()=>(col.wins.mines||0)>=1,r:{e:200},go:'mines',say:'وجدنا عروقاً غنية بالمعادن، لكن حولها صخور متفجرة. امشِ بحذر.'},
-  {t:'ابنِ برج الاتصالات',ok:()=>col.b.radio>=1,r:{m:200,c:5},say:'أسمع تشويشاً في اللاسلكي… كأن أحداً يرسل لنا. نحتاج برجاً.'},
+  {b:'radio',t:'ابنِ برج الاتصالات',ok:()=>col.b.radio>=1,r:{m:200,c:5},say:'أسمع تشويشاً في اللاسلكي… كأن أحداً يرسل لنا. نحتاج برجاً.'},
   {t:'فك أول شفرة: اربح مستوى في «الكلمات المتقاطعة»',ok:()=>(col.wins.words||0)>=1,r:{c:10},go:'words',say:'الإشارة مشفّرة بالكلمات! حلّ الشبكة لنفهم الرسالة.'},
-  {t:'طوّر المزرعة المائية إلى المستوى 3',ok:()=>col.b.farm>=3,r:{m:250,e:250},say:'الرسالة تقول: «لستم أول من سقط هنا». الطاقم جائع وقلق… لنزرع أكثر.'},
-  {t:'ابنِ المرصد',ok:()=>col.b.obs>=1,r:{f:250},say:'من المرصد نرى الكوكب كله. ربما نجد حطام من سبقونا.'},
+  {b:'farm',t:'طوّر المزرعة المائية إلى المستوى 3',ok:()=>col.b.farm>=3,r:{m:250,e:250},say:'الرسالة تقول: «لستم أول من سقط هنا». الطاقم جائع وقلق… لنزرع أكثر.'},
+  {b:'obs',t:'ابنِ المرصد',ok:()=>col.b.obs>=1,r:{f:250},say:'من المرصد نرى الكوكب كله. ربما نجد حطام من سبقونا.'},
   {t:'حلّل صور القمر الصناعي: اربح مستوى في «أوجد الاختلاف»',ok:()=>(col.wins.diff||0)>=1,r:{c:15},go:'diff',say:'قارن الصورتين: كل اختلاف أثرٌ لشيء يتحرك على السطح.'},
-  {t:'طوّر مركز القيادة إلى المستوى 3',ok:()=>col.b.hq>=3,r:{m:400,e:300},say:'الصور كشفت كائنات تقترب من المستعمرة. يجب أن نستعد.'},
-  {t:'ابنِ منظومة الدفاع',ok:()=>col.b.def>=1,r:{f:300},say:'الدفاع أولاً. إن جاءت الغارة نريد أن نصمد.'},
+  {b:'hq',t:'طوّر مركز القيادة إلى المستوى 3',ok:()=>col.b.hq>=3,r:{m:400,e:300},say:'الصور كشفت كائنات تقترب من المستعمرة. يجب أن نستعد.'},
+  {b:'def',t:'ابنِ منظومة الدفاع',ok:()=>col.b.def>=1,r:{f:300},say:'الدفاع أولاً. إن جاءت الغارة نريد أن نصمد.'},
   {t:'صدّ الغارة: اصمد دقيقتين في «صمود المدار»',ok:()=>(col.surv||0)>=120,r:{c:25},go:'survive',say:'إنهم هنا! اخرج بالبدلة وأبعدهم عن المباني.'},
-  {t:'ابنِ حوض الإصلاح',ok:()=>col.b.dock>=1,r:{m:300,e:300},say:'صدّيناهم. حان وقت العمل الحقيقي: إصلاح المركبة والخروج من هنا.'},
-  {t:'أصلح محرك المركبة',ok:()=>!!col.ship.engine,r:{c:20},say:'المحرك أهم جزء. بدونه لن نرتفع متراً واحداً.'},
-  {t:'طوّر المساكن إلى المستوى 4',ok:()=>col.b.habitat>=4,r:{m:500,f:400},say:'وصلتنا إشارة استغاثة من ناجين آخرين! سنستقبلهم، وسيساعدوننا في العمل.'},
-  {t:'أصلح نظام الملاحة',ok:()=>!!col.ship.nav,r:{c:30},say:'الملاحة تعمل. الإحداثيات تشير إلى مصدر الإشارة الغامضة… خارج هذا الكوكب.'},
-  {t:'طوّر مركز القيادة إلى المستوى 5',ok:()=>col.b.hq>=5,r:{e:800,f:500},say:'نحتاج مستعمرة أقوى لنصنع بقية الأجزاء الثقيلة.'},
-  {t:'أصلح الدرع الحراري والهوائي',ok:()=>!!(col.ship.shield&&col.ship.antenna),r:{c:40},say:'الدرع يحمينا عند الخروج من الغلاف الجوي، والهوائي يبقينا على اتصال.'},
-  {t:'أصلح الهيكل وأكمل المركبة',ok:()=>PARTS.every(p=>col.ship[p[0]]),r:{c:60},say:'آخر جزء! بعدها ننطلق لنكشف سرّ الإشارة.'}
+  {b:'dock',t:'ابنِ حوض الإصلاح',ok:()=>col.b.dock>=1,r:{m:300,e:300},say:'صدّيناهم. حان وقت العمل الحقيقي: إصلاح المركبة والخروج من هنا.'},
+  {b:'dock',t:'أصلح محرك المركبة',ok:()=>!!col.ship.engine,r:{c:20},say:'المحرك أهم جزء. بدونه لن نرتفع متراً واحداً.'},
+  {b:'habitat',t:'طوّر المساكن إلى المستوى 4',ok:()=>col.b.habitat>=4,r:{m:500,f:400},say:'وصلتنا إشارة استغاثة من ناجين آخرين! سنستقبلهم، وسيساعدوننا في العمل.'},
+  {b:'dock',t:'أصلح نظام الملاحة',ok:()=>!!col.ship.nav,r:{c:30},say:'الملاحة تعمل. الإحداثيات تشير إلى مصدر الإشارة الغامضة… خارج هذا الكوكب.'},
+  {b:'hq',t:'طوّر مركز القيادة إلى المستوى 5',ok:()=>col.b.hq>=5,r:{e:800,f:500},say:'نحتاج مستعمرة أقوى لنصنع بقية الأجزاء الثقيلة.'},
+  {b:'dock',t:'أصلح الدرع الحراري والهوائي',ok:()=>!!(col.ship.shield&&col.ship.antenna),r:{c:40},say:'الدرع يحمينا عند الخروج من الغلاف الجوي، والهوائي يبقينا على اتصال.'},
+  {b:'dock',t:'أصلح الهيكل وأكمل المركبة',ok:()=>PARTS.every(p=>col.ship[p[0]]),r:{c:60},say:'آخر جزء! بعدها ننطلق لنكشف سرّ الإشارة.'}
 ];
 function questCheck(){let changed=false;while(col.q<QUESTS.length&&QUESTS[col.q].ok()){const Q=QUESTS[col.q];Object.entries(Q.r).forEach(([k,n])=>gain(k,n));
     toast('✅ هدف مكتمل: '+Q.t+' · '+Object.entries(Q.r).map(([k,n])=>'+'+n+' '+RES[k][1]).join(' '),'ach');col.q++;changed=true;addXP(25)}
@@ -142,13 +142,13 @@ function renderColony(){const host=$('colony');if(!host)return;accrue();questChe
   if(col.build){const B=BLD[col.build.id],left=(col.build.end-Date.now())/1000,pc=Math.min(100,100-left/col.build.len*100);
     h+=`<div class="cbuild"><span>🏗️ يُبنى: <b>${B.name}</b> ← المستوى ${col.b[col.build.id]+1}</span><span class="ct" data-t>${fmtDur(left)}</span><i><u data-p style="width:${pc}%"></u></i><button class="btn" type="button" data-rush>إنهاء الآن 💎 <span data-rc>${Math.max(1,Math.ceil(left/60))}</span></button></div>`}
   if(Q){const G=Q.go&&GAMES.find(x=>x.id===Q.go);
-    h+=`<div class="cquest"><div class="qh"><span>🤖 نجم</span><small>هدف ${col.q+1} من ${QUESTS.length}</small></div><p class="say"></p><div class="qt"><b></b><span class="qr">${Object.entries(Q.r).map(([k,n])=>'+'+n+' '+RES[k][1]).join(' ')}</span></div>${G?'<button class="btn main" type="button" data-go="'+Q.go+'">🎮 ابدأ المهمة</button>':''}</div>`}
+    h+=`<div class="cquest"><div class="qh"><span>🤖 نجم</span><small>هدف ${col.q+1} من ${QUESTS.length}</small></div><p class="say"></p><button class="qt" type="button" data-to="${Q.go?'g:'+Q.go:'b:'+Q.b}"><b></b><span class="qr">${Object.entries(Q.r).map(([k,n])=>'+'+n+' '+RES[k][1]).join(' ')}</span><i class="qa" aria-hidden="true">‹</i></button>${G?'<button class="btn main" type="button" data-go="'+Q.go+'">🎮 ابدأ المهمة</button>':''}</div>`}
   else h+=`<div class="cquest"><div class="qh"><span>🤖 نجم</span></div><p class="say">أكملت الفصل الأول! الفصل الثاني قادم قريباً.</p></div>`;
   h+='<h3 class="sec">المباني</h3><div class="clist">';
   for(const id of BORDER){const B=BLD[id],L=col.b[id],locked=B.req&&col.b.hq<B.req,max=L>=(B.max||10),G=B.game&&GAMES.find(x=>x.id===B.game),c=upCost(id);
     const info=B.prod&&L?`${RES[B.prod[0]][1]} +${B.prod[0]==='c'?(B.prod[1]*L*Math.pow(1.15,L-1)*mult()).toFixed(1):fmtN(B.prod[1]*L*Math.pow(1.15,L-1)*mult())}/س`:id==='hq'?`📦 ${fmtN(cap())}`:id==='habitat'?`🧑‍🚀 ${crew()}`:id==='def'&&L?`غنائم +${col.b.def*20}%`:'';
-    h+=`<div class="cbc${locked?' locked':''}" id="cb-${id}"><div class="ch"><span class="ci"><svg viewBox="-40 -62 80 72">${art(id,Math.max(1,L))}</svg></span><span class="ctt"><b>${B.name}</b><small>${locked?'🔒 يحتاج مركز القيادة '+B.req:L?'المستوى '+L+(info?' · '+info:''):'غير مبني'}</small></span></div><p class="cd">${B.desc}</p>`;
-    if(!locked&&!max&&id!=='hq'&&L>col.b.hq)h+='<p class="cd need">⬆️ طوّر مركز القيادة إلى '+(L)+' لتطوير هذا المبنى</p>';
+    h+=`<div class="cbc${locked?' locked':''}" id="cb-${id}"><div class="ch"><span class="ci"><svg viewBox="-40 -62 80 72">${art(id,Math.max(1,L))}</svg></span><span class="ctt"><b>${B.name}</b><small>${locked?'<span class="golink" data-to="b:hq" role="button" tabindex="0">🔒 يحتاج مركز القيادة '+B.req+' ‹</span>':L?'المستوى '+L+(info?' · '+info:''):'غير مبني'}</small></span></div><p class="cd">${B.desc}</p>`;
+    if(!locked&&!max&&id!=='hq'&&L>col.b.hq)h+='<button class="cd need" type="button" data-to="b:hq">⬆️ طوّر مركز القيادة إلى '+(L)+' لتطوير هذا المبنى ‹</button>';
     else if(!locked&&!max)h+=`<div class="ccost">${costHTML(c)}<span class="cc time">⏱️ ${fmtDur(upTime(id))}</span></div><button class="btn${L?'':' main'}" type="button" data-up="${id}">${L?'تطوير إلى '+(L+1):'بناء'}</button>`;
     else if(max)h+='<p class="cd">✔️ أعلى مستوى</p>';
     if(G&&L)h+=`<button class="btn task" type="button" data-go="${B.game}">🎮 ${B.task}</button>`;
@@ -160,10 +160,15 @@ function renderColony(){const host=$('colony');if(!host)return;accrue();questChe
   host.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{const G=GAMES.find(x=>x.id===b.dataset.go);if(G)openGame(G)});
   host.querySelectorAll('[data-fix]').forEach(b=>b.onclick=()=>repair(+b.dataset.fix));
   const rb=host.querySelector('[data-rush]');if(rb)rb.onclick=rush;
-  host.querySelectorAll('.cb').forEach(g=>{const go=()=>{const el=$('cb-'+g.dataset.b);if(!el)return;snd('tap');el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash')};g.onclick=go;g.onkeydown=e=>{if(e.key==='Enter')go()}});
+  host.querySelectorAll('.cb').forEach(g=>{const go=()=>focusB(g.dataset.b);g.onclick=go;g.onkeydown=e=>{if(e.key==='Enter')go()}});
+  host.querySelectorAll('[data-to]').forEach(el=>{const go=()=>goTo(el.dataset.to);el.onclick=go;el.onkeydown=e=>{if(e.key==='Enter')go()}});
   colSave();
   if(!col.intro){col.intro=1;colSave();storyBox('تحطّمت المركبة!','هبطت مركبة «المدار» اضطرارياً على كوكب مجهول. الطاقم نجا، لكن المركبة محطّمة. ابنِ مستعمرة، اجمع الموارد، وأصلح المركبة لتكشف سرّ الإشارة التي أسقطتكم. كل لعبة تفوز بها تمدّ المستعمرة بالموارد.','لنبدأ')}
 }
+/* tapping a written task takes you to it: a game opens, a building card is brought into view */
+function focusB(id){const el=$('cb-'+id);if(!el)return;snd('tap');el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash')}
+function goTo(to){const [k,v]=(to||'').split(':');if(k==='g'){const G=GAMES.find(x=>x.id===v);if(G)openGame(G);return}
+  if(k==='b'){const B=BLD[v];if(v!=='hq'&&B&&B.req&&col.b.hq<B.req){toast('🔒 '+B.name+' يحتاج مركز القيادة '+B.req+' أولاً');focusB('hq');return}focusB(v)}}
 // live numbers once a second while the colony is on screen
 setInterval(()=>{const host=$('colony');if(!host||$('hub').hidden||$('pColony').hidden||document.hidden)return;
   const had=col.build&&col.build.id;accrue();if(had&&!col.build){renderColony();return}
