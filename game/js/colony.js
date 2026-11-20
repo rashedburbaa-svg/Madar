@@ -33,7 +33,7 @@ const canPay=c=>Object.keys(c).every(k=>col.res[k]>=c[k]);
 function pay(c){Object.keys(c).forEach(k=>col.res[k]-=c[k])}
 function gain(k,n){if(k==='c'){col.res.c+=n;return}const C=cap();col.res[k]=Math.max(col.res[k],Math.min(C,col.res[k]+n))}
 const fmtN=n=>{n=Math.floor(n);return n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e4?(n/1e3).toFixed(1)+'k':String(n)};
-const fmtDur=s=>{s=Math.max(0,Math.ceil(s));const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;return h?h+'س '+m+'د':m?m+'د '+x+'ث':x+'ث'};
+const fmtDur=s=>{s=Math.max(0,Math.ceil(s));const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;return h?h+'س '+m+'د '+x+'ث':m?m+'د '+x+'ث':x+'ث'};
 // production accrues from the last visit, up to 24 hours away
 function accrue(){const now=Date.now(),last=col.last||now;col.last=now;let dt=Math.min(24,Math.max(0,(now-last)/3600000));
   if(col.build&&now>=col.build.end){const sp=Math.max(0,(col.build.end-last)/3600000);fillStores(Math.min(dt,sp));dt=Math.max(0,dt-sp);finishBuild()}
@@ -665,7 +665,7 @@ function goTo(to){const [k,v]=(to||'').split(':');if(k==='g'){const G=GAMES.find
 // live numbers once a second while the colony is on screen; every 4 s the producers show what they made
 let fxT=0;
 let lastPhase=null,lastRaid=null;
-setInterval(()=>{ambSync();const host=$('colony');if(!host||$('hub').hidden||$('pColony').hidden||document.hidden)return;
+setInterval(()=>{try{ambSync()}catch(e){}const host=$('colony');if(!host||$('hub').hidden||$('pColony').hidden||document.hidden)return;
   const had=col.build&&col.build.id,had2=col.build2&&col.build2.id;accrue();if(had&&!col.build){renderColony();fxRing(had);return}if(had2&&!col.build2){renderColony();fxRing(had2);return}
   if(col.build2){const left=(col.build2.end-Date.now())/1000,t=host.querySelector('[data-t2]'),p=host.querySelector('[data-p2]'),rc=host.querySelector('[data-rc2]');if(t)t.textContent=fmtDur(left);if(p)p.style.width=Math.min(100,100-left/col.build2.len*100)+'%';if(rc)rc.textContent=Math.max(1,Math.ceil(left/60))}
   document.querySelectorAll('#colony [data-r]').forEach(e=>{e.textContent=fmtN(col.res[e.dataset.r])});
