@@ -267,12 +267,82 @@ function gateRaw(){const L=col.b.wall||0,[x,y]=fp(Math.PI/2),st=fenceStyle(Math.
     ${L?`<g class="bart">${_box(-36,0,9,st.h+12,5)}${_box(27,0,9,st.h+12,5)}<path d="M-32 ${-st.h-14} Q0 ${-st.h-30} 32 ${-st.h-14}" stroke="${st.post}" stroke-width="3" fill="none"/><circle cx="0" cy="${-st.h-22}" r="2.4" fill="${L>=6?'#5ff2d6':'#ffd34d'}" class="blink"/>${L>=6?`<path d="M-27 -4 H27 M-27 -10 H27" stroke="#5ff2d6" stroke-width=".8" opacity=".5" class="efence"/>`:''}</g>`:`<g class="plot"><circle cx="0" cy="-16" r="11" fill="#0b1226cc" stroke="#9fe8ff" stroke-width="1.2"/><path d="M-5 -16h10M0 -21v10" stroke="#9fe8ff" stroke-width="2" stroke-linecap="round"/></g>`}
     ${L?lvBadge(L,30,-st.h-30):''}</g>`}
 /* creatures: little green aliens, a six-legged crawler, a horned beast, a tentacled blob and a saucer */
+const MDEFS=`<defs>
+<radialGradient id="mAH" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#d8ffc0"/><stop offset=".45" stop-color="#7fd86a"/><stop offset="1" stop-color="#2f7a3a"/></radialGradient>
+<linearGradient id="mAS" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4a6a8a"/><stop offset="1" stop-color="#1c2a40"/></linearGradient>
+<radialGradient id="mEye" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#3a3a5a"/><stop offset=".6" stop-color="#0a0a16"/><stop offset="1" stop-color="#000"/></radialGradient>
+<radialGradient id="mBug" cx="35%" cy="25%" r="80%"><stop offset="0" stop-color="#ffb070"/><stop offset=".4" stop-color="#b8582a"/><stop offset="1" stop-color="#4a1c10"/></radialGradient>
+<radialGradient id="mBugH" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#d07040"/><stop offset="1" stop-color="#3a160c"/></radialGradient>
+<radialGradient id="mBeast" cx="35%" cy="25%" r="85%"><stop offset="0" stop-color="#c79af0"/><stop offset=".45" stop-color="#7a44b0"/><stop offset="1" stop-color="#2e1450"/></radialGradient>
+<linearGradient id="mBelly" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9a6ac8" stop-opacity="0"/><stop offset="1" stop-color="#d8c0f0"/></linearGradient>
+<linearGradient id="mHorn" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#8a7a5a"/><stop offset="1" stop-color="#fff4d8"/></linearGradient>
+<radialGradient id="mGlowY" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#fff6b0"/><stop offset=".5" stop-color="#ffd34d"/><stop offset="1" stop-color="#ff9a2a" stop-opacity="0"/></radialGradient>
+<radialGradient id="mGlowR" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ffe0e0"/><stop offset=".45" stop-color="#ff3d3d"/><stop offset="1" stop-color="#ff0000" stop-opacity="0"/></radialGradient>
+<radialGradient id="mBlob" cx="38%" cy="30%" r="80%"><stop offset="0" stop-color="#ff9aa8" stop-opacity=".95"/><stop offset=".5" stop-color="#e0304a" stop-opacity=".9"/><stop offset="1" stop-color="#6a0a1a" stop-opacity=".95"/></radialGradient>
+<radialGradient id="mCore" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ffd0d8"/><stop offset=".6" stop-color="#ff6a80" stop-opacity=".6"/><stop offset="1" stop-color="#ff6a80" stop-opacity="0"/></radialGradient>
+<linearGradient id="mUfo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0f4f8"/><stop offset=".5" stop-color="#9aa6b6"/><stop offset="1" stop-color="#4a5464"/></linearGradient>
+<radialGradient id="mUfoG" cx="40%" cy="30%" r="80%"><stop offset="0" stop-color="#e8fff8" stop-opacity=".95"/><stop offset=".6" stop-color="#5ff2d6" stop-opacity=".55"/><stop offset="1" stop-color="#1a6a7a" stop-opacity=".8"/></radialGradient>
+<linearGradient id="mBeam" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9fffb8" stop-opacity=".5"/><stop offset="1" stop-color="#9fffb8" stop-opacity="0"/></linearGradient>
+</defs>`;
 const CRE={
-  alien:`<ellipse cx="0" cy="1" rx="5" ry="1.6" fill="#000" opacity=".35"/><g class="bob"><path d="M-2.5 0 L-2 -6 M2.5 0 L2 -6" stroke="#4fae5a" stroke-width="1.6" stroke-linecap="round"/><ellipse cx="0" cy="-8" rx="3.6" ry="4" fill="#5fd06a"/><ellipse cx="0" cy="-15" rx="5.4" ry="4.6" fill="#7ddc5a"/><ellipse cx="-2" cy="-15" rx="1.6" ry="2.2" fill="#111"/><ellipse cx="2" cy="-15" rx="1.6" ry="2.2" fill="#111"/><circle cx="-1.6" cy="-15.8" r=".5" fill="#fff"/><path d="M-2 -19 L-4 -24 M2 -19 L4 -24" stroke="#5fd06a" stroke-width=".9"/><circle cx="-4" cy="-24.5" r="1.1" fill="#ff5d73"/><circle cx="4" cy="-24.5" r="1.1" fill="#ff5d73"/></g>`,
-  bug:`<ellipse cx="0" cy="1" rx="9" ry="2" fill="#000" opacity=".35"/><g class="skit"><path d="M-5 -2 l-5 3 M-2 -2 l-4 4 M1 -2 l-3 4 M-5 -3 l-6 -1 M3 -2 l5 3 M5 -3 l6 1" stroke="#3a2a1a" stroke-width="1.1" stroke-linecap="round"/><ellipse cx="-1" cy="-4" rx="8" ry="4.6" fill="#8a4a2a"/><ellipse cx="-2" cy="-6" rx="6" ry="2.4" fill="#b8683a"/><ellipse cx="7" cy="-4" rx="3.4" ry="3" fill="#6a3a22"/><circle cx="8.5" cy="-5" r="1" fill="#ff3d3d"/><path d="M9 -6 l4 -4 M9 -5 l5 -2" stroke="#3a2a1a" stroke-width=".7"/></g>`,
-  beast:`<ellipse cx="0" cy="1" rx="16" ry="3.6" fill="#000" opacity=".38"/><g class="stomp"><path d="M-9 0 v-9 M-3 0 v-8 M5 0 v-8 M11 0 v-9" stroke="#3a2450" stroke-width="3.4" stroke-linecap="round"/><path d="M-14 -8 C-16 -22 8 -26 14 -14 C16 -8 10 -6 0 -6 C-8 -6 -13 -5 -14 -8Z" fill="#6a3a8a"/><path d="M-10 -18 l2 -3 l2 3 M-3 -21 l2 -3 l2 3 M4 -20 l2 -3 l2 3" fill="#9a6abf"/><path d="M12 -15 C20 -18 24 -12 20 -8 C17 -6 13 -8 12 -10Z" fill="#7a4a9a"/><path d="M15 -17 l-2 -7 l4 4 M20 -16 l2 -7 l1 6" fill="#e6d6b0"/><circle cx="19" cy="-12" r="1.5" fill="#ffd34d"/><path d="M18 -8.5 l1.5 1.5 l1 -1.5" stroke="#fff" stroke-width=".6" fill="none"/><path d="M-14 -10 C-20 -10 -22 -4 -19 -2" stroke="#6a3a8a" stroke-width="2" fill="none"/></g>`,
-  blob:`<ellipse cx="0" cy="1" rx="13" ry="3" fill="#000" opacity=".35"/><g class="ooze"><path d="M-12 0 C-14 -14 -6 -24 0 -24 C6 -24 14 -14 12 0 Q8 -4 6 0 Q2 -5 0 0 Q-3 -5 -6 0 Q-9 -4 -12 0Z" fill="#c0304a"/><path d="M-8 -12 C-6 -20 4 -22 6 -18" stroke="#ff7a8a" stroke-width="2" fill="none" opacity=".7"/><circle cx="-4" cy="-14" r="3" fill="#fff"/><circle cx="4" cy="-15" r="2.4" fill="#fff"/><circle cx="-3.4" cy="-14" r="1.4" fill="#111"/><circle cx="4.4" cy="-15" r="1.1" fill="#111"/><circle cx="0" cy="-20" r="1.8" fill="#fff" opacity=".9"/><circle cx="0.4" cy="-20" r=".9" fill="#111"/><path d="M-4 -8 Q0 -5 4 -8" stroke="#3a0a14" stroke-width="1" fill="none"/></g>`,
-  ufo:`<g class="hover"><path d="M-6 6 L-14 40 L14 40 L6 6Z" fill="#9fffb8" opacity=".14" class="beam"/><ellipse cx="0" cy="4" rx="16" ry="4.6" fill="#7a8494"/><ellipse cx="0" cy="2.6" rx="16" ry="3.4" fill="#c7cfd8"/><path d="M-7 2 C-7 -6 7 -6 7 2Z" fill="#7fe8ff" opacity=".85"/><circle cx="-10" cy="4.6" r="1.2" fill="#ffd34d" class="blink"/><circle cx="0" cy="5.6" r="1.2" fill="#ff5d73" class="blink"/><circle cx="10" cy="4.6" r="1.2" fill="#5ff2d6" class="blink"/><circle cx="-1" cy="-2" r="1.6" fill="#5fd06a"/></g>`};
+  alien:`<ellipse cx="1" cy="1" rx="9" ry="2.4" fill="#000" opacity=".4"/>
+    <g class="lg la"><path d="M-2 -14 L-4 -6 L-3 0" stroke="#1c2a40" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M-6 0 h5" stroke="#2a2e3a" stroke-width="2.4" stroke-linecap="round"/></g>
+    <g class="lg lb"><path d="M2 -14 L3 -6 L2 0" stroke="#2a3c58" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 0 h5" stroke="#3a3e4a" stroke-width="2.4" stroke-linecap="round"/></g>
+    <path d="M-6 -14 C-7 -20 -5 -26 0 -26 C5 -26 7 -20 6 -14 Z" fill="url(#mAS)"/><path d="M-5.5 -15.5 H5.5" stroke="#ffd34d" stroke-width="1.4"/><circle cx="0" cy="-20" r="1.8" fill="#5ff2d6" class="chest"/><path d="M-4 -24 C-2 -25.5 2 -25.5 4 -24" stroke="#8aa8c8" stroke-width=".8" fill="none"/>
+    <g class="garm"><path d="M5 -23 C9 -21 10 -18 12 -18" stroke="#2a3c58" stroke-width="2.6" fill="none" stroke-linecap="round"/><path d="M11 -20.5 h7 v3 h-3 l-1 2 h-2 l0 -2 h-1Z" fill="#c7cfd8" stroke="#3a4250" stroke-width=".4"/><circle cx="18.5" cy="-19" r="1.3" fill="#ff5d73" class="chest"/></g>
+    <path d="M-5 -23 C-8 -21 -9 -18 -8 -15" stroke="#1c2a40" stroke-width="2.6" fill="none" stroke-linecap="round"/><circle cx="-8" cy="-14.5" r="1.4" fill="#6fc05a"/>
+    <rect x="-1.4" y="-29" width="2.8" height="4" fill="#5fb05a"/>
+    <path d="M0 -50 C9 -50 12 -43 10 -37 C8 -32 4 -29 0 -29 C-4 -29 -8 -32 -10 -37 C-12 -43 -9 -50 0 -50 Z" fill="url(#mAH)" stroke="#2f6a34" stroke-width=".5"/>
+    <path d="M-7 -46 C-4 -49 1 -49.5 4 -48" stroke="#fff" stroke-width="1.4" fill="none" opacity=".55" stroke-linecap="round"/>
+    <g class="eyes"><path d="M1.5 -41 C4 -44 9 -43.5 9.5 -40 C9 -37.5 5 -36.5 2.5 -38 Z" fill="url(#mEye)"/><path d="M-1.5 -41 C-4 -44 -8 -43.5 -8 -40 C-7.5 -37.5 -4 -36.5 -2 -38 Z" fill="url(#mEye)"/><circle cx="6" cy="-41.5" r="1" fill="#fff"/><circle cx="7.5" cy="-39.4" r=".5" fill="#9fe8ff"/><circle cx="-4" cy="-41.5" r=".9" fill="#fff"/></g>
+    <path d="M1 -33 Q3 -32 5 -33.5" stroke="#1f4a24" stroke-width=".8" fill="none" stroke-linecap="round"/><ellipse cx="7" cy="-35" rx="1.6" ry=".8" fill="#ff9ab0" opacity=".35"/>
+    <path d="M-3 -49 C-5 -54 -7 -57 -8 -59 M3 -49 C5 -54 6 -57 8 -59" stroke="#5fb05a" stroke-width="1" fill="none"/><circle cx="-8" cy="-59.5" r="2" fill="url(#mGlowY)" class="tip"/><circle cx="8" cy="-59.5" r="2" fill="url(#mGlowY)" class="tip"/>`,
+  bug:`<ellipse cx="0" cy="1" rx="16" ry="3" fill="#000" opacity=".4"/>
+    ${[[-9,'la'],[-3,'lb']].map(([x,c])=>`<g class="lg ${c}"><path d="M${x} -6 L${x-4} -11 L${x-7} 0" stroke="#3a160c" stroke-width="1.8" fill="none" stroke-linejoin="round"/><path d="M${x-7} 0 l-1.5 .5" stroke="#1a0a06" stroke-width="1.4"/></g>`).join('')}
+    ${[[2,'lb'],[7,'la']].map(([x,c])=>`<g class="lg ${c}"><path d="M${x} -6 L${x+5} -11 L${x+9} 0" stroke="#3a160c" stroke-width="1.8" fill="none" stroke-linejoin="round"/><path d="M${x+9} 0 l1.5 .5" stroke="#1a0a06" stroke-width="1.4"/></g>`).join('')}
+    <path d="M-17 -7 C-22 -9 -24 -15 -20 -17 C-18 -14 -17 -12 -14 -11" fill="url(#mBugH)" stroke="#2a0e06" stroke-width=".5"/><path d="M-20 -17 l-2 -3 l3 1Z" fill="#ffd8a0"/>
+    <path d="M-15 -6 C-17 -16 -6 -20 2 -18 C8 -17 9 -10 8 -6 Z" fill="url(#mBug)" stroke="#2a0e06" stroke-width=".6"/>
+    <path d="M-10 -17.5 C-11 -12 -10 -8 -9 -6 M-4 -19 C-5 -13 -4 -9 -3 -6 M2 -18.5 C1.5 -13 2 -9 2.5 -6" stroke="#4a1c10" stroke-width=".9" fill="none"/>
+    <path d="M-11 -16 C-6 -19.5 0 -19 4 -17" stroke="#ffd0a0" stroke-width="1.6" fill="none" opacity=".6" stroke-linecap="round"/>
+    <path d="M6 -14 C12 -16 16 -12 15 -7 C14 -4 9 -4 7 -6 Z" fill="url(#mBugH)" stroke="#2a0e06" stroke-width=".5"/>
+    <circle cx="12.5" cy="-11" r="1.5" fill="url(#mGlowR)" class="tip"/><circle cx="10" cy="-12" r="1.1" fill="url(#mGlowR)" class="tip"/>
+    <g class="jaw"><path d="M15 -8 C19 -9 20 -6 18 -4 M15 -6 C18 -5 19 -2 16.5 -1.5" stroke="#1a0a06" stroke-width="1.3" fill="none" stroke-linecap="round"/></g>
+    <path d="M13 -13 C16 -18 19 -19 22 -20 M11 -13.5 C12 -19 14 -21 16 -23" stroke="#3a160c" stroke-width=".8" fill="none"/>`,
+  beast:`<ellipse cx="2" cy="1" rx="22" ry="4" fill="#000" opacity=".42"/>
+    <g class="lg lb"><path d="M-13 -14 C-15 -8 -15 -4 -14 0" stroke="#2e1450" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M-17 0 l2 -2 l1 2 l1 -2 l1 2" fill="#e8dcc0"/></g>
+    <g class="lg la"><path d="M8 -14 C9 -8 9 -4 9 0" stroke="#2e1450" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M6 0 l2 -2 l1 2 l1 -2 l1 2" fill="#e8dcc0"/></g>
+    <path d="M-20 -16 C-28 -16 -32 -10 -30 -4 C-29 -1 -27 0 -26 -2" stroke="#5a2c90" stroke-width="3" fill="none" stroke-linecap="round" class="tail"/>
+    <path d="M-22 -15 C-23 -27 -8 -33 4 -31 C14 -30 19 -24 18 -16 C17 -10 12 -8 4 -8 C-6 -8 -20 -8 -22 -15 Z" fill="url(#mBeast)" stroke="#24103c" stroke-width=".7"/>
+    <path d="M-18 -11 C-10 -8 2 -8 14 -11" stroke="url(#mBelly)" stroke-width="5" fill="none" opacity=".6"/>
+    ${[-17,-11,-5,1,7].map((x,i)=>`<path d="M${x} ${-28+Math.abs(i-2)*1.4} l3 -${7-Math.abs(i-2)} l3 ${7-Math.abs(i-2)}Z" fill="#e8dcc0" stroke="#8a7a5a" stroke-width=".4"/>`).join('')}
+    <path d="M-16 -24 C-8 -29 2 -29 8 -27" stroke="#d8b8ff" stroke-width="1.6" fill="none" opacity=".5" stroke-linecap="round"/>
+    <g class="lg la"><path d="M-8 -12 C-9 -7 -9 -3 -9 0" stroke="#3e1c68" stroke-width="5.4" fill="none" stroke-linecap="round"/><path d="M-12 0 l2 -2 l1 2 l1 -2 l1 2" fill="#fff4d8"/></g>
+    <g class="lg lb"><path d="M13 -12 C15 -7 15 -3 15 0" stroke="#3e1c68" stroke-width="5.4" fill="none" stroke-linecap="round"/><path d="M12 0 l2 -2 l1 2 l1 -2 l1 2" fill="#fff4d8"/></g>
+    <g class="head"><path d="M14 -24 C22 -30 32 -26 32 -19 C32 -15 30 -13 27 -13 L18 -12 C15 -14 13 -19 14 -24 Z" fill="url(#mBeast)" stroke="#24103c" stroke-width=".7"/>
+      <path d="M17 -25 C15 -33 17 -38 22 -41 C20 -36 21 -31 22 -27 Z" fill="url(#mHorn)" stroke="#6a5a3a" stroke-width=".4"/><path d="M23 -27 C24 -34 28 -37 32 -38 C29 -34 28 -30 27 -26 Z" fill="url(#mHorn)" stroke="#6a5a3a" stroke-width=".4"/>
+      <circle cx="25" cy="-21" r="3.6" fill="url(#mGlowY)" class="tip"/><circle cx="25.5" cy="-21" r="1.2" fill="#3a1a00"/>
+      <g class="jaw"><path d="M19 -14 C24 -11 30 -11 32 -14 L31 -16 L19 -16 Z" fill="#2a0c3a"/><path d="M21 -16 l1 2 l1 -2 M25 -16 l1 2 l1 -2 M29 -16 l1 2 l1 -2" fill="#fff" stroke="#fff" stroke-width=".4"/></g>
+      <circle cx="31" cy="-18.5" r=".8" fill="#24103c"/></g>`,
+  blob:`<ellipse cx="0" cy="1" rx="15" ry="3.2" fill="#000" opacity=".4"/>
+    <g class="ooze"><path d="M-15 0 C-17 -10 -13 -22 -4 -26 C4 -29 13 -24 15 -14 C17 -6 16 -2 15 0 Q12 -2 10 1 Q7 -2 4 1 Q1 -2 -2 1 Q-5 -2 -8 1 Q-11 -2 -15 0 Z" fill="url(#mBlob)" stroke="#5a0a18" stroke-width=".6"/>
+      <circle cx="-1" cy="-11" r="7" fill="url(#mCore)"/>
+      <circle class="bubl" cx="-7" cy="-6" r="1.4" fill="#ffc0c8" opacity=".7"/><circle class="bubl b2" cx="7" cy="-8" r="1" fill="#ffc0c8" opacity=".7"/><circle class="bubl b3" cx="2" cy="-4" r=".8" fill="#ffc0c8" opacity=".7"/>
+      <path d="M-11 -18 C-8 -24 -1 -26 4 -25" stroke="#fff" stroke-width="2.2" fill="none" opacity=".55" stroke-linecap="round"/><circle cx="-12" cy="-13" r="1.1" fill="#fff" opacity=".6"/>
+      <path d="M-6 0 q0 4 1.5 5 q1.5 -1 1 -5" fill="#c0203a" class="drip"/>
+      <g class="eyes"><circle cx="-4" cy="-17" r="4" fill="#fff"/><circle cx="6" cy="-18" r="3.3" fill="#fff"/><circle cx="1" cy="-23.5" r="2.4" fill="#fff"/>
+        <g class="pupils"><circle cx="-3" cy="-16.5" r="2" fill="#1a0006"/><circle cx="7" cy="-17.6" r="1.7" fill="#1a0006"/><circle cx="1.8" cy="-23.2" r="1.2" fill="#1a0006"/></g>
+        <circle cx="-4.6" cy="-18.2" r=".8" fill="#fff"/><circle cx="5.4" cy="-19.1" r=".6" fill="#fff"/></g>
+      <path d="M-4 -9 C-1 -6 4 -6 7 -9 C5 -7.5 -2 -7.5 -4 -9 Z" fill="#3a0010"/><path d="M-2 -8.2 l.8 1.2 l.8 -1.2 M2 -8.2 l.8 1.2 l.8 -1.2" fill="#fff" stroke="#fff" stroke-width=".3"/></g>`,
+  ufo:`<g class="hover"><path d="M-8 6 L-20 46 L20 46 L8 6 Z" fill="url(#mBeam)" class="beam"/>
+    <ellipse cx="0" cy="6" rx="10" ry="2.6" fill="#9fffb8" opacity=".6" class="tip"/>
+    <path d="M-22 3 C-22 7 22 7 22 3 C18 9 -18 9 -22 3 Z" fill="#3a4250"/>
+    <ellipse cx="0" cy="2.6" rx="22" ry="5.2" fill="url(#mUfo)" stroke="#2a3040" stroke-width=".5"/>
+    <path d="M-20 2 C-12 -0.5 12 -0.5 20 2" stroke="#fff" stroke-width=".9" fill="none" opacity=".7"/>
+    <g class="ufol">${[-16,-8,0,8,16].map((x,i)=>`<circle cx="${x}" cy="${4.2+Math.abs(x)*-0.04}" r="1.3" fill="${['#ffd34d','#ff5d73','#5ff2d6','#ff5d73','#ffd34d'][i]}" class="ul u${i}"/>`).join('')}</g>
+    <path d="M-10 0 C-10 -11 10 -11 10 0 Z" fill="url(#mUfoG)" stroke="#bff8ee" stroke-width=".5"/>
+    <g opacity=".85"><ellipse cx="0" cy="-3.6" rx="2.6" ry="3.2" fill="#3a8a4a"/><ellipse cx="-1" cy="-4.4" rx=".9" ry="1.2" fill="#000"/><ellipse cx="1.2" cy="-4.4" rx=".9" ry="1.2" fill="#000"/><path d="M-3 0 C-3 -2 3 -2 3 0" fill="#2a6a3a"/></g>
+    <path d="M-6 -6 C-4 -8 0 -8.6 2 -8.2" stroke="#fff" stroke-width="1.2" fill="none" opacity=".75" stroke-linecap="round"/></g>`};
+const CTOP={alien:-66,bug:-27,beast:-46,blob:-33,ufo:-14};
 const ROAM=[
   ['alien','M-55 700 C20 684 90 716 150 700',17],['beast','M-50 340 C-38 420 -56 500 -42 590',30],
   ['blob','M406 360 C396 430 412 500 400 590',26],['bug','M415 736 C360 716 300 750 230 728',13],
@@ -298,7 +368,7 @@ function towersRaw(half){let s='';const L=col.b.tower||0,n=towerN(),t=tierOf(L);
 /* creatures move under script control so the towers can aim at them */
 const CHP={alien:3,bug:2,blob:7,beast:12,ufo:9};
 function creaturesSVG(){const n=Math.min(ROAM.length,3+Math.floor(col.b.hq/2)+(col.b.def?1:0)+Math.floor((col.b.tower||0)/3));let s='';
-  for(let i=0;i<n;i++){const [t,path]=ROAM[i];s+=`<path id="rp${i}" d="${path}" fill="none" stroke="none"/><g class="cre" data-i="${i}" data-cre="${t}" role="button" tabindex="0" aria-label="كائن فضائي"><g class="cflip"><g transform="scale(${t==='ufo'?1.3:1.55})"><ellipse cx="0" cy="-10" rx="16" ry="14" fill="transparent"/>${CRE[t]}</g></g><g class="hpb" opacity="0"><rect x="-12" y="${t==='ufo'?-16:-46}" width="24" height="3.4" rx="1.7" fill="#0008"/><rect class="hpf" x="-12" y="${t==='ufo'?-16:-46}" width="24" height="3.4" rx="1.7" fill="#7ddc5a"/></g></g>`}
+  for(let i=0;i<n;i++){const [t,path]=ROAM[i];s+=`<path id="rp${i}" d="${path}" fill="none" stroke="none"/><g class="cre" data-i="${i}" data-cre="${t}" role="button" tabindex="0" aria-label="كائن فضائي"><g class="cflip"><g transform="scale(${t==='ufo'?1.2:1.05})"><ellipse cx="0" cy="${CTOP[t]/2}" rx="${t==='beast'?30:20}" ry="${-CTOP[t]/2+4}" fill="transparent"/>${CRE[t]}</g></g><g class="hpb" opacity="0"><rect x="-12" y="${Math.round(CTOP[t]*(t==='ufo'?1.2:1.05))-7}" width="24" height="3.4" rx="1.7" fill="#0008"/><rect class="hpf" x="-12" y="${Math.round(CTOP[t]*(t==='ufo'?1.2:1.05))-7}" width="24" height="3.4" rx="1.7" fill="#7ddc5a"/></g></g>`}
   return s+'<g id="cshots"></g>'}
 const BT={cr:[],tw:[],shots:[],raf:0,last:0};
 function battleInit(){const svg=$('cscene');BT.cr=[];BT.tw=[];BT.shots=[];if(!svg)return;
@@ -358,7 +428,7 @@ function sceneSVG(){const R=rng(7);let stars='',tw='';
     if(L)g+=lvBadge(L,id==='hq'?34:24,id==='hq'?-70:-54);
     g+='</g>'}
   const roverPath='M184 470 Q120 486 64 466 Q40 500 70 580 Q130 600 184 584 Q240 600 298 580 Q330 500 296 462 Q240 486 184 470Z';
-  return `<svg class="cscene ${phase()}${raidSoon()?' raid':''}" id="cscene" viewBox="-20 0 400 780" preserveAspectRatio="xMidYMid slice" aria-label="خريطة المستعمرة">${ADEFS}${tintDefs()}<defs>
+  return `<svg class="cscene ${phase()}${raidSoon()?' raid':''}" id="cscene" viewBox="-20 0 400 780" preserveAspectRatio="xMidYMid slice" aria-label="خريطة المستعمرة">${ADEFS}${tintDefs()}${MDEFS}<defs>
     <linearGradient id="cSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${SKY[phase()][0]}"/><stop offset=".55" stop-color="${SKY[phase()][1]}"/><stop offset=".85" stop-color="${SKY[phase()][2]}"/><stop offset="1" stop-color="${SKY[phase()][3]}"/></linearGradient>
     <linearGradient id="cGround" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7a5266"/><stop offset=".15" stop-color="#5a4058"/><stop offset="1" stop-color="#1a1224"/></linearGradient>
     <linearGradient id="cHill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a3350"/><stop offset="1" stop-color="#3a2a44"/></linearGradient>

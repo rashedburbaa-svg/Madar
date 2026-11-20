@@ -638,3 +638,31 @@ body.colfull .tabbar{background:rgba(10,14,30,.92)}
 .brow .bc{display:flex;flex-wrap:wrap;gap:4px;font-size:12px;color:var(--muted)}
 .brow .bc .cc{font-size:11px;padding:1px 6px}
 .brow .btn{flex:none;height:38px;min-width:54px;padding:0 10px}
+/* creature animation */
+.cscene .cre .lg{transform-box:fill-box;transform-origin:50% 0}
+.cscene .cre .la{animation:cwalk .5s ease-in-out infinite alternate}
+.cscene .cre .lb{animation:cwalk .5s ease-in-out infinite alternate-reverse}
+.cscene .cre[data-cre="bug"] .la,.cscene .cre[data-cre="bug"] .lb{animation-duration:.16s}
+.cscene .cre[data-cre="beast"] .la,.cscene .cre[data-cre="beast"] .lb{animation-duration:.7s}
+@keyframes cwalk{from{transform:rotate(-14deg)}to{transform:rotate(14deg)}}
+.cscene .cre .tail{transform-box:fill-box;transform-origin:100% 0;animation:ctail 1.2s ease-in-out infinite alternate}
+@keyframes ctail{to{transform:rotate(-16deg)}}
+.cscene .cre .head{transform-box:fill-box;transform-origin:0 80%;animation:chead 1.4s ease-in-out infinite alternate}
+@keyframes chead{to{transform:rotate(5deg)}}
+.cscene .cre .jaw{transform-box:fill-box;transform-origin:0 0;animation:cjaw 1.1s ease-in-out infinite}
+@keyframes cjaw{0%,60%,100%{transform:none}75%{transform:rotate(14deg)}}
+.cscene .cre .eyes{transform-box:fill-box;transform-origin:center;animation:cblinkE 4.5s infinite}
+@keyframes cblinkE{0%,94%,100%{transform:none}97%{transform:scaleY(.1)}}
+.cscene .cre .pupils{animation:clook 3s ease-in-out infinite}
+@keyframes clook{0%,100%{transform:none}30%{transform:translate(1px,.5px)}65%{transform:translate(-1.2px,-.3px)}}
+.cscene .cre .bubl{animation:cbubl 2.4s ease-in infinite}.cscene .cre .bubl.b2{animation-delay:.8s}.cscene .cre .bubl.b3{animation-delay:1.6s}
+@keyframes cbubl{0%{transform:translateY(0);opacity:0}20%{opacity:.8}100%{transform:translateY(-12px);opacity:0}}
+.cscene .cre .drip{transform-box:fill-box;transform-origin:50% 0;animation:cdrip 2s ease-in infinite}
+@keyframes cdrip{0%{transform:scaleY(.3)}70%{transform:scaleY(1.2)}100%{transform:scaleY(.3)}}
+.cscene .cre .ooze{transform-box:fill-box;transform-origin:50% 100%;animation:cooze 1.3s ease-in-out infinite alternate}
+.cscene .cre .tip{animation:cglowp 1.4s ease-in-out infinite}
+.cscene .cre .chest{animation:cglowp 1s ease-in-out infinite}
+.cscene .cre .garm{transform-box:fill-box;transform-origin:0 50%;animation:carm 2s ease-in-out infinite alternate}
+@keyframes carm{to{transform:rotate(-8deg)}}
+.cscene .cre .ul{animation:cul 1.2s steps(1) infinite}.cscene .cre .u1{animation-delay:.24s}.cscene .cre .u2{animation-delay:.48s}.cscene .cre .u3{animation-delay:.72s}.cscene .cre .u4{animation-delay:.96s}
+@keyframes cul{0%{opacity:1}50%{opacity:.2}}
