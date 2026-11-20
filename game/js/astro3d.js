@@ -33,16 +33,18 @@ const Astro3D=(function(){
     parts.armL=limb(-.52,1.32,.13,.42,white);parts.armR=limb(.52,1.32,.13,.42,white);
     const gun=new THREE.Group();const g1=new THREE.Mesh(new THREE.BoxGeometry(.16,.18,.62),dark);g1.position.z=.2;gun.add(g1);
     const g2=new THREE.Mesh(new THREE.CylinderGeometry(.06,.06,.22,12),glow);g2.rotation.x=Math.PI/2;g2.position.z=.58;gun.add(g2);
-    gun.position.set(0,-.62,.12);parts.armR.add(gun);parts.armR.rotation.x=-1.25;parts.armL.rotation.x=-.9;parts.armL.rotation.z=.45;
+    gun.position.set(0,-.62,.12);parts.armR.add(gun);
+    const sab=new THREE.Group(),hilt=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,.24,10),grey),blade=new THREE.Mesh(new THREE.CylinderGeometry(.045,.045,1.2,10),mat(0xffe6fd,{emissive:0xff5df2,emissiveIntensity:2.2}));
+    blade.position.y=.72;sab.add(hilt,blade);sab.rotation.x=Math.PI/2;sab.position.set(0,-.62,.1);sab.visible=false;parts.armL.add(sab);parts.saber=sab;parts.armR.rotation.x=-1.25;parts.armL.rotation.x=-.9;parts.armL.rotation.z=.45;
   }
   function init(px){try{if(typeof THREE==='undefined')throw 0;R=new THREE.WebGLRenderer({alpha:true,antialias:true,preserveDrawingBuffer:true});
       R.setPixelRatio(1);size=px;R.setSize(px,px,false);R.setClearColor(0x000000,0);R.outputColorSpace=THREE.SRGBColorSpace;build()}catch(e){failed=true;R=null}}
   /* x,y: feet position on the 2D canvas; h: on-screen height; aim: radians in screen space; moving: bool; t: seconds */
-  function draw(ctx,x,y,h,aim,moving,t,hurt,visorCol){if(failed)return false;const px=Math.min(256,Math.max(96,Math.round(h*2.2*(window.devicePixelRatio||1))));if(!R)init(px);if(!R)return false;
+  function draw(ctx,x,y,h,aim,moving,t,hurt,visorCol,saber){if(failed)return false;const px=Math.min(256,Math.max(96,Math.round(h*2.2*(window.devicePixelRatio||1))));if(!R)init(px);if(!R)return false;
     root.rotation.y=Math.atan2(Math.cos(aim),Math.sin(aim));
     const s=moving?Math.sin(t*11):0;parts.legL.rotation.x=s*.7;parts.legR.rotation.x=-s*.7;parts.armL.rotation.x=-.9-s*.35;
     parts.body.position.y=moving?Math.abs(Math.cos(t*11))*.06:Math.sin(t*2)*.02;parts.head.rotation.z=moving?Math.sin(t*5.5)*.05:0;
     parts.white.emissive.setHex(hurt>0?0xff3040:0x000000);parts.white.emissiveIntensity=hurt>0?Math.min(1,hurt*5):0;
     if(visorCol&&visorCol!==tint){tint=visorCol;try{parts.visor.emissive.set(visorCol);parts.visor.emissiveIntensity=.16}catch(e){}}
-    R.render(scene,cam);const S=h*1.9;ctx.drawImage(R.domElement,x-S/2,y-S*0.78,S,S);return true}
+    parts.saber.visible=!!saber;R.render(scene,cam);const S=h*1.9;ctx.drawImage(R.domElement,x-S/2,y-S*0.78,S,S);return true}
   return {draw,ok:()=>!failed&&typeof THREE!=='undefined'}})();

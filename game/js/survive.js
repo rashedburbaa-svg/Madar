@@ -22,12 +22,15 @@ const SurviveGame=(()=>{
     {id:'mines',em:'🧨',name:'ألغام فضائية',d:'تزرع لغماً خلفك ينفجر عند اقتراب الكائنات',max:4,apply:()=>{}},
     {id:'armor',em:'🦺',name:'درع مدرّع',d:'يقلل كل ضرر تتلقاه 10%',max:5,apply:()=>{}},
     {id:'regen',em:'💚',name:'تجديد ذاتي',d:'تستعيد صحتك تدريجياً طوال الوقت',max:4,apply:()=>{}},
+    {id:'saber',em:'🗡️',name:'سيف ليزر',d:'شفرة طاقة تدور حولك وتقطع كل ما تلمسه',max:5,apply:()=>{}},
+    {id:'rail',em:'🔆',name:'مدفع ليزر ثقيل',d:'شعاع ضخم يخترق الشاشة كلها كل ثانيتين',max:5,apply:()=>{}},
     {id:'barrier',em:'🔰',name:'حاجز طاقة',d:'حاجز يصدّ ضربة كاملة ثم يعود بعد ثوانٍ',max:4,apply:()=>{p.bar=1;p.barT=0}}
   ];
   // fusions: two weapons that are strong enough merge into a super weapon (offered once, as a golden card)
   const EVO=[
     {id:'blackhole',em:'🕳️',name:'ثقب أسود',d:'دمج الأقمار ونبضة الجاذبية: ثقب يبتلع الكائنات القريبة',need:{orbit:4,pulse:3}},
     {id:'nova',em:'🌟',name:'ليزر نوفا',d:'دمج الليزر القوي والأشعة الإضافية: حلقة من 16 شعاعاً كل 3 ثوانٍ',need:{dmg:4,multi:3}},
+    {id:'saberstorm',em:'⚔️',name:'عاصفة السيوف',d:'دمج سيف الليزر والمدفع الثقيل: أربع شفرات أطول وأقوى',need:{saber:4,rail:2}},
     {id:'swarm',em:'🎆',name:'سرب الصواريخ',d:'دمج الصواريخ والمسيّرات: كل مسيّرة تطلق صواريخ أيضاً',need:{missile:3,drone:2}}
   ];
   // astronauts to choose from before a run
@@ -246,9 +249,19 @@ const SurviveGame=(()=>{
     ctx.fillStyle=col||'#fff';ctx.beginPath();ctx.arc(ex,ey,r,0,6.283);ctx.fill();ctx.fillStyle='#0b0b14';ctx.beginPath();ctx.arc(ex+Math.cos(a)*r*0.35,ey+Math.sin(a)*r*0.35,r*0.55,0,6.283);ctx.fill()}}
   /* painted sprites (player's Gemini artwork); art faces left */
   const SPR={};function spr(k){if(typeof ART==='undefined'||!ART[k])return null;let im=SPR[k];if(!im){im=SPR[k]=new Image();im.src=ART[k]}return im.complete&&im.naturalWidth?im:null}
+  let sabA=0,railT=1,rails=[];
+  if(location.hostname==='localhost')window.__sv={get lv(){return lv},get evo(){return evo}};
+  function drawFx(dt){if(!ctx)return;ctx.save();ctx.globalCompositeOperation='lighter';ctx.lineCap='round';
+    for(let i=rails.length-1;i>=0;i--){const r=rails[i];if(!paused)r.l-=dt;if(r.l<=0){rails.splice(i,1);continue}const k=r.l/0.35,ex=r.x+Math.cos(r.a)*900,ey=r.y+Math.sin(r.a)*900;
+      ctx.strokeStyle=`rgba(95,242,214,${0.35*k})`;ctx.lineWidth=r.w*2.6*k;ctx.beginPath();ctx.moveTo(r.x,r.y);ctx.lineTo(ex,ey);ctx.stroke();ctx.strokeStyle=`rgba(255,255,255,${0.9*k})`;ctx.lineWidth=r.w*0.7*k;ctx.stroke()}
+    if(lv.saber&&!over){const n=evo.saberstorm?4:lv.saber>=3?2:1,L=44+7*lv.saber+(evo.saberstorm?14:0);
+      for(let k=0;k<n;k++){const a=sabA+k*6.283/n,x0=p.x+Math.cos(a)*8,y0=p.y+Math.sin(a)*8,x1=p.x+Math.cos(a)*L,y1=p.y+Math.sin(a)*L;
+        ctx.fillStyle='rgba(255,93,242,.10)';ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.arc(p.x,p.y,L,a-0.7,a);ctx.closePath();ctx.fill();
+        ctx.strokeStyle='rgba(255,93,242,.45)';ctx.lineWidth=8;ctx.beginPath();ctx.moveTo(x0,y0);ctx.lineTo(x1,y1);ctx.stroke();ctx.strokeStyle='#ffe6fd';ctx.lineWidth=2.6;ctx.stroke()}}
+    ctx.restore()}
   const SPRK={grunt:'cre_alien',runner:'cre_bug',tank:'cre_beast',spitter:'cre_ufo'};
   {const d0=draw;let lastT=performance.now();draw=function(){const now=performance.now(),dt=Math.min(0.1,(now-lastT)/1000);lastT=now;
-    if(shk>0&&!paused){shk-=dt;const a=shkA*Math.max(0,shk)/0.7;ctx.save();ctx.translate((Math.random()-.5)*a*2,(Math.random()-.5)*a*2);d0();ctx.restore()}else{shk=0;d0()}
+    if(shk>0&&!paused){shk-=dt;const a=shkA*Math.max(0,shk)/0.7;ctx.save();ctx.translate((Math.random()-.5)*a*2,(Math.random()-.5)*a*2);d0();drawFx(dt);ctx.restore()}else{shk=0;d0();drawFx(dt)}
     if(FT.length){ctx.save();ctx.textAlign='center';ctx.lineJoin='round';for(let i=FT.length-1;i>=0;i--){const f=FT[i];if(!paused){f.l-=dt;f.y-=dt*28}if(f.l<=0){FT.splice(i,1);continue}
       ctx.globalAlpha=Math.min(1,f.l*2.5);ctx.font=`900 ${f.big?15:11}px system-ui,sans-serif`;ctx.lineWidth=3;ctx.strokeStyle='rgba(0,0,0,.75)';ctx.strokeText(f.v,f.x,f.y);ctx.fillStyle=f.big?'#ffd34d':'#fff';ctx.fillText(f.v,f.x,f.y)}ctx.restore()}}}
   ['astro','cre_alien','cre_bug','cre_beast','cre_ufo','cre_blob','bg0','bg1','bg2','bg3','bg4','bg5'].forEach(k=>spr(k));
@@ -285,7 +298,7 @@ const SurviveGame=(()=>{
     if(e.flash>0){ctx.fillStyle='rgba(255,255,255,.75)';ctx.beginPath();ctx.arc(x,y,r*1.05,0,6.283);ctx.fill()}
   }
   function drawAstronaut(){
-    if(typeof Astro3D!=='undefined'&&Astro3D.draw(ctx,p.x,p.y+p.r*0.6,p.r*4.4,p.aim,(p.stillT||0)<0.1,t,p.hurt,((CHARS[st.char]||CHARS.scout).visor||[])[0]))return;
+    if(typeof Astro3D!=='undefined'&&Astro3D.draw(ctx,p.x,p.y+p.r*0.6,p.r*4.4,p.aim,(p.stillT||0)<0.1,t,p.hurt,((CHARS[st.char]||CHARS.scout).visor||[])[0],!!lv.saber))return;
     {const im=spr('astro');if(im){const a=p.aim,x=p.x,y=p.y,right=Math.cos(a)>=0,step=(p.stillT||0)<0.1?Math.abs(Math.sin(t*12))*-1.5:0;
       ctx.save();ctx.translate(x,y+step);if(!right)ctx.scale(-1,1);ctx.filter=p.hurt>0?'sepia(1) saturate(4) hue-rotate(-40deg)':'none';const h=p.r*3.4,w=h*im.naturalWidth/im.naturalHeight;ctx.drawImage(im,-w/2,-h*0.66,w,h);ctx.restore();ctx.filter='none';
       ctx.strokeStyle='#3a4652';ctx.lineWidth=4;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(x+Math.cos(a)*4,y+Math.sin(a)*4);ctx.lineTo(x+Math.cos(a)*17,y+Math.sin(a)*17);ctx.stroke();
@@ -303,7 +316,7 @@ const SurviveGame=(()=>{
   function reset(){
     const C=CHARS[st.char]||CHARS.scout,CB=typeof survBonus==='function'?survBonus():{dmg:0,hp:0,rate:0},mx=Math.round((100+15*mlv('hp'))*C.hp)+CB.hp;
     p={x:W/2,y:H/2,r:11,hp:mx,max:mx,spd:120*(1+0.06*mlv('spd'))*C.spd,mag:40+20*mlv('mag'),aim:-Math.PI/2,hurt:0,slow:0,inv:0,bar:0,barT:0,rev:mlv('revive')};
-    gun={dmg:10*(1+0.1*mlv('dmg'))*C.dmg*(1+CB.dmg/100),rate:2.2*(1+0.08*mlv('rate'))*C.rate*(1+CB.rate/100),count:1,pierce:0,spd:380,cd:0};orb=mlv('moon');pul=0;mis=0;drn=0;evo={};misT=1;drnT=0.5;novaT=3;bhT=4;holes=[];ms=[];mines=[];bolts=[];flT=0;chT=1;mnT=1;beamTg=null;orbA=0;pulseT=3;
+    gun={dmg:10*(1+0.1*mlv('dmg'))*C.dmg*(1+CB.dmg/100),rate:2.2*(1+0.08*mlv('rate'))*C.rate*(1+CB.rate/100),count:1,pierce:0,spd:380,cd:0};orb=mlv('moon');pul=0;mis=0;drn=0;evo={};misT=1;drnT=0.5;novaT=3;bhT=4;holes=[];sabA=0;railT=1;rails=[];ms=[];mines=[];bolts=[];flT=0;chT=1;mnT=1;beamTg=null;orbA=0;pulseT=3;
     en=[];bl=[];eb=[];drops=[];parts=[];rings=[];hz=[];crys=0;bossKills=0;t=0;wave=1;waveT=0;spawnT=0.6;kills=0;
     buff={rapid:0,shield:3*mlv('shield')};banner={txt:'الموجة 1',sub:BIOMES[0].name,t:2.2};lv={};bossAlive=false;recordShown=false;over=false;ch=null;deathWhy='';p.stillT=0;
   }
@@ -431,6 +444,15 @@ const SurviveGame=(()=>{
     // flamethrower: short cone in the aiming direction
     if(lv.flame){flT-=dt;if(flT<=0){flT=0.12;const R=62+8*lv.flame;for(const e of en){if(e.dead||e.under>0)continue;const dx=e.x-p.x,dy=e.y-p.y,d=Math.hypot(dx,dy);if(d<R+e.r){let da=Math.abs(Math.atan2(dy,dx)-p.aim);if(da>Math.PI)da=2*Math.PI-da;if(da<0.5)hurt(e,(2+1.6*lv.flame)*wpn(wave))}}
       for(let k=0;k<3;k++){const a=p.aim+(Math.random()-0.5)*0.8,sp=160+Math.random()*120;parts.push({x:p.x+Math.cos(p.aim)*14,y:p.y+Math.sin(p.aim)*14,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,l:0.3,col:Math.random()<0.5?'#ffb347':'#ff5a1a'})}}}
+    // laser saber: glowing blades sweep around you
+    if(lv.saber){const n=evo.saberstorm?4:lv.saber>=3?2:1,L=44+7*lv.saber+(evo.saberstorm?14:0);sabA+=(3.2+0.5*lv.saber)*dt;
+      for(let k=0;k<n;k++){const a=sabA+k*6.283/n;for(const e of en){if(e.dead||e.under>0)continue;const dx=e.x-p.x,dy=e.y-p.y,d=Math.hypot(dx,dy);if(d>L+e.r||d<4)continue;
+        let da=Math.atan2(dy,dx)-a;da=Math.atan2(Math.sin(da),Math.cos(da));if(Math.abs(da)<0.3+e.r/Math.max(d,1)&&(!e.sab||t-e.sab>0.22)){e.sab=t;hurt(e,(9+5*lv.saber)*wpn(wave)*(evo.saberstorm?1.4:1));
+          for(let q=0;q<3;q++){const pa=a+1.57+(Math.random()-.5);parts.push({x:e.x,y:e.y,vx:Math.cos(pa)*110,vy:Math.sin(pa)*110,l:0.25,col:q?'#ff5df2':'#fff'})}}}}}
+    // heavy laser cannon: a screen-long piercing beam every few seconds
+    if(lv.rail){railT-=dt;if(railT<=0){const tg=nearest(),a=tg?Math.atan2(tg.y-p.y,tg.x-p.x):p.aim,w=7+3*lv.rail,ux=Math.cos(a),uy=Math.sin(a);railT=Math.max(0.9,2.6-0.3*lv.rail);
+      for(const e of en){if(e.dead||e.under>0)continue;const dx=e.x-p.x,dy=e.y-p.y;if(dx*ux+dy*uy<0)continue;if(Math.abs(dx*uy-dy*ux)<w+e.r)hurt(e,(30+18*lv.rail)*wpn(wave))}
+      rails.push({x:p.x,y:p.y,a,w,l:0.35});shake(2.5,0.12);snd('plasma')}}
     // chain lightning jumps between aliens
     if(lv.chain){chT-=dt;if(chT<=0){chT=Math.max(0.7,1.9-0.22*lv.chain);let cur=nearest();if(cur&&Math.hypot(cur.x-p.x,cur.y-p.y)<220){const pts=[[p.x,p.y]],hit=new Set();
       for(let k=0;k<2+lv.chain&&cur;k++){pts.push([cur.x,cur.y]);hit.add(cur);hurt(cur,(14+7*lv.chain)*wpn(wave));let nx=null,nd=95;for(const e of en){if(e.dead||hit.has(e)||e.under>0)continue;const d=Math.hypot(e.x-cur.x,e.y-cur.y);if(d<nd){nd=d;nx=e}}cur=nx}
