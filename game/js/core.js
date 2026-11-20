@@ -231,6 +231,10 @@ $('saveBtn').onclick=()=>{snd('tap');const m=document.createElement('div');m.cla
       if(!confirmBox)return;confirmBox('سيُستبدل تقدّمك الحالي بالنسخة المسترجعة. متابعة؟',()=>{Object.keys(localStorage).filter(k=>k.startsWith('arcade-')).forEach(k=>localStorage.removeItem(k));keys.forEach(k=>localStorage.setItem(k,data[k]));toast('✅ تم الاسترجاع');setTimeout(()=>location.reload(),700)})}
     catch(e){toast(e==='sum'?'⚠️ الرمز تالف — تأكد أنك نسخته كاملاً':e==='cut'?'⚠️ الرمز ناقص من آخره':'الرمز غير صحيح أو ناقص')}};
   document.body.appendChild(m)};
+/* out of hints → buy more with colony crystals */
+function buyHint(st,id,after){const have=(typeof col!=='undefined'&&col.res)?Math.floor(col.res.c):0;
+  confirmBox(`💡 نفدت التلميحات. اشترِ 3 تلميحات بـ 5 💎؟ (لديك ${have} 💎)`,()=>{if(have<5){toast('تحتاج 5 💎 — اجمعها من المستعمرة');return}
+    col.res.c-=5;save('arcade-colony',col);st.hints=(st.hints||0)+3;gSave(id,st);snd('ok');toast('💡 +3 تلميحات');if(after)after()})}
 function confirmBox(text,yes){const m=document.createElement('div');m.className='hmodal';m.style.zIndex=40;m.innerHTML='<div class="hbox"><p></p><button class="btn main" type="button">نعم</button><button class="btn" type="button">لا</button></div>';
   m.querySelector('p').textContent=text;const [a,b]=m.querySelectorAll('button');a.onclick=()=>{m.remove();yes()};b.onclick=()=>m.remove();document.body.appendChild(m)}
 /* how-to-play sits behind the ? button instead of under the game */

@@ -38,7 +38,7 @@ const GridGame=(()=>{
   }
   function refresh(){const L=lit();[...board.children].forEach((c,i)=>c.classList.toggle('lit',L.has(i)));
     setStat('s1',mode&&mode.daily?'اليوم':g.level);setStat('s2',g.moves);setStat('s3',g.par);setStat('s4',st.hints);
-    ub.disabled=!g.hist.length;hb.disabled=!st.hints;return L.size===g.sol.length}
+    ub.disabled=!g.hist.length;hb.disabled=false;return L.size===g.sol.length}
   function turn(i,rec=true){
     if(g.locked[i]){const el=board.children[i];el.classList.remove('shake');void el.offsetWidth;el.classList.add('shake');snd('err');buzz(30);return}
     g.rot[i]=(g.rot[i]+1)%4;g.angle[i]+=90;board.children[i].firstChild.style.transform=`rotate(${g.angle[i]}deg)`;if(rec){g.moves++;g.hist.push(i)}snd('rot');buzz(8);
@@ -61,7 +61,7 @@ const GridGame=(()=>{
       board=document.createElement('div');board.className='gboard';stage.appendChild(board);
       board.onclick=e=>{const c=e.target.closest('.cell');if(c&&!g.over)turn(+c.dataset.i)};
       ub=btn('تراجع',IC.undo,()=>{if(!g.hist.length||g.over)return;const i=g.hist.pop();g.rot[i]=(g.rot[i]+3)%4;g.angle[i]-=90;g.moves--;board.children[i].firstChild.style.transform=`rotate(${g.angle[i]}deg)`;snd('tap');refresh()});
-      hb=btn('تلميح',IC.hint,()=>{if(!st.hints||g.over)return;const L=lit(),n=g.n,wrong=g.sol.map((_,i)=>i).filter(i=>!g.locked[i]&&minRot(i)>0);if(!wrong.length)return;
+      hb=btn('تلميح',IC.hint,()=>{if(g.over)return;if(!st.hints){buyHint(st,'grid',()=>setStat('s4',st.hints));return}const L=lit(),n=g.n,wrong=g.sol.map((_,i)=>i).filter(i=>!g.locked[i]&&minRot(i)>0);if(!wrong.length)return;
         const near=wrong.filter(i=>DIRS.some(([,dx,dy])=>{const k=nb(i%n,(i/n)|0,dx,dy,n,g.wrap);return k>=0&&L.has(k)}));
         const i=(near.length?near:wrong)[0];st.hints--;gSave('grid',st);const el=board.children[i];el.classList.remove('hintflash');void el.offsetWidth;el.classList.add('hintflash');
         const k=minRot(i);for(let j=0;j<k&&!g.over;j++)turn(i)});

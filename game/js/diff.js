@@ -166,7 +166,7 @@ const DiffGame=(()=>{
       // a tap counts only if the finger didn't move (so dragging a zoomed picture never costs a mistake)
       [cA,cB].forEach(c=>{c.onpointerdown=e=>{downAt={x:e.clientX,y:e.clientY,c}};c.onpointercancel=()=>{downAt=null};
         c.onpointerup=e=>{if(downAt&&downAt.c===c&&Math.hypot(e.clientX-downAt.x,e.clientY-downAt.y)<10)tap(e,c);downAt=null}});this.rs=()=>{size(cA,xA);size(cB,xB);draw()};addEventListener('resize',this.rs);
-      btn('تلميح',IC.hint,()=>{if(!st.hints||g.over)return;const d=g.diffs.find(d=>!d.found&&!d.hint);if(!d)return;d.hint=true;g.hints++;st.hints--;gSave('diff',st);snd('tap');draw();upd();toast('تلميحات متبقية: '+st.hints)});
+      btn('تلميح',IC.hint,()=>{if(g.over)return;if(!st.hints){buyHint(st,'diff');return}const d=g.diffs.find(d=>!d.found&&!d.hint);if(!d)return;d.hint=true;g.hints++;st.hints--;gSave('diff',st);snd('tap');draw();upd();toast('تلميحات متبقية: '+st.hints)});
       cb=btn('قارن',IC.flip,()=>{if(g.over||flicking||!g.flips)return;g.flips--;flicking=true;cb.lastChild.textContent='قارن ('+g.flips+')';cb.disabled=!g.flips;snd('tap');
         let f=0;const iv=setInterval(()=>{f++;paint(xA,f%2?g.B:g.A);if(f>=8){clearInterval(iv);flicking=false;draw()}},320);
         cA.scrollIntoView({block:'nearest',behavior:'smooth'})});

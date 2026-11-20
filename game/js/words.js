@@ -651,7 +651,7 @@ const WordsGame=(()=>{
       g.entries.forEach((x,k)=>{if(x.dir!==dir)return;const b=document.createElement('button');b.type='button';b.className=(x.solved?'sv ':'')+(k===sel?'on':'');b.textContent=x.num+'. '+x.clue;b.onclick=()=>{sel=k;snd('tap');render()};col.appendChild(b)});
       listEl.appendChild(col)});
     const done=g.entries.filter(x=>x.solved).length;
-    setStat('s1',mode&&mode.daily?'اليوم':g.level);setStat('s2',done+'/'+g.entries.length);setStat('s3',g.mistakes);setStat('s4',st.hints);hb.disabled=!st.hints||g.over;tb.lastChild.textContent='الموضوع: '+(TOPICS[st.topic]||TOPICS.all)[0];tb.disabled=!!(mode&&mode.daily);
+    setStat('s1',mode&&mode.daily?'اليوم':g.level);setStat('s2',done+'/'+g.entries.length);setStat('s3',g.mistakes);setStat('s4',st.hints);hb.disabled=g.over;tb.lastChild.textContent='الموضوع: '+(TOPICS[st.topic]||TOPICS.all)[0];tb.disabled=!!(mode&&mode.daily);
   }
   function nextOpen(){const n=g.entries.length;for(let k=1;k<=n;k++){const j=(sel+k)%n;if(!g.entries[j].solved){sel=j;return}}}
   function check(e){
@@ -696,7 +696,7 @@ const WordsGame=(()=>{
       gridEl.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const i=+b.dataset.i;
         const hits=g.entries.map((x,k)=>x.cells.includes(i)?k:-1).filter(k=>k>=0);if(!hits.length)return;
         sel=hits.includes(sel)&&hits.length>1?hits.find(k=>k!==sel):(hits.find(k=>!g.entries[k].solved)??hits[0]);snd('tap');render()});
-      hb=btn('تلميح',IC.hint,()=>{const e=g.entries[sel];if(!e||e.solved||g.over||!st.hints)return;
+      hb=btn('تلميح',IC.hint,()=>{const e=g.entries[sel];if(g.over)return;if(!st.hints){buyHint(st,'words',()=>{setStat('s4',st.hints);hb.disabled=false});return}if(!e||e.solved)return;
         const i=e.cells.find(k=>g.cur[k]!==g.sol[k]);if(i==null)return;g.cur[i]=g.sol[i];st.hints--;g.hints++;gSave('words',st);snd('ok');
         render();if(e.cells.every(k=>g.cur[k]))check(e);persist()});
       btn('الكلمة التالية',IC.list,()=>{nextOpen();snd('tap');render()});

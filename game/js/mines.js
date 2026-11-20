@@ -51,7 +51,7 @@ const MinesGame=(()=>{
     g.cells.forEach((c,i)=>{const b=boardEl.children[i];b.className='mcell'+(c.v?' void':'')+(c.o?' o':'')+(c.b?' boom':'')+(g.flash&&g.flash.has(i)?' moved':'');if(c.v)return;
       if(c.o){if(c.m)b.textContent=c.b?'💥':'☄️';else{b.textContent=c.n||'';b.style.color=NUMC[c.n]||''}}else{b.textContent=c.f?'🚩':'';b.style.color=''}});
     setStat('s1',mode&&mode.daily?'اليوم':g.level);setStat('s2',g.mines-flags);setStat('s3',g.lives+' ❤️');setStat('s4',fmtTime(g.time));
-    fb.classList.toggle('on',flagMode);fb.lastChild.textContent=flagMode?'وضع العلم: يعمل':'وضع العلم';hb.disabled=!st.hints||g.over;
+    fb.classList.toggle('on',flagMode);fb.lastChild.textContent=flagMode?'وضع العلم: يعمل':'وضع العلم';hb.disabled=g.over;
   }
   function play(level){
     clearOverlays();clearInterval(timer);st=gState('mines',{hints:3});
@@ -75,7 +75,7 @@ const MinesGame=(()=>{
       boardEl.addEventListener('click',e=>{const b=e.target.closest('.mcell');if(!b)return;if(lpFired){lpFired=false;return}tap(+b.dataset.i)});
       boardEl.addEventListener('contextmenu',e=>e.preventDefault());
       fb=btn('وضع العلم',IC.pen,()=>{flagMode=!flagMode;snd('tap');render()});
-      hb=btn('تلميح',IC.hint,()=>{if(g.over||!st.hints)return;
+      hb=btn('تلميح',IC.hint,()=>{if(g.over)return;if(!st.hints){buyHint(st,'mines');return}
         if(!g.started){let i=Math.floor(g.rows/2)*g.cols+Math.floor(g.cols/2);if(g.cells[i].v)i=g.cells.findIndex(c=>!c.v);place(i);flood(i)}
         else{const cand=g.cells.map((_,i)=>i).filter(i=>!g.cells[i].m&&!g.cells[i].o&&!g.cells[i].v);if(!cand.length)return;
           const front=cand.filter(i=>nb(i).some(j=>g.cells[j].o&&!g.cells[j].m)),pool=front.length?front:cand;flood(pool[Math.floor(Math.random()*pool.length)])}
