@@ -593,3 +593,21 @@ body.colfull .tabbar{background:rgba(10,14,30,.92)}
 @keyframes cspb{to{width:100%}}
 @keyframes cspl{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.cscene .bubi,.ccall,.cscene .gbounce,.cchestb,.craid{animation:none}}
+/* towers + battle */
+.cscene .tow{cursor:pointer}
+.cscene .tracer{animation:cfade .14s linear forwards}
+.cscene .mflash{animation:cfade .08s linear forwards}
+.cscene .beam2{filter:drop-shadow(0 0 3px #5ff2d6);animation:cfade .16s linear forwards}
+.cscene .hitfx{transform-box:fill-box;transform-origin:center;animation:chitfx .2s ease-out forwards}
+.cscene .orb{filter:drop-shadow(0 0 4px #b47aff)}
+@keyframes cfade{to{opacity:0}}
+@keyframes chitfx{from{transform:scale(.5)}to{transform:scale(2.2);opacity:0}}
+.cscene .bm1{transform-box:fill-box;transform-origin:center;animation:cbm1 .6s ease-out forwards;opacity:.8}
+.cscene .bm2{transform-box:fill-box;transform-origin:center;animation:cbm1 .35s ease-out forwards}
+@keyframes cbm1{from{transform:scale(.2)}to{transform:scale(1.5);opacity:0}}
+.cscene .bmp{animation:cbmp .6s ease-out forwards}
+@keyframes cbmp{to{transform:translate(var(--dx),var(--dy));opacity:0}}
+.cscene .cre{transition:opacity .4s}
+.cscene .cre.gone{opacity:0;pointer-events:none}
+.cscene .cre.hit .cflip{animation:chit .15s linear}
+@keyframes chit{50%{filter:brightness(2.4) saturate(.3)}}
