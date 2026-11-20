@@ -33,8 +33,8 @@ const fmtN=n=>{n=Math.floor(n);return n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e4?(n/1e
 const fmtDur=s=>{s=Math.max(0,Math.ceil(s));const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;return h?h+'س '+m+'د':m?m+'د '+x+'ث':x+'ث'};
 // production accrues from the last visit, up to 24 hours away
 function accrue(){const now=Date.now(),last=col.last||now;col.last=now;let dt=Math.min(24,Math.max(0,(now-last)/3600000));
-  if(col.build&&now>=col.build.end){const sp=Math.max(0,(col.build.end-last)/3600000);for(const k of 'mefc')gain(k,rate(k)*Math.min(dt,sp));dt=Math.max(0,dt-sp);finishBuild()}
-  for(const k of 'mefc')gain(k,rate(k)*dt)}
+  if(col.build&&now>=col.build.end){const sp=Math.max(0,(col.build.end-last)/3600000);fillStores(Math.min(dt,sp));dt=Math.max(0,dt-sp);finishBuild()}
+  fillStores(dt)}
 function finishBuild(){const b=col.build;if(!b)return;col.build=null;col.b[b.id]++;colSave();snd('ach');buzz([20,30,20]);
   toast('🏗️ '+BLD[b.id].name+' '+col.b[b.id],'ach');if(col.b.hq>=5)unlock('col_hq5');if(BORDER.every(id=>col.b[id]>0))unlock('col_all');questCheck()}
 function startBuild(id){accrue();const B=BLD[id],L=col.b[id];
@@ -55,7 +55,7 @@ function repair(i){accrue();const [pid,name,c]=PARTS[i],need={m:c[0],e:c[1],f:c[
   if(PARTS.every(p=>col.ship[p[0]])){unlock('col_ship');setTimeout(chapterDone,600)}renderColony()}
 /* every win in a story game feeds the colony; the task building's level raises the reward */
 function colonyReward(id,stars,info){const bid=GAMEOF[id];if(!bid)return;accrue();info=info||{};const L=Math.max(1,col.b[bid]),k=1+0.3*(L-1);let got=[];
-  if(id==='survive'){const t=info.time||0;if(t<10)return;const d=1+0.2*col.b.def;col.surv=Math.max(col.surv||0,t);
+  if(id==='survive'){const t=info.time||0;if(t>=60&&raidSoon()){col.raid.mine=1;setTimeout(()=>toast('🛡️ صددت الغارة القادمة!','ach'),1800)}if(t<10)return;const d=1+0.2*col.b.def;col.surv=Math.max(col.surv||0,t);
     got=[['m',t*1.4*d],['e',t*1.2*d],['f',t*0.9*d],['c',Math.floor(t/30)+(info.boss||0)*5]]}
   else{col.wins[id]=(col.wins[id]||0)+1;const base=(50+30*stars)*k;
     got=id==='mines'?[['m',base*1.4],['c',stars]]:id==='grid'?[['e',base*1.4],['c',stars]]:id==='words'?[['c',2+2*stars],['f',base*0.6]]:[['f',base*1.2],['c',1+stars]]}
@@ -262,8 +262,8 @@ function sceneSVG(){const R=rng(7);let stars='',tw='';
     if(L)g+=`<g class="lv" transform="translate(${id==='hq'?34:24} ${id==='hq'?-70:-54})"><circle r="8" fill="#0b1226" stroke="#ffd34d" stroke-width="1.4"/><text y="3.2" text-anchor="middle" font-size="9.5" font-weight="700" fill="#ffd34d">${L}</text></g>`;
     g+='</g>'}
   const roverPath='M184 470 Q120 486 64 466 Q40 500 70 580 Q130 600 184 584 Q240 600 298 580 Q330 500 296 462 Q240 486 184 470Z';
-  return `<svg class="cscene" id="cscene" viewBox="-20 0 400 780" preserveAspectRatio="xMidYMid slice" aria-label="خريطة المستعمرة">${ADEFS}<defs>
-    <linearGradient id="cSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#04061a"/><stop offset=".55" stop-color="#1c1640"/><stop offset=".85" stop-color="#4a2c58"/><stop offset="1" stop-color="#7a4462"/></linearGradient>
+  return `<svg class="cscene ${phase()}${raidSoon()?' raid':''}" id="cscene" viewBox="-20 0 400 780" preserveAspectRatio="xMidYMid slice" aria-label="خريطة المستعمرة">${ADEFS}<defs>
+    <linearGradient id="cSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${SKY[phase()][0]}"/><stop offset=".55" stop-color="${SKY[phase()][1]}"/><stop offset=".85" stop-color="${SKY[phase()][2]}"/><stop offset="1" stop-color="${SKY[phase()][3]}"/></linearGradient>
     <linearGradient id="cGround" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7a5266"/><stop offset=".15" stop-color="#5a4058"/><stop offset="1" stop-color="#1a1224"/></linearGradient>
     <linearGradient id="cHill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a3350"/><stop offset="1" stop-color="#3a2a44"/></linearGradient>
     <linearGradient id="cHill2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2e2240"/><stop offset="1" stop-color="#3a2a48"/></linearGradient>
@@ -272,7 +272,7 @@ function sceneSVG(){const R=rng(7);let stars='',tw='';
     <radialGradient id="cNeb2" cx="50%" cy="50%"><stop offset="0" stop-color="#5ff2d6" stop-opacity=".16"/><stop offset="1" stop-color="#5ff2d6" stop-opacity="0"/></radialGradient>
     <radialGradient id="cCrat" cx="40%" cy="35%"><stop offset="0" stop-color="#1a1222"/><stop offset=".8" stop-color="#3a2a44"/><stop offset="1" stop-color="#9a7088"/></radialGradient>
     <linearGradient id="cMeteor" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff"/></linearGradient></defs>
-    <rect x="-700" y="-900" width="1760" height="1250" fill="#04061a"/><rect x="-700" y="-40" width="1760" height="330" fill="url(#cSky)"/><ellipse cx="90" cy="120" rx="140" ry="60" fill="url(#cNeb)"/><ellipse cx="280" cy="210" rx="120" ry="50" fill="url(#cNeb2)"/>${stars}${tw}
+    <rect x="-700" y="-900" width="1760" height="1250" fill="${SKY[phase()][0]}"/><rect x="-700" y="-40" width="1760" height="330" fill="url(#cSky)"/><ellipse cx="90" cy="120" rx="140" ry="60" fill="url(#cNeb)"/><ellipse cx="280" cy="210" rx="120" ry="50" fill="url(#cNeb2)"/>${stars}${tw}
     <g class="meteor"><path d="M0 0 L60 0" stroke="url(#cMeteor)" stroke-width="1.6" stroke-linecap="round"/><circle cx="60" cy="0" r="1.8" fill="#fff"/></g>
     <g class="meteor m2"><path d="M0 0 L44 0" stroke="url(#cMeteor)" stroke-width="1.2" stroke-linecap="round"/><circle cx="44" cy="0" r="1.4" fill="#fff"/></g>
     <g class="planet"><circle cx="268" cy="118" r="52" fill="url(#cPlanet)"/><path d="M226 100 Q268 92 312 104 M220 124 Q268 116 318 130" stroke="#a24a2a" stroke-width="5" fill="none" opacity=".35"/><ellipse cx="268" cy="118" rx="84" ry="15" fill="none" stroke="#ffd9a0" stroke-opacity=".5" stroke-width="3" transform="rotate(-14 268 118)"/></g>
@@ -283,7 +283,7 @@ function sceneSVG(){const R=rng(7);let stars='',tw='';
     <path d="M-720 286 Q-600 274 -480 284 T-240 280 T0 286 Q60 274 120 284 T240 280 T360 284 T600 280 T1080 284 V1300 H-720Z" fill="url(#cGround)"/>${crat}${rocks}
     <path d="${ROADS}" stroke="#1a1424" stroke-width="9" fill="none" stroke-linecap="round" opacity=".6"/><path d="${ROADS}" stroke="#d0a8bc" stroke-width=".7" fill="none" stroke-dasharray="4 6" opacity=".5"/>
     <g class="rover"><animateMotion dur="26s" repeatCount="indefinite" rotate="auto" path="${roverPath}"/><rect x="-7" y="-5" width="14" height="6" rx="2" fill="#e6ecf1"/><rect x="-3" y="-8" width="6" height="3" rx="1" fill="#9fb0c4"/><circle cx="-5" cy="2" r="2" fill="#2a2e3a"/><circle cx="5" cy="2" r="2" fill="#2a2e3a"/><circle cx="7.5" cy="-3" r="1.3" fill="#fff3c0"/><path d="M8 -3 l14 -4 v8Z" fill="#fff3c0" opacity=".18"/></g>
-    ${dust}${fenceSVG('back')}${g}${fenceSVG('front')}${gateSVG()}${creaturesSVG()}${zapSVG()}<g id="cfx"></g>
+    ${dust}${fenceSVG('back')}${g}${fenceSVG('front')}${gateSVG()}${creaturesSVG()}${zapSVG()}${nightLights()}${guideSVG()}${bubbleSVG()}<g id="cfx"></g>
     <g class="drone"><animateMotion dur="18s" repeatCount="indefinite" path="M-20 300 C80 250 160 330 240 280 S380 300 400 270"/><ellipse cx="0" cy="0" rx="6" ry="2" fill="#c7cfd8"/><path d="M-8 -2h5M3 -2h5" stroke="#9aa4b2" stroke-width="1"/><circle cx="0" cy="1.5" r="1" fill="#5ff2d6" class="blink"/></g>
     </svg>`}
 /* camera: the colony opens zoomed out to fit; pinch, drag, mouse wheel or the +/- buttons move it */
@@ -339,8 +339,8 @@ function openSheet(id){sheetId=id;let m=$('csheet');if(!m){m=document.createElem
 function renderSheet(){const m=$('csheet');if(!m||!sheetId)return;const c=m.querySelector('.csc');c.innerHTML=cardHTML(sheetId);bindActions(c)}
 function closeSheet(){const m=$('csheet');sheetId=null;if(!m)return;m.classList.remove('on');setTimeout(()=>{if(!sheetId)m.hidden=true},250)}
 function rankChip(){try{const i=rankOf(prof.xp);return `<span class="crk">${RANKS[i][2]} ${RANKS[i][1]}</span>`}catch(e){return ''}}
-function renderColony(){const host=$('colony');if(!host)return;accrue();questCheck();const Q=QUESTS[col.q];
-  let h=`<div class="cscene-wrap">${sceneSVG()}</div><div class="ctop"><div class="cres">${resBar()}</div><div class="crow">${rankChip()}</div></div><div class="cbot">`;
+function renderColony(){const host=$('colony');if(!host)return;accrue();raidCheck();questCheck();const Q=QUESTS[col.q];
+  let h=`<div class="cscene-wrap">${sceneSVG()}</div><div class="ctop"><div class="cres">${resBar()}</div><div class="crow">${rankChip()}${col.intro&&chestReady()?'<button class="cchestb" type="button" aria-label="مكافأة اليوم">🎁</button>':''}</div></div><div class="cbot"><button class="ccall" type="button" hidden>⤓ جمع الكل</button>${raidSoon()?`<div class="craid"><span>⚠️ غارة بعد <b data-raid>${fmtDur((col.raid.at-Date.now())/1000)}</b></span><button class="btn" type="button" data-go="survive">🛡️ دافع</button></div>`:''}`;
   if(col.build){const B=BLD[col.build.id],left=(col.build.end-Date.now())/1000,pc=Math.min(100,100-left/col.build.len*100);
     h+=`<div class="cbuild"><span>🏗️ <b>${B.name}</b> ← ${col.b[col.build.id]+1}</span><span class="ct" data-t>${fmtDur(left)}</span><button class="btn" type="button" data-rush aria-label="إنهاء الآن">⚡ 💎 <span data-rc>${Math.max(1,Math.ceil(left/60))}</span></button><i><u data-p style="width:${pc}%"></u></i></div>`}
   if(Q)h+=`<button class="qt" type="button" data-to="${Q.go?'g:'+Q.go:'b:'+Q.b}"><span class="qi">🎯</span><b></b><span class="qr">${Object.entries(Q.r).map(([k,n])=>'+'+n+' '+RES[k][1]).join(' ')}</span><i class="qa" aria-hidden="true">‹</i></button>`;
@@ -351,22 +351,107 @@ function renderColony(){const host=$('colony');if(!host)return;accrue();questChe
   bindActions(host);const rb=host.querySelector('[data-rush]');if(rb)rb.onclick=rush;
   host.querySelectorAll('.cb').forEach(g=>{const go=()=>{if(camDrag)return;snd('tap');g.classList.remove('tap');void g.getBoundingClientRect();g.classList.add('tap');openSheet(g.dataset.b)};g.onclick=go;g.onkeydown=e=>{if(e.key==='Enter')go()}});
   host.querySelectorAll('.cre').forEach(c=>{const go=()=>{if(camDrag)return;snd('tap');if(col.b.def){const G=GAMES.find(x=>x.id==='survive');closeSheet();if(G)openGame(G)}else{toast('👾 ابنِ منظومة الدفاع لصدّهم');focusB('def')}};c.onclick=go;c.onkeydown=e=>{if(e.key==='Enter')go()}});
+  host.querySelectorAll('.bub').forEach(b=>{const go=e=>{if(camDrag)return;e&&e.stopPropagation();collect(b.dataset.c)};b.onclick=go;b.onkeydown=e=>{if(e.key==='Enter')go(e)}});
+  const ca=host.querySelector('.ccall');if(ca)ca.onclick=collectAll;const cb=host.querySelector('.cchestb');if(cb)cb.onclick=()=>{snd('tap');chestBox()};
+  updBubbles();raidShow();
   renderSheet();colSave();
   if(!col.intro){col.intro=1;colSave();storyBox('تحطّمت المركبة!','ابنِ المستعمرة وأصلح المركبة. كل فوز في الألعاب يجلب موارد.','لنبدأ')}
 }
+/* ================= pro layer: collecting, guide arrow, day/night, daily chest, raids, splash, ambience ================= */
+/* --- collecting: producers fill their own store (up to 8 hours); tap the bubble to bring it home --- */
+if(!col.store)col.store={mine:40,solar:40,farm:30};
+const bRate=id=>{const B=BLD[id],L=col.b[id];return B.prod&&L>0?B.prod[1]*L*Math.pow(1.15,L-1)*mult():0};
+const bCap=id=>Math.max(1,bRate(id)*8);
+function fillStores(dt){for(const id of Object.keys(PRODB)){const r=bRate(id);if(r>0)col.store[id]=Math.min(bCap(id),(col.store[id]||0)+r*dt)}}
+const bubMin=id=>Math.max(id==='radio'?0.5:3,bRate(id)*0.02);
+function collect(id,quiet){const k=PRODB[id],have=col.store[id]||0;if(have<1&&!(k==='c'&&have>=0.5))return 0;
+  let take=k==='c'?Math.floor(have):Math.floor(have);if(k!=='c'){const room=Math.max(0,cap()-col.res[k]);take=Math.min(take,Math.floor(room))}
+  if(take<=0){if(!quiet){snd('err');toast('📦 المخازن ممتلئة — طوّر مركز القيادة');focusB('hq')}return 0}
+  col.store[id]=have-take;col.res[k]+=take;colSave();
+  if(!quiet){snd('ok');buzz(12)}flyRes(id,k,take);updBubbles();updRes();return take}
+function collectAll(){let n=0;for(const id of Object.keys(PRODB))if(col.b[id]>0)n+=collect(id,true)>0?1:0;if(n){snd('win');buzz([15,30,15])}else toast('لا يوجد شيء للجمع')}
+function bubbleSVG(){let s='';for(const id of Object.keys(PRODB)){if(!col.b[id])continue;const [x,y,sc]=SLOT[id],k=PRODB[id];
+  s+=`<g class="bub" data-c="${id}" transform="translate(${x} ${y-62*sc})" role="button" tabindex="0" aria-label="جمع ${RES[k][0]}" style="display:none"><g class="bubi"><path d="M0 14 l-5 -6 h10Z" fill="#0b1226"/><circle r="13" fill="#0b1226" stroke="${RES[k][2]}" stroke-width="2"/><circle class="bfull" r="15.5" fill="none" stroke="${RES[k][2]}" stroke-width="1.4" opacity="0"/><text y="5" text-anchor="middle" font-size="13">${RES[k][1]}</text></g></g>`}return s}
+function updBubbles(){document.querySelectorAll('#colony .bub').forEach(b=>{const id=b.dataset.c,v=col.store[id]||0,show=v>=bubMin(id);b.style.display=show?'':'none';b.classList.toggle('full',v>=bCap(id)*0.98)});
+  const any=Object.keys(PRODB).some(id=>col.b[id]&&(col.store[id]||0)>=bubMin(id)),ca=document.querySelector('#colony .ccall');if(ca)ca.hidden=!any}
+function updRes(){document.querySelectorAll('#colony [data-r]').forEach(e=>{e.textContent=fmtN(col.res[e.dataset.r])})}
+/* icons fly from the building to the resource counter */
+function flyRes(id,k,n){const svg=$('cscene'),chip=document.querySelector(`#colony [data-r="${k}"]`);if(!svg||!chip)return;
+  const [x,y,sc]=SLOT[id],pt=svg.createSVGPoint();pt.x=x;pt.y=y-62*sc;const m=svg.getScreenCTM();if(!m)return;const p=pt.matrixTransform(m),t=chip.getBoundingClientRect();
+  fxFloat(id,'+'+fmtN(n)+' '+RES[k][1],RES[k][2]);
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  for(let i=0;i<Math.min(7,2+Math.ceil(Math.log10(n+1)*2));i++){const e=document.createElement('span');e.className='flyr';e.textContent=RES[k][1];document.body.appendChild(e);
+    const sx=p.x+(Math.random()-0.5)*30,sy=p.y+(Math.random()-0.5)*20;e.style.left=sx+'px';e.style.top=sy+'px';
+    const a=e.animate([{transform:'translate(-50%,-50%) scale(.6)',opacity:0},{transform:'translate(-50%,-50%) scale(1.2)',opacity:1,offset:.2},{transform:`translate(${t.left+t.width/2-sx}px,${t.top+t.height/2-sy}px) translate(-50%,-50%) scale(.7)`,opacity:.9}],{duration:650+i*70,easing:'cubic-bezier(.5,0,.7,1)',delay:i*40,fill:'forwards'});
+    a.onfinish=()=>{e.remove();chip.parentElement.classList.remove('pop');void chip.offsetWidth;chip.parentElement.classList.add('pop')}}}
+
+/* --- day and night follow the real clock --- */
+function phase(){const h=new Date().getHours()+new Date().getMinutes()/60;return h>=19.5||h<5?'night':h<7?'dawn':h<17?'day':'dusk'}
+const SKY={night:['#04061a','#1c1640','#4a2c58','#7a4462'],dawn:['#1a1a48','#5a3a78','#d0708a','#ffb38a'],day:['#2a4a8a','#5a6ab0','#b48ac8','#e8b0b8'],dusk:['#140c30','#4a2458','#b0506a','#ff9a6a']};
+function nightLights(){if(phase()==='day')return '';let s='<rect class="nightveil" x="-700" y="-900" width="1760" height="2400" fill="#060a24" opacity="'+(phase()==='night'?.34:.18)+'"/>';
+  for(const id of Object.keys(SLOT)){if(id==='wall'||!col.b[id])continue;const [x,y,sc]=SLOT[id];s+=`<ellipse class="glow" cx="${x+4}" cy="${y-14*sc}" rx="${34*sc}" ry="${22*sc}" fill="url(#kLamp)" opacity=".55"/>`}
+  if(col.b.wall>=3)for(const deg of [215,325,145,35])if(col.b.wall>=6){const [x,y]=fp(deg*Math.PI/180);s+=`<ellipse cx="${x}" cy="${y-34}" rx="16" ry="12" fill="url(#kLamp)" opacity=".7"/>`}
+  return s}
+
+/* --- guide: a bouncing arrow over where the current objective is done --- */
+function guideSVG(){const Q=QUESTS[col.q];if(!Q)return '';const id=Q.b||GAMEOF[Q.go];if(!id||!SLOT[id])return '';const B=BLD[id];const tgt=(B&&B.req&&col.b.hq<B.req)?'hq':id;const [x,y,sc]=SLOT[tgt];
+  return `<g class="guide" transform="translate(${x} ${y-(tgt==='wall'?52:80*sc)})" aria-hidden="true"><g class="gbounce"><path d="M-9 -16 h18 v10 h8 L0 8 L-17 -6 h8Z" fill="#ffd34d" stroke="#7a5a10" stroke-width="1.4" stroke-linejoin="round"/></g></g>`}
+
+/* --- daily chest: 7-day streak --- */
+const DAILY=[{m:150,e:150},{f:200,c:5},{m:300,e:300},{c:12},{m:500,e:500,f:300},{c:20},{m:900,e:900,f:600,c:40}];
+const dayKey=d=>{d=d||new Date();return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate()};
+function chestReady(){if(!col.dly)col.dly={k:0,s:0};return col.dly.k!==dayKey()}
+function chestBox(){const y=new Date();y.setDate(y.getDate()-1);const cont=col.dly.k===dayKey(y),s=cont?col.dly.s%7:0;
+  const m=document.createElement('div');m.className='hmodal';m.style.zIndex=40;
+  m.innerHTML=`<div class="hbox cchest"><h3>🎁 مكافأة اليوم</h3><div class="dtrack">${DAILY.map((r,i)=>`<div class="dd${i<s?' got':''}${i===s?' now':''}"><small>${i+1}</small><span>${i===6?'👑':i<s?'✅':'🎁'}</span></div>`).join('')}</div><p class="drew">${Object.entries(DAILY[s]).map(([k,n])=>'+'+n+' '+RES[k][1]).join('  ')}</p><button class="btn main" type="button">استلام</button></div>`;
+  document.body.appendChild(m);const b=m.querySelector('button');b.focus();
+  b.onclick=()=>{Object.entries(DAILY[s]).forEach(([k,n])=>gain(k,n));col.dly={k:dayKey(),s:s+1};colSave();snd('win');buzz([20,40,20]);celebrate(m.querySelector('.hbox'));b.disabled=true;setTimeout(()=>{m.remove();renderColony()},900)}}
+
+/* --- raids: every few hours the creatures attack; fence and defence decide, or you defend in person --- */
+const raidsOn=()=>col.b.def>0||col.q>=10;
+const raidPower=()=>10+col.b.hq*10;
+const defPower=()=>col.b.wall*9+col.b.def*14+crew();
+function raidPlan(from){col.raid={at:(from||Date.now())+(3+Math.random()*3)*3600000,str:Math.round(raidPower()*(0.85+Math.random()*0.35)),mine:0};colSave()}
+function raidCheck(){if(!raidsOn())return;if(!col.raid)raidPlan();const now=Date.now();
+  if(now>=col.raid.at){const R=col.raid,won=R.mine||defPower()>=R.str;let txt;
+    if(won){const c=5+col.b.hq+(R.mine?10:0),mm=Math.round(R.str*6);gain('c',c);gain('m',mm);txt=(R.mine?'صددت الغارة بنفسك! ':'السور والدفاع صدّا الغارة! ')+`+${c} 💎 +${mm} ⛏️`;if(R.mine)unlock&&0}
+    else{const lost={};for(const k of 'mef'){lost[k]=Math.floor(col.res[k]*0.12);col.res[k]-=lost[k]}txt=`اخترقت الكائنات السور وسرقت: ${Object.entries(lost).map(([k,n])=>'-'+fmtN(n)+' '+RES[k][1]).join(' ')}. طوّر السور والدفاع.`}
+    col.raidLog={won,txt,seen:0};raidPlan(now);colSave()}}
+function raidSoon(){return raidsOn()&&col.raid&&!col.raid.mine&&col.raid.at-Date.now()<20*60000}
+function raidShow(){const L=col.raidLog;if(!L||L.seen)return;L.seen=1;colSave();const m=storyBox(L.won?'🛡️ صددنا الغارة':'⚠️ غارة ناجحة',L.txt,'حسناً');if(L.won)celebrate(m.querySelector('.hbox'));else{snd('err');buzz([60,40,60])}}
+
+/* --- splash on first open of the session --- */
+(function splash(){try{if(sessionStorage.getItem('madar-splash'))return;sessionStorage.setItem('madar-splash','1')}catch(e){}
+  const s=document.createElement('div');s.id='splash';s.innerHTML='<div class="spl"><svg viewBox="-60 -60 120 120" width="140" height="140"><defs><radialGradient id="spP" cx="35%" cy="35%"><stop offset="0" stop-color="#ffd9a0"/><stop offset=".7" stop-color="#d97a4a"/><stop offset="1" stop-color="#7a3a2a"/></radialGradient></defs><circle r="34" fill="url(#spP)"/><ellipse rx="56" ry="11" fill="none" stroke="#5ff2d6" stroke-width="3" transform="rotate(-18)" class="spring"/><circle cx="40" cy="-30" r="3" fill="#fff"/></svg><h1>مستعمرة <span>المدار</span></h1><i class="spbar"><u></u></i></div>';
+  document.body.appendChild(s);const end=()=>{s.classList.add('out');setTimeout(()=>s.remove(),500)};s.onclick=end;setTimeout(end,1600)})();
+
+/* --- quiet ambience while the colony is on screen (only with sound on) --- */
+let AMB=null;
+function ambStart(){if(AMB||!prefs.sound)return;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();
+  const g=AC.createGain();g.gain.value=0;g.connect(AC.destination);const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=700;f.connect(g);
+  const os=[55,82.4,110.3].map((fr,i)=>{const o=AC.createOscillator();o.type=i===2?'triangle':'sine';o.frequency.value=fr;const lg=AC.createGain();lg.gain.value=i===2?0.25:0.5;o.connect(lg);lg.connect(f);o.start();return o});
+  const lfo=AC.createOscillator(),lg2=AC.createGain();lfo.frequency.value=0.07;lg2.gain.value=260;lfo.connect(lg2);lg2.connect(f.frequency);lfo.start();
+  g.gain.linearRampToValueAtTime(0.035,AC.currentTime+2.5);
+  const ch=setInterval(()=>{if(!AMB)return;const o=AC.createOscillator(),gg=AC.createGain(),n=[660,784,880,988,1175][Math.floor(Math.random()*5)];o.type='sine';o.frequency.value=n;gg.gain.setValueAtTime(0.0001,AC.currentTime);gg.gain.exponentialRampToValueAtTime(0.018,AC.currentTime+0.05);gg.gain.exponentialRampToValueAtTime(0.0001,AC.currentTime+2.2);o.connect(gg);gg.connect(AC.destination);o.start();o.stop(AC.currentTime+2.3)},6500);
+  AMB={g,os:[...os,lfo],ch}}catch(e){AMB=null}}
+function ambStop(){if(!AMB)return;const a=AMB;AMB=null;clearInterval(a.ch);try{a.g.gain.cancelScheduledValues(AC.currentTime);a.g.gain.linearRampToValueAtTime(0,AC.currentTime+0.6);setTimeout(()=>a.os.forEach(o=>{try{o.stop()}catch(e){}}),700)}catch(e){}}
+function ambSync(){const on=prefs.sound&&!$('hub').hidden&&!$('pColony').hidden&&!document.hidden;if(on)ambStart();else ambStop()}
+addEventListener('pointerdown',()=>ambSync(),{passive:true});document.addEventListener('visibilitychange',ambSync);
+
 /* tapping a written task takes you to it: a game opens, a building opens its sheet */
 function focusB(id){snd('tap');openSheet(id)}
 function goTo(to){const [k,v]=(to||'').split(':');if(k==='g'){const G=GAMES.find(x=>x.id===v);if(G){closeSheet();openGame(G)}return}
   if(k==='b'){const B=BLD[v];if(v!=='hq'&&B&&B.req&&col.b.hq<B.req){toast('🔒 القيادة '+B.req);focusB('hq');return}focusB(v)}}
 // live numbers once a second while the colony is on screen; every 4 s the producers show what they made
 let fxT=0;
-setInterval(()=>{const host=$('colony');if(!host||$('hub').hidden||$('pColony').hidden||document.hidden)return;
+let lastPhase=null,lastRaid=null;
+setInterval(()=>{ambSync();const host=$('colony');if(!host||$('hub').hidden||$('pColony').hidden||document.hidden)return;
   const had=col.build&&col.build.id;accrue();if(had&&!col.build){renderColony();fxRing(had);return}
   document.querySelectorAll('#colony [data-r]').forEach(e=>{e.textContent=fmtN(col.res[e.dataset.r])});
   document.querySelectorAll('#colony .cc[data-k],#csheet .cc[data-k]').forEach(e=>e.classList.toggle('no',col.res[e.dataset.k]<+e.dataset.n));
   if(col.build){const left=(col.build.end-Date.now())/1000,t=host.querySelector('[data-t]'),p=host.querySelector('[data-p]'),rc=host.querySelector('[data-rc]');
     if(t)t.textContent=fmtDur(left);if(p)p.style.width=Math.min(100,100-left/col.build.len*100)+'%';if(rc)rc.textContent=Math.max(1,Math.ceil(left/60))}
-  if(++fxT%4===0&&!matchMedia('(prefers-reduced-motion: reduce)').matches){const ids=Object.keys(PRODB).filter(id=>col.b[id]>0),id=ids[(fxT/4)%ids.length|0];
-    if(id){const k=PRODB[id],B=BLD[id],L=col.b[id],v=B.prod[1]*L*Math.pow(1.15,L-1)*mult()/900;fxFloat(id,'+'+(v<10?v.toFixed(1):Math.round(v))+' '+RES[k][1],RES[k][2])}}
+  updBubbles();raidCheck();const rs=raidSoon();if(lastPhase&&(lastPhase!==phase()||lastRaid!==rs||(col.raidLog&&!col.raidLog.seen))){lastPhase=phase();lastRaid=rs;renderColony();return}lastPhase=phase();lastRaid=rs;
+  if(rs){const e=host.querySelector('[data-raid]');if(e)e.textContent=fmtDur((col.raid.at-Date.now())/1000)}
   if(Date.now()%10000<1000)colSave()},1000);
 addEventListener('pagehide',()=>{accrue();colSave()});
