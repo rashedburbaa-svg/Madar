@@ -25,7 +25,7 @@ const cap=()=>Math.round(600*Math.pow(1.7,col.b.hq-1)*(1+0.15*((col.tech&&col.te
 const crew=()=>3+2*col.b.habitat;
 if(col.b.wall==null)col.b.wall=0;if(col.b.tower==null)col.b.tower=0;if(col.b.lab==null)col.b.lab=0;
 const techLv=k=>(col.tech&&col.tech[k])||0,TK={m:'mine',e:'power',f:'agri'},tMul=k=>1+0.1*(TK[k]?techLv(TK[k]):0);
-const mult=()=>1+0.04*crew()+0.03*(col.b.wall||0);
+const mult=()=>1+0.04*crew()+0.03*(col.b.wall||0)+(typeof artCount==='function'?0.05*artCount():0);
 function rate(k){let r=0;for(const id of BORDER){const B=BLD[id],L=col.b[id];if(B.prod&&B.prod[0]===k&&L>0)r+=B.prod[1]*L*Math.pow(1.15,L-1)}return r*mult()*tMul(k)}
 function upCost(id){const L=col.b[id],B=BLD[id],f=Math.pow(1.6,L);return {m:Math.round(B.base[0]*f),e:Math.round(B.base[1]*f),f:Math.round(B.base[2]*f)}}
 const upTime=id=>Math.round(20*Math.pow(1.75,col.b[id])*(1-0.08*techLv('build')));
@@ -94,7 +94,7 @@ function storyBox(title,text,label,fn){const m=document.createElement('div');m.c
   m.innerHTML='<div class="hbox cstory"><div class="cav">🤖</div><h3></h3><p></p><button class="btn main" type="button"></button></div>';
   m.querySelector('h3').textContent=title;m.querySelector('p').textContent=text;const b=m.querySelector('button');b.textContent=label;b.onclick=()=>{m.remove();fn&&fn()};document.body.appendChild(m);b.focus();return m}
 function chapterDone(){if(col.done)return;col.done=1;colSave();
-  const m=storyBox('المركبة جاهزة! 🚀','اكتمل الفصل الأول. الفصل الثاني قريباً.','رائع');celebrate(m.querySelector('.hbox'))}
+  const m=storyBox('المركبة جاهزة! 🚀','اكتمل الفصل الأول. افتح خريطة المجرة 🌌 وابدأ الفصل الثاني.','لنستكشف',()=>galaxyBox());celebrate(m.querySelector('.hbox'))}
 
 /* every level gets its own metal colour: silver, copper, jade, steel, royal blue, violet, crimson, amber, gold, platinum */
 const TINT=[null,null,'#c8743a','#2fb07a','#3a8fd0','#3a52d8','#9a52e0','#d8404f','#ff8a2a','#f2c040','#dff6ff'];
@@ -230,6 +230,7 @@ case 'dock':{const S=k=>col.ship[k],fly=col.done;let s=_sh(48,10);
   if(L>=4)s+=`<g transform="translate(-56 0)"><rect x="-5" y="-20" width="10" height="20" rx="5" fill="url(#kCylH)"/><rect x="-5" y="-11" width="10" height="2" fill="#ff5d73"/></g><g transform="translate(-46 2)"><rect x="-4" y="-14" width="8" height="14" rx="4" fill="url(#kCylH)"/></g>`;
   if(L>=7)s+=`<path d="M-44 -46 H42" stroke="#ffd34d" stroke-width="1" stroke-dasharray="3 3"/><circle cx="-44" cy="-49" r="1.8" fill="#ff5d73" class="blink"/><circle cx="42" cy="-49" r="1.8" fill="#ff5d73" class="blink"/>`;
   if(L>=10)s+=`<path d="M-42 -44 L-22 2 L-8 2Z M40 -44 L20 2 L6 2Z" fill="#fff3c0" opacity=".14"/>`;
+  if(col.exp)return s+'<text x="0" y="-14" text-anchor="middle" font-size="12">🚀…</text>';
   s+=`<g transform="rotate(${fly?0:-12}) translate(0 ${fly?-6:-4})">`;
   s+=`<path d="M-30 -2 L-38 4 L-34 -6Z M-30 -14 L-38 -22 L-33 -11Z" fill="${S('hull')?'#9aa6b4':'#4c5059'}"/>`;
   s+=`<path d="M-30 -14 C-10 -17 18 -16 30 -8 L33 -6 L30 -4 C18 3 -10 3 -30 0Z" fill="url(#${S('hull')?'kHull':'kHullD'})" stroke="#2a2e3a" stroke-width=".7"/>`;
@@ -408,7 +409,7 @@ function spawnPack(list){const side=Math.floor(Math.random()*3);let px,py;for(le
 function battleTick(now){BT.raf=requestAnimationFrame(battleTick);const dt=Math.min(0.05,(now-BT.last)/1000);BT.last=now;
   if(BT.cr.length){const pop=BT.cr.filter(c=>!c.boss),dead=pop.filter(c=>c.dead),alive=pop.length-dead.length;if(!BT.wave)BT.wave=now+9000;
     if(dead.length&&(now>BT.wave||alive<=Math.ceil(pop.length/3))){spawnPack(dead.sort(()=>Math.random()-0.5).slice(0,Math.min(dead.length,2+Math.floor(Math.random()*4))));BT.wave=now+8000+Math.random()*9000}}
-  if($('hub').hidden||$('pColony').hidden||document.hidden||!$('cscene'))return;bossTick(now);meteorTick(now);const calm=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if($('hub').hidden||$('pColony').hidden||document.hidden||!$('cscene'))return;bossTick(now);meteorTick(now);traderTick(now);const calm=matchMedia('(prefers-reduced-motion: reduce)').matches;
   for(const c of BT.cr){if(!c.el.isConnected)continue;
     if(c.dead)continue;
     if(!calm)stepCreature(c,dt);BT.pos[c.i]={x:c.x,y:c.y,t:c.t};c.el.setAttribute('transform',`translate(${c.x.toFixed(1)} ${c.y.toFixed(1)})`);c.flip.setAttribute('transform',c.face<0?'scale(-1 1)':'')}
@@ -475,7 +476,7 @@ function sceneSVG(){const R=rng(7);let stars='',tw='';
     <path d="M-720 286 Q-600 274 -480 284 T-240 280 T0 286 Q60 274 120 284 T240 280 T360 284 T600 280 T1080 284 V1300 H-720Z" fill="url(#cGround)"/>${crat}${rocks}
     <path d="${ROADS}" stroke="#1a1424" stroke-width="9" fill="none" stroke-linecap="round" opacity=".6"/><path d="${ROADS}" stroke="#d0a8bc" stroke-width=".7" fill="none" stroke-dasharray="4 6" opacity=".5"/>
     <g class="rover"><animateMotion dur="26s" repeatCount="indefinite" rotate="auto" path="${roverPath}"/><rect x="-7" y="-5" width="14" height="6" rx="2" fill="#e6ecf1"/><rect x="-3" y="-8" width="6" height="3" rx="1" fill="#9fb0c4"/><circle cx="-5" cy="2" r="2" fill="#2a2e3a"/><circle cx="5" cy="2" r="2" fill="#2a2e3a"/><circle cx="7.5" cy="-3" r="1.3" fill="#fff3c0"/><path d="M8 -3 l14 -4 v8Z" fill="#fff3c0" opacity=".18"/></g>
-    ${dust}${fenceSVG('back')}${towersSVG('back')}${g}${fenceSVG('front')}${towersSVG('front')}${gateSVG()}${creaturesSVG()}${zapSVG()}${nightLights()}${guideSVG()}${bubbleSVG()}<g id="cfx"></g>
+    ${dust}${fenceSVG('back')}${towersSVG('back')}${g}${fenceSVG('front')}${towersSVG('front')}${gateSVG()}${traderSVG()}${creaturesSVG()}${zapSVG()}${nightLights()}${guideSVG()}${bubbleSVG()}<g id="cfx"></g>
     <g class="drone"><animateMotion dur="18s" repeatCount="indefinite" path="M-20 300 C80 250 160 330 240 280 S380 300 400 270"/><ellipse cx="0" cy="0" rx="6" ry="2" fill="#c7cfd8"/><path d="M-8 -2h5M3 -2h5" stroke="#9aa4b2" stroke-width="1"/><circle cx="0" cy="1.5" r="1" fill="#5ff2d6" class="blink"/></g>
     </svg>`}
 /* camera: the colony opens zoomed out to fit; pinch, drag, mouse wheel or the +/- buttons move it */
@@ -529,6 +530,7 @@ function openSheet(id){sheetId=id;let m=$('csheet');if(!m){m=document.createElem
     m.querySelector('.csb').onclick=closeSheet;m.querySelector('.csx').onclick=closeSheet}
   renderSheet();m.hidden=false;requestAnimationFrame(()=>m.classList.add('on'))}
 function renderSheet(){const m=$('csheet');if(!m||!sheetId)return;const c=m.querySelector('.csc');
+  if(sheetId==='trader'){c.innerHTML=traderHTML();c.querySelectorAll('[data-trade]').forEach(b=>b.onclick=()=>trade(+b.dataset.trade));return}
   if(sheetId==='tasks'){c.innerHTML=tasksHTML();c.querySelectorAll('[data-claim]').forEach(b=>b.onclick=()=>claimTask(+b.dataset.claim));return}
   if(sheetId==='lab'){c.innerHTML=cardHTML('lab')+labHTML();bindActions(c);c.querySelectorAll('[data-tech]').forEach(b=>b.onclick=()=>startResearch(b.dataset.tech));return}
   if(sheetId==='list'){c.innerHTML=listHTML();c.querySelectorAll('[data-open]').forEach(r=>r.onclick=e=>{if(e.target.closest('[data-up]'))return;snd('tap');openSheet(r.dataset.open)})}else c.innerHTML=cardHTML(sheetId);bindActions(c)}
@@ -541,13 +543,13 @@ function listHTML(){let h=`<h3 class="lh">🏗️ المباني <small>${col.bu
 function closeSheet(){const m=$('csheet');sheetId=null;if(!m)return;m.classList.remove('on');setTimeout(()=>{if(!sheetId)m.hidden=true},250)}
 function rankChip(){try{const i=rankOf(prof.xp);return `<span class="crk">${RANKS[i][2]} ${RANKS[i][1]}</span>`}catch(e){return ''}}
 function renderColony(){const host=$('colony');if(!host)return;accrue();raidCheck();questCheck();const Q=QUESTS[col.q];
-  let h=`<div class="cscene-wrap">${sceneSVG()}</div><div class="ctop"><div class="cres">${resBar()}</div><div class="crow">${rankChip()}<button class="ctaskb" type="button" aria-label="مهام اليوم">📋<i ${tasksReady()?'':'hidden'}>${tasksReady()}</i></button>${col.intro&&chestReady()?'<button class="cchestb" type="button" aria-label="مكافأة اليوم">🎁</button>':''}</div></div><div class="cbot"><div class="cbrow"><button class="cbtn" type="button" data-list aria-label="كل المباني">🏗️ المباني</button><button class="ccall" type="button" hidden>⤓ جمع الكل</button></div>${raidSoon()?`<div class="craid"><span>⚠️ غارة بعد <b data-raid>${fmtDur((col.raid.at-Date.now())/1000)}</b></span><button class="btn" type="button" data-go="survive">🛡️ دافع</button></div>`:''}`;
+  let h=`<div class="cscene-wrap">${sceneSVG()}</div><div class="ctop"><div class="cres">${resBar()}</div><div class="crow">${rankChip()}${galOpen()?`<button class="cgalb${col.exp&&Date.now()>=col.exp.end?' ready':''}" type="button" data-gal aria-label="خريطة المجرة">🌌</button>`:''}<button class="ctaskb" type="button" aria-label="مهام اليوم">📋<i ${tasksReady()?'':'hidden'}>${tasksReady()}</i></button>${col.intro&&chestReady()?'<button class="cchestb" type="button" aria-label="مكافأة اليوم">🎁</button>':''}</div></div><div class="cbot"><div class="cbrow"><button class="cbtn" type="button" data-list aria-label="كل المباني">🏗️ المباني</button><button class="ccall" type="button" hidden>⤓ جمع الكل</button></div>${raidSoon()?`<div class="craid"><span>⚠️ غارة بعد <b data-raid>${fmtDur((col.raid.at-Date.now())/1000)}</b></span><button class="btn" type="button" data-go="survive">🛡️ دافع</button></div>`:''}`;
   if(col.rs){const left=(col.rs.end-Date.now())/1000,pc=Math.min(100,100-left/col.rs.len*100);h+=`<div class="cbuild crs"><span>🔬 <b>${TECH[col.rs.k].n}</b> ← ${(col.tech[col.rs.k]||0)+1}</span><span class="ct" data-rt>${fmtDur(left)}</span><button class="btn" type="button" data-rrush aria-label="إنهاء البحث الآن">⚡ 💎 <span data-rrc>${Math.max(1,Math.ceil(left/60))}</span></button><i><u data-rp style="width:${pc}%"></u></i></div>`}
   if(col.build){const B=BLD[col.build.id],left=(col.build.end-Date.now())/1000,pc=Math.min(100,100-left/col.build.len*100);
     h+=`<div class="cbuild"><span>🏗️ <b>${B.name}</b> ← ${col.b[col.build.id]+1}</span><span class="ct" data-t>${fmtDur(left)}</span><button class="btn" type="button" data-rush aria-label="إنهاء الآن">⚡ 💎 <span data-rc>${Math.max(1,Math.ceil(left/60))}</span></button><i><u data-p style="width:${pc}%"></u></i></div>`}
   if(Q&&col.qhide)h+=`<button class="qmini" type="button" data-qshow aria-label="إظهار الهدف">🎯</button>`;
   else if(Q)h+=`<div class="qwrap"><button class="qhide" type="button" data-qhide aria-label="إخفاء الهدف">✕</button><button class="qt" type="button" data-to="${Q.go?'g:'+Q.go:'b:'+Q.b}"><span class="qi">🎯</span><b></b><span class="qr">${Object.entries(Q.r).map(([k,n])=>'+'+n+' '+RES[k][1]).join(' ')}</span><i class="qa" aria-hidden="true">‹</i></button></div>`;
-  else h+=`<div class="qt"><span class="qi">🚀</span><b>الفصل الثاني قريباً</b></div>`;
+  else h+=`<button class="qt" type="button" data-gal><span class="qi">🌌</span><b>الفصل الثاني: أرسل المركبة لاستكشاف المجرة</b><span class="qr">${artCount()}/6 🏺</span><i class="qa">‹</i></button>`;
   h+='</div><div class="czoom"><button type="button" data-z="in" aria-label="تكبير">＋</button><button type="button" data-z="out" aria-label="تصغير">－</button><button type="button" data-z="fit" aria-label="عرض الكل">⤢</button></div>';host.innerHTML=h;
   {const qb=host.querySelector('.qt b');if(Q&&qb)qb.textContent=Q.t}
   host.querySelectorAll('[data-z]').forEach(b=>b.onclick=()=>{snd('tap');const z=b.dataset.z;if(z==='fit'){cam.z=1;cam.x=180;cam.y=null;camView()}else camZoom(z==='in'?1.3:1/1.3)});camBind();battleInit();
@@ -557,6 +559,7 @@ function renderColony(){const host=$('colony');if(!host)return;accrue();raidChec
   host.querySelectorAll('.cre').forEach(el=>{const go=e=>{if(camDrag)return;e&&e.stopPropagation&&e.stopPropagation();const c=BT.cr.find(x=>x.el===el);if(c)strike(c)};el.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse'||e.button===0){el._pd=1}});el.onclick=go;el.onkeydown=e=>{if(e.key==='Enter')go()}});
   host.querySelectorAll('.bub').forEach(b=>{const go=e=>{if(camDrag)return;e&&e.stopPropagation();collect(b.dataset.c)};b.onclick=go;b.onkeydown=e=>{if(e.key==='Enter')go(e)}});
   const ca=host.querySelector('.ccall');if(ca)ca.onclick=collectAll;
+  host.querySelectorAll('[data-gal]').forEach(b=>b.onclick=()=>{snd('tap');galaxyBox()});host.querySelectorAll('.trader').forEach(t=>t.onclick=()=>{if(camDrag)return;snd('tap');openSheet('trader')});
   const tb=host.querySelector('.ctaskb');if(tb)tb.onclick=()=>{snd('tap');openSheet('tasks')};const rr=host.querySelector('[data-rrush]');if(rr)rr.onclick=rushResearch;
   const lb=host.querySelector('[data-list]');if(lb)lb.onclick=()=>{snd('tap');openSheet('list')};
   const qh=host.querySelector('[data-qhide]');if(qh)qh.onclick=()=>{col.qhide=1;colSave();snd('tap');renderColony()};const qs=host.querySelector('[data-qshow]');if(qs)qs.onclick=()=>{col.qhide=0;colSave();snd('tap');renderColony()};const cb=host.querySelector('.cchestb');if(cb)cb.onclick=()=>{snd('tap');chestBox()};
@@ -659,6 +662,7 @@ setInterval(()=>{ambSync();const host=$('colony');if(!host||$('hub').hidden||$('
   if(col.build){const left=(col.build.end-Date.now())/1000,t=host.querySelector('[data-t]'),p=host.querySelector('[data-p]'),rc=host.querySelector('[data-rc]');
     if(t)t.textContent=fmtDur(left);if(p)p.style.width=Math.min(100,100-left/col.build.len*100)+'%';if(rc)rc.textContent=Math.max(1,Math.ceil(left/60))}
   if(col.rs){if(Date.now()>=col.rs.end){researchTick();renderColony();return}const left=(col.rs.end-Date.now())/1000,t=host.querySelector('[data-rt]'),p2=host.querySelector('[data-rp]'),rc=host.querySelector('[data-rrc]');if(t)t.textContent=fmtDur(left);if(p2)p2.style.width=Math.min(100,100-left/col.rs.len*100)+'%';if(rc)rc.textContent=Math.max(1,Math.ceil(left/60))}
+  if(col.exp){const gb=document.getElementById('galbox');if(gb){const gt=gb.querySelector('.gt');if(Date.now()>=col.exp.end&&gt)galaxyBox();else if(gt)gt.textContent=fmtDur((col.exp.end-Date.now())/1000)}if(Date.now()>=col.exp.end&&!col.exp.told){col.exp.told=1;toast('🚀 عادت المركبة! افتح 🌌 لاستلام الغنائم','ach');renderColony();return}}
   updBubbles();raidCheck();const rs=raidSoon();if(lastPhase&&(lastPhase!==phase()||lastRaid!==rs||(col.raidLog&&!col.raidLog.seen))){lastPhase=phase();lastRaid=rs;renderColony();return}lastPhase=phase();lastRaid=rs;
   if(rs){const e=host.querySelector('[data-raid]');if(e)e.textContent=fmtDur((col.raid.at-Date.now())/1000)}
   if(Date.now()%10000<1000)colSave()},1000);
