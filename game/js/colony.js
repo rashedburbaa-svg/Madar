@@ -94,6 +94,19 @@ function storyBox(title,text,label,fn){const m=document.createElement('div');m.c
 function chapterDone(){if(col.done)return;col.done=1;colSave();
   const m=storyBox('المركبة جاهزة! 🚀','اكتمل الفصل الأول. الفصل الثاني قريباً.','رائع');celebrate(m.querySelector('.hbox'))}
 
+/* every level gets its own metal colour: silver, copper, jade, steel, royal blue, violet, crimson, amber, gold, platinum */
+const TINT=[null,null,'#c8743a','#2fb07a','#3a8fd0','#3a52d8','#9a52e0','#d8404f','#ff8a2a','#f2c040','#dff6ff'];
+const TNAME=['','فضّي','نحاسي','يشمي','فولاذي','ملكي','بنفسجي','قرمزي','كهرماني','ذهبي','بلاتيني'];
+const _mix=(a,b,t)=>{const p=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)),A=p(a),B=p(b);return '#'+A.map((v,i)=>Math.round(v+(B[i]-v)*t).toString(16).padStart(2,'0')).join('')};
+const GSET={Mf:['l',[['0','#aeb9c7'],['1','#6c7788']]],Ms:['l',[['0','#6f7a8c'],['1','#434b5a']]],Mt:['h',[['0','#e3e9ef'],['1','#b9c3cf']]],
+  Cyl:['l',[['0','#f4f7fa'],['.45','#c7d0da'],['1','#6a7686']]],CylH:['h',[['0','#eef2f6'],['.55','#a9b4c2'],['1','#5a6575']]],
+  Dome:['r',[['0','#ffffff'],['.35','#d6e2ee'],['.8','#8495ad'],['1','#5c6b82']]],Wall:['l',[['0','#c7d0da'],['.5','#7d8898'],['1','#4a5262']]],Panel:['l',[['0','#8a93a2'],['1','#4f5868']]]};
+function tintDefs(){let d='<defs>';for(let L=2;L<=10;L++){const T=TINT[L],k=L===10?0.32:L===9?0.55:0.46;
+  for(const [n,[type,stops]] of Object.entries(GSET)){const st=stops.map(([o,c],i)=>`<stop offset="${o}" stop-color="${_mix(c,T,i===0&&(n==='Dome'||n==='Mt')?k*0.45:k)}"/>`).join('');
+    d+=type==='r'?`<radialGradient id="k${n}${L}" cx="32%" cy="28%" r="80%">${st}</radialGradient>`:type==='h'?`<linearGradient id="k${n}${L}" x1="0" y1="0" x2="1" y2="0">${st}</linearGradient>`:`<linearGradient id="k${n}${L}" x1="0" y1="0" x2="0" y2="1">${st}</linearGradient>`}}
+  return d+'</defs>'}
+const tint=(svg,L)=>!L||L<2?svg:svg.replace(/url\(#k(Mf|Mt|Ms|CylH|Cyl|Dome|Wall|Panel)\)/g,(m,k)=>`url(#k${k}${Math.min(10,L)})`);
+const lvBadge=(L,x,y)=>`<g class="lv" transform="translate(${x} ${y})"><circle r="8" fill="#0b1226" stroke="${TINT[L]||'#d6dee8'}" stroke-width="1.8"/><text y="3.2" text-anchor="middle" font-size="9.5" font-weight="700" fill="${L>=9?'#ffd34d':'#fff'}">${L}</text></g>`;
 const ADEFS=`<defs>
 <linearGradient id="kMf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#aeb9c7"/><stop offset="1" stop-color="#6c7788"/></linearGradient>
 <linearGradient id="kMs" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6f7a8c"/><stop offset="1" stop-color="#434b5a"/></linearGradient>
@@ -120,7 +133,8 @@ const _win=(x,y,n,gap,w,h,c)=>{let s='';for(let i=0;i<n;i++)s+=`<rect x="${x+i*g
 function _lattice(x0,w0,x1,w1,y0,y1,n,c){let s=`<path d="M${x0} ${y0} L${x1} ${y1} M${x0+w0} ${y0} L${x1+w1} ${y1}" stroke="${c}" stroke-width="1.7" fill="none"/>`,p='';
   for(let i=0;i<n;i++){const t0=i/n,t1=(i+1)/n,ya=y0+(y1-y0)*t0,yb=y0+(y1-y0)*t1,la=x0+(x1-x0)*t0,lb=x0+(x1-x0)*t1,ra=la+w0+(w1-w0)*t0,rb=lb+w0+(w1-w0)*t1;p+=`M${la} ${ya}L${rb} ${yb}M${ra} ${ya}L${lb} ${yb}M${lb} ${yb}H${rb}`}
   return s+`<path d="${p}" stroke="${c}" stroke-width=".8" fill="none" opacity=".85"/>`}
-function art(id,L){L=Math.max(0,L);switch(id){
+function art(id,L){return tint(artRaw(id,L),L)}
+function artRaw(id,L){L=Math.max(0,L);switch(id){
 case 'hq':{let s=_sh(40,9);
   if(L>=4)s+=_box(-48,0,16,10,7)+_win(-46,-7,3,5,3,2.5);
   if(L>=7)s+=_box(30,0,12,26,7)+_win(32,-23,2,5,3,3)+_win(32,-16,2,5,3,3)+_win(32,-9,2,5,3,3);
@@ -235,7 +249,8 @@ const FEN={cx:178,cy:468,rx:196,ry:180};
 const fp=a=>[FEN.cx+FEN.rx*Math.cos(a),FEN.cy+FEN.ry*Math.sin(a)];
 function fenceStyle(L){return L>=9?{h:14,fill:'url(#kWall)',post:'#c7cfd8',cap:'#9fe8ff'}:L>=6?{h:11,fill:'url(#kWall)',post:'#aeb8c4',cap:'#5ff2d6'}:L>=3?{h:9,fill:'url(#kPanel)',post:'#9aa4b2',cap:'#ffd34d'}:{h:7,fill:'none',post:'#8a93a2',cap:'#ffd34d'}}
 /* half = 'back' (upper arc, drawn behind the buildings) or 'front' (lower arc, drawn over them) */
-function fenceSVG(half){const L=col.b.wall||0,N=44,gap=0.17,st=fenceStyle(L);let seg='',posts='',strand='',tow='';
+function fenceSVG(half){return tint(fenceRaw(half),col.b.wall||0)}
+function fenceRaw(half){const L=col.b.wall||0,N=44,gap=0.17,st=fenceStyle(L);let seg='',posts='',strand='',tow='';
   if(!L){let d='';for(let i=0;i<=N;i++){const a=i/N*Math.PI*2,[x,y]=fp(a),back=y<FEN.cy;if((half==='back')!==back)continue;d+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="1.2" fill="#9fe8ff" opacity=".45"/>`}return d}
   for(let i=0;i<N;i++){const a0=i/N*Math.PI*2,a1=(i+1)/N*Math.PI*2,mid=(a0+a1)/2;if(Math.abs(((mid-Math.PI/2+Math.PI*3)%(Math.PI*2))-Math.PI)<gap)continue;
     const [x0,y0]=fp(a0),[x1,y1]=fp(a1),back=(y0+y1)/2<FEN.cy;if((half==='back')!==back)continue;const h=st.h;
@@ -246,10 +261,11 @@ function fenceSVG(half){const L=col.b.wall||0,N=44,gap=0.17,st=fenceStyle(L);let
   if(L>=6)for(const deg of [215,325,145,35]){const a=deg*Math.PI/180,[x,y]=fp(a);if((half==='back')!==(y<FEN.cy))continue;
     tow+=`<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)})"><ellipse cx="2" cy="1" rx="9" ry="3" fill="#000" opacity=".35"/>${_lattice(-5,10,-4,8,0,-30,4,'#aeb8c4')}${_box(-7,-30,14,8,5)}<rect x="-5" y="-36" width="10" height="6" fill="#26324a"/><rect x="-4" y="-35" width="8" height="3" fill="#5ff2d6" opacity=".8"/><circle cx="0" cy="-40" r="1.8" fill="#ff5d73" class="blink"/><path d="M0 -38 L-26 -60 L-18 -64Z" fill="#fff3c0" opacity=".1" class="sweep"/></g>`}
   return seg+posts+(strand?`<path d="${strand}" stroke="${L>=9?'#9fe8ff':'#5ff2d6'}" stroke-width="${L>=9?2:1.4}" fill="none" class="efence"/>`:'')+tow}
-function gateSVG(){const L=col.b.wall||0,[x,y]=fp(Math.PI/2),st=fenceStyle(Math.max(1,L));
+function gateSVG(){return tint(gateRaw(),col.b.wall||0)}
+function gateRaw(){const L=col.b.wall||0,[x,y]=fp(Math.PI/2),st=fenceStyle(Math.max(1,L));
   return `<g class="cb${L?'':' empty'}${col.build&&col.build.id==='wall'?' building':''}" data-b="wall" transform="translate(${x.toFixed(1)} ${y.toFixed(1)})" role="button" tabindex="0" aria-label="${BLD.wall.name}"><ellipse cx="0" cy="-12" rx="44" ry="26" fill="transparent"/>
     ${L?`<g class="bart">${_box(-36,0,9,st.h+12,5)}${_box(27,0,9,st.h+12,5)}<path d="M-32 ${-st.h-14} Q0 ${-st.h-30} 32 ${-st.h-14}" stroke="${st.post}" stroke-width="3" fill="none"/><circle cx="0" cy="${-st.h-22}" r="2.4" fill="${L>=6?'#5ff2d6':'#ffd34d'}" class="blink"/>${L>=6?`<path d="M-27 -4 H27 M-27 -10 H27" stroke="#5ff2d6" stroke-width=".8" opacity=".5" class="efence"/>`:''}</g>`:`<g class="plot"><circle cx="0" cy="-16" r="11" fill="#0b1226cc" stroke="#9fe8ff" stroke-width="1.2"/><path d="M-5 -16h10M0 -21v10" stroke="#9fe8ff" stroke-width="2" stroke-linecap="round"/></g>`}
-    ${L?`<g class="lv" transform="translate(30 ${-st.h-30})"><circle r="8" fill="#0b1226" stroke="#ffd34d" stroke-width="1.4"/><text y="3.2" text-anchor="middle" font-size="9.5" font-weight="700" fill="#ffd34d">${L}</text></g>`:''}</g>`}
+    ${L?lvBadge(L,30,-st.h-30):''}</g>`}
 /* creatures: little green aliens, a six-legged crawler, a horned beast, a tentacled blob and a saucer */
 const CRE={
   alien:`<ellipse cx="0" cy="1" rx="5" ry="1.6" fill="#000" opacity=".35"/><g class="bob"><path d="M-2.5 0 L-2 -6 M2.5 0 L2 -6" stroke="#4fae5a" stroke-width="1.6" stroke-linecap="round"/><ellipse cx="0" cy="-8" rx="3.6" ry="4" fill="#5fd06a"/><ellipse cx="0" cy="-15" rx="5.4" ry="4.6" fill="#7ddc5a"/><ellipse cx="-2" cy="-15" rx="1.6" ry="2.2" fill="#111"/><ellipse cx="2" cy="-15" rx="1.6" ry="2.2" fill="#111"/><circle cx="-1.6" cy="-15.8" r=".5" fill="#fff"/><path d="M-2 -19 L-4 -24 M2 -19 L4 -24" stroke="#5fd06a" stroke-width=".9"/><circle cx="-4" cy="-24.5" r="1.1" fill="#ff5d73"/><circle cx="4" cy="-24.5" r="1.1" fill="#ff5d73"/></g>`,
@@ -274,7 +290,8 @@ const HEAD={
   plasma:'<rect x="-6" y="-6" width="12" height="12" rx="3" fill="#4a3a6a"/><rect x="2" y="-5.5" width="11" height="4.4" rx="2" fill="#b47aff"/><rect x="2" y="1.1" width="11" height="4.4" rx="2" fill="#b47aff"/><circle cx="13" cy="-3.3" r="1.3" fill="#ffd6ff"/><circle cx="13" cy="3.3" r="1.3" fill="#ffd6ff"/>'};
 function towerSVG(i,tier,big){const [x,y]=fp(TDEG[i]*Math.PI/180),s=big?1.4:0.85;
   return `<g class="tow${big?'':' wg'}" data-b="tower" data-t="${i}" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s})" role="button" tabindex="0" aria-label="${BLD.tower.name}"><ellipse cx="2" cy="1" rx="11" ry="3.4" fill="#000" opacity=".38"/>${big?_lattice(-6,12,-4,8,0,-20,3,'#aeb8c4')+_box(-8,-18,16,5,5):_box(-4,0,8,14,4)}<g class="thead" transform="translate(${big?2:0} ${big?-26:-18})">${HEAD[tier]}</g></g>`}
-function towersSVG(half){let s='';const L=col.b.tower||0,n=towerN(),t=tierOf(L);
+function towersSVG(half){return tint(towersRaw(half),col.b.tower||0)}
+function towersRaw(half){let s='';const L=col.b.tower||0,n=towerN(),t=tierOf(L);
   for(let i=0;i<n;i++){const [,y]=fp(TDEG[i]*Math.PI/180);if((half==='back')===(y<FEN.cy))s+=towerSVG(i,t,true)}
   if((col.b.wall||0)>=4)for(const deg of [180,0,112,68]){const [,y]=fp(deg*Math.PI/180);if((half==='back')===(y<FEN.cy))s+=`<g class="wgun" data-deg="${deg}" transform="translate(${fp(deg*Math.PI/180).map(v=>v.toFixed(1)).join(' ')})"><g class="thead" transform="translate(0 ${-fenceStyle(col.b.wall).h-5})">${HEAD.gun}</g></g>`}
   return s}
@@ -334,13 +351,14 @@ function sceneSVG(){const R=rng(7);let stars='',tw='';
   const order=Object.keys(SLOT).filter(k=>k!=='wall'&&k!=='tower').sort((a,b)=>SLOT[a][1]-SLOT[b][1]);let g='';
   for(const id of order){const [x,y,base]=SLOT[id],L=col.b[id],bl=col.build&&col.build.id===id,sc=(base*(0.92+Math.min(10,L)*0.02)).toFixed(3);
     g+=`<g class="cb${L?'':' empty'}${bl?' building':''}" data-b="${id}" transform="translate(${x} ${y})" role="button" tabindex="0" aria-label="${BLD[id].name}"><ellipse cx="0" cy="-20" rx="50" ry="46" fill="transparent"/>`;
+    if(L>=10)g+=`<ellipse class="aura" cx="0" cy="-6" rx="${46*base}" ry="${16*base}" fill="url(#kLamp)"/>`;
     if(L||id==='dock')g+=`<g class="bart" transform="scale(${sc})">${art(id,L)}</g>`;
     if(!L&&id!=='dock')g+=`<g class="plot"><ellipse cx="0" cy="-2" rx="30" ry="10" fill="#9fe8ff" opacity=".08" stroke="#9fe8ff" stroke-dasharray="5 4" stroke-width="1.2"/><circle cx="0" cy="-20" r="11" fill="#0b1226cc" stroke="#9fe8ff" stroke-width="1.2"/><path d="M-5 -20h10M0 -25v10" stroke="#9fe8ff" stroke-width="2" stroke-linecap="round"/></g>`;
     if(bl)g+=`<g class="scaf"><path d="M-26 2 V-44 M26 2 V-44 M-26 -14 H26 M-26 -30 H26 M-26 -14 L26 -30 M-26 -44 H34 M30 -44 V-30" stroke="#ffd34d" stroke-width="1.6" fill="none"/><path d="M30 -30 v6" stroke="#ddd" stroke-width=".8"/><rect x="27" y="-24" width="6" height="4" fill="#8f99a8"/>${[0,1,2,3,4].map(i=>`<circle class="spark" style="animation-delay:${i*0.25}s" cx="${-10+i*5}" cy="-18" r="1.2" fill="#fff3c0"/>`).join('')}</g>`;
-    if(L)g+=`<g class="lv" transform="translate(${id==='hq'?34:24} ${id==='hq'?-70:-54})"><circle r="8" fill="#0b1226" stroke="#ffd34d" stroke-width="1.4"/><text y="3.2" text-anchor="middle" font-size="9.5" font-weight="700" fill="#ffd34d">${L}</text></g>`;
+    if(L)g+=lvBadge(L,id==='hq'?34:24,id==='hq'?-70:-54);
     g+='</g>'}
   const roverPath='M184 470 Q120 486 64 466 Q40 500 70 580 Q130 600 184 584 Q240 600 298 580 Q330 500 296 462 Q240 486 184 470Z';
-  return `<svg class="cscene ${phase()}${raidSoon()?' raid':''}" id="cscene" viewBox="-20 0 400 780" preserveAspectRatio="xMidYMid slice" aria-label="خريطة المستعمرة">${ADEFS}<defs>
+  return `<svg class="cscene ${phase()}${raidSoon()?' raid':''}" id="cscene" viewBox="-20 0 400 780" preserveAspectRatio="xMidYMid slice" aria-label="خريطة المستعمرة">${ADEFS}${tintDefs()}<defs>
     <linearGradient id="cSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${SKY[phase()][0]}"/><stop offset=".55" stop-color="${SKY[phase()][1]}"/><stop offset=".85" stop-color="${SKY[phase()][2]}"/><stop offset="1" stop-color="${SKY[phase()][3]}"/></linearGradient>
     <linearGradient id="cGround" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7a5266"/><stop offset=".15" stop-color="#5a4058"/><stop offset="1" stop-color="#1a1224"/></linearGradient>
     <linearGradient id="cHill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a3350"/><stop offset="1" stop-color="#3a2a44"/></linearGradient>
@@ -397,10 +415,10 @@ function resBar(){return Object.entries(RES).map(([k,[n,em,c]])=>`<div class="cr
 function costHTML(c){return Object.entries(c).map(([k,n])=>`<span class="cc${col.res[k]>=n?'':' no'}" data-k="${k}" data-n="${n}">${RES[k][1]} ${fmtN(n)}</span>`).join('')}
 function cardHTML(id){const B=BLD[id],L=col.b[id],locked=B.req&&col.b.hq<B.req,max=L>=(B.max||10),G=B.game&&GAMES.find(x=>x.id===B.game),c=upCost(id);
   const info=B.prod&&L?`${RES[B.prod[0]][1]} +${B.prod[0]==='c'?(B.prod[1]*L*Math.pow(1.15,L-1)*mult()).toFixed(1):fmtN(B.prod[1]*L*Math.pow(1.15,L-1)*mult())}/س`:id==='hq'?`📦 ${fmtN(cap())}`:id==='habitat'?`🧑‍🚀 ${crew()}`:id==='wall'&&L?`إنتاج +${3*L}%`:id==='tower'&&L?`🗼 ${towerN()} · ${WNAME[tierOf(L)]}`:id==='def'&&L?`غنائم +${col.b.def*20}%`:'';
-  let h=`<div class="cbc${locked?' locked':''}"><div class="ch"><span class="ci"><svg viewBox="-52 -64 104 76">${art(id,Math.max(1,L))}</svg></span><span class="ctt"><b>${B.name}</b><small>${locked?'<span class="golink" data-to="b:hq" role="button" tabindex="0">🔒 القيادة '+B.req+' ‹</span>':L?'مستوى '+L+(info?' · '+info:''):'غير مبني'}</small></span></div>`;
+  let h=`<div class="cbc${locked?' locked':''}"><div class="ch"><span class="ci"><svg viewBox="-52 -64 104 76">${art(id,Math.max(1,L))}</svg></span><span class="ctt"><b>${B.name}</b><small>${locked?'<span class="golink" data-to="b:hq" role="button" tabindex="0">🔒 القيادة '+B.req+' ‹</span>':L?`مستوى ${L} <i class="tchip" style="--t:${TINT[L]||'#d6dee8'}">${TNAME[L]}</i>`+(info?' · '+info:''):'غير مبني'}</small></span></div>`;
   if(col.build&&col.build.id===id)h+=`<p class="cd">🏗️ قيد البناء…</p>`;
   else if(!locked&&!max&&id!=='hq'&&L>col.b.hq)h+='<button class="cd need" type="button" data-to="b:hq">🔒 يحتاج القيادة '+L+' ‹</button>';
-  else if(!locked&&!max)h+=`<div class="ccost">${costHTML(c)}<span class="cc time">⏱️ ${fmtDur(upTime(id))}</span></div><button class="btn${L?'':' main'}" type="button" data-up="${id}">${L?'⬆️ مستوى '+(L+1):'🏗️ بناء'}</button>`;
+  else if(!locked&&!max)h+=`<div class="ccost">${costHTML(c)}<span class="cc time">⏱️ ${fmtDur(upTime(id))}</span></div><button class="btn${L?'':' main'}" type="button" data-up="${id}">${L?'⬆️ مستوى '+(L+1)+' <i class="tdot" style="--t:'+(TINT[L+1]||'#d6dee8')+'"></i>':'🏗️ بناء'}</button>`;
   else if(max)h+='<p class="cd">✔️ الأعلى</p>';
   if(G&&L)h+=`<button class="btn task" type="button" data-go="${B.game}" aria-label="${B.task}">🎮 مهمة</button>`;
   if(id==='dock'&&L){h+='<div class="parts">'+PARTS.map(([pid,pn,pc],i)=>{const done=col.ship[pid];return `<div class="part${done?' ok':''}"><span>${done?'✅':'🔧'} ${pn}</span>${done?'':`<span class="ccost">${costHTML({m:pc[0],e:pc[1],f:pc[2],c:pc[3]})}</span><button class="btn" type="button" data-fix="${i}">${col.b.dock<i+1?'🔒 '+(i+1):'🔧'}</button>`}</div>`}).join('')+'</div>'}
