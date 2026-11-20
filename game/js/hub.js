@@ -1,6 +1,10 @@
 /* ================= hub ================= */
 
-const GAMES=[SurviveGame];
+const GAMES=[SurviveGame,PilotGame];
+function pilotCard(){const ps=gState('pilot')||{},lock=!(col.b.dock>0),S=typeof PilotGame!=='undefined';if(!S)return '';
+  return `<div class="svcard pvcard"><div class="pvhero">${PilotGame.icon}</div><div class="svbody"><h2>طيّار المدار</h2><p>قُد مركبة المستعمرة في المدار، أسقط أساطيل الغزاة واهزم السفينة الأم كل 5 موجات.</p>
+    <div class="svstats"><span><b>${(ps.best||0).toLocaleString('en')}</b><small>أعلى نقاط</small></span><span><b>${ps.bestWave||1}</b><small>أعلى موجة</small></span><span><b>${ps.runs||0}</b><small>رحلات</small></span></div>
+    <button class="btn main pvplay${lock?' locked':''}" type="button">${lock?'🔒 يحتاج حوض الإصلاح':'🚀 انطلق'}</button></div></div>`}
 function renderHub(){
   drawPrefs();drawRank();drawMissions();
   const d=$('daily'),sv=gState('survive')||{},best=col.surv||0,hero=typeof ART!=='undefined'&&ART.splash?`<img class="svhero" src="${ART.splash}" alt="">`:'';
@@ -8,8 +12,10 @@ function renderHub(){
   d.innerHTML=`<div class="svcard">${hero}<div class="svbody"><h2>صمود المدار</h2><p>اخرج من السور وواجه موجات الكائنات. كل ثانية صمود تجلب موارد للمستعمرة.</p>
     <div class="svstats"><span><b>${fmtTime?fmtTime(best):best}</b><small>أطول صمود</small></span><span><b>${col.skills||0}</b><small>أكثر قتلى</small></span><span><b>${col.sboss||0}</b><small>زعماء</small></span><span><b>${col.sruns||0}</b><small>جولات</small></span></div>
     ${bonus?`<div class="svbonus">🏗️ دعم المستعمرة: <b>+${bonus.dmg}%</b> ضرر · <b>+${bonus.hp}</b> صحة · <b>+${bonus.rate}%</b> سرعة إطلاق</div>`:''}
-    <button class="btn main svplay" type="button">⚔️ ابدأ جولة</button></div></div>`;
+    <button class="btn main svplay" type="button">⚔️ ابدأ جولة</button></div></div>
+    ${pilotCard()}`;
   d.querySelector('.svplay').onclick=()=>{snd('tap');openGame(SurviveGame)};
+  {const pb=d.querySelector('.pvplay');if(pb)pb.onclick=()=>{if(!(col.b.dock>0)){snd('err');toast('🔒 ابنِ حوض الإصلاح أولاً');showTab('pColony');setTimeout(()=>openSheet('dock'),300);return}snd('tap');openGame(PilotGame)}}
   {const l=document.getElementById('dlist');if(l)l.remove();const sm=document.getElementById('dsum');if(sm)sm.remove()}
   $('dailyDot').hidden=true;
   let total=0;GAMES.forEach(G=>{total+=G.progress().stars});renderColony();

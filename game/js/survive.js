@@ -1,7 +1,7 @@
 /* ================= game 10: endless survival ================= */
 const SurviveGame=(()=>{
   // fixed arena in logical units; the canvas is scaled to the stage width
-  const W=360,H=520,WAVE_LEN=30;
+  const W=432,H=624,WAVE_LEN=30;
   let cv,ctx,raf=0,last=0,st,running=false,paused=true,over=false,joy=null,keys={},statT=0,hitSndT=0,buzzT=0;
   let ch=null,deathWhy='',p,gun,orb,pul,mis,drn,mines,bolts,flT,chT,mnT,beamTg,evo,misT,drnT,novaT,bhT,holes,ms,en,bl,eb,drops,parts,rings,hz,crys,bossKills,t,wave,waveT,spawnT,kills,orbA,pulseT,buff,banner,lv,bossAlive,recordShown;
   const UP=[

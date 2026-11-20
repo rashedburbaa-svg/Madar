@@ -774,3 +774,10 @@ body.colfull .tabbar{background:rgba(10,14,30,.92)}
 .svplay{font-size:18px;padding:14px}
 #daily:has(.svcard){border:0;padding:0;background:none;box-shadow:none}
 .hubhead .pill:has(#totalStars){display:none}
+/* pilot game */
+canvas.pcv{margin:0 auto;background:#050816}
+.pvcard{margin-top:14px}.pvhero{height:150px;display:grid;place-items:center;background:radial-gradient(circle at 50% 40%,#2a2060,#070b22 70%)}
+.pvhero svg{width:120px;height:120px;filter:drop-shadow(0 0 18px #5ff2d655)}
+.pvcard .svstats{grid-template-columns:repeat(3,1fr)}
+.pvplay.locked{filter:grayscale(.8);opacity:.75}
+.overlay.pov .svbonus{margin:8px 0 12px;text-align:center}

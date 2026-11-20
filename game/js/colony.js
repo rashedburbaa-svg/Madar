@@ -14,11 +14,11 @@ const BLD={
   tower:{name:'أبراج الدفاع',base:[160,140,40],req:2,desc:'أبراج على السور تقتل الوحوش؛ كل مستوى يضيف برجاً ويقوّي السلاح.'},
   wall:{name:'السور',base:[90,70,20],desc:'يحمي المستعمرة من الكائنات، وكل مستوى يرفع الإنتاج 3%.'},
   lab:{name:'المختبر',base:[220,200,90],req:3,desc:'أبحاث تقوّي الإنتاج والدفاع والبناء.'},
-  dock:{name:'حوض الإصلاح',base:[250,200,80],req:2,desc:'هنا تُصلَح أجزاء المركبة لتنطلق من جديد.'}
+  dock:{name:'حوض الإصلاح',base:[250,200,80],req:2,game:'pilot',task:'دورية فضائية',desc:'هنا تُصلَح أجزاء المركبة لتنطلق من جديد.'}
 };
 const BORDER=['hq','wall','tower','mine','solar','farm','habitat','radio','obs','def','lab','dock'];
 const PARTS=[['engine','المحرك',[400,400,100,10]],['nav','نظام الملاحة',[650,700,160,20]],['shield','الدرع الحراري',[1000,850,300,30]],['antenna','هوائي الاتصال',[1400,1500,420,45]],['hull','الهيكل',[2200,2000,800,60]]];
-const GAMEOF={survive:'def'};
+const GAMEOF={survive:'def',pilot:'dock'};
 const col=load('arcade-colony',{res:{m:300,e:300,f:200,c:20},b:{hq:1,mine:1,solar:1,farm:1,habitat:1,radio:0,obs:0,def:0,dock:0},build:null,last:Date.now(),q:0,ship:{},intro:0,wins:{},surv:0,done:0});
 const colSave=()=>save('arcade-colony',col);
 const cap=()=>Math.round(600*Math.pow(1.7,col.b.hq-1)*(1+0.15*((col.tech&&col.tech.store)||0)));
@@ -60,7 +60,9 @@ function repair(i){accrue();const [pid,name,c]=PARTS[i],need={m:c[0],e:c[1],f:c[
   if(PARTS.every(p=>col.ship[p[0]])){unlock('col_ship');setTimeout(chapterDone,600)}renderColony()}
 /* every win in a story game feeds the colony; the task building's level raises the reward */
 function colonyReward(id,stars,info){const bid=GAMEOF[id];if(!bid)return;accrue();info=info||{};const L=Math.max(1,col.b[bid]),k=1+0.3*(L-1);let got=[];
-  if(id==='survive'){const t=info.time||0;if(t>=60&&raidSoon()){col.raid.mine=1;setTimeout(()=>toast('🛡️ صددت الغارة القادمة!','ach'),1800)}if(t<10)return;const d=1+0.2*col.b.def;col.surv=Math.max(col.surv||0,t);col.skills=Math.max(col.skills||0,info.kills||0);col.sboss=(col.sboss||0)+(info.boss||0);col.sruns=(col.sruns||0)+1;if(typeof dtask==='function')dtask('mission',1);
+  if(id==='pilot'){const sc=info.score||0;if(sc<200)return;col.pbest=Math.max(col.pbest||0,sc);col.pruns=(col.pruns||0)+1;if(typeof dtask==='function')dtask('mission',1);
+    got=[['m',sc*0.12*k],['e',sc*0.1*k],['f',sc*0.06*k],['c',(info.crys||0)+Math.floor((info.wave||0)/2)]]}
+  else if(id==='survive'){const t=info.time||0;if(t>=60&&raidSoon()){col.raid.mine=1;setTimeout(()=>toast('🛡️ صددت الغارة القادمة!','ach'),1800)}if(t<10)return;const d=1+0.2*col.b.def;col.surv=Math.max(col.surv||0,t);col.skills=Math.max(col.skills||0,info.kills||0);col.sboss=(col.sboss||0)+(info.boss||0);col.sruns=(col.sruns||0)+1;if(typeof dtask==='function')dtask('mission',1);
     got=[['m',t*1.4*d],['e',t*1.2*d],['f',t*0.9*d],['c',Math.floor(t/30)+(info.boss||0)*5]]}
   else{col.wins[id]=(col.wins[id]||0)+1;if(typeof dtask==='function')dtask('mission',1);const base=(50+30*stars)*k;
     got=id==='mines'?[['m',base*1.4],['c',stars]]:id==='grid'?[['e',base*1.4],['c',stars]]:id==='words'?[['c',2+2*stars],['f',base*0.6]]:[['f',base*1.2],['c',1+stars]]}

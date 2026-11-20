@@ -46,5 +46,5 @@ const Astro3D=(function(){
     parts.body.position.y=moving?Math.abs(Math.cos(t*11))*.06:Math.sin(t*2)*.02;parts.head.rotation.z=moving?Math.sin(t*5.5)*.05:0;
     parts.white.emissive.setHex(hurt>0?0xff3040:0x000000);parts.white.emissiveIntensity=hurt>0?Math.min(1,hurt*5):0;
     if(visorCol&&visorCol!==tint){tint=visorCol;try{parts.visor.emissive.set(visorCol);parts.visor.emissiveIntensity=.16}catch(e){}}
-    parts.saber.visible=!!saber;R.render(scene,cam);const S=h*1.9;ctx.drawImage(R.domElement,x-S/2,y-S*0.78,S,S);return true}
+    parts.saber.visible=!!saber;R.render(scene,cam);const S=h*1.9;ctx.drawImage(R.domElement,x-S/2,y-S*0.655,S,S);return true}
   return {draw,ok:()=>!failed&&typeof THREE!=='undefined'}})();
