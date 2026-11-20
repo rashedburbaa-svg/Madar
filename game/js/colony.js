@@ -13,20 +13,22 @@ const BLD={
   def:{name:'منظومة الدفاع',base:[220,180,60],req:3,game:'survive',task:'صد غارة الكائنات',desc:'تحمي المستعمرة، وكل مستوى يزيد غنائم الغارات 20%.'},
   tower:{name:'أبراج الدفاع',base:[160,140,40],req:2,desc:'أبراج على السور تقتل الوحوش؛ كل مستوى يضيف برجاً ويقوّي السلاح.'},
   wall:{name:'السور',base:[90,70,20],desc:'يحمي المستعمرة من الكائنات، وكل مستوى يرفع الإنتاج 3%.'},
+  lab:{name:'المختبر',base:[220,200,90],req:3,desc:'أبحاث تقوّي الإنتاج والدفاع والبناء.'},
   dock:{name:'حوض الإصلاح',base:[250,200,80],req:2,desc:'هنا تُصلَح أجزاء المركبة لتنطلق من جديد.'}
 };
-const BORDER=['hq','wall','tower','mine','solar','farm','habitat','radio','obs','def','dock'];
+const BORDER=['hq','wall','tower','mine','solar','farm','habitat','radio','obs','def','lab','dock'];
 const PARTS=[['engine','المحرك',[400,400,100,10]],['nav','نظام الملاحة',[650,700,160,20]],['shield','الدرع الحراري',[1000,850,300,30]],['antenna','هوائي الاتصال',[1400,1500,420,45]],['hull','الهيكل',[2200,2000,800,60]]];
 const GAMEOF={mines:'mine',grid:'solar',words:'radio',diff:'obs',survive:'def'};
 const col=load('arcade-colony',{res:{m:300,e:300,f:200,c:20},b:{hq:1,mine:1,solar:1,farm:1,habitat:1,radio:0,obs:0,def:0,dock:0},build:null,last:Date.now(),q:0,ship:{},intro:0,wins:{},surv:0,done:0});
 const colSave=()=>save('arcade-colony',col);
-const cap=()=>Math.round(600*Math.pow(1.7,col.b.hq-1));
+const cap=()=>Math.round(600*Math.pow(1.7,col.b.hq-1)*(1+0.15*((col.tech&&col.tech.store)||0)));
 const crew=()=>3+2*col.b.habitat;
-if(col.b.wall==null)col.b.wall=0;if(col.b.tower==null)col.b.tower=0;
+if(col.b.wall==null)col.b.wall=0;if(col.b.tower==null)col.b.tower=0;if(col.b.lab==null)col.b.lab=0;
+const techLv=k=>(col.tech&&col.tech[k])||0,TK={m:'mine',e:'power',f:'agri'},tMul=k=>1+0.1*(TK[k]?techLv(TK[k]):0);
 const mult=()=>1+0.04*crew()+0.03*(col.b.wall||0);
-function rate(k){let r=0;for(const id of BORDER){const B=BLD[id],L=col.b[id];if(B.prod&&B.prod[0]===k&&L>0)r+=B.prod[1]*L*Math.pow(1.15,L-1)}return r*mult()}
+function rate(k){let r=0;for(const id of BORDER){const B=BLD[id],L=col.b[id];if(B.prod&&B.prod[0]===k&&L>0)r+=B.prod[1]*L*Math.pow(1.15,L-1)}return r*mult()*tMul(k)}
 function upCost(id){const L=col.b[id],B=BLD[id],f=Math.pow(1.6,L);return {m:Math.round(B.base[0]*f),e:Math.round(B.base[1]*f),f:Math.round(B.base[2]*f)}}
-const upTime=id=>Math.round(20*Math.pow(1.75,col.b[id]));
+const upTime=id=>Math.round(20*Math.pow(1.75,col.b[id])*(1-0.08*techLv('build')));
 const canPay=c=>Object.keys(c).every(k=>col.res[k]>=c[k]);
 function pay(c){Object.keys(c).forEach(k=>col.res[k]-=c[k])}
 function gain(k,n){if(k==='c'){col.res.c+=n;return}const C=cap();col.res[k]=Math.max(col.res[k],Math.min(C,col.res[k]+n))}
@@ -35,9 +37,9 @@ const fmtDur=s=>{s=Math.max(0,Math.ceil(s));const h=Math.floor(s/3600),m=Math.fl
 // production accrues from the last visit, up to 24 hours away
 function accrue(){const now=Date.now(),last=col.last||now;col.last=now;let dt=Math.min(24,Math.max(0,(now-last)/3600000));
   if(col.build&&now>=col.build.end){const sp=Math.max(0,(col.build.end-last)/3600000);fillStores(Math.min(dt,sp));dt=Math.max(0,dt-sp);finishBuild()}
-  fillStores(dt)}
+  fillStores(dt);if(typeof researchTick==='function')researchTick()}
 function finishBuild(){const b=col.build;if(!b)return;col.build=null;col.b[b.id]++;colSave();snd('ach');buzz([20,30,20]);
-  toast('🏗️ '+BLD[b.id].name+' '+col.b[b.id],'ach');if(col.b.hq>=5)unlock('col_hq5');if(BORDER.every(id=>col.b[id]>0))unlock('col_all');questCheck()}
+  toast('🏗️ '+BLD[b.id].name+' '+col.b[b.id],'ach');if(typeof dtask==='function')dtask('upgrade',1);if(col.b.hq>=5)unlock('col_hq5');if(BORDER.every(id=>col.b[id]>0))unlock('col_all');questCheck()}
 function startBuild(id){accrue();const B=BLD[id],L=col.b[id];
   if(col.build){toast('🏗️ البناء مشغول');return}
   if(B.req&&col.b.hq<B.req){toast('🔒 القيادة '+B.req);return}
@@ -58,7 +60,7 @@ function repair(i){accrue();const [pid,name,c]=PARTS[i],need={m:c[0],e:c[1],f:c[
 function colonyReward(id,stars,info){const bid=GAMEOF[id];if(!bid)return;accrue();info=info||{};const L=Math.max(1,col.b[bid]),k=1+0.3*(L-1);let got=[];
   if(id==='survive'){const t=info.time||0;if(t>=60&&raidSoon()){col.raid.mine=1;setTimeout(()=>toast('🛡️ صددت الغارة القادمة!','ach'),1800)}if(t<10)return;const d=1+0.2*col.b.def;col.surv=Math.max(col.surv||0,t);
     got=[['m',t*1.4*d],['e',t*1.2*d],['f',t*0.9*d],['c',Math.floor(t/30)+(info.boss||0)*5]]}
-  else{col.wins[id]=(col.wins[id]||0)+1;const base=(50+30*stars)*k;
+  else{col.wins[id]=(col.wins[id]||0)+1;if(typeof dtask==='function')dtask('mission',1);const base=(50+30*stars)*k;
     got=id==='mines'?[['m',base*1.4],['c',stars]]:id==='grid'?[['e',base*1.4],['c',stars]]:id==='words'?[['c',2+2*stars],['f',base*0.6]]:[['f',base*1.2],['c',1+stars]]}
   got=got.map(([r,n])=>[r,Math.round(n)]).filter(x=>x[1]>0);got.forEach(([r,n])=>gain(r,n));colSave();questCheck();
   setTimeout(()=>toast(got.map(([r,n])=>'+'+fmtN(n)+' '+RES[r][1]).join('  ')),900)}
@@ -222,6 +224,7 @@ case 'wall':{const st=fenceStyle(Math.max(1,L)),h=st.h*1.8;let s=_sh(40,6);
   if(L>=6)s+=`<path d="M-36 ${-h-2} H36" stroke="#5ff2d6" stroke-width="1.6" class="efence"/>`;
   if(L>=6)s+=`<g transform="translate(26 0)">${_lattice(-4,8,-3,6,0,-36,4,'#aeb8c4')}${_box(-6,-36,12,7,4)}<circle cx="0" cy="-46" r="2" fill="#ff5d73" class="blink"/></g>`;
   return s}
+case 'lab':return labArt(L);
 case 'dock':{const S=k=>col.ship[k],fly=col.done;let s=_sh(48,10);
   if(L>0){s+=_lattice(-44,6,-43,4,0,-46,5,'#aeb8c4')+_lattice(36,6,37,4,0,-46,5,'#aeb8c4')+`<path d="M-44 -46 H42 V-43 H-44Z" fill="url(#kMf)"/><path d="M-6 -43 V-30" stroke="#8a93a2" stroke-width=".8"/><path d="M-9 -30 h6 l-3 4Z" fill="#ffd34d"/>`}
   if(L>=4)s+=`<g transform="translate(-56 0)"><rect x="-5" y="-20" width="10" height="20" rx="5" fill="url(#kCylH)"/><rect x="-5" y="-11" width="10" height="2" fill="#ff5d73"/></g><g transform="translate(-46 2)"><rect x="-4" y="-14" width="8" height="14" rx="4" fill="url(#kCylH)"/></g>`;
@@ -241,8 +244,8 @@ case 'dock':{const S=k=>col.ship[k],fly=col.done;let s=_sh(48,10);
 }return ''}
 
 /* ---------- full-screen scene (360 x 700 world, sliced to fill the phone) ---------- */
-const SLOT={wall:[178,648,1],tower:[-6,530,1],radio:[58,338,1.25],farm:[178,330,1.25],habitat:[296,338,1.2],mine:[64,452,1.3],hq:[184,456,1.45],dock:[296,446,1.1],solar:[70,566,1.3],obs:[184,570,1.3],def:[298,566,1.3]};
-const ROADS='M184 456 Q120 470 64 452 M184 456 Q240 470 296 446 M184 456 Q130 520 70 566 M184 456 L184 570 M184 456 Q240 520 298 566 M184 456 Q120 400 58 338 M184 456 L178 330 M184 456 Q250 400 296 338';
+const SLOT={wall:[178,648,1],tower:[-6,530,1],lab:[118,396,1.2],radio:[58,338,1.25],farm:[178,330,1.25],habitat:[296,338,1.2],mine:[64,452,1.3],hq:[184,456,1.45],dock:[296,446,1.1],solar:[70,566,1.3],obs:[184,570,1.3],def:[298,566,1.3]};
+const ROADS='M184 456 Q120 470 64 452 M184 456 Q240 470 296 446 M184 456 Q130 520 70 566 M184 456 L184 570 M184 456 Q240 520 298 566 M184 456 Q150 420 118 396 M118 396 Q80 370 58 338 M184 456 L178 330 M184 456 Q250 400 296 338';
 const PRODB={mine:'m',solar:'e',farm:'f',radio:'c'};
 /* ---------- the fence around the base, and the creatures roaming outside it ---------- */
 const FEN={cx:178,cy:468,rx:196,ry:180};
@@ -373,7 +376,7 @@ const crType=i=>CTYPES[i%CTYPES.length];
 const popN=()=>Math.min(CTYPES.length,5+col.b.hq+Math.round((col.b.tower||0)*1.2)+(col.b.def?2:0));
 function creaturesSVG(){const n=popN();let s='';
   for(let i=0;i<n;i++){const t=crType(i);s+=`<g class="cre" data-i="${i}" data-cre="${t}" role="button" tabindex="0" aria-label="كائن فضائي"><g class="cflip"><g transform="scale(${t==='ufo'?1.2:1.05})"><ellipse cx="0" cy="${CTOP[t]/2}" rx="${t==='beast'?30:20}" ry="${-CTOP[t]/2+4}" fill="transparent"/>${CRE[t]}</g></g><g class="hpb" opacity="0"><rect x="-12" y="${Math.round(CTOP[t]*(t==='ufo'?1.2:1.05))-7}" width="24" height="3.4" rx="1.7" fill="#0008"/><rect class="hpf" x="-12" y="${Math.round(CTOP[t]*(t==='ufo'?1.2:1.05))-7}" width="24" height="3.4" rx="1.7" fill="#7ddc5a"/></g></g>`}
-  return s+'<g id="cshots"></g>'}
+  return s+bossSVG()+'<g id="cshots"></g>'}
 const BT={cr:[],tw:[],shots:[],raf:0,last:0,pos:{}};
 /* free roaming: each creature picks its own destinations outside the fence, wanders, pauses, sometimes tests the fence */
 const SPEED={alien:15,bug:28,beast:10,blob:7,ufo:32};
@@ -388,10 +391,11 @@ function stepCreature(c,dt){if(c.wait>0){c.wait-=dt;c.el.classList.add('idle');r
   if(c.t!=='ufo'&&fenceR(nx,ny)<1.1){const a=Math.atan2((ny-FEN.cy)/FEN.ry,(nx-FEN.cx)/FEN.rx),side=((dx*-Math.sin(a)+dy*Math.cos(a))>=0?1:-1)*0.04;nx=FEN.cx+Math.cos(a+side)*FEN.rx*1.1;ny=FEN.cy+Math.sin(a+side)*FEN.ry*1.1}
   if(Math.abs(nx-c.x)>0.05)c.face=nx>c.x?1:-1;c.x=nx;c.y=ny}
 function battleInit(){const svg=$('cscene');BT.cr=[];BT.tw=[];BT.shots=[];if(!svg)return;
-  svg.querySelectorAll('.cre').forEach(el=>{const i=+el.dataset.i,t=crType(i),max=CHP[t]+col.b.hq,keep=BT.pos[i],p=keep&&keep.t===t?keep:spawnPt(t);
+  svg.querySelectorAll('.cre:not(.boss)').forEach(el=>{const i=+el.dataset.i,t=crType(i),max=CHP[t]+col.b.hq,keep=BT.pos[i],p=keep&&keep.t===t?keep:spawnPt(t);
     const c={el,t,i,hp:max,max,dead:0,x:p.x,y:p.y,tx:p.x,ty:p.y,wait:Math.random()*2,face:1,sp:SPEED[t]*(0.8+Math.random()*0.4),flip:el.querySelector('.cflip'),hpb:el.querySelector('.hpb'),hpf:el.querySelector('.hpf')};pickTarget(c);BT.cr.push(c)});
+  {const el=svg.querySelector('.cre.boss'),old=BT.boss;const c={el,t:'beast',i:'boss',boss:1,hp:old&&!old.dead?old.hp:1,max:old?old.max:1,dead:old&&!old.dead?0:1e15,born:old?old.born:0,x:old?old.x:-90,y:old?old.y:600,tx:old?old.tx:0,ty:old?old.ty:0,wait:0,face:1,sp:6,flip:el.querySelector('.cflip'),hpb:el.querySelector('.hpb'),hpf:el.querySelector('.hpf')};if(!c.dead)el.classList.remove('gone');BT.boss=c;BT.cr.push(c)}
   const L=col.b.tower||0,tier=tierOf(L);
-  svg.querySelectorAll('.tow:not(.wg)').forEach(el=>{const i=+el.dataset.t,[x,y]=fp(TDEG[i]*Math.PI/180);BT.tw.push({x:x+2*1.4,y:y-26*1.4,head:el.querySelector('.thead'),tier,dmg:1+Math.floor(L/3)+(tier==='plasma'?1:0),cd:i*0.37,rate:tier==='gun'?0.45:tier==='laser'?1.1:1.6,range:tier==='plasma'?240:200,ox:2,oy:-26,ang:0})});
+  svg.querySelectorAll('.tow:not(.wg)').forEach(el=>{const i=+el.dataset.t,[x,y]=fp(TDEG[i]*Math.PI/180);BT.tw.push({x:x+2*1.4,y:y-26*1.4,head:el.querySelector('.thead'),tier,dmg:1+Math.floor(L/3)+(tier==='plasma'?1:0)+techLv('dmg'),cd:i*0.37,rate:(tier==='gun'?0.45:tier==='laser'?1.1:1.6)*(1-0.08*techLv('rate')),range:tier==='plasma'?240:200,ox:2,oy:-26,ang:0})});
   svg.querySelectorAll('.wgun').forEach(el=>{const d=+el.dataset.deg,[x,y]=fp(d*Math.PI/180),h=fenceStyle(col.b.wall).h+5;BT.tw.push({x,y:y-h,head:el.querySelector('.thead'),tier:'gun',dmg:1,cd:d/180,rate:0.9,range:150,ox:0,oy:-h,ang:0})});
   if(!BT.raf){BT.last=performance.now();BT.raf=requestAnimationFrame(battleTick)}}
 function crPos(c,now){let u=((now/1000+c.off)/c.dur)%1;const fwd=u<0.5;u=fwd?u*2:2-u*2;const pt=c.p.getPointAtLength(u*c.len);return {x:pt.x,y:pt.y,fwd}}
@@ -402,9 +406,9 @@ function spawnPack(list){const side=Math.floor(Math.random()*3);let px,py;for(le
     if(c.t==='ufo'){const p=spawnPt('ufo');c.x=p.x;c.y=p.y}else{c.x=px+(Math.random()-0.5)*26;c.y=py+(Math.random()-0.5)*18;if(!okSpot(c.t,c.x,c.y)){c.x=px;c.y=py}}
     c.wait=j*0.25;const a=Math.atan2(c.y-FEN.cy,c.x-FEN.cx);c.tx=FEN.cx+Math.cos(a)*FEN.rx*1.14;c.ty=Math.max(305,FEN.cy+Math.sin(a)*FEN.ry*1.14);if(!okSpot(c.t,c.tx,c.ty))pickTarget(c);c.el.classList.remove('gone')})}
 function battleTick(now){BT.raf=requestAnimationFrame(battleTick);const dt=Math.min(0.05,(now-BT.last)/1000);BT.last=now;
-  if(BT.cr.length){const dead=BT.cr.filter(c=>c.dead),alive=BT.cr.length-dead.length;if(!BT.wave)BT.wave=now+9000;
-    if(dead.length&&(now>BT.wave||alive<=Math.ceil(BT.cr.length/3))){spawnPack(dead.sort(()=>Math.random()-0.5).slice(0,Math.min(dead.length,2+Math.floor(Math.random()*4))));BT.wave=now+8000+Math.random()*9000}}
-  if($('hub').hidden||$('pColony').hidden||document.hidden||!$('cscene'))return;const calm=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(BT.cr.length){const pop=BT.cr.filter(c=>!c.boss),dead=pop.filter(c=>c.dead),alive=pop.length-dead.length;if(!BT.wave)BT.wave=now+9000;
+    if(dead.length&&(now>BT.wave||alive<=Math.ceil(pop.length/3))){spawnPack(dead.sort(()=>Math.random()-0.5).slice(0,Math.min(dead.length,2+Math.floor(Math.random()*4))));BT.wave=now+8000+Math.random()*9000}}
+  if($('hub').hidden||$('pColony').hidden||document.hidden||!$('cscene'))return;bossTick(now);meteorTick(now);const calm=matchMedia('(prefers-reduced-motion: reduce)').matches;
   for(const c of BT.cr){if(!c.el.isConnected)continue;
     if(c.dead)continue;
     if(!calm)stepCreature(c,dt);BT.pos[c.i]={x:c.x,y:c.y,t:c.t};c.el.setAttribute('transform',`translate(${c.x.toFixed(1)} ${c.y.toFixed(1)})`);c.flip.setAttribute('transform',c.face<0?'scale(-1 1)':'')}
@@ -427,7 +431,7 @@ function boom(x,y,c,r){const L=$('cshots');if(!L)return;const g=svgEl('g',{trans
   L.appendChild(g);BT.shots.push({el:g,t:0,T:0.7})}
 function hurt(c,d){if(c.dead)return;c.hp-=d;c.hpb.setAttribute('opacity','1');c.hpf.setAttribute('width',Math.max(0,24*c.hp/c.max).toFixed(1));c.hpf.setAttribute('fill',c.hp/c.max>0.5?'#7ddc5a':c.hp/c.max>0.25?'#ffd34d':'#ff5d73');
   c.el.classList.remove('hit');void c.el.getBoundingClientRect();c.el.classList.add('hit');
-  if(c.hp<=0){c.dead=1e15;c.el.classList.add('gone');c.hpb.setAttribute('opacity','0');boom(c.x,c.y-10,c.t==='blob'?'#ff5d73':c.t==='beast'?'#b47aff':c.t==='ufo'?'#9fe8ff':'#7ddc5a',c.t==='beast'||c.t==='ufo'?18:12);
+  if(c.hp<=0){c.dead=1e15;dtask('kills',1);if(c.boss){c.el.classList.add('gone');boom(c.x,c.y-30,'#b47aff',34);bossDown(c);return}c.el.classList.add('gone');c.hpb.setAttribute('opacity','0');boom(c.x,c.y-10,c.t==='blob'?'#ff5d73':c.t==='beast'?'#b47aff':c.t==='ufo'?'#9fe8ff':'#7ddc5a',c.t==='beast'||c.t==='ufo'?18:12);
     col.kills=(col.kills||0)+1;if(prefs.sound&&Math.random()<0.5)snd('hit');
     if(Math.random()<0.15&&(BT.loot=(BT.loot||0)+1)<=40){const k=Math.random()<0.15?'c':'m',n=k==='c'?1:Math.round(2+col.b.hq);gain(k,n);fxAt(c.x,c.y-30,'+'+n+' '+RES[k][1],RES[k][2]);updRes()}
     if(col.kills%10===0)colSave()}}
@@ -525,6 +529,8 @@ function openSheet(id){sheetId=id;let m=$('csheet');if(!m){m=document.createElem
     m.querySelector('.csb').onclick=closeSheet;m.querySelector('.csx').onclick=closeSheet}
   renderSheet();m.hidden=false;requestAnimationFrame(()=>m.classList.add('on'))}
 function renderSheet(){const m=$('csheet');if(!m||!sheetId)return;const c=m.querySelector('.csc');
+  if(sheetId==='tasks'){c.innerHTML=tasksHTML();c.querySelectorAll('[data-claim]').forEach(b=>b.onclick=()=>claimTask(+b.dataset.claim));return}
+  if(sheetId==='lab'){c.innerHTML=cardHTML('lab')+labHTML();bindActions(c);c.querySelectorAll('[data-tech]').forEach(b=>b.onclick=()=>startResearch(b.dataset.tech));return}
   if(sheetId==='list'){c.innerHTML=listHTML();c.querySelectorAll('[data-open]').forEach(r=>r.onclick=e=>{if(e.target.closest('[data-up]'))return;snd('tap');openSheet(r.dataset.open)})}else c.innerHTML=cardHTML(sheetId);bindActions(c)}
 /* every building in one list: you choose what to build next */
 function listHTML(){let h=`<h3 class="lh">🏗️ المباني <small>${col.build?'البناء مشغول: '+BLD[col.build.id].name:'اختر ما تريد تطويره'}</small></h3><div class="blist">`;
@@ -535,7 +541,8 @@ function listHTML(){let h=`<h3 class="lh">🏗️ المباني <small>${col.bu
 function closeSheet(){const m=$('csheet');sheetId=null;if(!m)return;m.classList.remove('on');setTimeout(()=>{if(!sheetId)m.hidden=true},250)}
 function rankChip(){try{const i=rankOf(prof.xp);return `<span class="crk">${RANKS[i][2]} ${RANKS[i][1]}</span>`}catch(e){return ''}}
 function renderColony(){const host=$('colony');if(!host)return;accrue();raidCheck();questCheck();const Q=QUESTS[col.q];
-  let h=`<div class="cscene-wrap">${sceneSVG()}</div><div class="ctop"><div class="cres">${resBar()}</div><div class="crow">${rankChip()}${col.intro&&chestReady()?'<button class="cchestb" type="button" aria-label="مكافأة اليوم">🎁</button>':''}</div></div><div class="cbot"><div class="cbrow"><button class="cbtn" type="button" data-list aria-label="كل المباني">🏗️ المباني</button><button class="ccall" type="button" hidden>⤓ جمع الكل</button></div>${raidSoon()?`<div class="craid"><span>⚠️ غارة بعد <b data-raid>${fmtDur((col.raid.at-Date.now())/1000)}</b></span><button class="btn" type="button" data-go="survive">🛡️ دافع</button></div>`:''}`;
+  let h=`<div class="cscene-wrap">${sceneSVG()}</div><div class="ctop"><div class="cres">${resBar()}</div><div class="crow">${rankChip()}<button class="ctaskb" type="button" aria-label="مهام اليوم">📋<i ${tasksReady()?'':'hidden'}>${tasksReady()}</i></button>${col.intro&&chestReady()?'<button class="cchestb" type="button" aria-label="مكافأة اليوم">🎁</button>':''}</div></div><div class="cbot"><div class="cbrow"><button class="cbtn" type="button" data-list aria-label="كل المباني">🏗️ المباني</button><button class="ccall" type="button" hidden>⤓ جمع الكل</button></div>${raidSoon()?`<div class="craid"><span>⚠️ غارة بعد <b data-raid>${fmtDur((col.raid.at-Date.now())/1000)}</b></span><button class="btn" type="button" data-go="survive">🛡️ دافع</button></div>`:''}`;
+  if(col.rs){const left=(col.rs.end-Date.now())/1000,pc=Math.min(100,100-left/col.rs.len*100);h+=`<div class="cbuild crs"><span>🔬 <b>${TECH[col.rs.k].n}</b> ← ${(col.tech[col.rs.k]||0)+1}</span><span class="ct" data-rt>${fmtDur(left)}</span><button class="btn" type="button" data-rrush aria-label="إنهاء البحث الآن">⚡ 💎 <span data-rrc>${Math.max(1,Math.ceil(left/60))}</span></button><i><u data-rp style="width:${pc}%"></u></i></div>`}
   if(col.build){const B=BLD[col.build.id],left=(col.build.end-Date.now())/1000,pc=Math.min(100,100-left/col.build.len*100);
     h+=`<div class="cbuild"><span>🏗️ <b>${B.name}</b> ← ${col.b[col.build.id]+1}</span><span class="ct" data-t>${fmtDur(left)}</span><button class="btn" type="button" data-rush aria-label="إنهاء الآن">⚡ 💎 <span data-rc>${Math.max(1,Math.ceil(left/60))}</span></button><i><u data-p style="width:${pc}%"></u></i></div>`}
   if(Q&&col.qhide)h+=`<button class="qmini" type="button" data-qshow aria-label="إظهار الهدف">🎯</button>`;
@@ -547,9 +554,10 @@ function renderColony(){const host=$('colony');if(!host)return;accrue();raidChec
   bindActions(host);const rb=host.querySelector('[data-rush]');if(rb)rb.onclick=rush;
   host.querySelectorAll('.cb').forEach(g=>{const go=()=>{if(camDrag)return;snd('tap');g.classList.remove('tap');void g.getBoundingClientRect();g.classList.add('tap');openSheet(g.dataset.b)};g.onclick=go;g.onkeydown=e=>{if(e.key==='Enter')go()}});
   host.querySelectorAll('.tow').forEach(t=>{const go=()=>{if(camDrag)return;snd('tap');openSheet('tower')};t.onclick=go;t.onkeydown=e=>{if(e.key==='Enter')go()}});
-  host.querySelectorAll('.cre').forEach(c=>{const go=()=>{if(camDrag)return;snd('tap');if(col.b.def){const G=GAMES.find(x=>x.id==='survive');closeSheet();if(G)openGame(G)}else{toast('👾 ابنِ منظومة الدفاع لصدّهم');focusB('def')}};c.onclick=go;c.onkeydown=e=>{if(e.key==='Enter')go()}});
+  host.querySelectorAll('.cre').forEach(el=>{const go=e=>{if(camDrag)return;e&&e.stopPropagation&&e.stopPropagation();const c=BT.cr.find(x=>x.el===el);if(c)strike(c)};el.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse'||e.button===0){el._pd=1}});el.onclick=go;el.onkeydown=e=>{if(e.key==='Enter')go()}});
   host.querySelectorAll('.bub').forEach(b=>{const go=e=>{if(camDrag)return;e&&e.stopPropagation();collect(b.dataset.c)};b.onclick=go;b.onkeydown=e=>{if(e.key==='Enter')go(e)}});
   const ca=host.querySelector('.ccall');if(ca)ca.onclick=collectAll;
+  const tb=host.querySelector('.ctaskb');if(tb)tb.onclick=()=>{snd('tap');openSheet('tasks')};const rr=host.querySelector('[data-rrush]');if(rr)rr.onclick=rushResearch;
   const lb=host.querySelector('[data-list]');if(lb)lb.onclick=()=>{snd('tap');openSheet('list')};
   const qh=host.querySelector('[data-qhide]');if(qh)qh.onclick=()=>{col.qhide=1;colSave();snd('tap');renderColony()};const qs=host.querySelector('[data-qshow]');if(qs)qs.onclick=()=>{col.qhide=0;colSave();snd('tap');renderColony()};const cb=host.querySelector('.cchestb');if(cb)cb.onclick=()=>{snd('tap');chestBox()};
   updBubbles();raidShow();
@@ -559,14 +567,14 @@ function renderColony(){const host=$('colony');if(!host)return;accrue();raidChec
 /* ================= pro layer: collecting, guide arrow, day/night, daily chest, raids, splash, ambience ================= */
 /* --- collecting: producers fill their own store (up to 8 hours); tap the bubble to bring it home --- */
 if(!col.store)col.store={mine:40,solar:40,farm:30};
-const bRate=id=>{const B=BLD[id],L=col.b[id];return B.prod&&L>0?B.prod[1]*L*Math.pow(1.15,L-1)*mult():0};
-const bCap=id=>Math.max(1,bRate(id)*8);
+const bRate=id=>{const B=BLD[id],L=col.b[id];return B.prod&&L>0?B.prod[1]*L*Math.pow(1.15,L-1)*mult()*tMul(B.prod[0]):0};
+const bCap=id=>Math.max(1,bRate(id)*(8+2*techLv('offline')));
 function fillStores(dt){for(const id of Object.keys(PRODB)){const r=bRate(id);if(r>0)col.store[id]=Math.min(bCap(id),(col.store[id]||0)+r*dt)}}
 const bubMin=id=>Math.max(id==='radio'?0.5:3,bRate(id)*0.02);
 function collect(id,quiet){const k=PRODB[id],have=col.store[id]||0;if(have<1&&!(k==='c'&&have>=0.5))return 0;
   let take=k==='c'?Math.floor(have):Math.floor(have);if(k!=='c'){const room=Math.max(0,cap()-col.res[k]);take=Math.min(take,Math.floor(room))}
   if(take<=0){if(!quiet){snd('err');toast('📦 المخازن ممتلئة — طوّر مركز القيادة');focusB('hq')}return 0}
-  col.store[id]=have-take;col.res[k]+=take;colSave();
+  col.store[id]=have-take;col.res[k]+=take;colSave();dtask('collect',1);
   if(!quiet){snd('ok');buzz(12)}flyRes(id,k,take);updBubbles();updRes();return take}
 function collectAll(){let n=0;for(const id of Object.keys(PRODB))if(col.b[id]>0)n+=collect(id,true)>0?1:0;if(n){snd('win');buzz([15,30,15])}else toast('لا يوجد شيء للجمع')}
 function bubbleSVG(){let s='';for(const id of Object.keys(PRODB)){if(!col.b[id])continue;const [x,y,sc]=SLOT[id],k=PRODB[id];
@@ -650,6 +658,7 @@ setInterval(()=>{ambSync();const host=$('colony');if(!host||$('hub').hidden||$('
   document.querySelectorAll('#colony .cc[data-k],#csheet .cc[data-k]').forEach(e=>e.classList.toggle('no',col.res[e.dataset.k]<+e.dataset.n));
   if(col.build){const left=(col.build.end-Date.now())/1000,t=host.querySelector('[data-t]'),p=host.querySelector('[data-p]'),rc=host.querySelector('[data-rc]');
     if(t)t.textContent=fmtDur(left);if(p)p.style.width=Math.min(100,100-left/col.build.len*100)+'%';if(rc)rc.textContent=Math.max(1,Math.ceil(left/60))}
+  if(col.rs){if(Date.now()>=col.rs.end){researchTick();renderColony();return}const left=(col.rs.end-Date.now())/1000,t=host.querySelector('[data-rt]'),p2=host.querySelector('[data-rp]'),rc=host.querySelector('[data-rrc]');if(t)t.textContent=fmtDur(left);if(p2)p2.style.width=Math.min(100,100-left/col.rs.len*100)+'%';if(rc)rc.textContent=Math.max(1,Math.ceil(left/60))}
   updBubbles();raidCheck();const rs=raidSoon();if(lastPhase&&(lastPhase!==phase()||lastRaid!==rs||(col.raidLog&&!col.raidLog.seen))){lastPhase=phase();lastRaid=rs;renderColony();return}lastPhase=phase();lastRaid=rs;
   if(rs){const e=host.querySelector('[data-raid]');if(e)e.textContent=fmtDur((col.raid.at-Date.now())/1000)}
   if(Date.now()%10000<1000)colSave()},1000);

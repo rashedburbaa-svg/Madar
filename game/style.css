@@ -667,3 +667,24 @@ body.colfull .tabbar{background:rgba(10,14,30,.92)}
 .cscene .cre .ul{animation:cul 1.2s steps(1) infinite}.cscene .cre .u1{animation-delay:.24s}.cscene .cre .u2{animation-delay:.48s}.cscene .cre .u3{animation-delay:.72s}.cscene .cre .u4{animation-delay:.96s}
 @keyframes cul{0%{opacity:1}50%{opacity:.2}}
 .cscene .cre.idle .lg,.cscene .cre.idle .ooze{animation-play-state:paused}
+/* batch 1: tasks, research, boss, strike, meteors */
+.ctaskb{position:relative;margin-inline-start:8px;width:38px;height:38px;border-radius:50%;border:1px solid rgba(159,232,255,.35);background:rgba(8,12,30,.62);font-size:18px;cursor:pointer}
+.ctaskb i{position:absolute;top:-4px;left:-4px;min-width:18px;height:18px;border-radius:9px;background:var(--fire);color:#fff;font-style:normal;font-size:11px;font-weight:700;display:grid;place-items:center;padding:0 4px}
+.ctaskb i[hidden]{display:none}
+.brow .ti{width:46px;height:46px;flex:none;border-radius:12px;background:#0006;display:grid;place-items:center;font-size:22px}
+.brow .tlv{font-style:normal;font-size:11px;color:var(--gold);margin-inline-start:4px}
+.brow.task{cursor:default}.brow.task.done{opacity:.55}
+.tbar{display:block;height:5px;border-radius:3px;background:#0007;overflow:hidden;margin-top:3px}.tbar u{display:block;height:100%;background:linear-gradient(90deg,#5ff2d6,#ffd34d)}
+.cbot .cbuild.crs{background:rgba(40,20,70,.9);border-color:#8a5ad8}
+.cbot .cbuild.crs .ct{color:#d8b8ff}
+.bossbar{align-self:center;width:min(320px,92%);background:rgba(60,8,20,.88);border:1px solid #ff5d73;border-radius:12px;padding:6px 10px;display:grid;grid-template-columns:auto 1fr;gap:2px 10px;align-items:center;box-shadow:0 0 16px rgba(255,93,115,.35);animation:craid 1.2s ease-in-out infinite}
+.bossbar b{font-size:13.5px;color:#ffd6dc}.bossbar small{grid-column:1/-1;text-align:center;font-size:11px;color:#ffb0bc;font-variant-numeric:tabular-nums}
+.bossbar i{height:8px;border-radius:4px;background:#0008;overflow:hidden}.bossbar u{display:block;height:100%;background:linear-gradient(90deg,#ff3d3d,#ff9a3c);transition:width .2s}
+.metb{align-self:center;background:rgba(10,40,70,.88);border:1px solid #9fe8ff;color:#dff6ff;border-radius:999px;padding:6px 14px;font-size:13.5px;font-weight:600;animation:cbub 1.6s ease-in-out infinite}
+.cscene .met{cursor:pointer}
+.cscene .strike{animation:cfade .3s ease-out forwards}
+.cscene.quake{animation:cquake .35s linear}
+@keyframes cquake{20%{transform:translate(2px,-1px)}40%{transform:translate(-2px,1px)}60%{transform:translate(1px,1px)}80%{transform:translate(-1px,-1px)}}
+.cscene .cre.boss .cflip{filter:drop-shadow(0 0 6px rgba(255,60,60,.8)) saturate(1.3) hue-rotate(-30deg)}
+.spinr{transform-box:fill-box;transform-origin:center;animation:cspin 3s linear infinite}
+@keyframes cspin{to{transform:rotate(360deg)}}
