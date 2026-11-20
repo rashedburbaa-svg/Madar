@@ -35,7 +35,7 @@ function openGame(G,m){
   // remember which level is on screen so «انسحاب» restarts that one
   if(!G._wrapped){const orig=G.play;G.play=function(l){curLevel=l;return orig.apply(this,arguments)};G._wrapped=1}stage.innerHTML='';$('ctrl').innerHTML='';
   $('gTitle').textContent=G.name;$('help').textContent=G.help;$('dailyTag').hidden=!mode;$('lvlBtn').hidden=!!mode;
-  $('hub').hidden=true;$('tabbar').hidden=true;$('play').hidden=false;scrollTo(0,0);G.start();
+  document.body.classList.remove('colfull');if(typeof closeSheet==='function')closeSheet();$('hub').hidden=true;$('tabbar').hidden=true;$('play').hidden=false;scrollTo(0,0);G.start();
 }
 function goHub(){if(active&&active.stop)active.stop();active=null;toastQ.length=0;$('toast').hidden=true;mode=null;stage.innerHTML='';$('play').hidden=true;$('hub').hidden=false;$('tabbar').hidden=false;renderHub();showTab(hubTab)}
 $('back').onclick=goHub;

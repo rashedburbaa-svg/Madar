@@ -733,3 +733,4 @@ body.colfull .tabbar{background:rgba(10,14,30,.92)}
 .cre.frz .cflip{filter:hue-rotate(160deg) saturate(.6) brightness(1.25)}
 .ghaz{color:#ffb070}.ghaz.ok{color:#7ddc5a}
 .cfest{border:0;font-family:inherit}
+.qhint{float:left;margin:-2px 0 0 0;background:#ffd34d22;border:1px solid #ffd34d88;color:#ffe9a8;border-radius:999px;padding:4px 12px;font:inherit;font-weight:700;cursor:pointer}

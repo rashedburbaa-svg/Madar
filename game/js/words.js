@@ -636,7 +636,7 @@ const WordsGame=(()=>{
     const e=g.entries[sel],inw=new Set(e?e.cells:[]),curCell=e&&!e.solved?e.cells.find(i=>!g.cur[i]):undefined;
     const keys=new Set(g.secret?g.secret.cells:[]);
     [...gridEl.children].forEach((el,i)=>{if(!g.sol[i])return;el.className='xc'+(inw.has(i)?' inw':'')+(i===curCell?' cur':'')+(locked(i)?' ok':'')+(keys.has(i)?' key':'');el.querySelector('span').textContent=g.cur[i]||''});
-    if(e){barEl.innerHTML='';const b=document.createElement('b');b.textContent=e.num+' '+(e.dir==='a'?'أفقي':'عمودي');barEl.append(b,document.createTextNode(e.clue+' ('+e.ans.length+' حروف)'+(e.solved?' ✓':'')))}
+    if(e){barEl.innerHTML='';const b=document.createElement('b');b.textContent=e.num+' '+(e.dir==='a'?'أفقي':'عمودي');barEl.append(b,document.createTextNode(e.clue+' ('+e.ans.length+' حروف)'+(e.solved?' ✓':'')));if(!e.solved&&!g.over){const hq=document.createElement('button');hq.type='button';hq.className='qhint';hq.textContent='💡 '+(st.hints||0);hq.setAttribute('aria-label','تلميح');hq.onclick=ev=>{ev.stopPropagation();if(hb)hb.click()};barEl.append(hq)}}
     padEl.innerHTML='';
     if(e&&!e.solved){const R=rng(g.level*31+sel*7+e.num);const letters=e.ans.slice();while(letters.length<e.ans.length+3)letters.push(ALPHA[Math.floor(R()*ALPHA.length)]);
       shuffle(letters,R).forEach(ch=>{const k=document.createElement('button');k.type='button';k.textContent=ch;k.onclick=()=>input(ch);padEl.appendChild(k)});
