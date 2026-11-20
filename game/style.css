@@ -707,3 +707,29 @@ body.colfull .tabbar{background:rgba(10,14,30,.92)}
 @keyframes astep{from{transform:translateY(-.8px)}to{transform:translateY(.4px)}}
 .cd.rec{background:#ffffff10;border-radius:10px;padding:6px 10px;color:#ffe9a8}
 .smeta{font-size:.82em;opacity:.8;margin:2px 0 8px}
+/* part 4: ghost templates, stage strip, specs, festival, second builder */
+.cscene .ghost{opacity:.3;filter:grayscale(.55) brightness(1.15);pointer-events:none;animation:ghostp 3.2s ease-in-out infinite}
+.cscene .ghost.glock{opacity:.16;filter:grayscale(1) brightness(1.1)}
+.cscene .gfence,.cscene .gtowers{opacity:.22;animation:none}
+@keyframes ghostp{50%{opacity:.42}}
+.cscene .ghost.glock{animation:none}
+.stages{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0 10px}
+.stg{display:flex;flex-direction:column;align-items:center;background:#ffffff08;border:1px solid #ffffff14;border-radius:12px;padding:4px 2px 3px}
+.stg svg{width:100%;height:46px;opacity:.28;filter:grayscale(.8)}
+.stg.got svg{opacity:1;filter:none}
+.stg.cur{border-color:#ffd34d;box-shadow:0 0 0 1px #ffd34d55,0 0 12px #ffd34d33}
+.stg small{font-size:.72em;opacity:.8}
+.xrow{display:flex;align-items:center;gap:8px;justify-content:space-between;background:#ffffff0a;border-radius:12px;padding:8px 10px;margin:8px 0}
+.xrow span{display:flex;flex-direction:column}.xrow small{opacity:.75;font-size:.8em}.xrow .btn{flex:none;width:auto;margin:0;padding:8px 12px}
+.xh{margin:10px 0 6px;font-size:.95em}.xh small{opacity:.7;font-weight:400}
+.specs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.spec{background:#ffffff0a;border:1px solid #ffffff1c;border-radius:12px;color:inherit;padding:8px 4px;display:flex;flex-direction:column;gap:3px;font:inherit;text-align:center}
+.spec b{font-size:.85em}.spec small{font-size:.7em;opacity:.75}
+.spec.on{border-color:#5ff2d6;background:#5ff2d61c;box-shadow:0 0 10px #5ff2d633}
+.spec:disabled{opacity:.4}
+.cfest{background:linear-gradient(90deg,#ff9f6b,#ffd34d);color:#3a1a00;font-weight:800;border-radius:999px;padding:5px 10px;font-size:.8em;animation:festp 1.6s ease-in-out infinite alternate}
+@keyframes festp{to{filter:brightness(1.2)}}
+.cbuild.b2{border-color:#7ffcf066}
+.cre.frz .cflip{filter:hue-rotate(160deg) saturate(.6) brightness(1.25)}
+.ghaz{color:#ffb070}.ghaz.ok{color:#7ddc5a}
+.cfest{border:0;font-family:inherit}

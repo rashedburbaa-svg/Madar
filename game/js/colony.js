@@ -25,7 +25,7 @@ const cap=()=>Math.round(600*Math.pow(1.7,col.b.hq-1)*(1+0.15*((col.tech&&col.te
 const crew=()=>3+2*col.b.habitat;
 if(col.b.wall==null)col.b.wall=0;if(col.b.tower==null)col.b.tower=0;if(col.b.lab==null)col.b.lab=0;
 const techLv=k=>(col.tech&&col.tech[k])||0,TK={m:'mine',e:'power',f:'agri'},tMul=k=>1+0.1*(TK[k]?techLv(TK[k]):0);
-const mult=()=>1+0.04*crew()+0.03*(col.b.wall||0)+(typeof artCount==='function'?0.05*artCount():0);
+const mult=()=>1+(typeof festOn==='function'&&festOn()?0.25:0)+0.04*crew()+0.03*(col.b.wall||0)+(typeof artCount==='function'?0.05*artCount():0);
 function rate(k){let r=0;for(const id of BORDER){const B=BLD[id],L=col.b[id];if(B.prod&&B.prod[0]===k&&L>0)r+=B.prod[1]*L*Math.pow(1.15,L-1)}return r*mult()*tMul(k)}
 function upCost(id){const L=col.b[id],B=BLD[id],f=Math.pow(1.6,L);return {m:Math.round(B.base[0]*f),e:Math.round(B.base[1]*f),f:Math.round(B.base[2]*f)}}
 const upTime=id=>Math.round(20*Math.pow(1.85,col.b[id])*(1-0.08*techLv('build')));
@@ -37,16 +37,18 @@ const fmtDur=s=>{s=Math.max(0,Math.ceil(s));const h=Math.floor(s/3600),m=Math.fl
 // production accrues from the last visit, up to 24 hours away
 function accrue(){const now=Date.now(),last=col.last||now;col.last=now;let dt=Math.min(24,Math.max(0,(now-last)/3600000));
   if(col.build&&now>=col.build.end){const sp=Math.max(0,(col.build.end-last)/3600000);fillStores(Math.min(dt,sp));dt=Math.max(0,dt-sp);finishBuild()}
+  if(col.build2&&now>=col.build2.end){const b=col.build2,keep=col.build;col.build2=null;col.build=b;finishBuild();col.build=keep}
   fillStores(dt);if(typeof researchTick==='function')researchTick()}
 function finishBuild(){const b=col.build;if(!b)return;col.build=null;col.b[b.id]++;colSave();snd('ach');buzz([20,30,20]);
   toast('🏗️ '+BLD[b.id].name+' '+col.b[b.id],'ach');if(typeof dtask==='function')dtask('upgrade',1);if(col.b.hq>=5)unlock('col_hq5');if(BORDER.every(id=>col.b[id]>0))unlock('col_all');questCheck()}
 function startBuild(id){accrue();const B=BLD[id],L=col.b[id];
-  if(col.build){toast('🏗️ البناء مشغول');return}
+  if(building(id)){toast('🏗️ قيد البناء');return}
+  if(!freeSlot()){toast(col.bot2?'🏗️ الروبوتان مشغولان':'🏗️ البناء مشغول');return}
   if(B.req&&col.b.hq<B.req){toast('🔒 القيادة '+B.req);return}
   if(id!=='hq'&&L>col.b.hq){toast('🔒 طوّر القيادة أولاً');return}
   if(L>=(B.max||10)){toast('✔️ الأعلى');return}
   const c=upCost(id);if(!canPay(c)){snd('err');toast('الموارد لا تكفي');return}
-  pay(c);col.build={id,end:Date.now()+upTime(id)*1000,len:upTime(id)};colSave();snd('ok');buzz(15);renderColony()}
+  pay(c);col[freeSlot()]={id,end:Date.now()+upTime(id)*1000,len:upTime(id)};colSave();snd('ok');buzz(15);renderColony()}
 function rush(){accrue();if(!col.build)return;const left=(col.build.end-Date.now())/1000,cost=Math.max(1,Math.ceil(left/60));
   if(col.res.c<cost){snd('err');toast('تحتاج '+cost+' 💎');return}
   col.res.c-=cost;col.build.end=Date.now();accrue();colSave();renderColony()}
@@ -268,7 +270,7 @@ function fenceRaw(half){const L=col.b.wall||0,N=44,gap=0.17,st=fenceStyle(L);let
   return seg+posts+(strand?`<path d="${strand}" stroke="${L>=9?'#9fe8ff':'#5ff2d6'}" stroke-width="${L>=9?2:1.4}" fill="none" class="efence"/>`:'')+tow}
 function gateSVG(){return tint(gateRaw(),col.b.wall||0)}
 function gateRaw(){const L=col.b.wall||0,[x,y]=fp(Math.PI/2),st=fenceStyle(Math.max(1,L));
-  return `<g class="cb${L?'':' empty'}${col.build&&col.build.id==='wall'?' building':''}" data-b="wall" transform="translate(${x.toFixed(1)} ${y.toFixed(1)})" role="button" tabindex="0" aria-label="${BLD.wall.name}"><ellipse cx="0" cy="-12" rx="44" ry="26" fill="transparent"/>
+  return `<g class="cb${L?'':' empty'}${building('wall')?' building':''}" data-b="wall" transform="translate(${x.toFixed(1)} ${y.toFixed(1)})" role="button" tabindex="0" aria-label="${BLD.wall.name}"><ellipse cx="0" cy="-12" rx="44" ry="26" fill="transparent"/>
     ${L?`<g class="bart">${_box(-36,0,9,st.h+12,5)}${_box(27,0,9,st.h+12,5)}<path d="M-32 ${-st.h-14} Q0 ${-st.h-30} 32 ${-st.h-14}" stroke="${st.post}" stroke-width="3" fill="none"/><circle cx="0" cy="${-st.h-22}" r="2.4" fill="${L>=6?'#5ff2d6':'#ffd34d'}" class="blink"/>${L>=6?`<path d="M-27 -4 H27 M-27 -10 H27" stroke="#5ff2d6" stroke-width=".8" opacity=".5" class="efence"/>`:''}</g>`:`<g class="plot"><circle cx="0" cy="-16" r="11" fill="#0b1226cc" stroke="#9fe8ff" stroke-width="1.2"/><path d="M-5 -16h10M0 -21v10" stroke="#9fe8ff" stroke-width="2" stroke-linecap="round"/></g>`}
     ${L?lvBadge(L,30,-st.h-30):''}</g>`}
 /* creatures: little green aliens, a six-legged crawler, a horned beast, a tentacled blob and a saucer */
@@ -399,7 +401,7 @@ function battleInit(){const svg=$('cscene');BT.cr=[];BT.tw=[];BT.shots=[];if(!sv
   const L=col.b.tower||0,tier=tierOf(L);
   svg.querySelectorAll('.tow:not(.wg)').forEach(el=>{const i=+el.dataset.t,[x,y]=fp(TDEG[i]*Math.PI/180);BT.tw.push({x:x+2*1.4,y:y-26*1.4,head:el.querySelector('.thead'),tier,dmg:1+Math.floor(L/3)+(tier==='plasma'?1:0)+techLv('dmg'),cd:i*0.37,rate:(tier==='gun'?0.45:tier==='laser'?1.1:1.6)*(1-0.08*techLv('rate')),range:tier==='plasma'?240:200,ox:2,oy:-26,ang:0})});
   svg.querySelectorAll('.wgun').forEach(el=>{const d=+el.dataset.deg,[x,y]=fp(d*Math.PI/180),h=fenceStyle(col.b.wall).h+5;BT.tw.push({x,y:y-h,head:el.querySelector('.thead'),tier:'gun',dmg:1,cd:d/180,rate:0.9,range:150,ox:0,oy:-h,ang:0})});
-  crewInit(svg);
+  crewInit(svg);specApply();
   if(!BT.raf){BT.last=performance.now();BT.raf=requestAnimationFrame(battleTick)}}
 function crPos(c,now){let u=((now/1000+c.off)/c.dur)%1;const fwd=u<0.5;u=fwd?u*2:2-u*2;const pt=c.p.getPointAtLength(u*c.len);return {x:pt.x,y:pt.y,fwd}}
 function svgEl(tag,attrs){const e=document.createElementNS('http://www.w3.org/2000/svg',tag);for(const k in attrs)e.setAttribute(k,attrs[k]);return e}
@@ -448,11 +450,11 @@ function sceneSVG(){const R=rng(7);let stars='',tw='';
   let rocks='';for(let k=0;k<60;k++){const x=R()*760-200,y=286+R()*560,r=1.5+R()*4;rocks+=`<path d="M${(x-r).toFixed(1)} ${y.toFixed(1)} l${(r*0.6).toFixed(1)} ${(-r).toFixed(1)} l${(r*1.1).toFixed(1)} ${(r*0.3).toFixed(1)} l${(r*0.5).toFixed(1)} ${(r*0.7).toFixed(1)}Z" fill="#7a5a6a"/><path d="M${(x-r).toFixed(1)} ${y.toFixed(1)} l${(r*0.6).toFixed(1)} ${(-r).toFixed(1)} l${(r*0.3).toFixed(1)} ${r.toFixed(1)}Z" fill="#a07a8a"/>`}
   let dust='';for(let k=0;k<20;k++)dust+=`<circle class="dust" style="animation-delay:${(R()*9).toFixed(1)}s;animation-duration:${(7+R()*6).toFixed(1)}s" cx="${(R()*360).toFixed(0)}" cy="${(320+R()*360).toFixed(0)}" r="${(0.8+R()*1.4).toFixed(1)}" fill="#ffd9c0"/>`;
   const order=Object.keys(SLOT).filter(k=>k!=='wall'&&k!=='tower').sort((a,b)=>SLOT[a][1]-SLOT[b][1]);let g='';
-  for(const id of order){const [x,y,base]=SLOT[id],L=col.b[id],bl=col.build&&col.build.id===id,sc=(base*(0.92+Math.min(10,L)*0.02)).toFixed(3);
+  for(const id of order){const [x,y,base]=SLOT[id],L=col.b[id],bl=building(id),lk=BLD[id].req&&col.b.hq<BLD[id].req,sc=(base*(0.92+Math.min(10,L)*0.02)).toFixed(3);
     g+=`<g class="cb${L?'':' empty'}${bl?' building':''}" data-b="${id}" transform="translate(${x} ${y})" role="button" tabindex="0" aria-label="${BLD[id].name}"><ellipse cx="0" cy="-20" rx="50" ry="46" fill="transparent"/>`;
     if(L>=10)g+=`<ellipse class="aura" cx="0" cy="-6" rx="${46*base}" ry="${16*base}" fill="url(#kLamp)"/>`;
     if(L||id==='dock')g+=`<g class="bart" transform="scale(${sc})">${art(id,L)}</g>`;
-    if(!L&&id!=='dock')g+=`<g class="plot"><ellipse cx="0" cy="-2" rx="30" ry="10" fill="#9fe8ff" opacity=".08" stroke="#9fe8ff" stroke-dasharray="5 4" stroke-width="1.2"/><circle cx="0" cy="-20" r="11" fill="#0b1226cc" stroke="#9fe8ff" stroke-width="1.2"/><path d="M-5 -20h10M0 -25v10" stroke="#9fe8ff" stroke-width="2" stroke-linecap="round"/></g>`;
+    if(!L&&id!=='dock')g+=`<g class="ghost${lk?' glock':''}" transform="scale(${sc})">${art(id,1)}</g><g class="plot"><ellipse cx="0" cy="-2" rx="30" ry="10" fill="#9fe8ff" opacity=".08" stroke="#9fe8ff" stroke-dasharray="5 4" stroke-width="1.2"/><circle cx="0" cy="-20" r="11" fill="#0b1226cc" stroke="${lk?'#8a93a2':'#9fe8ff'}" stroke-width="1.2"/>${lk?`<text y="-16" text-anchor="middle" font-size="11">🔒</text>`:'<path d="M-5 -20h10M0 -25v10" stroke="#9fe8ff" stroke-width="2" stroke-linecap="round"/>'}</g>`;
     if(bl)g+=`<g class="scaf"><path d="M-26 2 V-44 M26 2 V-44 M-26 -14 H26 M-26 -30 H26 M-26 -14 L26 -30 M-26 -44 H34 M30 -44 V-30" stroke="#ffd34d" stroke-width="1.6" fill="none"/><path d="M30 -30 v6" stroke="#ddd" stroke-width=".8"/><rect x="27" y="-24" width="6" height="4" fill="#8f99a8"/>${[0,1,2,3,4].map(i=>`<circle class="spark" style="animation-delay:${i*0.25}s" cx="${-10+i*5}" cy="-18" r="1.2" fill="#fff3c0"/>`).join('')}</g>`;
     if(L)g+=lvBadge(L,id==='hq'?34:24,id==='hq'?-70:-54);
     g+='</g>'}
@@ -515,12 +517,14 @@ function costHTML(c){return Object.entries(c).map(([k,n])=>`<span class="cc${col
 function cardHTML(id){const B=BLD[id],L=col.b[id],locked=B.req&&col.b.hq<B.req,max=L>=(B.max||10),G=B.game&&GAMES.find(x=>x.id===B.game),c=upCost(id);
   const info=B.prod&&L?`${RES[B.prod[0]][1]} +${B.prod[0]==='c'?(B.prod[1]*L*Math.pow(1.15,L-1)*mult()).toFixed(1):fmtN(B.prod[1]*L*Math.pow(1.15,L-1)*mult())}/س`:id==='hq'?`📦 ${fmtN(cap())}`:id==='habitat'?`🧑‍🚀 ${crew()}`:id==='wall'&&L?`إنتاج +${3*L}%`:id==='tower'&&L?`🗼 ${towerN()} · ${WNAME[tierOf(L)]}`:id==='def'&&L?`غنائم +${col.b.def*20}%`:'';
   let h=`<div class="cbc${locked?' locked':''}"><div class="ch"><span class="ci"><svg viewBox="-52 -64 104 76">${art(id,Math.max(1,L))}</svg></span><span class="ctt"><b>${B.name}</b><small>${locked?'<span class="golink" data-to="b:hq" role="button" tabindex="0">🔒 القيادة '+B.req+' ‹</span>':L?`مستوى ${L} <i class="tchip" style="--t:${TINT[L]||'#d6dee8'}">${TNAME[L]}</i>`+(info?' · '+info:''):'غير مبني'}</small></span></div>`;
-  if(col.build&&col.build.id===id)h+=`<p class="cd">🏗️ قيد البناء…</p>`;
+  h+=stagesHTML(id,L);
+  if(building(id))h+=`<p class="cd">🏗️ قيد البناء…</p>`;
   else if(!locked&&!max&&id!=='hq'&&L>col.b.hq)h+='<button class="cd need" type="button" data-to="b:hq">🔒 يحتاج القيادة '+L+' ‹</button>';
   else if(!locked&&!max)h+=`<div class="ccost">${costHTML(c)}<span class="cc time">⏱️ ${fmtDur(upTime(id))}</span></div><button class="btn${L?'':' main'}" type="button" data-up="${id}">${L?'⬆️ مستوى '+(L+1)+' <i class="tdot" style="--t:'+(TINT[L+1]||'#d6dee8')+'"></i>':'🏗️ بناء'}</button>`;
   else if(max)h+='<p class="cd">✔️ الأعلى</p>';
   if(G&&L){const pr=G.progress?G.progress():{};h+=`<p class="cd rec">🏆 ${B.game==='survive'?'أطول صمود '+fmtDur(col.surv||0):'انتصارات '+(col.wins[B.game]||0)+' · المستوى '+(pr.level||1)}${col.streak&&col.streak[B.game]?' · 🔥 سلسلة '+col.streak[B.game]:''}</p>`}
   if(G&&L)h+=`<button class="btn task" type="button" data-go="${B.game}" aria-label="${B.task}">🎮 مهمة</button>`;
+  h+=extraCard(id,L);
   if(id==='dock'&&L){h+='<div class="parts">'+PARTS.map(([pid,pn,pc],i)=>{const done=col.ship[pid];return `<div class="part${done?' ok':''}"><span>${done?'✅':'🔧'} ${pn}</span>${done?'':`<span class="ccost">${costHTML({m:pc[0],e:pc[1],f:pc[2],c:pc[3]})}</span><button class="btn" type="button" data-fix="${i}">${col.b.dock<i+1?'🔒 '+(i+1):'🔧'}</button>`}</div>`}).join('')+'</div>'}
   return h+'</div>'}
 function bindActions(root){
@@ -538,25 +542,27 @@ function renderSheet(){const m=$('csheet');if(!m||!sheetId)return;const c=m.quer
   if(sheetId==='lab'){c.innerHTML=cardHTML('lab')+labHTML();bindActions(c);c.querySelectorAll('[data-tech]').forEach(b=>b.onclick=()=>startResearch(b.dataset.tech));return}
   if(sheetId==='list'){c.innerHTML=listHTML();c.querySelectorAll('[data-open]').forEach(r=>r.onclick=e=>{if(e.target.closest('[data-up]'))return;snd('tap');openSheet(r.dataset.open)})}else c.innerHTML=cardHTML(sheetId);bindActions(c)}
 /* every building in one list: you choose what to build next */
-function listHTML(){let h=`<h3 class="lh">🏗️ المباني <small>${col.build?'البناء مشغول: '+BLD[col.build.id].name:'اختر ما تريد تطويره'}</small></h3><div class="blist">`;
-  for(const id of BORDER){const B=BLD[id],L=col.b[id],locked=B.req&&col.b.hq<B.req,max=L>=(B.max||10),needHq=!locked&&!max&&id!=='hq'&&L>col.b.hq,c=upCost(id),ok=!locked&&!max&&!needHq&&canPay(c)&&!col.build;
-    const st=locked?`🔒 القيادة ${B.req}`:max?'✔️ الأعلى':col.build&&col.build.id===id?'🏗️ قيد البناء':needHq?`🔒 القيادة ${L}`:costHTML(c);
-    h+=`<div class="brow${ok?' ok':''}" data-open="${id}" role="button" tabindex="0"><span class="bi"><svg viewBox="-52 -64 104 76">${art(id,Math.max(1,L))}</svg></span><span class="bt"><b>${B.name}</b><small>${L?`مستوى ${L} <i class="tchip" style="--t:${TINT[L]||'#d6dee8'}">${TNAME[L]}</i>`:'غير مبني'}</small><span class="bc">${st}</span></span>${!locked&&!max&&!needHq&&!(col.build&&col.build.id===id)?`<button class="btn${ok?' main':''}" type="button" data-up="${id}">${L?'⬆️ '+(L+1):'🏗️'}</button>`:''}</div>`}
+function listHTML(){let h=`<h3 class="lh">🏗️ المباني <small>${!freeSlot()?'البناء مشغول':'اختر ما تريد تطويره'}${col.bot2?' · 🤖×2':''}</small></h3><div class="blist">`;
+  for(const id of BORDER){const B=BLD[id],L=col.b[id],locked=B.req&&col.b.hq<B.req,max=L>=(B.max||10),needHq=!locked&&!max&&id!=='hq'&&L>col.b.hq,c=upCost(id),ok=!locked&&!max&&!needHq&&canPay(c)&&!!freeSlot()&&!building(id);
+    const st=locked?`🔒 القيادة ${B.req}`:max?'✔️ الأعلى':building(id)?'🏗️ قيد البناء':needHq?`🔒 القيادة ${L}`:costHTML(c);
+    h+=`<div class="brow${ok?' ok':''}" data-open="${id}" role="button" tabindex="0"><span class="bi"><svg viewBox="-52 -64 104 76">${art(id,Math.max(1,L))}</svg></span><span class="bt"><b>${B.name}</b><small>${L?`مستوى ${L} <i class="tchip" style="--t:${TINT[L]||'#d6dee8'}">${TNAME[L]}</i>`:'غير مبني'}</small><span class="bc">${st}</span></span>${!locked&&!max&&!needHq&&!building(id)?`<button class="btn${ok?' main':''}" type="button" data-up="${id}">${L?'⬆️ '+(L+1):'🏗️'}</button>`:''}</div>`}
   return h+'</div>'}
 function closeSheet(){const m=$('csheet');sheetId=null;if(!m)return;m.classList.remove('on');setTimeout(()=>{if(!sheetId)m.hidden=true},250)}
 function rankChip(){try{const i=rankOf(prof.xp);return `<span class="crk">${RANKS[i][2]} ${RANKS[i][1]}</span>`}catch(e){return ''}}
 function renderColony(){const host=$('colony');if(!host)return;accrue();raidCheck();questCheck();const Q=QUESTS[col.q];
-  let h=`<div class="cscene-wrap">${sceneSVG()}</div><div class="ctop"><div class="cres">${resBar()}</div><div class="crow">${rankChip()}${galOpen()?`<button class="cgalb${col.exp&&Date.now()>=col.exp.end?' ready':''}" type="button" data-gal aria-label="خريطة المجرة">🌌</button>`:''}<button class="ctaskb" type="button" aria-label="مهام اليوم">📋<i ${tasksReady()?'':'hidden'}>${tasksReady()}</i></button>${col.intro&&chestReady()?'<button class="cchestb" type="button" aria-label="مكافأة اليوم">🎁</button>':''}</div></div><div class="cbot"><div class="cbrow"><button class="cbtn" type="button" data-list aria-label="كل المباني">🏗️ المباني</button><button class="ccall" type="button" hidden>⤓ جمع الكل</button></div>${raidSoon()?`<div class="craid"><span>⚠️ غارة بعد <b data-raid>${fmtDur((col.raid.at-Date.now())/1000)}</b></span><button class="btn" type="button" data-go="survive">🛡️ دافع</button></div>`:''}`;
+  let h=`<div class="cscene-wrap">${sceneSVG()}</div><div class="ctop"><div class="cres">${resBar()}</div><div class="crow">${rankChip()}${typeof festChip==='function'?festChip():''}${galOpen()?`<button class="cgalb${col.exp&&Date.now()>=col.exp.end?' ready':''}" type="button" data-gal aria-label="خريطة المجرة">🌌</button>`:''}<button class="ctaskb" type="button" aria-label="مهام اليوم">📋<i ${tasksReady()?'':'hidden'}>${tasksReady()}</i></button>${col.intro&&chestReady()?'<button class="cchestb" type="button" aria-label="مكافأة اليوم">🎁</button>':''}</div></div><div class="cbot"><div class="cbrow"><button class="cbtn" type="button" data-list aria-label="كل المباني">🏗️ المباني</button><button class="ccall" type="button" hidden>⤓ جمع الكل</button></div>${raidSoon()?`<div class="craid"><span>⚠️ غارة بعد <b data-raid>${fmtDur((col.raid.at-Date.now())/1000)}</b></span><button class="btn" type="button" data-go="survive">🛡️ دافع</button></div>`:''}`;
   if(col.rs){const left=(col.rs.end-Date.now())/1000,pc=Math.min(100,100-left/col.rs.len*100);h+=`<div class="cbuild crs"><span>🔬 <b>${TECH[col.rs.k].n}</b> ← ${(col.tech[col.rs.k]||0)+1}</span><span class="ct" data-rt>${fmtDur(left)}</span><button class="btn" type="button" data-rrush aria-label="إنهاء البحث الآن">⚡ 💎 <span data-rrc>${Math.max(1,Math.ceil(left/60))}</span></button><i><u data-rp style="width:${pc}%"></u></i></div>`}
   if(col.build){const B=BLD[col.build.id],left=(col.build.end-Date.now())/1000,pc=Math.min(100,100-left/col.build.len*100);
     h+=`<div class="cbuild"><span>🏗️ <b>${B.name}</b> ← ${col.b[col.build.id]+1}</span><span class="ct" data-t>${fmtDur(left)}</span><button class="btn" type="button" data-rush aria-label="إنهاء الآن">⚡ 💎 <span data-rc>${Math.max(1,Math.ceil(left/60))}</span></button><i><u data-p style="width:${pc}%"></u></i></div>`}
+  if(col.build2){const B=BLD[col.build2.id],left=(col.build2.end-Date.now())/1000,pc=Math.min(100,100-left/col.build2.len*100);
+    h+=`<div class="cbuild b2"><span>🤖 <b>${B.name}</b> ← ${col.b[col.build2.id]+1}</span><span class="ct" data-t2>${fmtDur(left)}</span><button class="btn" type="button" data-rush2 aria-label="إنهاء الآن">⚡ 💎 <span data-rc2>${Math.max(1,Math.ceil(left/60))}</span></button><i><u data-p2 style="width:${pc}%"></u></i></div>`}
   if(Q&&col.qhide)h+=`<button class="qmini" type="button" data-qshow aria-label="إظهار الهدف">🎯</button>`;
   else if(Q)h+=`<div class="qwrap"><button class="qhide" type="button" data-qhide aria-label="إخفاء الهدف">✕</button><button class="qt" type="button" data-to="${Q.go?'g:'+Q.go:'b:'+Q.b}"><span class="qi">🎯</span><b></b><span class="qr">${Object.entries(Q.r).map(([k,n])=>'+'+n+' '+RES[k][1]).join(' ')}</span><i class="qa" aria-hidden="true">‹</i></button></div>`;
   else h+=`<button class="qt" type="button" data-gal><span class="qi">🌌</span><b>الفصل الثاني: أرسل المركبة لاستكشاف المجرة</b><span class="qr">${artCount()}/6 🏺</span><i class="qa">‹</i></button>`;
   h+='</div><div class="czoom"><button type="button" data-z="in" aria-label="تكبير">＋</button><button type="button" data-z="out" aria-label="تصغير">－</button><button type="button" data-z="fit" aria-label="عرض الكل">⤢</button></div>';host.innerHTML=h;
   {const qb=host.querySelector('.qt b');if(Q&&qb)qb.textContent=Q.t}
   host.querySelectorAll('[data-z]').forEach(b=>b.onclick=()=>{snd('tap');const z=b.dataset.z;if(z==='fit'){cam.z=1;cam.x=180;cam.y=null;camView()}else camZoom(z==='in'?1.3:1/1.3)});camBind();battleInit();
-  bindActions(host);const rb=host.querySelector('[data-rush]');if(rb)rb.onclick=rush;
+  bindActions(host);const rb=host.querySelector('[data-rush]');if(rb)rb.onclick=rush;const rb2=host.querySelector('[data-rush2]');if(rb2)rb2.onclick=rush2;
   host.querySelectorAll('.cb').forEach(g=>{const go=()=>{if(camDrag)return;snd('tap');g.classList.remove('tap');void g.getBoundingClientRect();g.classList.add('tap');openSheet(g.dataset.b)};g.onclick=go;g.onkeydown=e=>{if(e.key==='Enter')go()}});
   host.querySelectorAll('.tow').forEach(t=>{const go=()=>{if(camDrag)return;snd('tap');openSheet('tower')};t.onclick=go;t.onkeydown=e=>{if(e.key==='Enter')go()}});
   host.querySelectorAll('.cre').forEach(el=>{const go=e=>{if(camDrag)return;e&&e.stopPropagation&&e.stopPropagation();const c=BT.cr.find(x=>x.el===el);if(c)strike(c)};el.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse'||e.button===0){el._pd=1}});el.onclick=go;el.onkeydown=e=>{if(e.key==='Enter')go()}});
@@ -660,7 +666,8 @@ function goTo(to){const [k,v]=(to||'').split(':');if(k==='g'){const G=GAMES.find
 let fxT=0;
 let lastPhase=null,lastRaid=null;
 setInterval(()=>{ambSync();const host=$('colony');if(!host||$('hub').hidden||$('pColony').hidden||document.hidden)return;
-  const had=col.build&&col.build.id;accrue();if(had&&!col.build){renderColony();fxRing(had);return}
+  const had=col.build&&col.build.id,had2=col.build2&&col.build2.id;accrue();if(had&&!col.build){renderColony();fxRing(had);return}if(had2&&!col.build2){renderColony();fxRing(had2);return}
+  if(col.build2){const left=(col.build2.end-Date.now())/1000,t=host.querySelector('[data-t2]'),p=host.querySelector('[data-p2]'),rc=host.querySelector('[data-rc2]');if(t)t.textContent=fmtDur(left);if(p)p.style.width=Math.min(100,100-left/col.build2.len*100)+'%';if(rc)rc.textContent=Math.max(1,Math.ceil(left/60))}
   document.querySelectorAll('#colony [data-r]').forEach(e=>{e.textContent=fmtN(col.res[e.dataset.r])});
   document.querySelectorAll('#colony .cc[data-k],#csheet .cc[data-k]').forEach(e=>e.classList.toggle('no',col.res[e.dataset.k]<+e.dataset.n));
   if(col.build){const left=(col.build.end-Date.now())/1000,t=host.querySelector('[data-t]'),p=host.querySelector('[data-p]'),rc=host.querySelector('[data-rc]');
