@@ -91,8 +91,6 @@ function storyBox(title,text,label,fn){const m=document.createElement('div');m.c
 function chapterDone(){if(col.done)return;col.done=1;colSave();
   const m=storyBox('المركبة جاهزة! 🚀','اكتمل الفصل الأول. الفصل الثاني قريباً.','رائع');celebrate(m.querySelector('.hbox'))}
 
-/* ---------- scene: the base drawn as SVG; each building is a tappable group ---------- */
-const SLOT={radio:[42,150],farm:[112,148],habitat:[214,146],dock:[304,150],mine:[58,214],hq:[168,206],solar:[272,214],obs:[96,272],def:[236,272]};
 const ADEFS=`<defs>
 <linearGradient id="kMf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#aeb9c7"/><stop offset="1" stop-color="#6c7788"/></linearGradient>
 <linearGradient id="kMs" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6f7a8c"/><stop offset="1" stop-color="#434b5a"/></linearGradient>
@@ -196,71 +194,106 @@ case 'dock':{const S=k=>col.ship[k],fly=col.done;let s=_sh(48,10);
   return s+'</g>'}
 }return ''}
 
-function sceneSVG(){let stars='';const R=rng(7);for(let k=0;k<40;k++)stars+=`<circle cx="${(R()*360).toFixed(0)}" cy="${(R()*100).toFixed(0)}" r="${(R()*1.1+0.3).toFixed(1)}" fill="#fff" opacity="${(0.3+R()*0.7).toFixed(2)}"/>`;
-  let crat='';for(let k=0;k<14;k++){const x=R()*360,y=120+R()*180,r=3+R()*9;crat+=`<ellipse cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" rx="${r.toFixed(1)}" ry="${(r*0.4).toFixed(1)}" fill="url(#cCrat)" opacity=".8"/>`}
+/* ---------- full-screen scene (360 x 700 world, sliced to fill the phone) ---------- */
+const SLOT={radio:[58,338,1.25],farm:[178,330,1.25],habitat:[296,338,1.2],mine:[64,452,1.3],hq:[184,456,1.45],dock:[296,446,1.1],solar:[70,566,1.3],obs:[184,570,1.3],def:[298,566,1.3]};
+const ROADS='M184 456 Q120 470 64 452 M184 456 Q240 470 296 446 M184 456 Q130 520 70 566 M184 456 L184 570 M184 456 Q240 520 298 566 M184 456 Q120 400 58 338 M184 456 L178 330 M184 456 Q250 400 296 338';
+const PRODB={mine:'m',solar:'e',farm:'f',radio:'c'};
+function sceneSVG(){const R=rng(7);let stars='',tw='';
+  for(let k=0;k<90;k++){const x=(R()*360).toFixed(0),y=(R()*250).toFixed(0),r=(R()*1.2+0.3).toFixed(1),o=(0.3+R()*0.7).toFixed(2);
+    if(k%5===0)tw+=`<circle class="tw" style="animation-delay:${(R()*4).toFixed(1)}s" cx="${x}" cy="${y}" r="${(+r+0.4).toFixed(1)}" fill="#fff"/>`;else stars+=`<circle cx="${x}" cy="${y}" r="${r}" fill="#fff" opacity="${o}"/>`}
+  let crat='';for(let k=0;k<22;k++){const x=R()*360,y=290+R()*400,r=4+R()*12;crat+=`<ellipse cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" rx="${r.toFixed(1)}" ry="${(r*0.4).toFixed(1)}" fill="url(#cCrat)" opacity=".8"/>`}
+  let rocks='';for(let k=0;k<30;k++){const x=R()*360,y=286+R()*410,r=1.5+R()*4;rocks+=`<path d="M${(x-r).toFixed(1)} ${y.toFixed(1)} l${(r*0.6).toFixed(1)} ${(-r).toFixed(1)} l${(r*1.1).toFixed(1)} ${(r*0.3).toFixed(1)} l${(r*0.5).toFixed(1)} ${(r*0.7).toFixed(1)}Z" fill="#7a5a6a"/><path d="M${(x-r).toFixed(1)} ${y.toFixed(1)} l${(r*0.6).toFixed(1)} ${(-r).toFixed(1)} l${(r*0.3).toFixed(1)} ${r.toFixed(1)}Z" fill="#a07a8a"/>`}
+  let dust='';for(let k=0;k<14;k++)dust+=`<circle class="dust" style="animation-delay:${(R()*9).toFixed(1)}s;animation-duration:${(7+R()*6).toFixed(1)}s" cx="${(R()*360).toFixed(0)}" cy="${(320+R()*360).toFixed(0)}" r="${(0.8+R()*1.4).toFixed(1)}" fill="#ffd9c0"/>`;
   const order=Object.keys(SLOT).sort((a,b)=>SLOT[a][1]-SLOT[b][1]);let g='';
-  for(const id of order){const [x,y]=SLOT[id],L=col.b[id],bl=col.build&&col.build.id===id,sc=(0.92+Math.min(10,L)*0.025).toFixed(3);
-    g+=`<g class="cb${L?'':' empty'}${bl?' building':''}" data-b="${id}" transform="translate(${x} ${y})" role="button" tabindex="0" aria-label="${BLD[id].name}"><rect x="-38" y="-58" width="76" height="66" fill="transparent"/>`;
-    if(L||id==='dock')g+=`<g transform="scale(${sc})">${art(id,L)}</g>`;
-    if(!L&&id!=='dock')g+=`<ellipse cx="0" cy="-2" rx="22" ry="8" fill="none" stroke="#9fe8ff" stroke-dasharray="4 3" opacity=".7"/><text x="0" y="-12" text-anchor="middle" font-size="16" fill="#9fe8ff">+</text>`;
-    if(bl)g+='<path d="M-20 0 L-20 -30 M20 0 L20 -30 M-20 -10 L20 -10 M-20 -22 L20 -22 M-20 -10 L20 -22" stroke="#ffd34d" stroke-width="1.6" opacity=".9"/>';
-    if(L)g+=`<g transform="translate(18 -40)"><circle r="7.5" fill="#0b1226" stroke="#ffd34d" stroke-width="1.4"/><text y="3" text-anchor="middle" font-size="9" font-weight="700" fill="#ffd34d">${L}</text></g>`;
+  for(const id of order){const [x,y,base]=SLOT[id],L=col.b[id],bl=col.build&&col.build.id===id,sc=(base*(0.92+Math.min(10,L)*0.02)).toFixed(3);
+    g+=`<g class="cb${L?'':' empty'}${bl?' building':''}" data-b="${id}" transform="translate(${x} ${y})" role="button" tabindex="0" aria-label="${BLD[id].name}"><ellipse cx="0" cy="-20" rx="50" ry="46" fill="transparent"/>`;
+    if(L||id==='dock')g+=`<g class="bart" transform="scale(${sc})">${art(id,L)}</g>`;
+    if(!L&&id!=='dock')g+=`<g class="plot"><ellipse cx="0" cy="-2" rx="30" ry="10" fill="#9fe8ff" opacity=".08" stroke="#9fe8ff" stroke-dasharray="5 4" stroke-width="1.2"/><circle cx="0" cy="-20" r="11" fill="#0b1226cc" stroke="#9fe8ff" stroke-width="1.2"/><path d="M-5 -20h10M0 -25v10" stroke="#9fe8ff" stroke-width="2" stroke-linecap="round"/></g>`;
+    if(bl)g+=`<g class="scaf"><path d="M-26 2 V-44 M26 2 V-44 M-26 -14 H26 M-26 -30 H26 M-26 -14 L26 -30 M-26 -44 H34 M30 -44 V-30" stroke="#ffd34d" stroke-width="1.6" fill="none"/><path d="M30 -30 v6" stroke="#ddd" stroke-width=".8"/><rect x="27" y="-24" width="6" height="4" fill="#8f99a8"/>${[0,1,2,3,4].map(i=>`<circle class="spark" style="animation-delay:${i*0.25}s" cx="${-10+i*5}" cy="-18" r="1.2" fill="#fff3c0"/>`).join('')}</g>`;
+    if(L)g+=`<g class="lv" transform="translate(${id==='hq'?34:24} ${id==='hq'?-70:-54})"><circle r="8" fill="#0b1226" stroke="#ffd34d" stroke-width="1.4"/><text y="3.2" text-anchor="middle" font-size="9.5" font-weight="700" fill="#ffd34d">${L}</text></g>`;
     g+='</g>'}
-  let rocks='';for(let k=0;k<18;k++){const x=R()*360,y=124+R()*170,r=1.5+R()*3.5;rocks+=`<path d="M${(x-r).toFixed(1)} ${y.toFixed(1)} l${(r*0.6).toFixed(1)} ${(-r).toFixed(1)} l${(r*1.1).toFixed(1)} ${(r*0.3).toFixed(1)} l${(r*0.5).toFixed(1)} ${(r*0.7).toFixed(1)}Z" fill="#7a5a6a"/><path d="M${(x-r).toFixed(1)} ${y.toFixed(1)} l${(r*0.6).toFixed(1)} ${(-r).toFixed(1)} l${(r*0.3).toFixed(1)} ${(r).toFixed(1)}Z" fill="#a07a8a"/>`}
-  return `<svg class="cscene" viewBox="0 0 360 300" aria-label="خريطة المستعمرة">${ADEFS}<defs>
-    <linearGradient id="cSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#070b22"/><stop offset=".7" stop-color="#2a1d48"/><stop offset="1" stop-color="#5a3358"/></linearGradient>
-    <linearGradient id="cGround" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7a5266"/><stop offset=".2" stop-color="#5a4058"/><stop offset="1" stop-color="#21182c"/></linearGradient>
+  const roverPath='M184 470 Q120 486 64 466 Q40 500 70 580 Q130 600 184 584 Q240 600 298 580 Q330 500 296 462 Q240 486 184 470Z';
+  return `<svg class="cscene" viewBox="0 0 360 700" preserveAspectRatio="xMidYMid slice" aria-label="خريطة المستعمرة">${ADEFS}<defs>
+    <linearGradient id="cSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#04061a"/><stop offset=".55" stop-color="#1c1640"/><stop offset=".85" stop-color="#4a2c58"/><stop offset="1" stop-color="#7a4462"/></linearGradient>
+    <linearGradient id="cGround" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7a5266"/><stop offset=".15" stop-color="#5a4058"/><stop offset="1" stop-color="#1a1224"/></linearGradient>
     <linearGradient id="cHill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a3350"/><stop offset="1" stop-color="#3a2a44"/></linearGradient>
+    <linearGradient id="cHill2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2e2240"/><stop offset="1" stop-color="#3a2a48"/></linearGradient>
     <radialGradient id="cPlanet" cx="35%" cy="35%"><stop offset="0" stop-color="#ffd9a0"/><stop offset=".7" stop-color="#d97a4a"/><stop offset="1" stop-color="#7a3a2a"/></radialGradient>
-    <radialGradient id="cCrat" cx="40%" cy="35%"><stop offset="0" stop-color="#1a1222"/><stop offset=".8" stop-color="#3a2a44"/><stop offset="1" stop-color="#9a7088"/></radialGradient></defs>
-    <rect width="360" height="300" fill="url(#cSky)"/>${stars}<circle cx="300" cy="44" r="30" fill="url(#cPlanet)"/><ellipse cx="300" cy="44" rx="48" ry="9" fill="none" stroke="#ffd9a0" stroke-opacity=".45" stroke-width="2" transform="rotate(-14 300 44)"/><circle cx="62" cy="30" r="9" fill="#c9d3dc" opacity=".8"/><circle cx="59" cy="28" r="3" fill="#9aa4b2" opacity=".6"/>
-    <path d="M0 112 L30 92 L52 104 L84 82 L118 106 L150 96 L190 108 L232 86 L262 102 L300 90 L330 104 L360 94 V130 H0Z" fill="url(#cHill)"/><path d="M84 82 L96 96 L88 100 Z M232 86 L242 98 L236 100Z" fill="#6a4a6a" opacity=".6"/>
-    <path d="M0 118 Q40 108 90 116 T190 112 T290 118 T360 112 V300 H0Z" fill="url(#cGround)"/>${crat}${rocks}
-    <path d="M58 214 Q110 232 168 206 M168 206 Q220 232 272 214 M168 206 Q150 240 96 272 M168 206 Q200 250 236 272 M168 206 Q190 170 214 146 M168 206 Q130 170 112 148 M112 148 Q80 152 42 150 M214 146 Q260 160 304 150" stroke="#1a1424" stroke-width="7" fill="none" stroke-linecap="round" opacity=".55"/>
-    <path d="M58 214 Q110 232 168 206 M168 206 Q220 232 272 214 M168 206 Q150 240 96 272 M168 206 Q200 250 236 272 M168 206 Q190 170 214 146 M168 206 Q130 170 112 148 M112 148 Q80 152 42 150 M214 146 Q260 160 304 150" stroke="#c9a0b4" stroke-width=".6" fill="none" stroke-dasharray="3 5" opacity=".5"/>
-    ${g}</svg>`}
+    <radialGradient id="cNeb" cx="50%" cy="50%"><stop offset="0" stop-color="#b47aff" stop-opacity=".28"/><stop offset="1" stop-color="#b47aff" stop-opacity="0"/></radialGradient>
+    <radialGradient id="cNeb2" cx="50%" cy="50%"><stop offset="0" stop-color="#5ff2d6" stop-opacity=".16"/><stop offset="1" stop-color="#5ff2d6" stop-opacity="0"/></radialGradient>
+    <radialGradient id="cCrat" cx="40%" cy="35%"><stop offset="0" stop-color="#1a1222"/><stop offset=".8" stop-color="#3a2a44"/><stop offset="1" stop-color="#9a7088"/></radialGradient>
+    <linearGradient id="cMeteor" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff"/></linearGradient></defs>
+    <rect y="-40" width="360" height="760" fill="url(#cSky)"/><ellipse cx="90" cy="120" rx="140" ry="60" fill="url(#cNeb)"/><ellipse cx="280" cy="210" rx="120" ry="50" fill="url(#cNeb2)"/>${stars}${tw}
+    <g class="meteor"><path d="M0 0 L60 0" stroke="url(#cMeteor)" stroke-width="1.6" stroke-linecap="round"/><circle cx="60" cy="0" r="1.8" fill="#fff"/></g>
+    <g class="meteor m2"><path d="M0 0 L44 0" stroke="url(#cMeteor)" stroke-width="1.2" stroke-linecap="round"/><circle cx="44" cy="0" r="1.4" fill="#fff"/></g>
+    <g class="planet"><circle cx="268" cy="118" r="52" fill="url(#cPlanet)"/><path d="M226 100 Q268 92 312 104 M220 124 Q268 116 318 130" stroke="#a24a2a" stroke-width="5" fill="none" opacity=".35"/><ellipse cx="268" cy="118" rx="84" ry="15" fill="none" stroke="#ffd9a0" stroke-opacity=".5" stroke-width="3" transform="rotate(-14 268 118)"/></g>
+    <g class="moon"><circle cx="120" cy="196" r="11" fill="#c9d3dc"/><circle cx="116" cy="193" r="3" fill="#9aa4b2" opacity=".7"/><circle cx="124" cy="200" r="2" fill="#9aa4b2" opacity=".6"/></g>
+    <g class="shuttle"><path d="M-10 0 L8 -3 L12 0 L8 3Z" fill="#dfe6ee"/><path d="M-10 -1 L-16 0 L-10 1Z" fill="#ff9a3c"/><circle cx="0" cy="-3" r="1" fill="#ff5d73" class="blink"/></g>
+    <path d="M0 262 L28 236 L52 252 L90 220 L124 250 L158 238 L196 254 L236 224 L268 246 L304 230 L334 248 L360 236 V300 H0Z" fill="url(#cHill2)"/>
+    <path d="M0 276 L36 254 L70 268 L104 248 L140 270 L176 258 L214 272 L250 252 L290 268 L326 256 L360 266 V300 H0Z" fill="url(#cHill)"/><path d="M104 248 L114 262 L106 266Z M250 252 L260 264 L254 268Z" fill="#6a4a6a" opacity=".6"/>
+    <path d="M0 286 Q60 274 120 284 T240 280 T360 284 V720 H0Z" fill="url(#cGround)"/>${crat}${rocks}
+    <path d="${ROADS}" stroke="#1a1424" stroke-width="9" fill="none" stroke-linecap="round" opacity=".6"/><path d="${ROADS}" stroke="#d0a8bc" stroke-width=".7" fill="none" stroke-dasharray="4 6" opacity=".5"/>
+    <g class="rover"><animateMotion dur="26s" repeatCount="indefinite" rotate="auto" path="${roverPath}"/><rect x="-7" y="-5" width="14" height="6" rx="2" fill="#e6ecf1"/><rect x="-3" y="-8" width="6" height="3" rx="1" fill="#9fb0c4"/><circle cx="-5" cy="2" r="2" fill="#2a2e3a"/><circle cx="5" cy="2" r="2" fill="#2a2e3a"/><circle cx="7.5" cy="-3" r="1.3" fill="#fff3c0"/><path d="M8 -3 l14 -4 v8Z" fill="#fff3c0" opacity=".18"/></g>
+    ${dust}${g}<g id="cfx"></g>
+    <g class="drone"><animateMotion dur="18s" repeatCount="indefinite" path="M-20 300 C80 250 160 330 240 280 S380 300 400 270"/><ellipse cx="0" cy="0" rx="6" ry="2" fill="#c7cfd8"/><path d="M-8 -2h5M3 -2h5" stroke="#9aa4b2" stroke-width="1"/><circle cx="0" cy="1.5" r="1" fill="#5ff2d6" class="blink"/></g>
+    </svg>`}
+/* floating "+n" over producing buildings, a ring burst on finished builds */
+function fxFloat(id,txt,col2){const L=$('cfx');if(!L||!SLOT[id])return;const [x,y]=SLOT[id],t=document.createElementNS('http://www.w3.org/2000/svg','text');
+  t.setAttribute('x',x);t.setAttribute('y',y-58);t.setAttribute('text-anchor','middle');t.setAttribute('class','flt');t.setAttribute('fill',col2||'#fff');t.textContent=txt;L.appendChild(t);setTimeout(()=>t.remove(),1900)}
+function fxRing(id){const L=$('cfx');if(!L||!SLOT[id])return;const [x,y]=SLOT[id],c=document.createElementNS('http://www.w3.org/2000/svg','ellipse');
+  c.setAttribute('cx',x);c.setAttribute('cy',y-4);c.setAttribute('rx',40);c.setAttribute('ry',14);c.setAttribute('class','ring');L.appendChild(c);setTimeout(()=>c.remove(),1200)}
 
-/* ---------- main screen ---------- */
-function resBar(){return Object.entries(RES).map(([k,[n,em,c]])=>`<div class="cr" style="--c:${c}"><span class="ce">${em}</span><b data-r="${k}">${fmtN(col.res[k])}</b><small>${k==='c'?'+'+rate('c').toFixed(1)+'/س':'+'+fmtN(rate(k))+'/س'}</small></div>`).join('')}
+/* ---------- main screen: scene + overlays; buildings open in a bottom sheet ---------- */
+function resBar(){return Object.entries(RES).map(([k,[n,em,c]])=>`<div class="cr" style="--c:${c}"><span class="ce">${em}</span><b data-r="${k}">${fmtN(col.res[k])}</b><small>${k==='c'?'+'+rate('c').toFixed(1):'+'+fmtN(rate(k))}/س</small></div>`).join('')}
 function costHTML(c){return Object.entries(c).map(([k,n])=>`<span class="cc${col.res[k]>=n?'':' no'}" data-k="${k}" data-n="${n}">${RES[k][1]} ${fmtN(n)}</span>`).join('')}
+function cardHTML(id){const B=BLD[id],L=col.b[id],locked=B.req&&col.b.hq<B.req,max=L>=(B.max||10),G=B.game&&GAMES.find(x=>x.id===B.game),c=upCost(id);
+  const info=B.prod&&L?`${RES[B.prod[0]][1]} +${B.prod[0]==='c'?(B.prod[1]*L*Math.pow(1.15,L-1)*mult()).toFixed(1):fmtN(B.prod[1]*L*Math.pow(1.15,L-1)*mult())}/س`:id==='hq'?`📦 ${fmtN(cap())}`:id==='habitat'?`🧑‍🚀 ${crew()}`:id==='def'&&L?`غنائم +${col.b.def*20}%`:'';
+  let h=`<div class="cbc${locked?' locked':''}"><div class="ch"><span class="ci"><svg viewBox="-52 -64 104 76">${art(id,Math.max(1,L))}</svg></span><span class="ctt"><b>${B.name}</b><small>${locked?'<span class="golink" data-to="b:hq" role="button" tabindex="0">🔒 القيادة '+B.req+' ‹</span>':L?'مستوى '+L+(info?' · '+info:''):'غير مبني'}</small></span></div>`;
+  if(col.build&&col.build.id===id)h+=`<p class="cd">🏗️ قيد البناء…</p>`;
+  else if(!locked&&!max&&id!=='hq'&&L>col.b.hq)h+='<button class="cd need" type="button" data-to="b:hq">🔒 يحتاج القيادة '+L+' ‹</button>';
+  else if(!locked&&!max)h+=`<div class="ccost">${costHTML(c)}<span class="cc time">⏱️ ${fmtDur(upTime(id))}</span></div><button class="btn${L?'':' main'}" type="button" data-up="${id}">${L?'⬆️ مستوى '+(L+1):'🏗️ بناء'}</button>`;
+  else if(max)h+='<p class="cd">✔️ الأعلى</p>';
+  if(G&&L)h+=`<button class="btn task" type="button" data-go="${B.game}" aria-label="${B.task}">🎮 مهمة</button>`;
+  if(id==='dock'&&L){h+='<div class="parts">'+PARTS.map(([pid,pn,pc],i)=>{const done=col.ship[pid];return `<div class="part${done?' ok':''}"><span>${done?'✅':'🔧'} ${pn}</span>${done?'':`<span class="ccost">${costHTML({m:pc[0],e:pc[1],f:pc[2],c:pc[3]})}</span><button class="btn" type="button" data-fix="${i}">${col.b.dock<i+1?'🔒 '+(i+1):'🔧'}</button>`}</div>`}).join('')+'</div>'}
+  return h+'</div>'}
+function bindActions(root){
+  root.querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>startBuild(b.dataset.up));
+  root.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{const G=GAMES.find(x=>x.id===b.dataset.go);if(G){closeSheet();openGame(G)}});
+  root.querySelectorAll('[data-fix]').forEach(b=>b.onclick=()=>repair(+b.dataset.fix));
+  root.querySelectorAll('[data-to]').forEach(el=>{const go=()=>goTo(el.dataset.to);el.onclick=go;el.onkeydown=e=>{if(e.key==='Enter')go()}})}
+let sheetId=null;
+function openSheet(id){sheetId=id;let m=$('csheet');if(!m){m=document.createElement('div');m.id='csheet';m.className='csheet';m.innerHTML='<div class="csb"></div><div class="csp" role="dialog" aria-modal="true"><button class="csx" type="button" aria-label="إغلاق">✕</button><div class="csc"></div></div>';document.body.appendChild(m);
+    m.querySelector('.csb').onclick=closeSheet;m.querySelector('.csx').onclick=closeSheet}
+  renderSheet();m.hidden=false;requestAnimationFrame(()=>m.classList.add('on'))}
+function renderSheet(){const m=$('csheet');if(!m||!sheetId)return;const c=m.querySelector('.csc');c.innerHTML=cardHTML(sheetId);bindActions(c)}
+function closeSheet(){const m=$('csheet');sheetId=null;if(!m)return;m.classList.remove('on');setTimeout(()=>{if(!sheetId)m.hidden=true},250)}
+function rankChip(){try{const i=rankOf(prof.xp);return `<span class="crk">${RANKS[i][2]} ${RANKS[i][1]}</span>`}catch(e){return ''}}
 function renderColony(){const host=$('colony');if(!host)return;accrue();questCheck();const Q=QUESTS[col.q];
-  let h=`<div class="cres">${resBar()}</div>`;
-  h+=`<div class="cscene-wrap">${sceneSVG()}</div>`;
+  let h=`<div class="cscene-wrap">${sceneSVG()}</div><div class="ctop"><div class="cres">${resBar()}</div><div class="crow">${rankChip()}</div></div><div class="cbot">`;
   if(col.build){const B=BLD[col.build.id],left=(col.build.end-Date.now())/1000,pc=Math.min(100,100-left/col.build.len*100);
-    h+=`<div class="cbuild"><span>🏗️ <b>${B.name}</b> ← ${col.b[col.build.id]+1}</span><span class="ct" data-t>${fmtDur(left)}</span><i><u data-p style="width:${pc}%"></u></i><button class="btn" type="button" data-rush aria-label="إنهاء الآن">⚡ 💎 <span data-rc>${Math.max(1,Math.ceil(left/60))}</span></button></div>`}
-  if(Q){const G=Q.go&&GAMES.find(x=>x.id===Q.go);
-    h+=`<div class="cquest"><button class="qt" type="button" data-to="${Q.go?'g:'+Q.go:'b:'+Q.b}"><span class="qi">🎯</span><b></b><span class="qr">${Object.entries(Q.r).map(([k,n])=>'+'+n+' '+RES[k][1]).join(' ')}</span><i class="qa" aria-hidden="true">‹</i></button></div>`}
-  h+='<h3 class="sec">المباني</h3><div class="clist">';
-  for(const id of BORDER){const B=BLD[id],L=col.b[id],locked=B.req&&col.b.hq<B.req,max=L>=(B.max||10),G=B.game&&GAMES.find(x=>x.id===B.game),c=upCost(id);
-    const info=B.prod&&L?`${RES[B.prod[0]][1]} +${B.prod[0]==='c'?(B.prod[1]*L*Math.pow(1.15,L-1)*mult()).toFixed(1):fmtN(B.prod[1]*L*Math.pow(1.15,L-1)*mult())}/س`:id==='hq'?`📦 ${fmtN(cap())}`:id==='habitat'?`🧑‍🚀 ${crew()}`:id==='def'&&L?`غنائم +${col.b.def*20}%`:'';
-    h+=`<div class="cbc${locked?' locked':''}" id="cb-${id}"><div class="ch"><span class="ci"><svg viewBox="-52 -64 104 76">${art(id,Math.max(1,L))}</svg></span><span class="ctt"><b>${B.name}</b><small>${locked?'<span class="golink" data-to="b:hq" role="button" tabindex="0">🔒 القيادة '+B.req+' ‹</span>':L?'مستوى '+L+(info?' · '+info:''):'غير مبني'}</small></span></div>`;
-    if(!locked&&!max&&id!=='hq'&&L>col.b.hq)h+='<button class="cd need" type="button" data-to="b:hq">🔒 يحتاج القيادة '+L+' ‹</button>';
-    else if(!locked&&!max)h+=`<div class="ccost">${costHTML(c)}<span class="cc time">⏱️ ${fmtDur(upTime(id))}</span></div><button class="btn${L?'':' main'}" type="button" data-up="${id}">${L?'⬆️ مستوى '+(L+1):'🏗️ بناء'}</button>`;
-    else if(max)h+='<p class="cd">✔️ الأعلى</p>';
-    if(G&&L)h+=`<button class="btn task" type="button" data-go="${B.game}" aria-label="${B.task}">🎮 مهمة</button>`;
-    if(id==='dock'&&L){h+='<div class="parts">'+PARTS.map(([pid,pn,pc],i)=>{const done=col.ship[pid];return `<div class="part${done?' ok':''}"><span>${done?'✅':'🔧'} ${pn}</span>${done?'':`<span class="ccost">${costHTML({m:pc[0],e:pc[1],f:pc[2],c:pc[3]})}</span><button class="btn" type="button" data-fix="${i}">${col.b.dock<i+1?'🔒 '+(i+1):'🔧'}</button>`}</div>`}).join('')+'</div>'}
-    h+='</div>'}
+    h+=`<div class="cbuild"><span>🏗️ <b>${B.name}</b> ← ${col.b[col.build.id]+1}</span><span class="ct" data-t>${fmtDur(left)}</span><button class="btn" type="button" data-rush aria-label="إنهاء الآن">⚡ 💎 <span data-rc>${Math.max(1,Math.ceil(left/60))}</span></button><i><u data-p style="width:${pc}%"></u></i></div>`}
+  if(Q)h+=`<button class="qt" type="button" data-to="${Q.go?'g:'+Q.go:'b:'+Q.b}"><span class="qi">🎯</span><b></b><span class="qr">${Object.entries(Q.r).map(([k,n])=>'+'+n+' '+RES[k][1]).join(' ')}</span><i class="qa" aria-hidden="true">‹</i></button>`;
+  else h+=`<div class="qt"><span class="qi">🚀</span><b>الفصل الثاني قريباً</b></div>`;
   h+='</div>';host.innerHTML=h;
   if(Q)host.querySelector('.qt b').textContent=Q.t;
-  host.querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>startBuild(b.dataset.up));
-  host.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{const G=GAMES.find(x=>x.id===b.dataset.go);if(G)openGame(G)});
-  host.querySelectorAll('[data-fix]').forEach(b=>b.onclick=()=>repair(+b.dataset.fix));
-  const rb=host.querySelector('[data-rush]');if(rb)rb.onclick=rush;
-  host.querySelectorAll('.cb').forEach(g=>{const go=()=>focusB(g.dataset.b);g.onclick=go;g.onkeydown=e=>{if(e.key==='Enter')go()}});
-  host.querySelectorAll('[data-to]').forEach(el=>{const go=()=>goTo(el.dataset.to);el.onclick=go;el.onkeydown=e=>{if(e.key==='Enter')go()}});
-  colSave();
+  bindActions(host);const rb=host.querySelector('[data-rush]');if(rb)rb.onclick=rush;
+  host.querySelectorAll('.cb').forEach(g=>{const go=()=>{snd('tap');g.classList.remove('tap');void g.getBoundingClientRect();g.classList.add('tap');openSheet(g.dataset.b)};g.onclick=go;g.onkeydown=e=>{if(e.key==='Enter')go()}});
+  renderSheet();colSave();
   if(!col.intro){col.intro=1;colSave();storyBox('تحطّمت المركبة!','ابنِ المستعمرة وأصلح المركبة. كل فوز في الألعاب يجلب موارد.','لنبدأ')}
 }
-/* tapping a written task takes you to it: a game opens, a building card is brought into view */
-function focusB(id){const el=$('cb-'+id);if(!el)return;snd('tap');el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash')}
-function goTo(to){const [k,v]=(to||'').split(':');if(k==='g'){const G=GAMES.find(x=>x.id===v);if(G)openGame(G);return}
+/* tapping a written task takes you to it: a game opens, a building opens its sheet */
+function focusB(id){snd('tap');openSheet(id)}
+function goTo(to){const [k,v]=(to||'').split(':');if(k==='g'){const G=GAMES.find(x=>x.id===v);if(G){closeSheet();openGame(G)}return}
   if(k==='b'){const B=BLD[v];if(v!=='hq'&&B&&B.req&&col.b.hq<B.req){toast('🔒 القيادة '+B.req);focusB('hq');return}focusB(v)}}
-// live numbers once a second while the colony is on screen
+// live numbers once a second while the colony is on screen; every 4 s the producers show what they made
+let fxT=0;
 setInterval(()=>{const host=$('colony');if(!host||$('hub').hidden||$('pColony').hidden||document.hidden)return;
-  const had=col.build&&col.build.id;accrue();if(had&&!col.build){renderColony();return}
-  host.querySelectorAll('[data-r]').forEach(e=>{e.textContent=fmtN(col.res[e.dataset.r])});
-  host.querySelectorAll('.cc[data-k]').forEach(e=>e.classList.toggle('no',col.res[e.dataset.k]<+e.dataset.n));
+  const had=col.build&&col.build.id;accrue();if(had&&!col.build){renderColony();fxRing(had);return}
+  document.querySelectorAll('#colony [data-r]').forEach(e=>{e.textContent=fmtN(col.res[e.dataset.r])});
+  document.querySelectorAll('#colony .cc[data-k],#csheet .cc[data-k]').forEach(e=>e.classList.toggle('no',col.res[e.dataset.k]<+e.dataset.n));
   if(col.build){const left=(col.build.end-Date.now())/1000,t=host.querySelector('[data-t]'),p=host.querySelector('[data-p]'),rc=host.querySelector('[data-rc]');
     if(t)t.textContent=fmtDur(left);if(p)p.style.width=Math.min(100,100-left/col.build.len*100)+'%';if(rc)rc.textContent=Math.max(1,Math.ceil(left/60))}
+  if(++fxT%4===0&&!matchMedia('(prefers-reduced-motion: reduce)').matches){const ids=Object.keys(PRODB).filter(id=>col.b[id]>0),id=ids[(fxT/4)%ids.length|0];
+    if(id){const k=PRODB[id],B=BLD[id],L=col.b[id],v=B.prod[1]*L*Math.pow(1.15,L-1)*mult()/900;fxFloat(id,'+'+(v<10?v.toFixed(1):Math.round(v))+' '+RES[k][1],RES[k][2])}}
   if(Date.now()%10000<1000)colSave()},1000);
 addEventListener('pagehide',()=>{accrue();colSave()});

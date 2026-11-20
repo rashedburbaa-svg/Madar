@@ -26,7 +26,7 @@ function renderHub(){
 }
 let hubTab='pColony';try{const t=localStorage.getItem('arcade-tab');if(['pDaily','pColony','pBadges'].includes(t))hubTab=t}catch(e){}
 function showTab(id){hubTab=id;try{localStorage.setItem('arcade-tab',id)}catch(e){}
-  ['pDaily','pColony','pBadges'].forEach(p=>{$(p).hidden=p!==id});if(id==='pColony')renderColony();
+  ['pDaily','pColony','pBadges'].forEach(p=>{$(p).hidden=p!==id});document.body.classList.toggle('colfull',id==='pColony');if(id==='pColony')renderColony();else if(typeof closeSheet==='function')closeSheet();
   document.querySelectorAll('#tabbar [role=tab]').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===id));scrollTo(0,0)}
 document.querySelectorAll('#tabbar [role=tab]').forEach(b=>b.onclick=()=>{if(b.dataset.tab!==hubTab)snd('tap');showTab(b.dataset.tab)});
 function openGame(G,m){
