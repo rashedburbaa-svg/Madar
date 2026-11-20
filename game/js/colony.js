@@ -34,16 +34,16 @@ function accrue(){const now=Date.now(),last=col.last||now;col.last=now;let dt=Ma
   if(col.build&&now>=col.build.end){const sp=Math.max(0,(col.build.end-last)/3600000);for(const k of 'mefc')gain(k,rate(k)*Math.min(dt,sp));dt=Math.max(0,dt-sp);finishBuild()}
   for(const k of 'mefc')gain(k,rate(k)*dt)}
 function finishBuild(){const b=col.build;if(!b)return;col.build=null;col.b[b.id]++;colSave();snd('ach');buzz([20,30,20]);
-  toast('🏗️ اكتمل: '+BLD[b.id].name+' · المستوى '+col.b[b.id],'ach');if(col.b.hq>=5)unlock('col_hq5');if(BORDER.every(id=>col.b[id]>0))unlock('col_all');questCheck()}
+  toast('🏗️ '+BLD[b.id].name+' '+col.b[b.id],'ach');if(col.b.hq>=5)unlock('col_hq5');if(BORDER.every(id=>col.b[id]>0))unlock('col_all');questCheck()}
 function startBuild(id){accrue();const B=BLD[id],L=col.b[id];
-  if(col.build){toast('فريق البناء مشغول بـ'+BLD[col.build.id].name);return}
-  if(B.req&&col.b.hq<B.req){toast('يحتاج مركز القيادة مستوى '+B.req);return}
-  if(id!=='hq'&&L>col.b.hq){toast('طوّر مركز القيادة أولاً');return}
-  if(L>=(B.max||10)){toast('وصل إلى أعلى مستوى');return}
+  if(col.build){toast('🏗️ البناء مشغول');return}
+  if(B.req&&col.b.hq<B.req){toast('🔒 القيادة '+B.req);return}
+  if(id!=='hq'&&L>col.b.hq){toast('🔒 طوّر القيادة أولاً');return}
+  if(L>=(B.max||10)){toast('✔️ الأعلى');return}
   const c=upCost(id);if(!canPay(c)){snd('err');toast('الموارد لا تكفي');return}
   pay(c);col.build={id,end:Date.now()+upTime(id)*1000,len:upTime(id)};colSave();snd('ok');buzz(15);renderColony()}
 function rush(){accrue();if(!col.build)return;const left=(col.build.end-Date.now())/1000,cost=Math.max(1,Math.ceil(left/60));
-  if(col.res.c<cost){snd('err');toast('تحتاج '+cost+' 💎 لإنهاء البناء الآن');return}
+  if(col.res.c<cost){snd('err');toast('تحتاج '+cost+' 💎');return}
   col.res.c-=cost;col.build.end=Date.now();accrue();colSave();renderColony()}
 function repair(i){accrue();const [pid,name,c]=PARTS[i],need={m:c[0],e:c[1],f:c[2],c:c[3]};
   if(col.ship[pid])return;if(i>0&&!col.ship[PARTS[i-1][0]]){toast('أصلح '+PARTS[i-1][1]+' أولاً');return}
@@ -58,7 +58,7 @@ function colonyReward(id,stars,info){const bid=GAMEOF[id];if(!bid)return;accrue(
   else{col.wins[id]=(col.wins[id]||0)+1;const base=(50+30*stars)*k;
     got=id==='mines'?[['m',base*1.4],['c',stars]]:id==='grid'?[['e',base*1.4],['c',stars]]:id==='words'?[['c',2+2*stars],['f',base*0.6]]:[['f',base*1.2],['c',1+stars]]}
   got=got.map(([r,n])=>[r,Math.round(n)]).filter(x=>x[1]>0);got.forEach(([r,n])=>gain(r,n));colSave();questCheck();
-  setTimeout(()=>toast('🏠 للمستعمرة: '+got.map(([r,n])=>'+'+fmtN(n)+' '+RES[r][1]).join('  ')),900)}
+  setTimeout(()=>toast(got.map(([r,n])=>'+'+fmtN(n)+' '+RES[r][1]).join('  ')),900)}
 
 /* chapter one: guided objectives told by «نجم», the ship's assistant */
 const QUESTS=[
@@ -83,36 +83,121 @@ const QUESTS=[
   {b:'dock',t:'أصلح الهيكل وأكمل المركبة',ok:()=>PARTS.every(p=>col.ship[p[0]]),r:{c:60},say:'آخر جزء! بعدها ننطلق لنكشف سرّ الإشارة.'}
 ];
 function questCheck(){let changed=false;while(col.q<QUESTS.length&&QUESTS[col.q].ok()){const Q=QUESTS[col.q];Object.entries(Q.r).forEach(([k,n])=>gain(k,n));
-    toast('✅ هدف مكتمل: '+Q.t+' · '+Object.entries(Q.r).map(([k,n])=>'+'+n+' '+RES[k][1]).join(' '),'ach');col.q++;changed=true;addXP(25)}
+    toast('✅ '+Object.entries(Q.r).map(([k,n])=>'+'+n+' '+RES[k][1]).join(' '),'ach');col.q++;changed=true;addXP(25)}
   if(changed)colSave();return changed}
 function storyBox(title,text,label,fn){const m=document.createElement('div');m.className='hmodal';m.style.zIndex=40;
   m.innerHTML='<div class="hbox cstory"><div class="cav">🤖</div><h3></h3><p></p><button class="btn main" type="button"></button></div>';
   m.querySelector('h3').textContent=title;m.querySelector('p').textContent=text;const b=m.querySelector('button');b.textContent=label;b.onclick=()=>{m.remove();fn&&fn()};document.body.appendChild(m);b.focus();return m}
 function chapterDone(){if(col.done)return;col.done=1;colSave();
-  const m=storyBox('الفصل الأول: اكتمل! 🚀','المركبة جاهزة للإقلاع. الإحداثيات تشير إلى مصدر الإشارة في مجرة قريبة. الفصل الثاني «خريطة المجرة» قادم في التحديث القادم — واصل تطوير مستعمرتك حتى ذلك الحين.','رائع');celebrate(m.querySelector('.hbox'))}
+  const m=storyBox('المركبة جاهزة! 🚀','اكتمل الفصل الأول. الفصل الثاني قريباً.','رائع');celebrate(m.querySelector('.hbox'))}
 
 /* ---------- scene: the base drawn as SVG; each building is a tappable group ---------- */
 const SLOT={radio:[42,150],farm:[112,148],habitat:[214,146],dock:[304,150],mine:[58,214],hq:[168,206],solar:[272,214],obs:[96,272],def:[236,272]};
-function art(id,L){const on=L>0;switch(id){
-  case 'hq':return `<ellipse cx="0" cy="0" rx="34" ry="7" fill="#0006"/><rect x="-30" y="-14" width="60" height="14" rx="3" fill="#5b6a86"/><path d="M-26 -14 A26 24 0 0 1 26 -14Z" fill="url(#cDome)"/><rect x="-24" y="-10" width="48" height="4" fill="#5ff2d6" opacity=".85"/><path d="M0 -38v-12" stroke="#c9d3dc" stroke-width="2"/><circle cx="0" cy="-51" r="2.5" fill="#ff5d73" class="blink"/>${L>=4?'<rect x="-40" y="-10" width="10" height="10" rx="2" fill="#4a5875"/><rect x="30" y="-10" width="10" height="10" rx="2" fill="#4a5875"/>':''}${L>=7?'<path d="M-14 -36 A14 8 0 0 1 14 -36" stroke="#ffd34d" stroke-width="2" fill="none"/>':''}`;
-  case 'mine':return `<ellipse cx="0" cy="0" rx="28" ry="6" fill="#0006"/><path d="M-22 0 L-8 -12 L6 -4 L20 -10 L26 0Z" fill="#7a6a5a"/><path d="M-6 0 L0 -40 L6 0" stroke="#c9b8a6" stroke-width="3" fill="none"/><path d="M-4 -14h8M-3 -26h6" stroke="#c9b8a6" stroke-width="2"/><rect x="-5" y="-46" width="10" height="7" rx="1.5" fill="#ff9a3c"/><circle cx="16" cy="-6" r="3" fill="#b8a48e"/><circle cx="-14" cy="-6" r="2.5" fill="#9fe8ff" opacity=".8"/>${L>=4?'<path d="M10 -2 L28 -14" stroke="#8f99a8" stroke-width="3"/>':''}`;
-  case 'solar':{let p='';const n=Math.min(5,1+Math.ceil(L/2));for(let k=0;k<n;k++){const x=-24+k*12;p+=`<path d="M${x-5} -4 L${x+4} -4 L${x+7} -16 L${x-2} -16Z" fill="url(#cPanel)" stroke="#9fd0ff" stroke-width=".6"/><path d="M${x} -4v4" stroke="#8f99a8" stroke-width="1.5"/>`}return `<ellipse cx="0" cy="0" rx="32" ry="6" fill="#0006"/>${p}`}
-  case 'farm':return `<ellipse cx="0" cy="0" rx="26" ry="6" fill="#0006"/><path d="M-22 0 A22 22 0 0 1 22 0Z" fill="#9dffc8" opacity=".25" stroke="#bfffe0" stroke-width="1.2"/><path d="M-11 0 A22 22 0 0 1 -6 -20 M11 0 A22 22 0 0 0 6 -20 M-22 0h44" stroke="#bfffe0" stroke-width=".8" fill="none" opacity=".7"/><path d="M-12 0c0-6 3-9 4-12M-2 0c0-8 2-11 3-14M8 0c0-5 3-7 4-10" stroke="#5fd06a" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
-  case 'habitat':{const n=Math.min(3,1+Math.floor(L/3));let p='';for(let k=0;k<n;k++){const x=-18*(n-1)/2*1+k*18-(n>1?0:0);p+=`<rect x="${x-9}" y="-18" width="18" height="18" rx="8" fill="#d9e2ea"/><circle cx="${x}" cy="-10" r="3" fill="#ffd36a"/>`}return `<ellipse cx="0" cy="0" rx="${12+n*10}" ry="6" fill="#0006"/>${n>1?`<rect x="${-9*(n-1)}" y="-12" width="${18*(n-1)}" height="6" fill="#aab6c2"/>`:''}${p}`}
-  case 'radio':return `<ellipse cx="0" cy="0" rx="16" ry="5" fill="#0006"/><path d="M-10 0 L0 -50 L10 0 M-7 -14h14M-4 -30h8" stroke="#aab6c2" stroke-width="2" fill="none"/><path d="M-12 -46 A12 12 0 0 0 4 -58" stroke="#e6ecf1" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="0" cy="-52" r="2.5" fill="#5ff2d6" class="blink"/>${on?'<path d="M10 -58 a8 8 0 0 1 0 10 M14 -61 a13 13 0 0 1 0 16" stroke="#5ff2d6" stroke-width="1.5" fill="none" class="wave"/>':''}`;
-  case 'obs':return `<ellipse cx="0" cy="0" rx="24" ry="6" fill="#0006"/><rect x="-18" y="-10" width="36" height="10" fill="#6b7890"/><path d="M-18 -10 A18 18 0 0 1 18 -10Z" fill="#c9d3dc"/><path d="M-3 -27 L3 -27 L3 -10 L-3 -10Z" fill="#26304a"/><path d="M0 -18 L16 -34" stroke="#8f99a8" stroke-width="5" stroke-linecap="round"/>`;
-  case 'def':return `<ellipse cx="0" cy="0" rx="24" ry="6" fill="#0006"/><path d="M-30 -4 A30 30 0 0 1 30 -4" stroke="#9fe8ff" stroke-width="2" fill="none" opacity=".45" class="shieldarc"/><rect x="-14" y="-12" width="28" height="12" rx="3" fill="#4a5875"/><circle cx="0" cy="-16" r="9" fill="#6b7890"/><path d="M4 -20 L22 -30" stroke="#c9d3dc" stroke-width="4" stroke-linecap="round"/><circle cx="0" cy="-16" r="3" fill="#ff5d73"/>`;
-  case 'dock':{const S=k=>col.ship[k];return `<ellipse cx="0" cy="2" rx="40" ry="8" fill="#0007"/>${L>0?'<path d="M-36 2 L-30 -30 M36 2 L30 -30 M-30 -30h60" stroke="#8f99a8" stroke-width="2" fill="none"/>':''}
-    <g transform="rotate(${col.done?0:-24}) translate(0 -6)">
-    <path d="M-30 -6 C-30 -16 10 -18 26 -9 L30 -6 L26 -3 C10 6 -30 4 -30 -6Z" fill="${S('hull')?'url(#cHull)':'#6b6f7a'}" stroke="#2a2e3a" stroke-width="1"/>
-    <path d="M14 -12 C20 -10 24 -8 26 -6" stroke="${S('shield')?'#ffb43a':'#4a4e5a'}" stroke-width="3" fill="none"/>
-    <ellipse cx="12" cy="-7" rx="5" ry="3" fill="${S('nav')?'#7fe8ff':'#2a3040'}"/>
-    <path d="M-30 -11 L-38 -16 L-34 -6 L-38 4 L-30 -1Z" fill="${S('engine')?'#c9d3dc':'#555a66'}"/>${S('engine')?'<path d="M-38 -9 L-48 -6 L-38 -3Z" fill="#ff9a3c" class="flame"/>':''}
-    <path d="M-6 -15 L-2 -26" stroke="${S('antenna')?'#e6ecf1':'#555a66'}" stroke-width="1.5"/><circle cx="-2" cy="-27" r="2" fill="${S('antenna')?'#5ff2d6':'#555a66'}"/>
-    ${!col.done&&!S('engine')?'<circle cx="-20" cy="-14" r="5" fill="#8889" class="smoke"/><circle cx="-16" cy="-24" r="7" fill="#7778" class="smoke s2"/>':''}</g>`}
+const ADEFS=`<defs>
+<linearGradient id="kMf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#aeb9c7"/><stop offset="1" stop-color="#6c7788"/></linearGradient>
+<linearGradient id="kMs" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6f7a8c"/><stop offset="1" stop-color="#434b5a"/></linearGradient>
+<linearGradient id="kMt" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#e3e9ef"/><stop offset="1" stop-color="#b9c3cf"/></linearGradient>
+<linearGradient id="kCyl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4f7fa"/><stop offset=".45" stop-color="#c7d0da"/><stop offset="1" stop-color="#6a7686"/></linearGradient>
+<linearGradient id="kCylH" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#eef2f6"/><stop offset=".55" stop-color="#a9b4c2"/><stop offset="1" stop-color="#5a6575"/></linearGradient>
+<radialGradient id="kDome" cx="32%" cy="28%" r="80%"><stop offset="0" stop-color="#ffffff"/><stop offset=".35" stop-color="#d6e2ee"/><stop offset=".8" stop-color="#8495ad"/><stop offset="1" stop-color="#5c6b82"/></radialGradient>
+<radialGradient id="kGlass" cx="30%" cy="25%" r="85%"><stop offset="0" stop-color="#e8fff6" stop-opacity=".75"/><stop offset=".5" stop-color="#7fe0c8" stop-opacity=".35"/><stop offset="1" stop-color="#2f7f8a" stop-opacity=".5"/></radialGradient>
+<linearGradient id="kSolar" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4f8fe8"/><stop offset=".45" stop-color="#1d3f8f"/><stop offset="1" stop-color="#0d1d4a"/></linearGradient>
+<linearGradient id="kRock" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a08672"/><stop offset="1" stop-color="#4a3a30"/></linearGradient>
+<linearGradient id="kDish" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#8d9aab"/></linearGradient>
+<linearGradient id="kHull" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7f9fb"/><stop offset=".5" stop-color="#c3ccd6"/><stop offset="1" stop-color="#6d7887"/></linearGradient>
+<linearGradient id="kHullD" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a8f98"/><stop offset=".5" stop-color="#5d626c"/><stop offset="1" stop-color="#32363e"/></linearGradient>
+<radialGradient id="kLamp"><stop offset="0" stop-color="#fff3c0"/><stop offset=".4" stop-color="#ffd36a" stop-opacity=".6"/><stop offset="1" stop-color="#ffd36a" stop-opacity="0"/></radialGradient>
+<radialGradient id="kShield" cx="50%" cy="90%" r="90%"><stop offset=".6" stop-color="#9fe8ff" stop-opacity="0"/><stop offset="1" stop-color="#9fe8ff" stop-opacity=".35"/></radialGradient>
+</defs>`;
+const _sh=(rx,ry)=>`<ellipse cx="${(rx*0.18).toFixed(1)}" cy="1" rx="${rx}" ry="${ry||rx*0.26}" fill="#000" opacity=".38"/>`;
+/* a box seen from the front-left: front face, lit top, shaded right side */
+function _box(x,y,w,h,d,front,top,side,stroke){const e=d*0.55,s=stroke?` stroke="${stroke}" stroke-width=".5"`:'';
+  return `<path d="M${x+w} ${y} l${d} ${-e} v${-h} l${-d} ${e}Z" fill="${side||'url(#kMs)'}"${s}/><path d="M${x} ${y-h} l${d} ${-e} h${w} l${-d} ${e}Z" fill="${top||'url(#kMt)'}"${s}/><rect x="${x}" y="${y-h}" width="${w}" height="${h}" fill="${front||'url(#kMf)'}"${s}/>`}
+const _win=(x,y,n,gap,w,h,c)=>{let s='';for(let i=0;i<n;i++)s+=`<rect x="${x+i*gap}" y="${y}" width="${w}" height="${h}" rx=".6" fill="${c||'#ffd36a'}"/>`;return s};
+function _lattice(x0,w0,x1,w1,y0,y1,n,c){let s=`<path d="M${x0} ${y0} L${x1} ${y1} M${x0+w0} ${y0} L${x1+w1} ${y1}" stroke="${c}" stroke-width="1.7" fill="none"/>`,p='';
+  for(let i=0;i<n;i++){const t0=i/n,t1=(i+1)/n,ya=y0+(y1-y0)*t0,yb=y0+(y1-y0)*t1,la=x0+(x1-x0)*t0,lb=x0+(x1-x0)*t1,ra=la+w0+(w1-w0)*t0,rb=lb+w0+(w1-w0)*t1;p+=`M${la} ${ya}L${rb} ${yb}M${ra} ${ya}L${lb} ${yb}M${lb} ${yb}H${rb}`}
+  return s+`<path d="${p}" stroke="${c}" stroke-width=".8" fill="none" opacity=".85"/>`}
+function art(id,L){L=Math.max(0,L);switch(id){
+case 'hq':{let s=_sh(40,9);
+  if(L>=3)s+=_box(-48,0,16,10,7)+_win(-46,-7,3,5,3,2.5);
+  if(L>=5)s+=_box(30,0,12,26,7)+_win(32,-23,2,5,3,3)+_win(32,-16,2,5,3,3)+_win(32,-9,2,5,3,3);
+  s+=_box(-30,0,58,13,10)+`<rect x="-28" y="-10" width="54" height="4" fill="#0b1830"/>${_win(-26,-9.5,9,6,4,3,'#5ff2d6')}<rect x="-6" y="-7" width="10" height="7" fill="#26324a"/><rect x="-5" y="-6" width="8" height="6" fill="#ffd36a" opacity=".85"/>`;
+  s+=`<ellipse cx="4" cy="-18" rx="27" ry="4.5" fill="#7c8aa0"/><path d="M-22 -18 A26 25 0 0 1 30 -18 Z" fill="url(#kDome)"/><path d="M4 -43 A9 25 0 0 0 -5 -18 M4 -43 A9 25 0 0 1 13 -18 M-19 -28 Q4 -33 27 -28" stroke="#6e7f98" stroke-width=".7" fill="none" opacity=".8"/><ellipse cx="-6" cy="-32" rx="6" ry="3.2" fill="#fff" opacity=".55" transform="rotate(-30 -6 -32)"/>`;
+  s+=`<path d="M4 -43 V-58" stroke="#c9d3dc" stroke-width="1.6"/><path d="M4 -52 l7 -4" stroke="#c9d3dc" stroke-width="1"/><ellipse cx="12" cy="-57" rx="4" ry="2" fill="url(#kDish)" transform="rotate(-30 12 -57)"/><circle cx="4" cy="-59" r="1.8" fill="#ff5d73" class="blink"/>`;
+  if(L>=7)s+=`<ellipse cx="4" cy="-18" rx="31" ry="6" fill="none" stroke="#ffd34d" stroke-width="1.2" opacity=".8"/>`;
+  return s}
+case 'mine':{let s=_sh(34,8);
+  s+=`<path d="M14 0 L20 -9 L27 -12 L34 -5 L36 0Z" fill="url(#kRock)"/><path d="M18 -4 l3 -5 l3 4Z M28 -6 l2 -4 l2 4Z" fill="#7fe8ff" opacity=".9"/><path d="M24 -2 l2 -4 l2 4Z" fill="#b47aff"/>`;
+  s+=`<path d="M2 -7 L20 -13 L22 -10 L4 -4Z" fill="#2b3240"/><path d="M4 -6 L21 -12" stroke="#5a6475" stroke-width=".6" stroke-dasharray="1.5 2"/>`;
+  s+=_box(-28,0,34,6,9,'url(#kMf)','url(#kMt)','url(#kMs)')+`<path d="M-28 -1 h34" stroke="#ffd34d" stroke-width="2" stroke-dasharray="3 3"/>`;
+  s+=_box(-26,-6,14,11,6)+`<path d="M-24 -13 h9 M-24 -11 h9 M-24 -9 h9" stroke="#4a5262" stroke-width=".8"/><circle cx="-14" cy="-15" r="1.3" fill="#ffd34d" class="blink"/>`;
+  s+=_lattice(-6,14,-1,4,-6,-52,6,'#c7cfd8')+`<rect x="-3" y="-56" width="8" height="5" fill="#ff9a3c"/><path d="M1 -51 V-2" stroke="#8a93a2" stroke-width="1.6"/><path d="M-1 -2 l2 5 l2 -5Z" fill="#9aa4b2"/>`;
+  if(L>=4)s+=`<circle cx="-34" cy="-20" r="6" fill="url(#kLamp)"/><path d="M-34 -20 V0" stroke="#7a8494" stroke-width="1.2"/><rect x="-36" y="-22" width="4" height="2.5" fill="#ffe9a8"/>`;
+  return s}
+case 'solar':{const n=Math.min(6,1+Math.ceil(L/2)),rows=n>3?2:1,per=Math.ceil(n/rows);let s=_sh(36,8);
+  s+=_box(-36,0,8,9,5)+`<circle cx="-32" cy="-6" r="1" fill="#7ddc5a" class="blink"/>`;
+  for(let r=rows-1;r>=0;r--){const cnt=r===0?n-(rows-1)*per:per,y=r?-11:0,ox=r?6:0;
+    for(let k=0;k<cnt;k++){const x=-24+ox+k*16;
+      s+=`<path d="M${x+7} ${y} V${y-7}" stroke="#7a8494" stroke-width="1.4"/><path d="M${x} ${y-6} L${x+15} ${y-6} L${x+19} ${y-17} L${x+4} ${y-17}Z" fill="url(#kSolar)" stroke="#c9d6e6" stroke-width=".7"/>`+
+        `<path d="M${x+5} ${y-6} L${x+9} ${y-17} M${x+10} ${y-6} L${x+14} ${y-17} M${x+1.3} ${y-9.7} H${x+16.3} M${x+2.7} ${y-13.3} H${x+17.7}" stroke="#9fc4ff" stroke-width=".35" opacity=".8"/>`+
+        `<path d="M${x+3} ${y-7} L${x+8} ${y-16}" stroke="#fff" stroke-width="1.6" opacity=".22"/>`}}
+  return s}
+case 'farm':{let s=_sh(36,8);
+  s+=`<rect x="24" y="-17" width="10" height="17" fill="url(#kCylH)"/><ellipse cx="29" cy="-17" rx="5" ry="2" fill="#dfe6ee"/><ellipse cx="29" cy="0" rx="5" ry="2" fill="#5a6575"/><path d="M24 -8 h10" stroke="#5a6575" stroke-width=".6"/>`;
+  s+=_box(-30,0,50,3,10,'#8d97a6','#b8c2ce','#5d6776');
+  s+=`<path d="M-30 -3 A25 22 0 0 1 20 -3 L30 -8.5 A25 22 0 0 0 -20 -8.5Z" fill="#2c4a3c" opacity=".55"/>`;
+  for(let i=0;i<6;i++){const x=-24+i*7.5;s+=`<circle cx="${x}" cy="-7" r="3.2" fill="#3fa654"/><circle cx="${x+1}" cy="-10" r="2.6" fill="#5fd06a"/><circle cx="${x+4}" cy="-12" r="2" fill="#7ddc5a"/>`}
+  s+=`<path d="M-30 -3 A25 24 0 0 1 20 -3 Z" fill="url(#kGlass)" stroke="#d8fff0" stroke-width=".8"/><path d="M-20 -8.5 A25 24 0 0 1 30 -8.5" stroke="#d8fff0" stroke-width=".7" fill="none" opacity=".7"/><path d="M-5 -27 L5 -32.5" stroke="#d8fff0" stroke-width=".7"/>`;
+  s+=`<path d="M-22 -3 A6 24 0 0 1 -18 -19 M-12 -3 A4 24 0 0 1 -10 -24 M0 -3 V-27 M12 -3 A4 24 0 0 0 10 -24" stroke="#d8fff0" stroke-width=".55" fill="none" opacity=".75"/><path d="M-22 -16 Q-12 -26 0 -26" stroke="#fff" stroke-width="2" fill="none" opacity=".35" stroke-linecap="round"/>`;
+  if(L>=5)s+=`<circle cx="-34" cy="-3" r="3" fill="#5fd06a"/><circle cx="-36" cy="-6" r="2.4" fill="#7ddc5a"/>`;
+  return s}
+case 'habitat':{const n=Math.min(3,1+Math.floor(L/3)),top=L>=8;let s=_sh(14+n*12,8),mods='';
+  const mod=(cx,cy,w)=>`<rect x="${cx-w/2}" y="${cy-12}" width="${w}" height="12" rx="6" fill="url(#kCyl)" stroke="#5a6575" stroke-width=".5"/><ellipse cx="${cx+w/2-3}" cy="${cy-6}" rx="2.6" ry="5.4" fill="#8e9aa8"/>`+
+    `<circle cx="${cx-w/4}" cy="${cy-6.5}" r="2.2" fill="#26324a"/><circle cx="${cx-w/4}" cy="${cy-6.5}" r="1.5" fill="#ffd36a"/><circle cx="${cx+w/12}" cy="${cy-6.5}" r="2.2" fill="#26324a"/><circle cx="${cx+w/12}" cy="${cy-6.5}" r="1.5" fill="#ffd36a"/>`+
+    `<path d="M${cx-w/2+3} ${cy-10} H${cx+w/2-5}" stroke="#fff" stroke-width="1.2" opacity=".55" stroke-linecap="round"/><path d="M${cx-w/3} ${cy} v2 M${cx+w/3} ${cy} v2" stroke="#5a6575" stroke-width="1.5"/>`;
+  const W=22,gap=4,tot=n*W+(n-1)*gap;
+  for(let k=0;k<n;k++){const cx=-tot/2+W/2+k*(W+gap);if(k)mods+=`<rect x="${cx-W/2-gap-1}" y="-9" width="${gap+2}" height="5" fill="#8e9aa8"/>`;mods+=mod(cx,-2,W)}
+  if(top)mods+=`<rect x="-3" y="-17" width="6" height="4" fill="#8e9aa8"/>`+mod(0,-15,20);
+  return s+mods}
+case 'radio':{let s=_sh(22,6);
+  s+=`<path d="M0 -56 L-22 0 M0 -56 L22 0" stroke="#8a93a2" stroke-width=".4" opacity=".7"/>`;
+  s+=_box(-14,0,12,7,6)+`<rect x="-12" y="-5" width="3" height="3" fill="#5ff2d6"/>`;
+  s+=_lattice(-5,10,-1,2,-1,-56,7,'#c7cfd8');
+  s+=`<g transform="translate(-3 -44) rotate(-28)"><path d="M-11 0 A11 5 0 0 0 11 0 Z" fill="url(#kDish)" stroke="#7a8494" stroke-width=".6"/><path d="M-11 0 A11 2.6 0 0 1 11 0" fill="#b8c4d2"/><path d="M0 -1 V-9" stroke="#8a93a2" stroke-width="1"/><circle cx="0" cy="-9.5" r="1.4" fill="#5a6475"/></g>`;
+  s+=`<circle cx="0" cy="-57" r="2" fill="#ff5d73" class="blink"/>`;
+  if(L)s+=`<path d="M8 -58 a7 7 0 0 1 0 10 M12 -61 a12 12 0 0 1 0 16" stroke="#5ff2d6" stroke-width="1.3" fill="none" class="wave"/>`;
+  return s}
+case 'obs':{let s=_sh(26,7);
+  s+=`<rect x="-18" y="-15" width="36" height="15" fill="url(#kCylH)"/><ellipse cx="0" cy="0" rx="18" ry="3" fill="#5a6575"/><rect x="-14" y="-10" width="5" height="10" fill="#26324a"/><rect x="-13" y="-9" width="3" height="9" fill="#ffd36a" opacity=".8"/>`;
+  s+=`<ellipse cx="0" cy="-15" rx="19" ry="3.2" fill="#7c8aa0"/><path d="M-18 -15 A18 18 0 0 1 18 -15 Z" fill="url(#kDome)"/>`;
+  s+=`<path d="M-3 -32.8 L4 -32.6 L5 -15 L-1 -15Z" fill="#141b2e"/><g transform="translate(2 -22) rotate(-38)"><rect x="-2" y="-3.5" width="22" height="7" rx="2" fill="url(#kCyl)" stroke="#5a6575" stroke-width=".5"/><rect x="18" y="-4.3" width="4" height="8.6" rx="1" fill="#5a6575"/><circle cx="22" cy="0" r="2.6" fill="#7fe8ff" opacity=".8"/></g>`;
+  s+=`<ellipse cx="-8" cy="-26" rx="4" ry="2" fill="#fff" opacity=".6" transform="rotate(-35 -8 -26)"/>`;
+  return s}
+case 'def':{let s=_sh(30,8);
+  s+=`<path d="M-30 -2 A30 34 0 0 1 30 -2 Z" fill="url(#kShield)" stroke="#9fe8ff" stroke-width=".8" stroke-opacity=".5" class="shieldarc"/>`;
+  s+=`<path d="M-20 0 L-15 -12 L17 -12 L22 0Z" fill="url(#kMf)" stroke="#434b5a" stroke-width=".6"/><path d="M-15 -12 L-11 -15 L19 -15 L17 -12Z" fill="url(#kMt)"/><path d="M17 -12 L19 -15 L25 -3 L22 0Z" fill="url(#kMs)"/>`;
+  s+=`<path d="M-19 -3 H21" stroke="#ffd34d" stroke-width="2.2" stroke-dasharray="3 3"/><path d="M-5 -12 v12 M6 -12 v12" stroke="#434b5a" stroke-width=".6"/>`;
+  s+=`<ellipse cx="2" cy="-16" rx="12" ry="3" fill="#434b5a"/><path d="M-9 -16 C-9 -27 13 -27 13 -16Z" fill="url(#kDome)"/>`;
+  s+=`<path d="M8 -22 L28 -32 M9 -19 L29 -29" stroke="#5a6575" stroke-width="3" stroke-linecap="round"/><path d="M8 -22 L28 -32 M9 -19 L29 -29" stroke="#c7cfd8" stroke-width="1.2" stroke-linecap="round"/><circle cx="-2" cy="-20" r="1.8" fill="#ff5d73" class="blink"/>`;
+  if(L>=5)s+=`<path d="M-24 -1 l-6 -14 h5 l5 14Z" fill="url(#kMs)"/><circle cx="-27" cy="-16" r="2" fill="#9fe8ff"/>`;
+  return s}
+case 'dock':{const S=k=>col.ship[k],fly=col.done;let s=_sh(48,10);
+  if(L>0){s+=_lattice(-44,6,-43,4,0,-46,5,'#aeb8c4')+_lattice(36,6,37,4,0,-46,5,'#aeb8c4')+`<path d="M-44 -46 H42 V-43 H-44Z" fill="url(#kMf)"/><path d="M-6 -43 V-30" stroke="#8a93a2" stroke-width=".8"/><path d="M-9 -30 h6 l-3 4Z" fill="#ffd34d"/>`}
+  s+=`<g transform="rotate(${fly?0:-12}) translate(0 ${fly?-6:-4})">`;
+  s+=`<path d="M-30 -2 L-38 4 L-34 -6Z M-30 -14 L-38 -22 L-33 -11Z" fill="${S('hull')?'#9aa6b4':'#4c5059'}"/>`;
+  s+=`<path d="M-30 -14 C-10 -17 18 -16 30 -8 L33 -6 L30 -4 C18 3 -10 3 -30 0Z" fill="url(#${S('hull')?'kHull':'kHullD'})" stroke="#2a2e3a" stroke-width=".7"/>`;
+  s+=`<path d="M22 -13 C28 -11 31 -8 33 -6 C31 -4 28 -1 22 1" stroke="${S('shield')?'#d9772a':'#3a3d45'}" stroke-width="4" fill="none"/>`;
+  s+=`<path d="M10 -12 C15 -12 19 -10 21 -8 L10 -8Z" fill="${S('nav')?'#7fe8ff':'#1c2230'}" stroke="#2a2e3a" stroke-width=".5"/>`+(S('nav')?'<path d="M12 -11 l3 0" stroke="#fff" stroke-width=".8" opacity=".8"/>':'');
+  s+=`${_win(-20,-10,4,6,3,2.4,S('hull')?'#ffd36a':'#2a2e38')}<path d="M-26 -6 H18" stroke="${S('hull')?'#8e9aa8':'#2e323b'}" stroke-width=".6"/>`;
+  s+=`<path d="M-30 -12 L-36 -14 L-36 -2 L-30 -2Z" fill="${S('engine')?'url(#kCylH)':'#3e424b'}"/>`+(S('engine')?`<path d="M-36 -12 L-${fly?54:46} -8 L-36 -4Z" fill="#ff9a3c" class="flame"/><path d="M-36 -10 L-42 -8 L-36 -6Z" fill="#fff3c0"/>`:'');
+  s+=`<path d="M-4 -15 L-1 -26" stroke="${S('antenna')?'#e6ecf1':'#4c5059'}" stroke-width="1.2"/><circle cx="-1" cy="-27" r="1.8" fill="${S('antenna')?'#5ff2d6':'#4c5059'}"/>`;
+  if(!S('hull'))s+=`<ellipse cx="-8" cy="-8" rx="6" ry="3" fill="#111" opacity=".55"/><ellipse cx="8" cy="-3" rx="4" ry="2" fill="#111" opacity=".5"/><path d="M-14 -13 l4 4 l-3 3 l5 3" stroke="#111" stroke-width=".8" fill="none"/>`;
+  if(!fly&&!S('engine'))s+=`<circle cx="-24" cy="-18" r="5" fill="#8889" class="smoke"/><circle cx="-20" cy="-28" r="7" fill="#7778" class="smoke s2"/>`;
+  return s+'</g>'}
 }return ''}
+
 function sceneSVG(){let stars='';const R=rng(7);for(let k=0;k<40;k++)stars+=`<circle cx="${(R()*360).toFixed(0)}" cy="${(R()*100).toFixed(0)}" r="${(R()*1.1+0.3).toFixed(1)}" fill="#fff" opacity="${(0.3+R()*0.7).toFixed(2)}"/>`;
-  let crat='';for(let k=0;k<14;k++){const x=R()*360,y=120+R()*180,r=3+R()*9;crat+=`<ellipse cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" rx="${r.toFixed(1)}" ry="${(r*0.4).toFixed(1)}" fill="#0003"/>`}
+  let crat='';for(let k=0;k<14;k++){const x=R()*360,y=120+R()*180,r=3+R()*9;crat+=`<ellipse cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" rx="${r.toFixed(1)}" ry="${(r*0.4).toFixed(1)}" fill="url(#cCrat)" opacity=".8"/>`}
   const order=Object.keys(SLOT).sort((a,b)=>SLOT[a][1]-SLOT[b][1]);let g='';
   for(const id of order){const [x,y]=SLOT[id],L=col.b[id],bl=col.build&&col.build.id===id,sc=(0.92+Math.min(10,L)*0.025).toFixed(3);
     g+=`<g class="cb${L?'':' empty'}${bl?' building':''}" data-b="${id}" transform="translate(${x} ${y})" role="button" tabindex="0" aria-label="${BLD[id].name}"><rect x="-38" y="-58" width="76" height="66" fill="transparent"/>`;
@@ -121,41 +206,42 @@ function sceneSVG(){let stars='';const R=rng(7);for(let k=0;k<40;k++)stars+=`<ci
     if(bl)g+='<path d="M-20 0 L-20 -30 M20 0 L20 -30 M-20 -10 L20 -10 M-20 -22 L20 -22 M-20 -10 L20 -22" stroke="#ffd34d" stroke-width="1.6" opacity=".9"/>';
     if(L)g+=`<g transform="translate(18 -40)"><circle r="7.5" fill="#0b1226" stroke="#ffd34d" stroke-width="1.4"/><text y="3" text-anchor="middle" font-size="9" font-weight="700" fill="#ffd34d">${L}</text></g>`;
     g+='</g>'}
-  return `<svg class="cscene" viewBox="0 0 360 300" aria-label="خريطة المستعمرة"><defs>
-    <linearGradient id="cSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0a0f2a"/><stop offset="1" stop-color="#3a2350"/></linearGradient>
-    <linearGradient id="cGround" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6b4a5e"/><stop offset=".25" stop-color="#4e3a52"/><stop offset="1" stop-color="#241a30"/></linearGradient>
+  let rocks='';for(let k=0;k<18;k++){const x=R()*360,y=124+R()*170,r=1.5+R()*3.5;rocks+=`<path d="M${(x-r).toFixed(1)} ${y.toFixed(1)} l${(r*0.6).toFixed(1)} ${(-r).toFixed(1)} l${(r*1.1).toFixed(1)} ${(r*0.3).toFixed(1)} l${(r*0.5).toFixed(1)} ${(r*0.7).toFixed(1)}Z" fill="#7a5a6a"/><path d="M${(x-r).toFixed(1)} ${y.toFixed(1)} l${(r*0.6).toFixed(1)} ${(-r).toFixed(1)} l${(r*0.3).toFixed(1)} ${(r).toFixed(1)}Z" fill="#a07a8a"/>`}
+  return `<svg class="cscene" viewBox="0 0 360 300" aria-label="خريطة المستعمرة">${ADEFS}<defs>
+    <linearGradient id="cSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#070b22"/><stop offset=".7" stop-color="#2a1d48"/><stop offset="1" stop-color="#5a3358"/></linearGradient>
+    <linearGradient id="cGround" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7a5266"/><stop offset=".2" stop-color="#5a4058"/><stop offset="1" stop-color="#21182c"/></linearGradient>
+    <linearGradient id="cHill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a3350"/><stop offset="1" stop-color="#3a2a44"/></linearGradient>
     <radialGradient id="cPlanet" cx="35%" cy="35%"><stop offset="0" stop-color="#ffd9a0"/><stop offset=".7" stop-color="#d97a4a"/><stop offset="1" stop-color="#7a3a2a"/></radialGradient>
-    <radialGradient id="cDome" cx="40%" cy="30%"><stop offset="0" stop-color="#eaf6ff"/><stop offset="1" stop-color="#7f93b3"/></radialGradient>
-    <linearGradient id="cPanel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3a7bd5"/><stop offset="1" stop-color="#1a2f6e"/></linearGradient>
-    <linearGradient id="cHull" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4f7fa"/><stop offset="1" stop-color="#9aa7b3"/></linearGradient></defs>
-    <rect width="360" height="300" fill="url(#cSky)"/>${stars}<circle cx="300" cy="44" r="30" fill="url(#cPlanet)"/><ellipse cx="300" cy="44" rx="48" ry="9" fill="none" stroke="#ffd9a0" stroke-opacity=".45" stroke-width="2" transform="rotate(-14 300 44)"/><circle cx="62" cy="30" r="9" fill="#c9d3dc" opacity=".8"/>
-    <path d="M0 118 Q40 104 90 114 T190 110 T290 116 T360 108 V300 H0Z" fill="url(#cGround)"/><path d="M0 118 Q40 104 90 114 T190 110 T290 116 T360 108" stroke="#9a6a7e" stroke-width="1.5" fill="none" opacity=".6"/>${crat}
-    <path d="M58 214 Q110 232 168 206 M168 206 Q220 232 272 214 M168 206 Q150 240 96 272 M168 206 Q200 250 236 272 M168 206 Q190 170 214 146 M168 206 Q130 170 112 148 M112 148 Q80 152 42 150 M214 146 Q260 160 304 150" stroke="#ffffff14" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <radialGradient id="cCrat" cx="40%" cy="35%"><stop offset="0" stop-color="#1a1222"/><stop offset=".8" stop-color="#3a2a44"/><stop offset="1" stop-color="#9a7088"/></radialGradient></defs>
+    <rect width="360" height="300" fill="url(#cSky)"/>${stars}<circle cx="300" cy="44" r="30" fill="url(#cPlanet)"/><ellipse cx="300" cy="44" rx="48" ry="9" fill="none" stroke="#ffd9a0" stroke-opacity=".45" stroke-width="2" transform="rotate(-14 300 44)"/><circle cx="62" cy="30" r="9" fill="#c9d3dc" opacity=".8"/><circle cx="59" cy="28" r="3" fill="#9aa4b2" opacity=".6"/>
+    <path d="M0 112 L30 92 L52 104 L84 82 L118 106 L150 96 L190 108 L232 86 L262 102 L300 90 L330 104 L360 94 V130 H0Z" fill="url(#cHill)"/><path d="M84 82 L96 96 L88 100 Z M232 86 L242 98 L236 100Z" fill="#6a4a6a" opacity=".6"/>
+    <path d="M0 118 Q40 108 90 116 T190 112 T290 118 T360 112 V300 H0Z" fill="url(#cGround)"/>${crat}${rocks}
+    <path d="M58 214 Q110 232 168 206 M168 206 Q220 232 272 214 M168 206 Q150 240 96 272 M168 206 Q200 250 236 272 M168 206 Q190 170 214 146 M168 206 Q130 170 112 148 M112 148 Q80 152 42 150 M214 146 Q260 160 304 150" stroke="#1a1424" stroke-width="7" fill="none" stroke-linecap="round" opacity=".55"/>
+    <path d="M58 214 Q110 232 168 206 M168 206 Q220 232 272 214 M168 206 Q150 240 96 272 M168 206 Q200 250 236 272 M168 206 Q190 170 214 146 M168 206 Q130 170 112 148 M112 148 Q80 152 42 150 M214 146 Q260 160 304 150" stroke="#c9a0b4" stroke-width=".6" fill="none" stroke-dasharray="3 5" opacity=".5"/>
     ${g}</svg>`}
 
 /* ---------- main screen ---------- */
 function resBar(){return Object.entries(RES).map(([k,[n,em,c]])=>`<div class="cr" style="--c:${c}"><span class="ce">${em}</span><b data-r="${k}">${fmtN(col.res[k])}</b><small>${k==='c'?'+'+rate('c').toFixed(1)+'/س':'+'+fmtN(rate(k))+'/س'}</small></div>`).join('')}
 function costHTML(c){return Object.entries(c).map(([k,n])=>`<span class="cc${col.res[k]>=n?'':' no'}" data-k="${k}" data-n="${n}">${RES[k][1]} ${fmtN(n)}</span>`).join('')}
 function renderColony(){const host=$('colony');if(!host)return;accrue();questCheck();const Q=QUESTS[col.q];
-  let h=`<div class="cres">${resBar()}</div><div class="capline">سعة المخازن ${fmtN(cap())} · الطاقم ${crew()} 🧑‍🚀 · إنتاج +${Math.round((mult()-1)*100)}%</div>`;
+  let h=`<div class="cres">${resBar()}</div>`;
   h+=`<div class="cscene-wrap">${sceneSVG()}</div>`;
   if(col.build){const B=BLD[col.build.id],left=(col.build.end-Date.now())/1000,pc=Math.min(100,100-left/col.build.len*100);
-    h+=`<div class="cbuild"><span>🏗️ يُبنى: <b>${B.name}</b> ← المستوى ${col.b[col.build.id]+1}</span><span class="ct" data-t>${fmtDur(left)}</span><i><u data-p style="width:${pc}%"></u></i><button class="btn" type="button" data-rush>إنهاء الآن 💎 <span data-rc>${Math.max(1,Math.ceil(left/60))}</span></button></div>`}
+    h+=`<div class="cbuild"><span>🏗️ <b>${B.name}</b> ← ${col.b[col.build.id]+1}</span><span class="ct" data-t>${fmtDur(left)}</span><i><u data-p style="width:${pc}%"></u></i><button class="btn" type="button" data-rush aria-label="إنهاء الآن">⚡ 💎 <span data-rc>${Math.max(1,Math.ceil(left/60))}</span></button></div>`}
   if(Q){const G=Q.go&&GAMES.find(x=>x.id===Q.go);
-    h+=`<div class="cquest"><div class="qh"><span>🤖 نجم</span><small>هدف ${col.q+1} من ${QUESTS.length}</small></div><p class="say"></p><button class="qt" type="button" data-to="${Q.go?'g:'+Q.go:'b:'+Q.b}"><b></b><span class="qr">${Object.entries(Q.r).map(([k,n])=>'+'+n+' '+RES[k][1]).join(' ')}</span><i class="qa" aria-hidden="true">‹</i></button>${G?'<button class="btn main" type="button" data-go="'+Q.go+'">🎮 ابدأ المهمة</button>':''}</div>`}
-  else h+=`<div class="cquest"><div class="qh"><span>🤖 نجم</span></div><p class="say">أكملت الفصل الأول! الفصل الثاني قادم قريباً.</p></div>`;
+    h+=`<div class="cquest"><button class="qt" type="button" data-to="${Q.go?'g:'+Q.go:'b:'+Q.b}"><span class="qi">🎯</span><b></b><span class="qr">${Object.entries(Q.r).map(([k,n])=>'+'+n+' '+RES[k][1]).join(' ')}</span><i class="qa" aria-hidden="true">‹</i></button></div>`}
   h+='<h3 class="sec">المباني</h3><div class="clist">';
   for(const id of BORDER){const B=BLD[id],L=col.b[id],locked=B.req&&col.b.hq<B.req,max=L>=(B.max||10),G=B.game&&GAMES.find(x=>x.id===B.game),c=upCost(id);
     const info=B.prod&&L?`${RES[B.prod[0]][1]} +${B.prod[0]==='c'?(B.prod[1]*L*Math.pow(1.15,L-1)*mult()).toFixed(1):fmtN(B.prod[1]*L*Math.pow(1.15,L-1)*mult())}/س`:id==='hq'?`📦 ${fmtN(cap())}`:id==='habitat'?`🧑‍🚀 ${crew()}`:id==='def'&&L?`غنائم +${col.b.def*20}%`:'';
-    h+=`<div class="cbc${locked?' locked':''}" id="cb-${id}"><div class="ch"><span class="ci"><svg viewBox="-40 -62 80 72">${art(id,Math.max(1,L))}</svg></span><span class="ctt"><b>${B.name}</b><small>${locked?'<span class="golink" data-to="b:hq" role="button" tabindex="0">🔒 يحتاج مركز القيادة '+B.req+' ‹</span>':L?'المستوى '+L+(info?' · '+info:''):'غير مبني'}</small></span></div><p class="cd">${B.desc}</p>`;
-    if(!locked&&!max&&id!=='hq'&&L>col.b.hq)h+='<button class="cd need" type="button" data-to="b:hq">⬆️ طوّر مركز القيادة إلى '+(L)+' لتطوير هذا المبنى ‹</button>';
-    else if(!locked&&!max)h+=`<div class="ccost">${costHTML(c)}<span class="cc time">⏱️ ${fmtDur(upTime(id))}</span></div><button class="btn${L?'':' main'}" type="button" data-up="${id}">${L?'تطوير إلى '+(L+1):'بناء'}</button>`;
-    else if(max)h+='<p class="cd">✔️ أعلى مستوى</p>';
-    if(G&&L)h+=`<button class="btn task" type="button" data-go="${B.game}">🎮 ${B.task}</button>`;
-    if(id==='dock'&&L){h+='<div class="parts">'+PARTS.map(([pid,pn,pc],i)=>{const done=col.ship[pid];return `<div class="part${done?' ok':''}"><span>${done?'✅':'🔧'} ${pn}</span>${done?'<small>تم</small>':`<span class="ccost">${costHTML({m:pc[0],e:pc[1],f:pc[2],c:pc[3]})}</span><button class="btn" type="button" data-fix="${i}">إصلاح${col.b.dock<i+1?' (حوض '+(i+1)+')':''}</button>`}</div>`}).join('')+'</div>'}
+    h+=`<div class="cbc${locked?' locked':''}" id="cb-${id}"><div class="ch"><span class="ci"><svg viewBox="-52 -64 104 76">${art(id,Math.max(1,L))}</svg></span><span class="ctt"><b>${B.name}</b><small>${locked?'<span class="golink" data-to="b:hq" role="button" tabindex="0">🔒 القيادة '+B.req+' ‹</span>':L?'مستوى '+L+(info?' · '+info:''):'غير مبني'}</small></span></div>`;
+    if(!locked&&!max&&id!=='hq'&&L>col.b.hq)h+='<button class="cd need" type="button" data-to="b:hq">🔒 يحتاج القيادة '+L+' ‹</button>';
+    else if(!locked&&!max)h+=`<div class="ccost">${costHTML(c)}<span class="cc time">⏱️ ${fmtDur(upTime(id))}</span></div><button class="btn${L?'':' main'}" type="button" data-up="${id}">${L?'⬆️ مستوى '+(L+1):'🏗️ بناء'}</button>`;
+    else if(max)h+='<p class="cd">✔️ الأعلى</p>';
+    if(G&&L)h+=`<button class="btn task" type="button" data-go="${B.game}" aria-label="${B.task}">🎮 مهمة</button>`;
+    if(id==='dock'&&L){h+='<div class="parts">'+PARTS.map(([pid,pn,pc],i)=>{const done=col.ship[pid];return `<div class="part${done?' ok':''}"><span>${done?'✅':'🔧'} ${pn}</span>${done?'':`<span class="ccost">${costHTML({m:pc[0],e:pc[1],f:pc[2],c:pc[3]})}</span><button class="btn" type="button" data-fix="${i}">${col.b.dock<i+1?'🔒 '+(i+1):'🔧'}</button>`}</div>`}).join('')+'</div>'}
     h+='</div>'}
   h+='</div>';host.innerHTML=h;
-  if(Q)host.querySelector('.say').textContent=Q.say,host.querySelector('.qt b').textContent=Q.t;
+  if(Q)host.querySelector('.qt b').textContent=Q.t;
   host.querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>startBuild(b.dataset.up));
   host.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{const G=GAMES.find(x=>x.id===b.dataset.go);if(G)openGame(G)});
   host.querySelectorAll('[data-fix]').forEach(b=>b.onclick=()=>repair(+b.dataset.fix));
@@ -163,12 +249,12 @@ function renderColony(){const host=$('colony');if(!host)return;accrue();questChe
   host.querySelectorAll('.cb').forEach(g=>{const go=()=>focusB(g.dataset.b);g.onclick=go;g.onkeydown=e=>{if(e.key==='Enter')go()}});
   host.querySelectorAll('[data-to]').forEach(el=>{const go=()=>goTo(el.dataset.to);el.onclick=go;el.onkeydown=e=>{if(e.key==='Enter')go()}});
   colSave();
-  if(!col.intro){col.intro=1;colSave();storyBox('تحطّمت المركبة!','هبطت مركبة «المدار» اضطرارياً على كوكب مجهول. الطاقم نجا، لكن المركبة محطّمة. ابنِ مستعمرة، اجمع الموارد، وأصلح المركبة لتكشف سرّ الإشارة التي أسقطتكم. كل لعبة تفوز بها تمدّ المستعمرة بالموارد.','لنبدأ')}
+  if(!col.intro){col.intro=1;colSave();storyBox('تحطّمت المركبة!','ابنِ المستعمرة وأصلح المركبة. كل فوز في الألعاب يجلب موارد.','لنبدأ')}
 }
 /* tapping a written task takes you to it: a game opens, a building card is brought into view */
 function focusB(id){const el=$('cb-'+id);if(!el)return;snd('tap');el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash')}
 function goTo(to){const [k,v]=(to||'').split(':');if(k==='g'){const G=GAMES.find(x=>x.id===v);if(G)openGame(G);return}
-  if(k==='b'){const B=BLD[v];if(v!=='hq'&&B&&B.req&&col.b.hq<B.req){toast('🔒 '+B.name+' يحتاج مركز القيادة '+B.req+' أولاً');focusB('hq');return}focusB(v)}}
+  if(k==='b'){const B=BLD[v];if(v!=='hq'&&B&&B.req&&col.b.hq<B.req){toast('🔒 القيادة '+B.req);focusB('hq');return}focusB(v)}}
 // live numbers once a second while the colony is on screen
 setInterval(()=>{const host=$('colony');if(!host||$('hub').hidden||$('pColony').hidden||document.hidden)return;
   const had=col.build&&col.build.id;accrue();if(had&&!col.build){renderColony();return}

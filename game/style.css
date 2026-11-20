@@ -447,3 +447,19 @@ body{background:transparent}
 .cbc .cd.need{background:none;border:0;padding:0;font:inherit;font-size:13px;text-align:start;cursor:pointer;text-decoration:underline dotted;text-underline-offset:4px}
 .golink{color:var(--gold);cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px}
 .cbc.locked{opacity:1}.cbc.locked .ci,.cbc.locked .ctt b,.cbc.locked .cd{opacity:.55}
+/* colony: compact cards, bigger building pictures, short quest line */
+.cbc{flex-direction:row;flex-wrap:wrap;align-items:center;gap:8px;padding:10px}
+.cbc .ch{flex-basis:100%}
+.cbc .ci{width:84px;height:62px;background:radial-gradient(ellipse at 50% 85%,#5a4058,#1c142a 75%);border-radius:12px}
+.cbc .ci svg{width:84px;height:62px}
+.cbc .ctt b{font-size:16.5px}
+.cbc .ccost{flex:1 1 100%}
+.cbc .btn{flex:1 1 0;min-width:0;height:40px;padding:0 8px}
+.cbc .cd{flex-basis:100%}
+.parts{flex-basis:100%}
+.part{flex-wrap:nowrap}.part .ccost{flex:1 1 auto;flex-basis:auto}.part>span:first-child{flex:none;min-width:96px}.part .btn{flex:none;width:52px}
+.cquest{padding:0;background:none;border:0;box-shadow:none}
+.cquest .qt{background:linear-gradient(160deg,rgba(30,44,90,.95),rgba(14,20,44,.95));border:1px solid #3a4c8a;border-radius:14px;padding:12px;gap:10px;align-items:center}
+.cquest .qi{font-size:20px;flex:none}
+.cquest .qt b{font-size:14.5px;line-height:1.5}
+.cbuild{padding:8px 12px}.cbuild .btn{height:34px}
