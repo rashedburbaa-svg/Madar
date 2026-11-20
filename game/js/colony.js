@@ -367,8 +367,12 @@ function towersRaw(half){let s='';const L=col.b.tower||0,n=towerN(),t=tierOf(L);
   return s}
 /* creatures move under script control so the towers can aim at them */
 const CHP={alien:3,bug:2,blob:7,beast:12,ufo:9};
-function creaturesSVG(){const n=Math.min(ROAM.length,3+Math.floor(col.b.hq/2)+(col.b.def?1:0)+Math.floor((col.b.tower||0)/3));let s='';
-  for(let i=0;i<n;i++){const t=ROAM[i][0];s+=`<g class="cre" data-i="${i}" data-cre="${t}" role="button" tabindex="0" aria-label="كائن فضائي"><g class="cflip"><g transform="scale(${t==='ufo'?1.2:1.05})"><ellipse cx="0" cy="${CTOP[t]/2}" rx="${t==='beast'?30:20}" ry="${-CTOP[t]/2+4}" fill="transparent"/>${CRE[t]}</g></g><g class="hpb" opacity="0"><rect x="-12" y="${Math.round(CTOP[t]*(t==='ufo'?1.2:1.05))-7}" width="24" height="3.4" rx="1.7" fill="#0008"/><rect class="hpf" x="-12" y="${Math.round(CTOP[t]*(t==='ufo'?1.2:1.05))-7}" width="24" height="3.4" rx="1.7" fill="#7ddc5a"/></g></g>`}
+/* how many creatures live outside: grows with the colony; they come back in packs */
+const CTYPES=['alien','beast','bug','alien','blob','ufo','bug','alien','beast','bug','alien','blob','bug','alien','beast','alien','bug','blob','alien','ufo','bug','alien','beast','bug'];
+const crType=i=>CTYPES[i%CTYPES.length];
+const popN=()=>Math.min(CTYPES.length,5+col.b.hq+Math.round((col.b.tower||0)*1.2)+(col.b.def?2:0));
+function creaturesSVG(){const n=popN();let s='';
+  for(let i=0;i<n;i++){const t=crType(i);s+=`<g class="cre" data-i="${i}" data-cre="${t}" role="button" tabindex="0" aria-label="كائن فضائي"><g class="cflip"><g transform="scale(${t==='ufo'?1.2:1.05})"><ellipse cx="0" cy="${CTOP[t]/2}" rx="${t==='beast'?30:20}" ry="${-CTOP[t]/2+4}" fill="transparent"/>${CRE[t]}</g></g><g class="hpb" opacity="0"><rect x="-12" y="${Math.round(CTOP[t]*(t==='ufo'?1.2:1.05))-7}" width="24" height="3.4" rx="1.7" fill="#0008"/><rect class="hpf" x="-12" y="${Math.round(CTOP[t]*(t==='ufo'?1.2:1.05))-7}" width="24" height="3.4" rx="1.7" fill="#7ddc5a"/></g></g>`}
   return s+'<g id="cshots"></g>'}
 const BT={cr:[],tw:[],shots:[],raf:0,last:0,pos:{}};
 /* free roaming: each creature picks its own destinations outside the fence, wanders, pauses, sometimes tests the fence */
@@ -384,18 +388,25 @@ function stepCreature(c,dt){if(c.wait>0){c.wait-=dt;c.el.classList.add('idle');r
   if(c.t!=='ufo'&&fenceR(nx,ny)<1.1){const a=Math.atan2((ny-FEN.cy)/FEN.ry,(nx-FEN.cx)/FEN.rx),side=((dx*-Math.sin(a)+dy*Math.cos(a))>=0?1:-1)*0.04;nx=FEN.cx+Math.cos(a+side)*FEN.rx*1.1;ny=FEN.cy+Math.sin(a+side)*FEN.ry*1.1}
   if(Math.abs(nx-c.x)>0.05)c.face=nx>c.x?1:-1;c.x=nx;c.y=ny}
 function battleInit(){const svg=$('cscene');BT.cr=[];BT.tw=[];BT.shots=[];if(!svg)return;
-  svg.querySelectorAll('.cre').forEach(el=>{const i=+el.dataset.i,t=ROAM[i][0],max=CHP[t]+Math.floor(col.b.hq/3),keep=BT.pos[i],p=keep&&keep.t===t?keep:spawnPt(t);
+  svg.querySelectorAll('.cre').forEach(el=>{const i=+el.dataset.i,t=crType(i),max=CHP[t]+col.b.hq,keep=BT.pos[i],p=keep&&keep.t===t?keep:spawnPt(t);
     const c={el,t,i,hp:max,max,dead:0,x:p.x,y:p.y,tx:p.x,ty:p.y,wait:Math.random()*2,face:1,sp:SPEED[t]*(0.8+Math.random()*0.4),flip:el.querySelector('.cflip'),hpb:el.querySelector('.hpb'),hpf:el.querySelector('.hpf')};pickTarget(c);BT.cr.push(c)});
   const L=col.b.tower||0,tier=tierOf(L);
-  svg.querySelectorAll('.tow:not(.wg)').forEach(el=>{const i=+el.dataset.t,[x,y]=fp(TDEG[i]*Math.PI/180);BT.tw.push({x:x+2*1.4,y:y-26*1.4,head:el.querySelector('.thead'),tier,dmg:1+Math.floor(L/2)+(tier==='plasma'?2:0),cd:i*0.37,rate:tier==='gun'?0.45:tier==='laser'?1.1:1.6,range:tier==='plasma'?240:200,ox:2,oy:-26,ang:0})});
+  svg.querySelectorAll('.tow:not(.wg)').forEach(el=>{const i=+el.dataset.t,[x,y]=fp(TDEG[i]*Math.PI/180);BT.tw.push({x:x+2*1.4,y:y-26*1.4,head:el.querySelector('.thead'),tier,dmg:1+Math.floor(L/3)+(tier==='plasma'?1:0),cd:i*0.37,rate:tier==='gun'?0.45:tier==='laser'?1.1:1.6,range:tier==='plasma'?240:200,ox:2,oy:-26,ang:0})});
   svg.querySelectorAll('.wgun').forEach(el=>{const d=+el.dataset.deg,[x,y]=fp(d*Math.PI/180),h=fenceStyle(col.b.wall).h+5;BT.tw.push({x,y:y-h,head:el.querySelector('.thead'),tier:'gun',dmg:1,cd:d/180,rate:0.9,range:150,ox:0,oy:-h,ang:0})});
   if(!BT.raf){BT.last=performance.now();BT.raf=requestAnimationFrame(battleTick)}}
 function crPos(c,now){let u=((now/1000+c.off)/c.dur)%1;const fwd=u<0.5;u=fwd?u*2:2-u*2;const pt=c.p.getPointAtLength(u*c.len);return {x:pt.x,y:pt.y,fwd}}
 function svgEl(tag,attrs){const e=document.createElementNS('http://www.w3.org/2000/svg',tag);for(const k in attrs)e.setAttribute(k,attrs[k]);return e}
+/* a pack of the fallen returns together from one edge of the map */
+function spawnPack(list){const side=Math.floor(Math.random()*3);let px,py;for(let k=0;k<40;k++){px=side===0?-88:side===1?448:-80+Math.random()*520;py=side===2?760:330+Math.random()*420;if(okSpot('alien',px,py))break}
+  list.forEach((c,j)=>{c.dead=0;c.hp=c.max;c.hpb.setAttribute('opacity','0');c.hpf.setAttribute('width','24');c.hpf.setAttribute('fill','#7ddc5a');
+    if(c.t==='ufo'){const p=spawnPt('ufo');c.x=p.x;c.y=p.y}else{c.x=px+(Math.random()-0.5)*26;c.y=py+(Math.random()-0.5)*18;if(!okSpot(c.t,c.x,c.y)){c.x=px;c.y=py}}
+    c.wait=j*0.25;const a=Math.atan2(c.y-FEN.cy,c.x-FEN.cx);c.tx=FEN.cx+Math.cos(a)*FEN.rx*1.14;c.ty=Math.max(305,FEN.cy+Math.sin(a)*FEN.ry*1.14);if(!okSpot(c.t,c.tx,c.ty))pickTarget(c);c.el.classList.remove('gone')})}
 function battleTick(now){BT.raf=requestAnimationFrame(battleTick);const dt=Math.min(0.05,(now-BT.last)/1000);BT.last=now;
+  if(BT.cr.length){const dead=BT.cr.filter(c=>c.dead),alive=BT.cr.length-dead.length;if(!BT.wave)BT.wave=now+9000;
+    if(dead.length&&(now>BT.wave||alive<=Math.ceil(BT.cr.length/3))){spawnPack(dead.sort(()=>Math.random()-0.5).slice(0,Math.min(dead.length,2+Math.floor(Math.random()*4))));BT.wave=now+8000+Math.random()*9000}}
   if($('hub').hidden||$('pColony').hidden||document.hidden||!$('cscene'))return;const calm=matchMedia('(prefers-reduced-motion: reduce)').matches;
   for(const c of BT.cr){if(!c.el.isConnected)continue;
-    if(c.dead){if(now>c.dead){c.dead=0;c.hp=c.max;const p=spawnPt(c.t);c.x=p.x;c.y=p.y;pickTarget(c);c.el.classList.remove('gone')}else continue}
+    if(c.dead)continue;
     if(!calm)stepCreature(c,dt);BT.pos[c.i]={x:c.x,y:c.y,t:c.t};c.el.setAttribute('transform',`translate(${c.x.toFixed(1)} ${c.y.toFixed(1)})`);c.flip.setAttribute('transform',c.face<0?'scale(-1 1)':'')}
   if(calm)return;
   for(const w of BT.tw){w.cd-=dt;let best=null,bd=1e9;for(const c of BT.cr){if(c.dead||!c.el.isConnected)continue;const d=Math.hypot(c.x-w.x,c.y-12-w.y);if(d<w.range&&d<bd){bd=d;best=c}}
@@ -416,9 +427,9 @@ function boom(x,y,c,r){const L=$('cshots');if(!L)return;const g=svgEl('g',{trans
   L.appendChild(g);BT.shots.push({el:g,t:0,T:0.7})}
 function hurt(c,d){if(c.dead)return;c.hp-=d;c.hpb.setAttribute('opacity','1');c.hpf.setAttribute('width',Math.max(0,24*c.hp/c.max).toFixed(1));c.hpf.setAttribute('fill',c.hp/c.max>0.5?'#7ddc5a':c.hp/c.max>0.25?'#ffd34d':'#ff5d73');
   c.el.classList.remove('hit');void c.el.getBoundingClientRect();c.el.classList.add('hit');
-  if(c.hp<=0){c.dead=performance.now()+4000+Math.random()*5000;c.el.classList.add('gone');c.hpb.setAttribute('opacity','0');boom(c.x,c.y-10,c.t==='blob'?'#ff5d73':c.t==='beast'?'#b47aff':c.t==='ufo'?'#9fe8ff':'#7ddc5a',c.t==='beast'||c.t==='ufo'?18:12);
+  if(c.hp<=0){c.dead=1e15;c.el.classList.add('gone');c.hpb.setAttribute('opacity','0');boom(c.x,c.y-10,c.t==='blob'?'#ff5d73':c.t==='beast'?'#b47aff':c.t==='ufo'?'#9fe8ff':'#7ddc5a',c.t==='beast'||c.t==='ufo'?18:12);
     col.kills=(col.kills||0)+1;if(prefs.sound&&Math.random()<0.5)snd('hit');
-    if(Math.random()<0.45){const k=Math.random()<0.15?'c':'m',n=k==='c'?1:Math.round(4+col.b.hq*2+(col.b.tower||0));gain(k,n);fxAt(c.x,c.y-30,'+'+n+' '+RES[k][1],RES[k][2]);updRes()}
+    if(Math.random()<0.15&&(BT.loot=(BT.loot||0)+1)<=40){const k=Math.random()<0.15?'c':'m',n=k==='c'?1:Math.round(2+col.b.hq);gain(k,n);fxAt(c.x,c.y-30,'+'+n+' '+RES[k][1],RES[k][2]);updRes()}
     if(col.kills%10===0)colSave()}}
 function fxAt(x,y,txt,colr){const L=$('cfx');if(!L)return;const t=svgEl('text',{x,y,'text-anchor':'middle',class:'flt',fill:colr||'#fff'});t.textContent=txt;L.appendChild(t);setTimeout(()=>t.remove(),1900)}
 function zapSVG(){if((col.b.wall||0)<3)return '';let s='';for(const [deg,d] of [[160,0],[20,2.6],[200,5.1],[95,7.4],[340,9.3]]){const [x,y]=fp(deg*Math.PI/180),h=fenceStyle(col.b.wall).h;
