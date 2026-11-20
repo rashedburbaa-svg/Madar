@@ -748,3 +748,4 @@ body.colfull .tabbar{background:rgba(10,14,30,.92)}
 .toast:has(.tnajm){display:flex;align-items:center;gap:8px;text-align:start}.toast .tnajm{float:none;flex:none;margin:0}
 .cscene .aura{animation:auraP 2.4s ease-in-out infinite}@keyframes auraP{50%{opacity:.25}}
 .cscene .beam{animation:auraP 1.8s ease-in-out infinite}
+.cstory .shero.wide{height:170px;object-position:50% 50%}

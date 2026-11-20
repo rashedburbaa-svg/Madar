@@ -97,7 +97,7 @@ function storyBox(title,text,label,fn){const m=document.createElement('div');m.c
   m.innerHTML='<div class="hbox cstory"><div class="cav">'+(typeof ART!=='undefined'&&ART.najm?'<img class="najm" src="'+ART.najm+'" alt="نجم">':'🤖')+'</div><h3></h3><p></p><button class="btn main" type="button"></button></div>';
   m.querySelector('h3').textContent=title;m.querySelector('p').textContent=text;const b=m.querySelector('button');b.textContent=label;b.onclick=()=>{m.remove();fn&&fn()};document.body.appendChild(m);b.focus();return m}
 function chapterDone(){if(col.done)return;col.done=1;colSave();
-  const m=storyBox('المركبة جاهزة! 🚀','اكتمل الفصل الأول. افتح خريطة المجرة 🌌 وابدأ الفصل الثاني.','لنستكشف',()=>galaxyBox());celebrate(m.querySelector('.hbox'))}
+  const m=storyBox('المركبة جاهزة! 🚀','اكتمل الفصل الأول. افتح خريطة المجرة 🌌 وابدأ الفصل الثاني.','لنستكشف',()=>galaxyBox());if(typeof ART!=='undefined'&&ART.city){const c=m.querySelector('.cstory'),i=document.createElement('img');i.className='shero wide';i.src=ART.city;i.alt='';c.prepend(i);const av=c.querySelector('.cav');if(av)av.remove();const p=c.querySelector('p');p.textContent='اكتمل الفصل الأول. هذه رؤية نجم لمدينة المدار التي سنبنيها بين الكواكب — افتح خريطة المجرة 🌌 وابدأ الفصل الثاني.'}celebrate(m.querySelector('.hbox'))}
 
 /* every level gets its own metal colour: silver, copper, jade, steel, royal blue, violet, crimson, amber, gold, platinum */
 const TINT=[null,null,'#c8743a','#2fb07a','#3a8fd0','#3a52d8','#9a52e0','#d8404f','#ff8a2a','#f2c040','#dff6ff'];
@@ -139,7 +139,7 @@ function _lattice(x0,w0,x1,w1,y0,y1,n,c){let s=`<path d="M${x0} ${y0} L${x1} ${y
   for(let i=0;i<n;i++){const t0=i/n,t1=(i+1)/n,ya=y0+(y1-y0)*t0,yb=y0+(y1-y0)*t1,la=x0+(x1-x0)*t0,lb=x0+(x1-x0)*t1,ra=la+w0+(w1-w0)*t0,rb=lb+w0+(w1-w0)*t1;p+=`M${la} ${ya}L${rb} ${yb}M${ra} ${ya}L${lb} ${yb}M${lb} ${yb}H${rb}`}
   return s+`<path d="${p}" stroke="${c}" stroke-width=".8" fill="none" opacity=".85"/>`}
 function art(id,L){return tint(artRaw(id,L),L)}
-function artRaw(id,L){L=Math.max(0,L);switch(id){
+function artRaw(id,L){L=Math.max(0,L);if(id!=='dock'&&typeof ART!=='undefined'&&ART[id]&&ART[id+'R'])return imgArt(id,L);switch(id){
 case 'hq':{if(typeof ART!=='undefined'&&ART.hq)return imgArt('hq',L);let s=_sh(40,9);
   if(L>=4)s+=_box(-48,0,16,10,7)+_win(-46,-7,3,5,3,2.5);
   if(L>=7)s+=_box(30,0,12,26,7)+_win(32,-23,2,5,3,3)+_win(32,-16,2,5,3,3)+_win(32,-9,2,5,3,3);
