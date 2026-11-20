@@ -55,7 +55,7 @@ function bossBar(c){let b=document.querySelector('#colony .bossbar');if(!c||c.de
   b.querySelector('u').style.width=Math.max(0,c.hp/c.max*100)+'%';b.querySelector('small').textContent=Math.max(0,Math.ceil(c.hp))+' / '+c.max}
 function bossSpawn(){const c=BT.boss;if(!c||!c.dead)return;c.max=BOSS_HP();c.hp=c.max;c.dead=0;c.born=performance.now();const p=spawnPt('beast');c.x=p.x<180?-90:450;c.y=Math.max(420,Math.min(720,p.y));
   const a=Math.atan2(c.y-FEN.cy,c.x-FEN.cx);c.tx=FEN.cx+Math.cos(a)*FEN.rx*1.16;c.ty=FEN.cy+Math.sin(a)*FEN.ry*1.16;c.wait=0;c.el.classList.remove('gone');
-  toast('👹 زعيم الوحوش قادم! اضربه بالضربة المدارية','ach');snd('err');buzz([60,40,60]);bossBar(c)}
+  toast('🤖 نجم: زعيم الوحوش قادم! اضربه بالضربة المدارية','ach');snd('err');buzz([60,40,60]);bossBar(c)}
 function bossTick(now){const c=BT.boss;if(!c)return;if(!BT.bossAt)BT.bossAt=now+(col.b.hq>=2?90000+Math.random()*120000:1e15);
   if(c.dead){if(now>BT.bossAt&&col.b.hq>=2)bossSpawn();return}
   bossBar(c);if(fenceR(c.x,c.y)<1.22&&now>(c.hitAt||0)){c.hitAt=now+1600;boom(c.x+(FEN.cx-c.x)*0.06,c.y-12,'#ff5d73',12);const svg=$('cscene');if(svg){svg.classList.remove('quake');void svg.getBoundingClientRect();svg.classList.add('quake')}}
@@ -67,7 +67,7 @@ function bossDown(c){bossBar(null);BT.bossAt=performance.now()+300000+Math.rando
 /* ---------- meteor shower: tap the falling stars ---------- */
 const MET={on:0,end:0,next:0,got:0};
 function meteorTick(now){if(!MET.next)MET.next=now+60000+Math.random()*120000;
-  if(!MET.on&&now>MET.next){MET.on=1;MET.end=now+26000;MET.got=0;MET.spawn=0;metBanner(true);snd('ach')}
+  if(!MET.on&&now>MET.next){MET.on=1;MET.end=now+26000;MET.got=0;MET.spawn=0;metBanner(true);snd('ach');toast('🤖 نجم: زخة شهب! التقطها بسرعة')}
   if(MET.on){if(now>MET.end){MET.on=0;MET.next=now+420000+Math.random()*420000;metBanner(false);return}
     if(now>MET.spawn){MET.spawn=now+650+Math.random()*500;metSpawn()}}}
 function metBanner(on){let b=document.querySelector('#colony .metb');if(!on){if(b)b.remove();return}

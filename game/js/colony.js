@@ -28,7 +28,7 @@ const techLv=k=>(col.tech&&col.tech[k])||0,TK={m:'mine',e:'power',f:'agri'},tMul
 const mult=()=>1+0.04*crew()+0.03*(col.b.wall||0)+(typeof artCount==='function'?0.05*artCount():0);
 function rate(k){let r=0;for(const id of BORDER){const B=BLD[id],L=col.b[id];if(B.prod&&B.prod[0]===k&&L>0)r+=B.prod[1]*L*Math.pow(1.15,L-1)}return r*mult()*tMul(k)}
 function upCost(id){const L=col.b[id],B=BLD[id],f=Math.pow(1.6,L);return {m:Math.round(B.base[0]*f),e:Math.round(B.base[1]*f),f:Math.round(B.base[2]*f)}}
-const upTime=id=>Math.round(20*Math.pow(1.75,col.b[id])*(1-0.08*techLv('build')));
+const upTime=id=>Math.round(20*Math.pow(1.85,col.b[id])*(1-0.08*techLv('build')));
 const canPay=c=>Object.keys(c).every(k=>col.res[k]>=c[k]);
 function pay(c){Object.keys(c).forEach(k=>col.res[k]-=c[k])}
 function gain(k,n){if(k==='c'){col.res.c+=n;return}const C=cap();col.res[k]=Math.max(col.res[k],Math.min(C,col.res[k]+n))}
@@ -62,8 +62,9 @@ function colonyReward(id,stars,info){const bid=GAMEOF[id];if(!bid)return;accrue(
     got=[['m',t*1.4*d],['e',t*1.2*d],['f',t*0.9*d],['c',Math.floor(t/30)+(info.boss||0)*5]]}
   else{col.wins[id]=(col.wins[id]||0)+1;if(typeof dtask==='function')dtask('mission',1);const base=(50+30*stars)*k;
     got=id==='mines'?[['m',base*1.4],['c',stars]]:id==='grid'?[['e',base*1.4],['c',stars]]:id==='words'?[['c',2+2*stars],['f',base*0.6]]:[['f',base*1.2],['c',1+stars]]}
-  got=got.map(([r,n])=>[r,Math.round(n)]).filter(x=>x[1]>0);got.forEach(([r,n])=>gain(r,n));colSave();questCheck();
-  setTimeout(()=>toast(got.map(([r,n])=>'+'+fmtN(n)+' '+RES[r][1]).join('  ')),900)}
+  if(id!=='survive'){if(!col.streak)col.streak={};col.streak[id]=(col.streak[id]||0)+1}const sk=id==='survive'?0:Math.min(5,(col.streak[id]||1)-1);
+  got=got.map(([r,n])=>[r,Math.round(n*(1+0.1*sk))]).filter(x=>x[1]>0);got.forEach(([r,n])=>gain(r,n));colSave();questCheck();
+  setTimeout(()=>toast((sk?`🔥×${sk+1} +${sk*10}% `:'')+got.map(([r,n])=>'+'+fmtN(n)+' '+RES[r][1]).join('  ')),900)}
 
 /* chapter one: guided objectives told by «نجم», the ship's assistant */
 const QUESTS=[
@@ -398,6 +399,7 @@ function battleInit(){const svg=$('cscene');BT.cr=[];BT.tw=[];BT.shots=[];if(!sv
   const L=col.b.tower||0,tier=tierOf(L);
   svg.querySelectorAll('.tow:not(.wg)').forEach(el=>{const i=+el.dataset.t,[x,y]=fp(TDEG[i]*Math.PI/180);BT.tw.push({x:x+2*1.4,y:y-26*1.4,head:el.querySelector('.thead'),tier,dmg:1+Math.floor(L/3)+(tier==='plasma'?1:0)+techLv('dmg'),cd:i*0.37,rate:(tier==='gun'?0.45:tier==='laser'?1.1:1.6)*(1-0.08*techLv('rate')),range:tier==='plasma'?240:200,ox:2,oy:-26,ang:0})});
   svg.querySelectorAll('.wgun').forEach(el=>{const d=+el.dataset.deg,[x,y]=fp(d*Math.PI/180),h=fenceStyle(col.b.wall).h+5;BT.tw.push({x,y:y-h,head:el.querySelector('.thead'),tier:'gun',dmg:1,cd:d/180,rate:0.9,range:150,ox:0,oy:-h,ang:0})});
+  crewInit(svg);
   if(!BT.raf){BT.last=performance.now();BT.raf=requestAnimationFrame(battleTick)}}
 function crPos(c,now){let u=((now/1000+c.off)/c.dur)%1;const fwd=u<0.5;u=fwd?u*2:2-u*2;const pt=c.p.getPointAtLength(u*c.len);return {x:pt.x,y:pt.y,fwd}}
 function svgEl(tag,attrs){const e=document.createElementNS('http://www.w3.org/2000/svg',tag);for(const k in attrs)e.setAttribute(k,attrs[k]);return e}
@@ -413,7 +415,7 @@ function battleTick(now){BT.raf=requestAnimationFrame(battleTick);const dt=Math.
   for(const c of BT.cr){if(!c.el.isConnected)continue;
     if(c.dead)continue;
     if(!calm)stepCreature(c,dt);BT.pos[c.i]={x:c.x,y:c.y,t:c.t};c.el.setAttribute('transform',`translate(${c.x.toFixed(1)} ${c.y.toFixed(1)})`);c.flip.setAttribute('transform',c.face<0?'scale(-1 1)':'')}
-  if(calm)return;
+  if(calm)return;crewTick(dt);
   for(const w of BT.tw){w.cd-=dt;let best=null,bd=1e9;for(const c of BT.cr){if(c.dead||!c.el.isConnected)continue;const d=Math.hypot(c.x-w.x,c.y-12-w.y);if(d<w.range&&d<bd){bd=d;best=c}}
     if(!best)continue;const ang=Math.atan2(best.y-12-w.y,best.x-w.x)*180/Math.PI;w.ang+=((ang-w.ang+540)%360-180)*Math.min(1,dt*8);w.head.setAttribute('transform',`translate(${w.ox} ${w.oy}) rotate(${w.ang.toFixed(1)})`);
     if(w.cd<=0){w.cd=w.rate*(0.8+Math.random()*0.4);fire(w,best)}}
@@ -517,6 +519,7 @@ function cardHTML(id){const B=BLD[id],L=col.b[id],locked=B.req&&col.b.hq<B.req,m
   else if(!locked&&!max&&id!=='hq'&&L>col.b.hq)h+='<button class="cd need" type="button" data-to="b:hq">🔒 يحتاج القيادة '+L+' ‹</button>';
   else if(!locked&&!max)h+=`<div class="ccost">${costHTML(c)}<span class="cc time">⏱️ ${fmtDur(upTime(id))}</span></div><button class="btn${L?'':' main'}" type="button" data-up="${id}">${L?'⬆️ مستوى '+(L+1)+' <i class="tdot" style="--t:'+(TINT[L+1]||'#d6dee8')+'"></i>':'🏗️ بناء'}</button>`;
   else if(max)h+='<p class="cd">✔️ الأعلى</p>';
+  if(G&&L){const pr=G.progress?G.progress():{};h+=`<p class="cd rec">🏆 ${B.game==='survive'?'أطول صمود '+fmtDur(col.surv||0):'انتصارات '+(col.wins[B.game]||0)+' · المستوى '+(pr.level||1)}${col.streak&&col.streak[B.game]?' · 🔥 سلسلة '+col.streak[B.game]:''}</p>`}
   if(G&&L)h+=`<button class="btn task" type="button" data-go="${B.game}" aria-label="${B.task}">🎮 مهمة</button>`;
   if(id==='dock'&&L){h+='<div class="parts">'+PARTS.map(([pid,pn,pc],i)=>{const done=col.ship[pid];return `<div class="part${done?' ok':''}"><span>${done?'✅':'🔧'} ${pn}</span>${done?'':`<span class="ccost">${costHTML({m:pc[0],e:pc[1],f:pc[2],c:pc[3]})}</span><button class="btn" type="button" data-fix="${i}">${col.b.dock<i+1?'🔒 '+(i+1):'🔧'}</button>`}</div>`}).join('')+'</div>'}
   return h+'</div>'}
@@ -619,11 +622,12 @@ function chestBox(){const y=new Date();y.setDate(y.getDate()-1);const cont=col.d
 
 /* --- raids: every few hours the creatures attack; fence and defence decide, or you defend in person --- */
 const raidsOn=()=>col.b.def>0||col.q>=10;
-const raidPower=()=>10+col.b.hq*10;
+const raidPower=()=>10+col.b.hq*10+5*(col.raidWins||0);
 const defPower=()=>col.b.wall*9+col.b.def*14+(col.b.tower||0)*12+crew();
-function raidPlan(from){col.raid={at:(from||Date.now())+(3+Math.random()*3)*3600000,str:Math.round(raidPower()*(0.85+Math.random()*0.35)),mine:0};colSave()}
+function raidPlan(from){const first=!col.raidN;col.raid={at:(from||Date.now())+(3+Math.random()*3)*3600000,str:Math.round(raidPower()*(0.85+Math.random()*0.35)*(first?0.5:1)),mine:0,first};colSave();if(first)setTimeout(()=>toast('🤖 نجم: أول غارة ستكون ضعيفة — جهّز السور والأبراج','ach'),1500)}
 function raidCheck(){if(!raidsOn())return;if(!col.raid)raidPlan();const now=Date.now();
   if(now>=col.raid.at){const R=col.raid,won=R.mine||defPower()>=R.str;let txt;
+    col.raidN=(col.raidN||0)+1;if(won)col.raidWins=(col.raidWins||0)+1;
     if(won){const c=5+col.b.hq+(R.mine?10:0),mm=Math.round(R.str*6);gain('c',c);gain('m',mm);txt=(R.mine?'صددت الغارة بنفسك! ':'السور والدفاع صدّا الغارة! ')+`+${c} 💎 +${mm} ⛏️`;if(R.mine)unlock&&0}
     else{const lost={};for(const k of 'mef'){lost[k]=Math.floor(col.res[k]*0.12);col.res[k]-=lost[k]}txt=`اخترقت الكائنات السور وسرقت: ${Object.entries(lost).map(([k,n])=>'-'+fmtN(n)+' '+RES[k][1]).join(' ')}. طوّر السور والدفاع.`}
     col.raidLog={won,txt,seen:0};raidPlan(now);colSave()}}

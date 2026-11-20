@@ -68,6 +68,7 @@ function celebrate(host){
 }
 
 function loseBox({title,text,onRetry}){
+  try{if(typeof col!=='undefined'&&col.streak&&active&&col.streak[active.id]){col.streak[active.id]=0;save('arcade-colony',col)}}catch(e){}
   snd('err');buzz([40,40,80]);const o=document.createElement('div');o.className='overlay';
   o.innerHTML='<h3></h3><p></p><button class="btn main" type="button">حاول مرة أخرى</button><button class="btn" type="button">رجوع إلى القاعة</button>';
   o.querySelector('h3').textContent=title;o.querySelector('p').textContent=text;const [b1,b2]=o.querySelectorAll('button');
@@ -204,25 +205,29 @@ $('pauseBtn').onclick=()=>{if(!active||document.querySelector('.hmodal'))return;
 async function packSave(){const data={};for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith('arcade-'))data[k]=localStorage.getItem(k)}
   const raw=new TextEncoder().encode(JSON.stringify(data));let bytes=raw,tag='MADAR1:';
   if(window.CompressionStream){bytes=new Uint8Array(await new Response(new Blob([raw]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer());tag='MADAR1z:'}
-  let bin='';bytes.forEach(b=>bin+=String.fromCharCode(b));return tag+btoa(bin)}
+  let bin='';bytes.forEach(b=>bin+=String.fromCharCode(b));const b=btoa(bin);try{localStorage.setItem('madar-lastsave',Date.now())}catch(e){}return tag+b+'~'+sumOf(b)}
+function sumOf(t){let h=2166136261;for(let i=0;i<t.length;i++){h^=t.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(16).padStart(8,'0')}
 async function unpackSave(code){code=(code||'').trim().replace(/\s+/g,'');const z=code.startsWith('MADAR1z:');if(!z&&!code.startsWith('MADAR1:'))throw 0;
-  const bin=atob(code.slice(z?8:7)),bytes=Uint8Array.from(bin,c=>c.charCodeAt(0));
+  let body=code.slice(z?8:7);const ti=body.indexOf('~');if(ti>=0){const sum=body.slice(ti+1,ti+9);body=body.slice(0,ti);if(sum.length<8)throw 'cut';if(sumOf(body)!==sum)throw 'sum'}
+  const bin=atob(body),bytes=Uint8Array.from(bin,c=>c.charCodeAt(0));
   const raw=z?new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer()):bytes;
   const data=JSON.parse(new TextDecoder().decode(raw));if(typeof data!=='object')throw 0;return data}
 $('saveBtn').onclick=()=>{snd('tap');const m=document.createElement('div');m.className='hmodal';
-  m.innerHTML=`<div class="hbox"><h3>💾 حفظ التقدّم ونقله</h3><p>احفظ نسخة من كل تقدّمك (المستويات والنجوم والأوسمة والكريستالات) في رسالة لنفسك، واسترجعها على أي هاتف.</p>
-    <button class="btn main" type="button" data-a="out">📤 إرسال نسخة احتياطية</button>
+  m.innerHTML=`<div class="hbox"><h3>💾 حفظ التقدّم ونقله</h3><p>احفظ نسخة من كل تقدّمك في رسالة لنفسك أو ملف، واسترجعها على أي هاتف.</p><p class="smeta">${(()=>{const t=+localStorage.getItem('madar-lastsave');return t?'آخر نسخة: '+new Date(t).toLocaleString('ar',{dateStyle:'medium',timeStyle:'short'}):'⚠️ لم تحفظ نسخة بعد'})()}</p>
+    <button class="btn main" type="button" data-a="out">📤 إرسال نسخة احتياطية</button><button class="btn" type="button" data-a="file">📄 تنزيل كملف</button>
     <textarea class="scode" placeholder="الصق هنا رمز النسخة الاحتياطية لاسترجاعها" rows="3"></textarea>
-    <button class="btn" type="button" data-a="in">📥 استرجاع من الرمز</button><button class="btn" type="button" data-a="x">إغلاق</button></div>`;
+    <button class="btn" type="button" data-a="in">📥 استرجاع من الرمز</button><label class="btn" style="display:block;text-align:center">📂 استرجاع من ملف<input type="file" accept=".txt,text/plain" hidden></label><button class="btn" type="button" data-a="x">إغلاق</button></div>`;
   const ta=m.querySelector('textarea');m.onclick=e=>{if(e.target===m)m.remove()};
   m.querySelector('[data-a=x]').onclick=()=>m.remove();
-  m.querySelector('[data-a=out]').onclick=async()=>{try{const code=await packSave();const msg='نسخة احتياطية من قاعة المدار ('+new Date().toLocaleDateString('ar')+'):\n'+code;
+  m.querySelector('[data-a=out]').onclick=async()=>{try{const code=await packSave();const msg='نسخة احتياطية من مستعمرة المدار ('+new Date().toLocaleDateString('ar')+'):\n'+code;
       if(navigator.share){try{await navigator.share({text:msg});return}catch(e){if(e&&e.name==='AbortError')return}}
       if(navigator.clipboard){await navigator.clipboard.writeText(code);toast('نُسخ الرمز، احفظه في رسالة لنفسك')}else{ta.value=code;ta.select();toast('انسخ الرمز الظاهر واحفظه')}}catch(e){toast('تعذّر إنشاء النسخة')}};
-  m.querySelector('[data-a=in]').onclick=async()=>{const code=ta.value.match(/MADAR1z?:[A-Za-z0-9+/=\s]+/);if(!code){toast('الصق رمزاً يبدأ بـ MADAR1');return}
+  m.querySelector('input[type=file]').onchange=async e=>{const f=e.target.files[0];if(!f)return;ta.value=await f.text();m.querySelector('[data-a=in]').click()};
+  m.querySelector('[data-a=file]').onclick=async()=>{try{const code=await packSave();const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([code],{type:'text/plain'}));a.download='madar-save-'+new Date().toISOString().slice(0,10)+'.txt';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);toast('✅ تم تنزيل الملف')}catch(e){toast('تعذّر إنشاء الملف')}};
+  m.querySelector('[data-a=in]').onclick=async()=>{const code=ta.value.match(/MADAR1z?:[A-Za-z0-9+/=\s]+(~\s*[0-9a-f\s]{0,12})?/);if(!code){toast('الصق رمزاً يبدأ بـ MADAR1');return}
     try{const data=await unpackSave(code[0]);const keys=Object.keys(data).filter(k=>k.startsWith('arcade-'));if(!keys.length)throw 0;
       if(!confirmBox)return;confirmBox('سيُستبدل تقدّمك الحالي بالنسخة المسترجعة. متابعة؟',()=>{Object.keys(localStorage).filter(k=>k.startsWith('arcade-')).forEach(k=>localStorage.removeItem(k));keys.forEach(k=>localStorage.setItem(k,data[k]));toast('✅ تم الاسترجاع');setTimeout(()=>location.reload(),700)})}
-    catch(e){toast('الرمز غير صحيح أو ناقص')}};
+    catch(e){toast(e==='sum'?'⚠️ الرمز تالف — تأكد أنك نسخته كاملاً':e==='cut'?'⚠️ الرمز ناقص من آخره':'الرمز غير صحيح أو ناقص')}};
   document.body.appendChild(m)};
 function confirmBox(text,yes){const m=document.createElement('div');m.className='hmodal';m.style.zIndex=40;m.innerHTML='<div class="hbox"><p></p><button class="btn main" type="button">نعم</button><button class="btn" type="button">لا</button></div>';
   m.querySelector('p').textContent=text;const [a,b]=m.querySelectorAll('button');a.onclick=()=>{m.remove();yes()};b.onclick=()=>m.remove();document.body.appendChild(m)}

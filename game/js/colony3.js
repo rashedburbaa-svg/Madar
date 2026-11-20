@@ -42,9 +42,26 @@ const TRD={on:0,end:0,next:0,offers:[]};
 function traderTick(now){if(col.b.hq<3)return;if(!TRD.next)TRD.next=now+150000+Math.random()*200000;
   if(!TRD.on&&now>TRD.next){TRD.on=1;TRD.end=now+180000;const C=cap(),q=n=>Math.max(50,Math.round(C*n/50)*50);
     TRD.offers=[{give:{m:q(.18)},get:{c:6+col.b.hq}},{give:{c:8+col.b.hq},get:{e:q(.3),f:q(.2)}},{give:{f:q(.2)},get:{m:q(.22)}},{give:{e:q(.2)},get:{c:5+col.b.hq}}].sort(()=>Math.random()-0.5).slice(0,3);
-    toast('🛸 تاجر فضائي هبط عند البوابة!','ach');snd('ach');if(!$('hub').hidden)renderColony()}
+    toast('🤖 نجم: تاجر فضائي هبط عند البوابة 🛸','ach');snd('ach');if(!$('hub').hidden)renderColony()}
   if(TRD.on&&now>TRD.end){TRD.on=0;TRD.next=now+900000+Math.random()*900000;closeSheet&&sheetId==='trader'&&closeSheet();if(!$('hub').hidden)renderColony()}}
 function traderSVG(){if(!TRD.on)return '';const [x,y]=fp(Math.PI/2);return `<g class="trader" transform="translate(${x+46} ${y+40})" role="button" tabindex="0" aria-label="التاجر"><ellipse cx="0" cy="4" rx="22" ry="5" fill="#000" opacity=".35"/><path d="M-16 0 L-20 6 M16 0 L20 6" stroke="#8a93a2" stroke-width="1.6"/><ellipse cx="0" cy="-2" rx="20" ry="6" fill="url(#mUfo)"/><path d="M-9 -4 C-9 -15 9 -15 9 -4Z" fill="#ffd34d" opacity=".8"/><text y="-6" text-anchor="middle" font-size="9">💰</text><circle cx="-14" cy="-1" r="1.4" fill="#ffd34d" class="blink"/><circle cx="14" cy="-1" r="1.4" fill="#ffd34d" class="blink"/><g class="tsign" transform="translate(0 -26)"><rect x="-18" y="-8" width="36" height="14" rx="7" fill="#2a1a00" stroke="#ffd34d"/><text y="3" text-anchor="middle" font-size="8.5" fill="#ffd34d" font-weight="700">تاجر</text></g></g>`}
 function traderHTML(){const left=fmtDur((TRD.end-performance.now())/1000);
   return `<h3 class="lh">🛸 التاجر الفضائي <small>يغادر بعد ${left}</small></h3><div class="blist">`+TRD.offers.map((o,i)=>{const ok=!o.done&&canPay(o.give);return `<div class="brow${ok?' ok':''}${o.done?' done':''}"><span class="ti">💱</span><span class="bt"><b>${Object.entries(o.give).map(([k,n])=>fmtN(n)+' '+RES[k][1]).join(' + ')} ← ${Object.entries(o.get).map(([k,n])=>fmtN(n)+' '+RES[k][1]).join(' + ')}</b><small>${o.done?'✔️ تمت':'تعطي ما على اليمين وتأخذ ما على اليسار'}</small></span>${o.done?'':`<button class="btn${ok?' main':''}" type="button" data-trade="${i}">تبادل</button>`}</div>`}).join('')+'</div>'}
 function trade(i){const o=TRD.offers[i];if(!o||o.done)return;if(!canPay(o.give)){snd('err');toast('الموارد لا تكفي');return}pay(o.give);Object.entries(o.get).forEach(([k,n])=>gain(k,n));o.done=1;colSave();snd('win');buzz([15,30,15]);updRes();renderSheet()}
+
+/* crew: little astronauts strolling between built structures inside the fence */
+const CREW={w:[]};
+function crewPts(){return Object.keys(SLOT).filter(k=>k!=='wall'&&k!=='tower'&&col.b[k]>0).map(k=>({x:SLOT[k][0]+(Math.random()-0.5)*30,y:SLOT[k][1]+14+Math.random()*8}))}
+function crewInit(svg){const sh=svg.querySelector('#cshots');if(!sh)return;let g=svg.querySelector('#ccrew');if(!g){g=svgEl('g',{id:'ccrew'});sh.before(g)}g.innerHTML='';CREW.w=[];
+  const n=Math.min(8,Math.max(0,crew()-2)),pts=crewPts();if(pts.length<2)return;
+  const suits=['#f2f5fb','#ffd34d','#7ffcf0','#ff9f6b','#b9a4ff'];
+  for(let i=0;i<n;i++){const p=pts[i%pts.length],e=svgEl('g',{class:'astro'});const su=suits[i%suits.length];
+    e.innerHTML=`<ellipse cy="0.5" rx="4" ry="1.3" fill="#0005"/><g class="aflip"><rect x="-2.6" y="-7" width="5.2" height="6" rx="2" fill="${su}"/><rect x="-3.9" y="-6.4" width="1.6" height="4" rx=".8" fill="#9aa6bd"/><circle cy="-9.4" r="3.1" fill="${su}"/><path d="M-.6 -10.6 h2.6 a1.3 1.3 0 0 1 0 2.6 h-2.6z" fill="#2a3a7a"/><circle cx="1.6" cy="-10" r=".5" fill="#9ff"/><rect class="al1" x="-2" y="-1.4" width="1.6" height="2.4" rx=".7" fill="#9aa6bd"/><rect class="al2" x=".4" y="-1.4" width="1.6" height="2.4" rx=".7" fill="#9aa6bd"/></g>`;
+    g.appendChild(e);const q=pts[(i*3+1)%pts.length];CREW.w.push({e,f:e.firstChild.nextSibling,x:p.x,y:p.y,tx:q.x,ty:q.y,wait:Math.random()*3,sp:9+Math.random()*5})}
+  CREW.w.forEach(w=>w.e.setAttribute('transform',`translate(${w.x.toFixed(1)} ${w.y.toFixed(1)}) scale(1.25)`))}
+function crewTick(dt){if(!CREW.w.length)return;let pts=null;
+  for(const w of CREW.w){if(!w.e.isConnected)continue;if(w.wait>0){w.wait-=dt;w.e.classList.remove('walk');continue}
+    const dx=w.tx-w.x,dy=w.ty-w.y,d=Math.hypot(dx,dy);
+    if(d<2){pts=pts||crewPts();const q=pts[Math.floor(Math.random()*pts.length)];w.tx=q.x;w.ty=q.y;w.wait=1.5+Math.random()*4;continue}
+    w.x+=dx/d*w.sp*dt;w.y+=dy/d*w.sp*dt;w.e.classList.add('walk');w.f.setAttribute('transform',dx<0?'scale(-1 1)':'');
+    w.e.setAttribute('transform',`translate(${w.x.toFixed(1)} ${w.y.toFixed(1)}) scale(1.25)`)}}
