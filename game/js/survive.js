@@ -242,7 +242,14 @@ const SurviveGame=(()=>{
   // aliens: each type has its own look, eyes always track the astronaut
   function eyes(x,y,a,off,sp,r,col){for(const s of [-1,1]){const ex=x+Math.cos(a)*off+Math.cos(a+1.57)*sp*s,ey=y+Math.sin(a)*off+Math.sin(a+1.57)*sp*s;
     ctx.fillStyle=col||'#fff';ctx.beginPath();ctx.arc(ex,ey,r,0,6.283);ctx.fill();ctx.fillStyle='#0b0b14';ctx.beginPath();ctx.arc(ex+Math.cos(a)*r*0.35,ey+Math.sin(a)*r*0.35,r*0.55,0,6.283);ctx.fill()}}
+  /* painted sprites (player's Gemini artwork); art faces left */
+  const SPR={};function spr(k){if(typeof ART==='undefined'||!ART[k])return null;let im=SPR[k];if(!im){im=SPR[k]=new Image();im.src=ART[k]}return im.complete&&im.naturalWidth?im:null}
+  const SPRK={grunt:'cre_alien',runner:'cre_bug',tank:'cre_beast',spitter:'cre_ufo'};
+  function drawSprite(im,x,y,h,faceRight,flash,filt){const w=h*im.naturalWidth/im.naturalHeight;ctx.save();ctx.translate(x,y);if(faceRight)ctx.scale(-1,1);
+    ctx.filter=(flash?'brightness(2.3) ':'')+(filt||'');if(ctx.filter==='')ctx.filter='none';ctx.drawImage(im,-w/2,-h*0.62,w,h);ctx.restore();ctx.filter='none'}
   function drawAlien(e){
+    {const k=SPRK[e.type],im=k&&spr(k);if(im){const tt=t+e.ph,bob=e.type==='spitter'?Math.sin(tt*3)*2:Math.abs(Math.sin(tt*9))*-1.6;
+      drawSprite(im,e.x,e.y+bob,e.r*(e.type==='grunt'?3.1:e.type==='spitter'?2.6:2.4),p.x>e.x,e.flash>0,e.elite?'drop-shadow(0 0 4px #ffd34d)':'');return}}
     const a=Math.atan2(p.y-e.y,p.x-e.x),r=e.r,x=e.x,y=e.y,tt=t+e.ph;ctx.lineCap='round';
     if(e.type==='grunt'){ // little green alien with antennae and big almond eyes
       ctx.strokeStyle='#4f9c38';ctx.lineWidth=1.4;for(const s of [-1,1]){const bx=x-Math.cos(a)*r*0.5+Math.cos(a+1.57)*r*0.45*s,by=y-Math.sin(a)*r*0.5+Math.sin(a+1.57)*r*0.45*s,tx=bx-Math.cos(a+0.5*s)*r*0.9,ty=by-Math.sin(a+0.5*s)*r*0.9+Math.sin(tt*6)*1.2;
@@ -268,6 +275,10 @@ const SurviveGame=(()=>{
     if(e.flash>0){ctx.fillStyle='rgba(255,255,255,.75)';ctx.beginPath();ctx.arc(x,y,r*1.05,0,6.283);ctx.fill()}
   }
   function drawAstronaut(){
+    {const im=spr('astro');if(im){const a=p.aim,x=p.x,y=p.y,right=Math.cos(a)>=0,step=(p.stillT||0)<0.1?Math.abs(Math.sin(t*12))*-1.5:0;
+      ctx.save();ctx.translate(x,y+step);if(!right)ctx.scale(-1,1);ctx.filter=p.hurt>0?'sepia(1) saturate(4) hue-rotate(-40deg)':'none';const h=p.r*3.4,w=h*im.naturalWidth/im.naturalHeight;ctx.drawImage(im,-w/2,-h*0.66,w,h);ctx.restore();ctx.filter='none';
+      ctx.strokeStyle='#3a4652';ctx.lineWidth=4;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(x+Math.cos(a)*4,y+Math.sin(a)*4);ctx.lineTo(x+Math.cos(a)*17,y+Math.sin(a)*17);ctx.stroke();
+      ctx.strokeStyle='#5ff2d6';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x+Math.cos(a)*11,y+Math.sin(a)*11);ctx.lineTo(x+Math.cos(a)*17,y+Math.sin(a)*17);ctx.stroke();return}}
     const x=p.x,y=p.y,r=p.r,a=p.aim;
     ctx.fillStyle='#9aa7b3';ctx.beginPath();ctx.ellipse(x-Math.cos(a)*r*0.8,y-Math.sin(a)*r*0.8,r*0.75,r*0.55,a,0,6.283);ctx.fill();ctx.strokeStyle='#0b1618';ctx.lineWidth=1.5;ctx.stroke();
     ctx.strokeStyle='#3a4652';ctx.lineWidth=5;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+Math.cos(a)*18,y+Math.sin(a)*18);ctx.stroke();
