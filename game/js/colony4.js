@@ -79,3 +79,12 @@ function crewLine(i){const tips=[
   ()=>'الآلات تعمل جيداً، لا تنسَ جمع الموارد ⤓'];return tips[i%tips.length]()}
 {const _ci=crewInit;crewInit=function(svg){_ci(svg);CREW.w.forEach((w,i)=>{w.e.style.pointerEvents='auto';w.e.style.cursor='pointer';
   w.e.addEventListener('click',e=>{if(typeof camDrag!=='undefined'&&camDrag)return;e.stopPropagation();const [n,r]=CREWN[i%CREWN.length];snd('tap');toast(`🧑‍🚀 ${n} (${r}): ${crewLine(i)}`);w.wait=2.5})})}}
+
+/* ---------- painted building art (player-generated with Gemini): grows with level, colour shifts between stages, aura at 4/7/10 ---------- */
+const IMGHUE=[0,0,14,28,0,16,32,0,18,36,0];
+function imgArt(id,L){const r=ART[id+'R']||1,w=78+Math.min(10,L)*2.6,h=w/r,y=-h+12,hue=IMGHUE[Math.min(10,L)]||0;
+  let s=`<ellipse cx="0" cy="4" rx="${(w*0.46).toFixed(1)}" ry="${(w*0.12).toFixed(1)}" fill="#000" opacity=".35"/>`;
+  if(L>=4)s+=`<ellipse cx="0" cy="0" rx="${(w*0.5).toFixed(1)}" ry="${(w*0.16).toFixed(1)}" fill="none" stroke="${L>=10?'#ffd34d':L>=7?'#c58bff':'#5ff2d6'}" stroke-width="2" opacity=".75" class="aura"/>`;
+  s+=`<image href="${ART[id]}" x="${(-w/2).toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" preserveAspectRatio="xMidYMax meet"${hue?` style="filter:hue-rotate(${hue}deg) saturate(1.15)"`:''}/>`;
+  if(L>=10)s+=`<path d="M-6 ${(y+4).toFixed(1)} L0 ${(y-40).toFixed(1)} L6 ${(y+4).toFixed(1)}z" fill="#ffd34d" opacity=".35" class="beam"/>`;
+  return s}

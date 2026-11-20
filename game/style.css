@@ -746,3 +746,5 @@ body.colfull .tabbar{background:rgba(10,14,30,.92)}
 @keyframes najmf{50%{transform:translateY(-5px)}}
 .toast .tnajm{width:34px;height:34px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-inline-end:8px;box-shadow:0 0 0 2px #5ff2d677;float:right}
 .toast:has(.tnajm){display:flex;align-items:center;gap:8px;text-align:start}.toast .tnajm{float:none;flex:none;margin:0}
+.cscene .aura{animation:auraP 2.4s ease-in-out infinite}@keyframes auraP{50%{opacity:.25}}
+.cscene .beam{animation:auraP 1.8s ease-in-out infinite}
