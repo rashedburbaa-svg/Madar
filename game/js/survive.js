@@ -175,6 +175,8 @@ const SurviveGame=(()=>{
   let bg=null,bgOld=null,bgFade=0,biome=0,amb=[];
   function makeBg(bi){
     const B=BIOMES[bi%BIOMES.length],S=2,c=document.createElement('canvas');c.width=W*S;c.height=H*S;const g=c.getContext('2d');g.scale(S,S);const R=Math.random;
+    {const im=spr('bg'+(bi%BIOMES.length));if(im){const T=Math.max(W,H)*0.62;for(let y=0;y<H;y+=T)for(let x=0;x<W;x+=T)g.drawImage(im,x,y,T+0.5,T+0.5);
+      const vg=g.createRadialGradient(W/2,H/2,Math.min(W,H)*0.35,W/2,H/2,Math.max(W,H)*0.75);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,.45)');g.fillStyle=vg;g.fillRect(0,0,W,H);return c}}
     g.fillStyle=B.base;g.fillRect(0,0,W,H);
     const blot=(x,y,r,col,al)=>{const gr=g.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,col.replace('A',al));gr.addColorStop(1,col.replace('A',0));g.fillStyle=gr;g.beginPath();g.arc(x,y,r,0,6.283);g.fill()};
     if(B.space){
@@ -245,6 +247,7 @@ const SurviveGame=(()=>{
   /* painted sprites (player's Gemini artwork); art faces left */
   const SPR={};function spr(k){if(typeof ART==='undefined'||!ART[k])return null;let im=SPR[k];if(!im){im=SPR[k]=new Image();im.src=ART[k]}return im.complete&&im.naturalWidth?im:null}
   const SPRK={grunt:'cre_alien',runner:'cre_bug',tank:'cre_beast',spitter:'cre_ufo'};
+  ['astro','cre_alien','cre_bug','cre_beast','cre_ufo','bg0','bg1','bg2','bg3','bg4','bg5'].forEach(k=>spr(k));
   function drawSprite(im,x,y,h,faceRight,flash,filt){const w=h*im.naturalWidth/im.naturalHeight;ctx.save();ctx.translate(x,y);if(faceRight)ctx.scale(-1,1);
     ctx.filter=(flash?'brightness(2.3) ':'')+(filt||'');if(ctx.filter==='')ctx.filter='none';ctx.drawImage(im,-w/2,-h*0.62,w,h);ctx.restore();ctx.filter='none'}
   function drawAlien(e){
@@ -290,9 +293,9 @@ const SurviveGame=(()=>{
   const shadow=(x,y,r)=>{ctx.fillStyle='rgba(0,0,0,.32)';ctx.beginPath();ctx.ellipse(x+r*0.15,y+r*0.75,r*0.95,r*0.42,0,0,6.283);ctx.fill()};
   function resize(){const w=stage.clientWidth;cv.width=Math.round(w*devicePixelRatio);cv.height=Math.round(w*H/W*devicePixelRatio);cv.style.height=(w*H/W)+'px';ctx.setTransform(w/W*devicePixelRatio,0,0,w/W*devicePixelRatio,0,0)}
   function reset(){
-    const C=CHARS[st.char]||CHARS.scout,mx=Math.round((100+15*mlv('hp'))*C.hp);
+    const C=CHARS[st.char]||CHARS.scout,CB=typeof survBonus==='function'?survBonus():{dmg:0,hp:0,rate:0},mx=Math.round((100+15*mlv('hp'))*C.hp)+CB.hp;
     p={x:W/2,y:H/2,r:11,hp:mx,max:mx,spd:120*(1+0.06*mlv('spd'))*C.spd,mag:40+20*mlv('mag'),aim:-Math.PI/2,hurt:0,slow:0,inv:0,bar:0,barT:0,rev:mlv('revive')};
-    gun={dmg:10*(1+0.1*mlv('dmg'))*C.dmg,rate:2.2*(1+0.08*mlv('rate'))*C.rate,count:1,pierce:0,spd:380,cd:0};orb=mlv('moon');pul=0;mis=0;drn=0;evo={};misT=1;drnT=0.5;novaT=3;bhT=4;holes=[];ms=[];mines=[];bolts=[];flT=0;chT=1;mnT=1;beamTg=null;orbA=0;pulseT=3;
+    gun={dmg:10*(1+0.1*mlv('dmg'))*C.dmg*(1+CB.dmg/100),rate:2.2*(1+0.08*mlv('rate'))*C.rate*(1+CB.rate/100),count:1,pierce:0,spd:380,cd:0};orb=mlv('moon');pul=0;mis=0;drn=0;evo={};misT=1;drnT=0.5;novaT=3;bhT=4;holes=[];ms=[];mines=[];bolts=[];flT=0;chT=1;mnT=1;beamTg=null;orbA=0;pulseT=3;
     en=[];bl=[];eb=[];drops=[];parts=[];rings=[];hz=[];crys=0;bossKills=0;t=0;wave=1;waveT=0;spawnT=0.6;kills=0;
     buff={rapid:0,shield:3*mlv('shield')};banner={txt:'الموجة 1',sub:BIOMES[0].name,t:2.2};lv={};bossAlive=false;recordShown=false;over=false;ch=null;deathWhy='';p.stillT=0;
   }
@@ -495,7 +498,7 @@ const SurviveGame=(()=>{
     for(let k=0;k<30;k++){const a=Math.random()*6.28,s=60+Math.random()*160;parts.push({x:p.x,y:p.y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,l:0.8,col:'#3fd6c0'})}
     stats();
     const earned=crys+Math.floor(kills/5)+wave*2;st.crys=(st.crys||0)+earned;gSave('survive',st);
-    addXP(Math.floor(t/6)+bossKills*15);mission('survive',{time:t});if(typeof colonyReward==='function')colonyReward('survive',0,{time:t,boss:bossKills,kills});
+    addXP(Math.floor(t/6)+bossKills*15);mission('survive',{time:t,kills,boss:bossKills,wave});unlock('first');if(typeof colonyReward==='function')colonyReward('survive',0,{time:t,boss:bossKills,kills});
     snd('err');buzz([40,40,80]);
     const show=()=>{const o=document.createElement('div');o.className='overlay';
       o.innerHTML='<h3></h3><p></p><p class="gain"></p><button class="btn main" type="button">جولة جديدة</button><button class="btn" type="button">🔬 مختبر المدار</button><button class="btn" type="button">رجوع إلى القاعة</button><button class="btn share" type="button">📤 مشاركة النتيجة</button>';

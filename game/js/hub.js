@@ -1,23 +1,17 @@
 /* ================= hub ================= */
 
-const GAMES=[SurviveGame,GridGame,WordsGame,MinesGame,DiffGame];
+const GAMES=[SurviveGame];
 function renderHub(){
   drawPrefs();drawRank();drawMissions();
-  const k=todayKey(),doneToday=daily.done[k]||{},alive=daily.last===k||daily.last===yesterdayKey(),streak=alive?daily.streak:0;
-  const d=$('daily');
-  const DAYS=['أحد','إثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];let week='';
-  for(let back=6;back>=0;back--){const dt=new Date();dt.setDate(dt.getDate()-back);const kk=todayKey(dt),on=daily.done[kk]&&Object.keys(daily.done[kk]).length;
-    week+=`<span class="${on?'on ':''}${back===0?'today':''}"><i>${on?'🔥':''}</i>${back===0?'اليوم':DAYS[dt.getDay()]}</span>`}
-  const DG=GAMES.filter(G=>!G.noDaily),nDone=DG.filter(G=>doneToday[G.id]).length;
-  d.innerHTML=`<div class="top"><b>تحدي اليوم</b><span class="streak">🔥 ${streak} ${streak===1?'يوم':'أيام'}</span></div><small style="color:var(--muted)">لغز جديد كل يوم في كل لعبة. حلّ واحداً على الأقل يومياً لتحافظ على السلسلة.</small><div class="week">${week}</div>`;
-  let list=document.getElementById('dlist');if(!list){list=document.createElement('div');list.id='dlist';list.className='dlist';d.after(list)}list.innerHTML='';
-  DG.forEach((G,i)=>{const s=doneToday[G.id];const b=document.createElement('button');b.type='button';b.className='drow'+(s?' done':'');
-    b.innerHTML=`<span class="gi">${G.icon}</span><span class="t"><b></b><small></small></span><span class="go">${s?'★'.repeat(s)+'☆'.repeat(3-s):'العب'}</span>`;
-    b.querySelector('b').textContent=G.name;b.querySelector('small').textContent=s?(s<3?'أُنجز · أعد اللعب لتحصل على 3 نجوم':'أُنجز بإتقان'):'لم يُحل بعد';
-    b.setAttribute('aria-label','تحدي اليوم: '+G.name);b.onclick=()=>openGame(G,{daily:true,key:k,seed:k*97+i*7});list.appendChild(b)});
-  let sum=document.getElementById('dsum');if(!sum){sum=document.createElement('p');sum.id='dsum';sum.className='dsum';list.after(sum)}
-  sum.textContent=nDone===DG.length?'👑 أنهيت كل تحديات اليوم! عُد غداً لتحديات جديدة.':`أنجزت ${nDone} من ${DG.length} تحديات اليوم`;
-  $('dailyDot').hidden=nDone>0;
+  const d=$('daily'),sv=gState('survive')||{},best=col.surv||0,hero=typeof ART!=='undefined'&&ART.splash?`<img class="svhero" src="${ART.splash}" alt="">`:'';
+  const bonus=typeof survBonus==='function'?survBonus():null;
+  d.innerHTML=`<div class="svcard">${hero}<div class="svbody"><h2>صمود المدار</h2><p>اخرج من السور وواجه موجات الكائنات. كل ثانية صمود تجلب موارد للمستعمرة.</p>
+    <div class="svstats"><span><b>${fmtTime?fmtTime(best):best}</b><small>أطول صمود</small></span><span><b>${col.skills||0}</b><small>أكثر قتلى</small></span><span><b>${col.sboss||0}</b><small>زعماء</small></span><span><b>${col.sruns||0}</b><small>جولات</small></span></div>
+    ${bonus?`<div class="svbonus">🏗️ دعم المستعمرة: <b>+${bonus.dmg}%</b> ضرر · <b>+${bonus.hp}</b> صحة · <b>+${bonus.rate}%</b> سرعة إطلاق</div>`:''}
+    <button class="btn main svplay" type="button">⚔️ ابدأ جولة</button></div></div>`;
+  d.querySelector('.svplay').onclick=()=>{snd('tap');openGame(SurviveGame)};
+  {const l=document.getElementById('dlist');if(l)l.remove();const sm=document.getElementById('dsum');if(sm)sm.remove()}
+  $('dailyDot').hidden=true;
   let total=0;GAMES.forEach(G=>{total+=G.progress().stars});renderColony();
   $('totalStars').textContent=total;
   const bs=$('badges');bs.innerHTML='';let got=0;

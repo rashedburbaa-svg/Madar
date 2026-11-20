@@ -4,12 +4,12 @@
 const RES={m:['معادن','⛏️','#c9b8a6'],e:['طاقة','⚡','#ffd34d'],f:['غذاء','🌱','#7ddc5a'],c:['كريستال','💎','#9fe8ff']};
 const BLD={
   hq:{name:'مركز القيادة',base:[200,150,100],max:10,desc:'قلب المستعمرة: يرفع سعة المخازن، وكل مبنى يمكن أن يسبقه بمستوى واحد فقط.'},
-  mine:{name:'منجم المعادن',base:[60,80,30],prod:['m',60],game:'mines',task:'تمشيط حقل التعدين',desc:'يستخرج المعادن من صخور الكوكب.'},
-  solar:{name:'محطة الطاقة',base:[80,50,30],prod:['e',60],game:'grid',task:'إصلاح شبكة الطاقة',desc:'ألواح شمسية تمدّ المستعمرة بالطاقة.'},
+  mine:{name:'منجم المعادن',base:[60,80,30],prod:['m',60],desc:'يستخرج المعادن من صخور الكوكب.'},
+  solar:{name:'محطة الطاقة',base:[80,50,30],prod:['e',60],desc:'ألواح شمسية تمدّ المستعمرة بالطاقة.'},
   farm:{name:'المزرعة المائية',base:[70,70,20],prod:['f',45],desc:'قبة زجاجية تزرع غذاء الروّاد.'},
   habitat:{name:'المساكن',base:[100,80,80],desc:'كل مستوى يستقبل رائدَين، وكل رائد يرفع الإنتاج 4%.'},
-  radio:{name:'برج الاتصالات',base:[150,120,40],req:2,prod:['c',0.6],game:'words',task:'فك شفرة إشارة',desc:'يلتقط إشارات غامضة، وينتج قليلاً من الكريستال.'},
-  obs:{name:'المرصد',base:[160,140,60],req:2,game:'diff',task:'تحليل صور القمر الصناعي',desc:'يدرس صور الكوكب بحثاً عن أرض خصبة وكنوز.'},
+  radio:{name:'برج الاتصالات',base:[150,120,40],req:2,prod:['c',0.6],desc:'يلتقط إشارات غامضة، وينتج قليلاً من الكريستال.'},
+  obs:{name:'المرصد',base:[160,140,60],req:2,desc:'يدرس صور الكوكب بحثاً عن أرض خصبة وكنوز.'},
   def:{name:'منظومة الدفاع',base:[220,180,60],req:3,game:'survive',task:'صد غارة الكائنات',desc:'تحمي المستعمرة، وكل مستوى يزيد غنائم الغارات 20%.'},
   tower:{name:'أبراج الدفاع',base:[160,140,40],req:2,desc:'أبراج على السور تقتل الوحوش؛ كل مستوى يضيف برجاً ويقوّي السلاح.'},
   wall:{name:'السور',base:[90,70,20],desc:'يحمي المستعمرة من الكائنات، وكل مستوى يرفع الإنتاج 3%.'},
@@ -18,7 +18,7 @@ const BLD={
 };
 const BORDER=['hq','wall','tower','mine','solar','farm','habitat','radio','obs','def','lab','dock'];
 const PARTS=[['engine','المحرك',[400,400,100,10]],['nav','نظام الملاحة',[650,700,160,20]],['shield','الدرع الحراري',[1000,850,300,30]],['antenna','هوائي الاتصال',[1400,1500,420,45]],['hull','الهيكل',[2200,2000,800,60]]];
-const GAMEOF={mines:'mine',grid:'solar',words:'radio',diff:'obs',survive:'def'};
+const GAMEOF={survive:'def'};
 const col=load('arcade-colony',{res:{m:300,e:300,f:200,c:20},b:{hq:1,mine:1,solar:1,farm:1,habitat:1,radio:0,obs:0,def:0,dock:0},build:null,last:Date.now(),q:0,ship:{},intro:0,wins:{},surv:0,done:0});
 const colSave=()=>save('arcade-colony',col);
 const cap=()=>Math.round(600*Math.pow(1.7,col.b.hq-1)*(1+0.15*((col.tech&&col.tech.store)||0)));
@@ -60,7 +60,7 @@ function repair(i){accrue();const [pid,name,c]=PARTS[i],need={m:c[0],e:c[1],f:c[
   if(PARTS.every(p=>col.ship[p[0]])){unlock('col_ship');setTimeout(chapterDone,600)}renderColony()}
 /* every win in a story game feeds the colony; the task building's level raises the reward */
 function colonyReward(id,stars,info){const bid=GAMEOF[id];if(!bid)return;accrue();info=info||{};const L=Math.max(1,col.b[bid]),k=1+0.3*(L-1);let got=[];
-  if(id==='survive'){const t=info.time||0;if(t>=60&&raidSoon()){col.raid.mine=1;setTimeout(()=>toast('🛡️ صددت الغارة القادمة!','ach'),1800)}if(t<10)return;const d=1+0.2*col.b.def;col.surv=Math.max(col.surv||0,t);
+  if(id==='survive'){const t=info.time||0;if(t>=60&&raidSoon()){col.raid.mine=1;setTimeout(()=>toast('🛡️ صددت الغارة القادمة!','ach'),1800)}if(t<10)return;const d=1+0.2*col.b.def;col.surv=Math.max(col.surv||0,t);col.skills=Math.max(col.skills||0,info.kills||0);col.sboss=(col.sboss||0)+(info.boss||0);col.sruns=(col.sruns||0)+1;if(typeof dtask==='function')dtask('mission',1);
     got=[['m',t*1.4*d],['e',t*1.2*d],['f',t*0.9*d],['c',Math.floor(t/30)+(info.boss||0)*5]]}
   else{col.wins[id]=(col.wins[id]||0)+1;if(typeof dtask==='function')dtask('mission',1);const base=(50+30*stars)*k;
     got=id==='mines'?[['m',base*1.4],['c',stars]]:id==='grid'?[['e',base*1.4],['c',stars]]:id==='words'?[['c',2+2*stars],['f',base*0.6]]:[['f',base*1.2],['c',1+stars]]}
@@ -71,14 +71,14 @@ function colonyReward(id,stars,info){const bid=GAMEOF[id];if(!bid)return;accrue(
 /* chapter one: guided objectives told by «نجم», the ship's assistant */
 const QUESTS=[
   {b:'mine',t:'طوّر منجم المعادن إلى المستوى 2',ok:()=>col.b.mine>=2,r:{e:120},say:'القائد؟ أنا نجم، مساعد المركبة. تحطّمنا، لكن الطاقم بخير. نحتاج معادن أولاً.'},
-  {t:'أصلح شبكة الطاقة: اربح مستوى في «شبكة المدار»',ok:()=>(col.wins.grid||0)>=1,r:{m:150},go:'grid',say:'الشبكة الكهربائية تضررت في الهبوط. وصّل القطع لتضيء المستعمرة.'},
+  {t:'تدرّب على القتال: اصمد 30 ثانية في «صمود المدار»',ok:()=>(col.surv||0)>=30,r:{m:150},go:'survive',say:'الكائنات تحوم حول المستعمرة. ارتدِ البدلة واخرج للتدريب — اصمد 30 ثانية فقط.'},
   {b:'hq',t:'طوّر مركز القيادة إلى المستوى 2',ok:()=>col.b.hq>=2,r:{f:150},say:'مركز قيادة أكبر يعني مخازن أكبر ومبانيَ جديدة.'},
-  {t:'امسح حقل التعدين: اربح مستوى في «حقل الكويكبات»',ok:()=>(col.wins.mines||0)>=1,r:{e:200},go:'mines',say:'وجدنا عروقاً غنية بالمعادن، لكن حولها صخور متفجرة. امشِ بحذر.'},
+  {t:'نظّف حقل التعدين: اقتل 40 كائناً في جولة واحدة',ok:()=>(col.skills||0)>=40,r:{e:200},go:'survive',say:'الكائنات تعشش قرب عروق المعادن. نظّف المنطقة حتى نحفر بأمان.'},
   {b:'radio',t:'ابنِ برج الاتصالات',ok:()=>col.b.radio>=1,r:{m:200,c:5},say:'أسمع تشويشاً في اللاسلكي… كأن أحداً يرسل لنا. نحتاج برجاً.'},
-  {t:'فك أول شفرة: اربح مستوى في «الكلمات المتقاطعة»',ok:()=>(col.wins.words||0)>=1,r:{c:10},go:'words',say:'الإشارة مشفّرة بالكلمات! حلّ الشبكة لنفهم الرسالة.'},
+  {t:'احمِ الهوائي: اصمد 60 ثانية في «صمود المدار»',ok:()=>(col.surv||0)>=60,r:{c:10},go:'survive',say:'إشارة البرج تجذب الكائنات. اصمد دقيقة كاملة حتى نلتقط الرسالة.'},
   {b:'farm',t:'طوّر المزرعة المائية إلى المستوى 3',ok:()=>col.b.farm>=3,r:{m:250,e:250},say:'الرسالة تقول: «لستم أول من سقط هنا». الطاقم جائع وقلق… لنزرع أكثر.'},
   {b:'obs',t:'ابنِ المرصد',ok:()=>col.b.obs>=1,r:{f:250},say:'من المرصد نرى الكوكب كله. ربما نجد حطام من سبقونا.'},
-  {t:'حلّل صور القمر الصناعي: اربح مستوى في «أوجد الاختلاف»',ok:()=>(col.wins.diff||0)>=1,r:{c:15},go:'diff',say:'قارن الصورتين: كل اختلاف أثرٌ لشيء يتحرك على السطح.'},
+  {t:'استطلاع خطير: اهزم أول زعيم في «صمود المدار»',ok:()=>(col.sboss||0)>=1,r:{c:15},go:'survive',say:'المرصد كشف زعيماً ضخماً يقود الكائنات. اصمد حتى الموجة الخامسة واهزمه.'},
   {b:'hq',t:'طوّر مركز القيادة إلى المستوى 3',ok:()=>col.b.hq>=3,r:{m:400,e:300},say:'الصور كشفت كائنات تقترب من المستعمرة. يجب أن نستعد.'},
   {b:'def',t:'ابنِ منظومة الدفاع',ok:()=>col.b.def>=1,r:{f:300},say:'الدفاع أولاً. إن جاءت الغارة نريد أن نصمد.'},
   {t:'صدّ الغارة: اصمد دقيقتين في «صمود المدار»',ok:()=>(col.surv||0)>=120,r:{c:25},go:'survive',say:'إنهم هنا! اخرج بالبدلة وأبعدهم عن المباني.'},
@@ -614,7 +614,7 @@ function nightLights(){if(phase()==='day')return '';let s='<rect class="nightvei
   return s}
 
 /* --- guide: a bouncing arrow over where the current objective is done --- */
-function guideSVG(){const Q=QUESTS[col.q];if(!Q||col.qhide)return '';const id=Q.b||GAMEOF[Q.go];if(!id||!SLOT[id])return '';const B=BLD[id];const tgt=(B&&B.req&&col.b.hq<B.req)?'hq':id;const [x,y,sc]=SLOT[tgt];
+function guideSVG(){const Q=QUESTS[col.q];if(!Q||col.qhide)return '';if(Q.go==='survive')return '';const id=Q.b||GAMEOF[Q.go];if(!id||!SLOT[id])return '';const B=BLD[id];const tgt=(B&&B.req&&col.b.hq<B.req)?'hq':id;const [x,y,sc]=SLOT[tgt];
   return `<g class="guide" transform="translate(${x} ${y-(tgt==='wall'?52:80*sc)})" aria-hidden="true"><g class="gbounce"><path d="M-9 -16 h18 v10 h8 L0 8 L-17 -6 h8Z" fill="#ffd34d" stroke="#7a5a10" stroke-width="1.4" stroke-linejoin="round"/></g></g>`}
 
 /* --- daily chest: 7-day streak --- */

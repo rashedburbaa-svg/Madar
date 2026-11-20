@@ -99,3 +99,6 @@ function towerImg(tier){const w=24,h=w/ART.x_towerR,hue=tier==='plasma'?235:tier
   return `<image href="${ART.x_tower}" x="${-w/2}" y="${(-h+3).toFixed(1)}" width="${w}" height="${h.toFixed(1)}"${hue?` style="filter:hue-rotate(${hue}deg)"`:''}/><g class="thead" transform="translate(0 -26)"></g>`}
 {const _tr=traderSVG;traderSVG=function(){const s=_tr();if(!s||typeof ART==='undefined'||!ART.x_trader)return s;const w=56,h=w/ART.x_traderR;
   return s.replace(/(<g class="trader"[^>]*>)[\s\S]*?(<g class="tsign")/,`$1<ellipse cx="0" cy="3" rx="20" ry="4.5" fill="#000" opacity=".35"/><g class="tbob"><image href="${ART.x_trader}" x="${-w/2}" y="${(-h+4).toFixed(1)}" width="${w}" height="${h.toFixed(1)}"/></g>$2`)}}
+
+/* ---------- the colony backs you up in «صمود المدار» ---------- */
+function survBonus(){const b=col.b;return {dmg:Math.min(60,4*(b.def||0)+2*(b.tower||0)),hp:Math.min(120,8*(b.habitat||0)+4*(b.wall||0)),rate:Math.min(40,3*(b.solar||0))}}

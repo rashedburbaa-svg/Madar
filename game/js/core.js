@@ -95,13 +95,9 @@ function dailyDone(id){return (daily.done[todayKey()]||{})[id]}
 
 /* achievements */
 const ACH=[
-  ['first','🎉','أول فوز'],['three','⭐','أول 3 نجوم'],['s50','🌟','50 نجمة'],['s150','💫','150 نجمة'],
-  ['grid10','🔗','الشبكة: المستوى 10'],['grid9','🧩','لوحة 9×9'],['wrap','🌀','أول شبكة ملتفّة'],
-  ['eagle_eye','🦅','اختلافات بلا أخطاء'],['diff_fast','⏱️','اختلافات في أقل من دقيقة'],['allfive','🎮','فوز في كل الألعاب'],
-  ['mines_clean','☄️','حقل كويكبات بلا خسارة قلب'],['words_clean','📝','كلمات متقاطعة بلا أخطاء'],
+  ['first','🎉','أول جولة'],
   ['surv2','🛡️','الصمود دقيقتين'],['surv5','⚔️','الصمود 5 دقائق'],['surv_boss','👹','هزيمة أول زعيم'],['surv_k1000','💀','1000 عدو في الصمود'],['surv_all_boss','🌌','هزيمة زعماء الكواكب الستة'],['surv_evo','✨','أول سلاح خارق بالدمج'],['surv_lab','🔬','إكمال كل تطويرات المختبر'],
-  ['col_hq5','🏛️','مركز القيادة: المستوى 5'],['col_all','🏗️','بناء كل المباني'],['col_ship','🚀','إصلاح المركبة'],
-  ['daily1','📅','أول تحدي يومي'],['streak3','🔥','سلسلة 3 أيام'],['streak7','☄️','سلسلة 7 أيام'],['dailyall','👑','كل تحديات اليوم']
+  ['col_hq5','🏛️','مركز القيادة: المستوى 5'],['col_all','🏗️','بناء كل المباني'],['col_ship','🚀','إصلاح المركبة']
 ];
 const ach=load('arcade-ach',{got:{},won:{}});
 function unlock(id){if(ach.got[id])return;ach.got[id]=Date.now();save('arcade-ach',ach);const a=ACH.find(x=>x[0]===id);if(a){snd('ach');buzz([30,40,30]);toast('🏅 وسام جديد: '+a[2],'ach')}}
@@ -143,19 +139,17 @@ function drawRank(){const el=$('rank');if(!el)return;const i=rankOf(prof.xp),cur
 
 /* weekly missions: three per week, the same for the whole week, with an XP reward */
 function weekKey(d){d=d||new Date();const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const day=(t.getUTCDay()+1)%7;t.setUTCDate(t.getUTCDate()-day);return t.getUTCFullYear()*10000+(t.getUTCMonth()+1)*100+t.getUTCDate()}
-const GNAMES={survive:'صمود المدار',grid:'شبكة المدار',words:'الكلمات المتقاطعة',mines:'حقل الكويكبات',diff:'أوجد الاختلاف'};
-function missionsFor(wk){const R=rng(wk*31+7),games=Object.keys(GNAMES),G=games[Math.floor(R()*games.length)];
-  const a=R()<0.5?{id:'wins',t:'اربح 12 مستوى في أي لعبة',n:12,xp:120}:{id:'stars3',t:'احصل على 3 نجوم في 6 مستويات',n:6,xp:140};
-  const b={id:'game_'+G,t:`اربح 4 مستويات في ${GNAMES[G]}`,n:4,xp:120};
-  const c=[{id:'variety',t:'اربح في 5 ألعاب مختلفة',n:5,xp:150},{id:'daily',t:'أنجز 5 تحديات يومية',n:5,xp:150},{id:'survive',t:'اصمد 3 دقائق في صمود المدار',n:180,xp:150,time:true}][Math.floor(R()*3)];
-  return [a,b,c]}
+const GNAMES={survive:'صمود المدار'};
+function missionsFor(wk){const R=rng(wk*31+7),pick=(arr)=>arr[Math.floor(R()*arr.length)];
+  return [pick([{id:'runs',t:'العب 8 جولات في صمود المدار',n:8,xp:120},{id:'kills',t:'اقتل 600 كائن هذا الأسبوع',n:600,xp:140}]),
+    pick([{id:'wave',t:'اصل إلى الموجة 8',n:8,xp:140},{id:'boss',t:'اهزم 3 زعماء',n:3,xp:150}]),
+    {id:'survive',t:'اصمد 3 دقائق في جولة واحدة',n:180,xp:150,time:true}]}
 const weekly=load('arcade-weekly',{wk:0,prog:{},seen:{},claimed:{}});
 function wkCheck(){const k=weekKey();if(weekly.wk!==k){weekly.wk=k;weekly.prog={};weekly.seen={};weekly.claimed={};save('arcade-weekly',weekly)}return missionsFor(k)}
 function mission(ev,d){const ms=wkCheck();let changed=false;
   const bump=(id,v,max)=>{const m=ms.find(x=>x.id===id);if(!m||weekly.claimed[id])return;weekly.prog[id]=max?Math.max(weekly.prog[id]||0,v):(weekly.prog[id]||0)+v;changed=true;
     if(weekly.prog[id]>=m.n){weekly.claimed[id]=1;addXP(m.xp);snd('ach');toast('✅ مهمة أسبوعية: '+m.t+' · +'+m.xp+' خبرة','ach')}};
-  if(ev==='win'){bump('wins',1);if(d.stars===3)bump('stars3',1);bump('game_'+d.id,1);if(!weekly.seen[d.id]){weekly.seen[d.id]=1;bump('variety',1)}if(d.daily)bump('daily',1)}
-  if(ev==='survive')bump('survive',Math.floor(d.time),true);
+  if(ev==='survive'){bump('survive',Math.floor(d.time),true);bump('runs',1);bump('kills',d.kills||0);bump('boss',d.boss||0);bump('wave',d.wave||0,true)}
   if(changed)save('arcade-weekly',weekly)}
 function drawMissions(){const host=$('missions');if(!host)return;const ms=wkCheck();
   const left=7-((new Date().getDay()+1)%7);

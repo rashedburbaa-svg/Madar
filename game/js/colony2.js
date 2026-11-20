@@ -28,7 +28,7 @@ function labHTML(){if(!col.b.lab)return '<p class="cd">ابنِ المختبر �
   return h+'</div>'}
 
 /* ---------- daily colony tasks ---------- */
-const DPOOL=[['collect','اجمع الموارد من المباني',12],['kills','اقتل وحوشاً خارج السور',40],['strike','اضرب الوحوش بالضربة المدارية',15],['upgrade','طوّر مبانيَ',2],['mission','اربح مهام في الألعاب',2],['research','ابدأ أبحاثاً في المختبر',1],['boss','اهزم زعيم الوحوش',1],['meteor','التقط شهباً',8]];
+const DPOOL=[['collect','اجمع الموارد من المباني',12],['kills','اقتل وحوشاً خارج السور',40],['strike','اضرب الوحوش بالضربة المدارية',15],['upgrade','طوّر مبانيَ',2],['mission','اخرج في جولات «صمود المدار»',2],['research','ابدأ أبحاثاً في المختبر',1],['boss','اهزم زعيم الوحوش',1],['meteor','التقط شهباً',8]];
 function dtasks(){const k=dayKey();if(!col.dt||col.dt.k!==k){const R=rng(k*7+3),pool=DPOOL.filter(p=>p[0]!=='research'||col.b.lab).slice();const pick=[];
     while(pick.length<3){const i=Math.floor(R()*pool.length);pick.push(pool.splice(i,1)[0])}
     col.dt={k,t:pick.map(([id,t,n],i)=>({id,t,n,p:0,c:0,r:i===2?{c:12}:i===1?{m:300+col.b.hq*120,e:300+col.b.hq*120}:{c:6,f:200+col.b.hq*80}}))};colSave()}return col.dt.t}

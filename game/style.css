@@ -762,3 +762,15 @@ body.colfull .tabbar{background:rgba(10,14,30,.92)}
 .astro .aimg{transform-box:fill-box;transform-origin:50% 100%}
 .astro.walk .aimg{animation:astroW .28s ease-in-out infinite alternate}
 @keyframes astroW{from{transform:translateY(0) rotate(-3deg)}to{transform:translateY(-1.2px) rotate(3deg)}}
+/* survive home card */
+.svcard{background:#0b1226;border:1px solid #ffffff1a;border-radius:20px;overflow:hidden;margin-top:6px}
+.svhero{width:100%;height:230px;object-fit:cover;object-position:50% 38%;display:block}
+.svbody{padding:14px 16px 16px}.svbody h2{font-family:var(--display);margin:0 0 4px;font-size:26px;color:#ffd34d}
+.svbody p{margin:0 0 12px;color:#cfd8f5;line-height:1.7}
+.svstats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}
+.svstats span{background:#ffffff0a;border-radius:12px;padding:8px 2px;text-align:center;display:flex;flex-direction:column}
+.svstats b{font-size:18px}.svstats small{font-size:11px;opacity:.75}
+.svbonus{background:#5ff2d614;border:1px solid #5ff2d644;border-radius:12px;padding:8px 10px;font-size:13px;margin-bottom:12px}
+.svplay{font-size:18px;padding:14px}
+#daily:has(.svcard){border:0;padding:0;background:none;box-shadow:none}
+.hubhead .pill:has(#totalStars){display:none}
