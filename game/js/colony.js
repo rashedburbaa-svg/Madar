@@ -669,6 +669,7 @@ function goTo(to){const [k,v]=(to||'').split(':');if(k==='g'){const G=GAMES.find
 // live numbers once a second while the colony is on screen; every 4 s the producers show what they made
 let fxT=0;
 let lastPhase=null,lastRaid=null;
+let saveTick=0;
 setInterval(()=>{try{ambSync()}catch(e){}const host=$('colony');if(!host||$('hub').hidden||$('pColony').hidden||document.hidden)return;
   const had=col.build&&col.build.id,had2=col.build2&&col.build2.id;accrue();if(had&&!col.build){renderColony();fxRing(had);return}if(had2&&!col.build2){renderColony();fxRing(had2);return}
   if(col.build2){const left=(col.build2.end-Date.now())/1000,t=host.querySelector('[data-t2]'),p=host.querySelector('[data-p2]'),rc=host.querySelector('[data-rc2]');if(t)t.textContent=fmtDur(left);if(p)p.style.width=Math.min(100,100-left/col.build2.len*100)+'%';if(rc)rc.textContent=Math.max(1,Math.ceil(left/60))}
@@ -680,5 +681,5 @@ setInterval(()=>{try{ambSync()}catch(e){}const host=$('colony');if(!host||$('hub
   if(col.exp){const gb=document.getElementById('galbox');if(gb){const gt=gb.querySelector('.gt');if(Date.now()>=col.exp.end&&gt)galaxyBox();else if(gt)gt.textContent=fmtDur((col.exp.end-Date.now())/1000)}if(Date.now()>=col.exp.end&&!col.exp.told){col.exp.told=1;toast('🚀 عادت المركبة! افتح 🌌 لاستلام الغنائم','ach');renderColony();return}}
   updBubbles();raidCheck();const rs=raidSoon();if(lastPhase&&(lastPhase!==phase()||lastRaid!==rs||(col.raidLog&&!col.raidLog.seen))){lastPhase=phase();lastRaid=rs;renderColony();return}lastPhase=phase();lastRaid=rs;
   if(rs){const e=host.querySelector('[data-raid]');if(e)e.textContent=fmtDur((col.raid.at-Date.now())/1000)}
-  if(Date.now()%10000<1000)colSave()},1000);
-addEventListener('pagehide',()=>{accrue();colSave()});
+  if(++saveTick%10===0)colSave()},1000);
+addEventListener('pagehide',()=>{accrue();colSave()});document.addEventListener('visibilitychange',()=>{if(document.hidden){try{accrue();colSave()}catch(e){}}});

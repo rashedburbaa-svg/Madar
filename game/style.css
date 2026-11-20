@@ -781,3 +781,4 @@ canvas.pcv{margin:0 auto;background:#050816}
 .pvcard .svstats{grid-template-columns:repeat(3,1fr)}
 .pvplay.locked{filter:grayscale(.8);opacity:.75}
 .overlay.pov .svbonus{margin:8px 0 12px;text-align:center}
+.cstory p{white-space:pre-line}

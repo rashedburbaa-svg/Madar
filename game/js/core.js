@@ -1,6 +1,7 @@
 /* ================= shared ================= */
 const $=id=>document.getElementById(id);
-function load(k,d){try{const v=localStorage.getItem(k);return v==null?JSON.parse(JSON.stringify(d)):Object.assign(JSON.parse(JSON.stringify(d)),JSON.parse(v))}catch(e){return JSON.parse(JSON.stringify(d))}}
+function load(k,d){const base=JSON.parse(JSON.stringify(d));try{const v=localStorage.getItem(k);if(v==null)return base;const p=JSON.parse(v);if(!p||typeof p!=='object'||Array.isArray(p))return base;
+  const isObj=x=>x&&typeof x==='object'&&!Array.isArray(x);for(const key of Object.keys(p)){base[key]=isObj(p[key])&&isObj(base[key])?Object.assign(base[key],p[key]):p[key]}return base}catch(e){return base}}
 function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 function rng(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 function shuffle(a,R){for(let i=a.length-1;i>0;i--){const j=Math.floor(R()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
@@ -103,21 +104,7 @@ const ACH=[
 const ach=load('arcade-ach',{got:{},won:{}});
 function unlock(id){if(ach.got[id])return;ach.got[id]=Date.now();save('arcade-ach',ach);const a=ACH.find(x=>x[0]===id);if(a){snd('ach');buzz([30,40,30]);toast('🏅 وسام جديد: '+a[2],'ach')}}
 function onWin(id,level,stars,info){
-  info=info||{};snd('win');buzz([20,30,60]);
-  addXP(10*stars+(mode&&mode.daily?20:0));mission('win',{id,stars,daily:!!(mode&&mode.daily)});
-  ach.won[id]=true;save('arcade-ach',ach);
-  unlock('first');if(stars===3)unlock('three');
-  const tot=allStars();if(tot>=50)unlock('s50');if(tot>=150)unlock('s150');
-  if(GAMES.every(G=>ach.won[G.id]))unlock('allfive');
-  if(id==='grid'){if(level>=10)unlock('grid10');if(info.n===9)unlock('grid9');if(info.wrap)unlock('wrap')}
-  if(id==='sudoku'){if(info.clean)unlock('sud_clean');if(info.time<300)unlock('sud_fast');if(level>=10)unlock('sud10')}
-  if(id==='golf'){if(info.strokes===1)unlock('ace');if(info.strokes<info.par)unlock('under');if(info.beatCpu)unlock('beat_cpu')}
-  if(id==='diff'){if(info.mistakes===0&&info.hints===0)unlock('eagle_eye');if(info.time<60)unlock('diff_fast')}
-  if(id==='memory'){if(info.perfect)unlock('memory');if(info.beatCpu)unlock('mem_cpu')}
-  if(id==='g2048'&&info.max>=2048)unlock('t2048');
-  if(id==='mines'&&info.lives===3)unlock('mines_clean');
-  if(id==='nono'&&info.clean)unlock('nono_clean');
-  if(id==='words'&&info.clean)unlock('words_clean');
+  info=info||{};snd('win');buzz([20,30,60]);addXP(10*stars);unlock('first');
   if(typeof colonyReward==='function')colonyReward(id,stars,info);
   if(mode&&mode.daily){const k=todayKey();const first=!daily.done[k]||!Object.keys(daily.done[k]).length;
     daily.done[k]=daily.done[k]||{};daily.done[k][id]=Math.max(daily.done[k][id]||0,stars);
@@ -135,7 +122,7 @@ function rankOf(xp){let i=0;while(i+1<RANKS.length&&xp>=RANKS[i+1][0])i++;return
 function addXP(n,why){if(!(n>0))return;const before=rankOf(prof.xp);prof.xp+=Math.round(n);save('arcade-profile',prof);const after=rankOf(prof.xp);
   if(after>before){snd('ach');buzz([30,40,30,40]);toast(RANKS[after][2]+' رتبة جديدة: '+RANKS[after][1],'ach')}}
 function drawRank(){const el=$('rank');if(!el)return;const i=rankOf(prof.xp),cur=RANKS[i],nxt=RANKS[i+1];
-  const pct=nxt?Math.round((prof.xp-cur[0])/(nxt[0]-cur[0])*100):100;
+  const pct=nxt?Math.max(0,Math.min(100,Math.round((prof.xp-cur[0])/(nxt[0]-cur[0])*100))):100;
   el.innerHTML=`<span class="re">${cur[2]}</span><span class="rt"><b>${cur[1]}</b><small>${nxt?`${prof.xp} / ${nxt[0]} نقطة خبرة · التالية: ${nxt[1]}`:prof.xp+' نقطة خبرة · أعلى رتبة'}</small><i><u style="width:${pct}%"></u></i></span>`}
 
 /* weekly missions: three per week, the same for the whole week, with an XP reward */
@@ -230,13 +217,9 @@ $('saveBtn').onclick=()=>{snd('tap');const m=document.createElement('div');m.cla
       const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([code],{type:'text/plain'}));a.download='madar-save-'+new Date().toISOString().slice(0,10)+'.txt';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);toast('✅ تم تنزيل الملف')}catch(e){toast('تعذّر إنشاء الملف')}};
   m.querySelector('[data-a=in]').onclick=async()=>{const code=ta.value.match(/MADAR1z?:[A-Za-z0-9+/=\s]+(~\s*[0-9a-f\s]{0,12})?/);if(!code){toast('الصق رمزاً يبدأ بـ MADAR1');return}
     try{const data=await unpackSave(code[0]);const keys=Object.keys(data).filter(k=>k.startsWith('arcade-'));if(!keys.length)throw 0;
-      if(!confirmBox)return;confirmBox('سيُستبدل تقدّمك الحالي بالنسخة المسترجعة. متابعة؟',()=>{Object.keys(localStorage).filter(k=>k.startsWith('arcade-')).forEach(k=>localStorage.removeItem(k));keys.forEach(k=>localStorage.setItem(k,data[k]));toast('✅ تم الاسترجاع');setTimeout(()=>location.reload(),700)})}
+      confirmBox('سيُستبدل تقدّمك الحالي بالنسخة المسترجعة. متابعة؟',()=>{Object.keys(localStorage).filter(k=>k.startsWith('arcade-')).forEach(k=>localStorage.removeItem(k));keys.forEach(k=>localStorage.setItem(k,data[k]));toast('✅ تم الاسترجاع');setTimeout(()=>location.reload(),700)})}
     catch(e){toast(e==='sum'?'⚠️ الرمز تالف — تأكد أنك نسخته كاملاً':e==='cut'?'⚠️ الرمز ناقص من آخره':'الرمز غير صحيح أو ناقص')}};
   document.body.appendChild(m)};
-/* out of hints → buy more with colony crystals */
-function buyHint(st,id,after){const have=(typeof col!=='undefined'&&col.res)?Math.floor(col.res.c):0;
-  confirmBox(`💡 نفدت التلميحات. اشترِ 3 تلميحات بـ 5 💎؟ (لديك ${have} 💎)`,()=>{if(have<5){toast('تحتاج 5 💎 — اجمعها من المستعمرة');return}
-    col.res.c-=5;save('arcade-colony',col);st.hints=(st.hints||0)+3;gSave(id,st);snd('ok');toast('💡 +3 تلميحات');if(after)after()})}
 function confirmBox(text,yes){const m=document.createElement('div');m.className='hmodal';m.style.zIndex=40;m.innerHTML='<div class="hbox"><p></p><button class="btn main" type="button">نعم</button><button class="btn" type="button">لا</button></div>';
   m.querySelector('p').textContent=text;const [a,b]=m.querySelectorAll('button');a.onclick=()=>{m.remove();yes()};b.onclick=()=>m.remove();document.body.appendChild(m)}
 /* how-to-play sits behind the ? button instead of under the game */

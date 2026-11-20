@@ -105,3 +105,16 @@ function survBonus(){const b=col.b;return {dmg:Math.min(60,4*(b.def||0)+2*(b.tow
 
 /* the tower card/list icon uses the painted tower too */
 if(typeof ART!=='undefined'&&ART.x_tower){ART.tower=ART.x_tower;ART.towerR=ART.x_towerR}
+
+/* ---------- welcome back: what happened while the player was away ---------- */
+(function(){try{const away=Date.now()-(col.last||Date.now());if(away<15*60000||!col.intro)return;
+  const b1=col.build&&col.build.id,b2=col.build2&&col.build2.id,rs=col.rs&&col.rs.k,ex=col.exp&&col.exp.i,raid0=JSON.stringify(col.raidLog||null);
+  accrue();const lines=[];const h=Math.floor(away/3600000),m=Math.floor(away/60000)%60;
+  [b1,b2].forEach(b=>{if(b&&!building(b))lines.push(`🏗️ اكتمل ${BLD[b].name} ← مستوى ${col.b[b]}`)});
+  if(rs&&!col.rs)lines.push(`🔬 اكتمل بحث ${TECH[rs]?TECH[rs].n:''}`);
+  if(ex!=null&&col.exp&&Date.now()>=col.exp.end)lines.push(`🚀 عادت المركبة من ${PLANETS[col.exp.i].n} — افتح المجرة لاستلام الغنائم`);
+  const pend={};Object.entries(col.store||{}).forEach(([id,v])=>{const r=PRODB[id];if(r&&v>0)pend[r]=(pend[r]||0)+v});
+  const ps=Object.entries(pend).filter(([,v])=>v>=1).map(([r,v])=>fmtN(v)+' '+RES[r][1]).join('  ');if(ps)lines.push('📦 في المخازن: '+ps+' — اضغط «⤓ جمع الكل»');
+  if(JSON.stringify(col.raidLog||null)!==raid0&&col.raidLog)lines.push(col.raidLog.won?'🛡️ صدّت المستعمرة غارة أثناء غيابك':'⚠️ وقعت غارة أثناء غيابك');
+  if(!lines.length)return;colSave();
+  setTimeout(()=>{if(document.querySelector('.hmodal'))return;storyBox('🤖 مرحباً بعودتك أيها القائد!',`غبت ${h?h+' ساعة ':''}${m} دقيقة. إليك ما حدث:\n`+lines.join('\n'),'رائع')},3600)}catch(e){}})();

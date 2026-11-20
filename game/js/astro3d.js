@@ -40,11 +40,18 @@ const Astro3D=(function(){
   function init(px){try{if(typeof THREE==='undefined')throw 0;R=new THREE.WebGLRenderer({alpha:true,antialias:true,preserveDrawingBuffer:true});
       R.setPixelRatio(1);size=px;R.setSize(px,px,false);R.setClearColor(0x000000,0);R.outputColorSpace=THREE.SRGBColorSpace;build()}catch(e){failed=true;R=null}}
   /* x,y: feet position on the 2D canvas; h: on-screen height; aim: radians in screen space; moving: bool; t: seconds */
-  function draw(ctx,x,y,h,aim,moving,t,hurt,visorCol,saber){if(failed)return false;const px=Math.min(256,Math.max(96,Math.round(h*2.2*(window.devicePixelRatio||1))));if(!R)init(px);if(!R)return false;
-    root.rotation.y=Math.atan2(Math.cos(aim),Math.sin(aim));
-    const s=moving?Math.sin(t*11):0;parts.legL.rotation.x=s*.7;parts.legR.rotation.x=-s*.7;parts.armL.rotation.x=-.9-s*.35;
-    parts.body.position.y=moving?Math.abs(Math.cos(t*11))*.06:Math.sin(t*2)*.02;parts.head.rotation.z=moving?Math.sin(t*5.5)*.05:0;
+  /* frames are cached by direction (16) × walk phase (8) so the GPU renders each pose once; only the red hurt flash is drawn live */
+  const FR=new Map();const DIRS=16,PH=8;
+  function pose(dir,ph,moving,hurt,visorCol,saber){const aim=dir/DIRS*Math.PI*2;root.rotation.y=Math.atan2(Math.cos(aim),Math.sin(aim));
+    const s=moving?Math.sin(ph/PH*Math.PI*2):0;parts.legL.rotation.x=s*.7;parts.legR.rotation.x=-s*.7;parts.armL.rotation.x=-.9-s*.35;
+    parts.body.position.y=moving?Math.abs(Math.cos(ph/PH*Math.PI*2))*.06:0;parts.head.rotation.z=moving?Math.sin(ph/PH*Math.PI)*.05:0;
     parts.white.emissive.setHex(hurt>0?0xff3040:0x000000);parts.white.emissiveIntensity=hurt>0?Math.min(1,hurt*5):0;
     if(visorCol&&visorCol!==tint){tint=visorCol;try{parts.visor.emissive.set(visorCol);parts.visor.emissiveIntensity=.16}catch(e){}}
-    parts.saber.visible=!!saber;R.render(scene,cam);const S=h*1.9;ctx.drawImage(R.domElement,x-S/2,y-S*0.655,S,S);return true}
+    parts.saber.visible=!!saber;R.render(scene,cam)}
+  function draw(ctx,x,y,h,aim,moving,t,hurt,visorCol,saber){if(failed)return false;if(!R)init(160);if(!R)return false;
+    const dir=((Math.round(aim/(Math.PI*2)*DIRS)%DIRS)+DIRS)%DIRS,ph=moving?Math.floor(t*11/(Math.PI*2)*PH)%PH:0,S=h*1.9;
+    if(hurt>0){pose(dir,ph,moving,hurt,visorCol,saber);ctx.drawImage(R.domElement,x-S/2,y-S*0.655,S,S);return true}
+    const key=dir+'|'+ph+'|'+(moving?1:0)+'|'+(saber?1:0)+'|'+(visorCol||'');let c=FR.get(key);
+    if(!c){pose(dir,ph,moving,0,visorCol,saber);c=document.createElement('canvas');c.width=c.height=160;c.getContext('2d').drawImage(R.domElement,0,0);if(FR.size>260)FR.clear();FR.set(key,c)}
+    ctx.drawImage(c,x-S/2,y-S*0.655,S,S);return true}
   return {draw,ok:()=>!failed&&typeof THREE!=='undefined'}})();
