@@ -574,7 +574,7 @@ function renderColony(){const host=$('colony');if(!host)return;accrue();raidChec
   const qh=host.querySelector('[data-qhide]');if(qh)qh.onclick=()=>{col.qhide=1;colSave();snd('tap');renderColony()};const qs=host.querySelector('[data-qshow]');if(qs)qs.onclick=()=>{col.qhide=0;colSave();snd('tap');renderColony()};const cb=host.querySelector('.cchestb');if(cb)cb.onclick=()=>{snd('tap');chestBox()};
   updBubbles();raidShow();
   renderSheet();colSave();
-  if(!col.intro){col.intro=1;colSave();storyBox('تحطّمت المركبة!','ابنِ المستعمرة وأصلح المركبة. كل فوز في الألعاب يجلب موارد.','لنبدأ')}
+  if(!col.intro){col.intro=1;colSave();const m=storyBox('تحطّمت المركبة!','ابنِ المستعمرة وأصلح المركبة. كل فوز في الألعاب يجلب موارد.','لنبدأ');if(typeof ART!=='undefined'&&m){const c=m.querySelector('.cstory'),i=document.createElement('img');i.className='shero';i.src=ART.splash;i.alt='';if(c){c.prepend(i);const av=c.querySelector('.cav');if(av)av.remove()}}}
 }
 /* ================= pro layer: collecting, guide arrow, day/night, daily chest, raids, splash, ambience ================= */
 /* --- collecting: producers fill their own store (up to 8 hours); tap the bubble to bring it home --- */
@@ -643,7 +643,8 @@ function raidShow(){const L=col.raidLog;if(!L||L.seen)return;L.seen=1;colSave();
 /* --- splash on first open of the session --- */
 (function splash(){try{if(sessionStorage.getItem('madar-splash'))return;sessionStorage.setItem('madar-splash','1')}catch(e){}
   const s=document.createElement('div');s.id='splash';s.innerHTML='<div class="spl"><svg viewBox="-60 -60 120 120" width="140" height="140"><defs><radialGradient id="spP" cx="35%" cy="35%"><stop offset="0" stop-color="#ffd9a0"/><stop offset=".7" stop-color="#d97a4a"/><stop offset="1" stop-color="#7a3a2a"/></radialGradient></defs><circle r="34" fill="url(#spP)"/><ellipse rx="56" ry="11" fill="none" stroke="#5ff2d6" stroke-width="3" transform="rotate(-18)" class="spring"/><circle cx="40" cy="-30" r="3" fill="#fff"/></svg><h1>مستعمرة <span>المدار</span></h1><i class="spbar"><u></u></i></div>';
-  document.body.appendChild(s);const end=()=>{s.classList.add('out');setTimeout(()=>s.remove(),500)};s.onclick=end;setTimeout(end,1600)})();
+  const art=typeof ART!=='undefined'&&ART.splash;if(art){s.classList.add('art');s.innerHTML='<img src="'+ART.splash+'" alt=""><div class="splt"><h1>مستعمرة <span>المدار</span></h1><p>اضغط للبدء</p></div>'}
+  document.body.appendChild(s);const end=()=>{s.classList.add('out');setTimeout(()=>s.remove(),500)};s.onclick=end;setTimeout(end,art?3200:1600)})();
 
 /* --- quiet ambience while the colony is on screen (only with sound on) --- */
 let AMB=null;
