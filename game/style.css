@@ -756,3 +756,6 @@ body.colfull .tabbar{background:rgba(10,14,30,.92)}
 @keyframes crehov{to{transform:translateY(-5px)}}
 @keyframes creblob{to{transform:scale(1.06,.93)}}
 .cre.hit .cimg image{animation:crehit .3s ease-out}@keyframes crehit{from{filter:brightness(2.4) saturate(.4)}}
+.cscene .pship image{transform-box:fill-box;transform-origin:50% 80%;transform:rotate(-6deg)}
+.cscene .pship.fixed image{transform:none;filter:drop-shadow(0 0 6px #5ff2d6aa)}
+.cscene .tbob{animation:crebob .6s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:50% 100%}

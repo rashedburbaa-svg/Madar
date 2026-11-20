@@ -93,3 +93,9 @@ function imgArt(id,L){const r=ART[id+'R']||1,w=(60+Math.min(10,L)*2.4)*Math.sqrt
 (function(){if(typeof ART==='undefined')return;const H={alien:42,bug:30,beast:38,blob:30,ufo:36};
   for(const t of Object.keys(H)){const src=ART['cre_'+t];if(!src)continue;const r=ART['cre_'+t+'R']||1,h=H[t],w=h*r,lift=t==='ufo'?10:0;CTOP[t]=-h-lift-2;
     CRE[t]=`<ellipse cx="0" cy="1" rx="${(w*0.36).toFixed(1)}" ry="${(2+h*0.06).toFixed(1)}" fill="#000" opacity="${t==='ufo'?.25:.4}"/><g class="cimg ${t}"><image href="${src}" x="${(-w/2).toFixed(1)}" y="${(-h-lift).toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" transform="scale(-1 1)"/></g>`}})();
+
+/* ---------- painted tower, ship and trader ---------- */
+function towerImg(tier){const w=24,h=w/ART.x_towerR,hue=tier==='plasma'?235:tier==='laser'?0:-150;
+  return `<image href="${ART.x_tower}" x="${-w/2}" y="${(-h+3).toFixed(1)}" width="${w}" height="${h.toFixed(1)}"${hue?` style="filter:hue-rotate(${hue}deg)"`:''}/><g class="thead" transform="translate(0 -26)"></g>`}
+{const _tr=traderSVG;traderSVG=function(){const s=_tr();if(!s||typeof ART==='undefined'||!ART.x_trader)return s;const w=56,h=w/ART.x_traderR;
+  return s.replace(/(<g class="trader"[^>]*>)[\s\S]*?(<g class="tsign")/,`$1<ellipse cx="0" cy="3" rx="20" ry="4.5" fill="#000" opacity=".35"/><g class="tbob"><image href="${ART.x_trader}" x="${-w/2}" y="${(-h+4).toFixed(1)}" width="${w}" height="${h.toFixed(1)}"/></g>$2`)}}

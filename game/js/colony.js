@@ -234,6 +234,7 @@ case 'dock':{const S=k=>col.ship[k],fly=col.done;let s=_sh(48,10);
   if(L>=7)s+=`<path d="M-44 -46 H42" stroke="#ffd34d" stroke-width="1" stroke-dasharray="3 3"/><circle cx="-44" cy="-49" r="1.8" fill="#ff5d73" class="blink"/><circle cx="42" cy="-49" r="1.8" fill="#ff5d73" class="blink"/>`;
   if(L>=10)s+=`<path d="M-42 -44 L-22 2 L-8 2Z M40 -44 L20 2 L6 2Z" fill="#fff3c0" opacity=".14"/>`;
   if(col.exp)return s+'<text x="0" y="-14" text-anchor="middle" font-size="12">🚀…</text>';
+  if(typeof ART!=='undefined'&&ART.x_ship){const w=78,h=w/ART.x_shipR;return s+`<g class="pship${fly?' fixed':''}"><image href="${ART.x_ship}" x="${-w/2}" y="${(-h+6).toFixed(1)}" width="${w}" height="${h.toFixed(1)}"/></g>`}
   s+=`<g transform="rotate(${fly?0:-12}) translate(0 ${fly?-6:-4})">`;
   s+=`<path d="M-30 -2 L-38 4 L-34 -6Z M-30 -14 L-38 -22 L-33 -11Z" fill="${S('hull')?'#9aa6b4':'#4c5059'}"/>`;
   s+=`<path d="M-30 -14 C-10 -17 18 -16 30 -8 L33 -6 L30 -4 C18 3 -10 3 -30 0Z" fill="url(#${S('hull')?'kHull':'kHullD'})" stroke="#2a2e3a" stroke-width=".7"/>`;
@@ -366,7 +367,7 @@ const HEAD={
   laser:'<ellipse cx="0" cy="0" rx="6.5" ry="5.5" fill="url(#kDome)"/><rect x="3" y="-1.4" width="15" height="2.8" rx="1.2" fill="#8e9aa8"/><circle cx="18.5" cy="0" r="2" fill="#5ff2d6" class="blink"/>',
   plasma:'<rect x="-6" y="-6" width="12" height="12" rx="3" fill="#4a3a6a"/><rect x="2" y="-5.5" width="11" height="4.4" rx="2" fill="#b47aff"/><rect x="2" y="1.1" width="11" height="4.4" rx="2" fill="#b47aff"/><circle cx="13" cy="-3.3" r="1.3" fill="#ffd6ff"/><circle cx="13" cy="3.3" r="1.3" fill="#ffd6ff"/>'};
 function towerSVG(i,tier,big){const [x,y]=fp(TDEG[i]*Math.PI/180),s=big?1.4:0.85;
-  return `<g class="tow${big?'':' wg'}" data-b="tower" data-t="${i}" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s})" role="button" tabindex="0" aria-label="${BLD.tower.name}"><ellipse cx="2" cy="1" rx="11" ry="3.4" fill="#000" opacity=".38"/>${big?_lattice(-6,12,-4,8,0,-20,3,'#aeb8c4')+_box(-8,-18,16,5,5):_box(-4,0,8,14,4)}<g class="thead" transform="translate(${big?2:0} ${big?-26:-18})">${HEAD[tier]}</g></g>`}
+  return `<g class="tow${big?'':' wg'}" data-b="tower" data-t="${i}" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s})" role="button" tabindex="0" aria-label="${BLD.tower.name}"><ellipse cx="2" cy="1" rx="11" ry="3.4" fill="#000" opacity=".38"/>${big&&typeof ART!=='undefined'&&ART.x_tower?towerImg(tier):(big?_lattice(-6,12,-4,8,0,-20,3,'#aeb8c4')+_box(-8,-18,16,5,5):_box(-4,0,8,14,4))+`<g class="thead" transform="translate(${big?2:0} ${big?-26:-18})">${HEAD[tier]}</g>`}</g>`}
 function towersSVG(half){return tint(towersRaw(half),col.b.tower||0)}
 function towersRaw(half){let s='';const L=col.b.tower||0,n=towerN(),t=tierOf(L);
   for(let i=0;i<n;i++){const [,y]=fp(TDEG[i]*Math.PI/180);if((half==='back')===(y<FEN.cy))s+=towerSVG(i,t,true)}
