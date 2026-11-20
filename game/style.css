@@ -749,3 +749,10 @@ body.colfull .tabbar{background:rgba(10,14,30,.92)}
 .cscene .aura{animation:auraP 2.4s ease-in-out infinite}@keyframes auraP{50%{opacity:.25}}
 .cscene .beam{animation:auraP 1.8s ease-in-out infinite}
 .cstory .shero.wide{height:170px;object-position:50% 50%}
+.cre .cimg{animation:crebob .42s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:50% 100%}
+.cre .cimg.ufo{animation:crehov 1.6s ease-in-out infinite alternate}
+.cre .cimg.blob{animation:creblob .7s ease-in-out infinite alternate}
+@keyframes crebob{to{transform:translateY(-1.6px) rotate(1.5deg)}}
+@keyframes crehov{to{transform:translateY(-5px)}}
+@keyframes creblob{to{transform:scale(1.06,.93)}}
+.cre.hit .cimg image{animation:crehit .3s ease-out}@keyframes crehit{from{filter:brightness(2.4) saturate(.4)}}

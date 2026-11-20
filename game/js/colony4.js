@@ -88,3 +88,8 @@ function imgArt(id,L){const r=ART[id+'R']||1,w=(60+Math.min(10,L)*2.4)*Math.sqrt
   s+=`<image href="${ART[id]}" x="${(-w/2).toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" preserveAspectRatio="xMidYMax meet"${hue?` style="filter:hue-rotate(${hue}deg) saturate(1.15)"`:''}/>`;
   if(L>=10)s+=`<path d="M-6 ${(y+4).toFixed(1)} L0 ${(y-40).toFixed(1)} L6 ${(y+4).toFixed(1)}z" fill="#ffd34d" opacity=".35" class="beam"/>`;
   return s}
+
+/* ---------- painted creatures (player's Gemini artwork); art faces left, so mirror to the game's right-facing default ---------- */
+(function(){if(typeof ART==='undefined')return;const H={alien:42,bug:30,beast:38,blob:30,ufo:36};
+  for(const t of Object.keys(H)){const src=ART['cre_'+t];if(!src)continue;const r=ART['cre_'+t+'R']||1,h=H[t],w=h*r,lift=t==='ufo'?10:0;CTOP[t]=-h-lift-2;
+    CRE[t]=`<ellipse cx="0" cy="1" rx="${(w*0.36).toFixed(1)}" ry="${(2+h*0.06).toFixed(1)}" fill="#000" opacity="${t==='ufo'?.25:.4}"/><g class="cimg ${t}"><image href="${src}" x="${(-w/2).toFixed(1)}" y="${(-h-lift).toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" transform="scale(-1 1)"/></g>`}})();
