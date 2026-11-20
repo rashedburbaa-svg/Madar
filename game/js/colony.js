@@ -11,16 +11,18 @@ const BLD={
   radio:{name:'برج الاتصالات',base:[150,120,40],req:2,prod:['c',0.6],game:'words',task:'فك شفرة إشارة',desc:'يلتقط إشارات غامضة، وينتج قليلاً من الكريستال.'},
   obs:{name:'المرصد',base:[160,140,60],req:2,game:'diff',task:'تحليل صور القمر الصناعي',desc:'يدرس صور الكوكب بحثاً عن أرض خصبة وكنوز.'},
   def:{name:'منظومة الدفاع',base:[220,180,60],req:3,game:'survive',task:'صد غارة الكائنات',desc:'تحمي المستعمرة، وكل مستوى يزيد غنائم الغارات 20%.'},
+  wall:{name:'السور',base:[90,70,20],desc:'يحمي المستعمرة من الكائنات، وكل مستوى يرفع الإنتاج 3%.'},
   dock:{name:'حوض الإصلاح',base:[250,200,80],req:2,desc:'هنا تُصلَح أجزاء المركبة لتنطلق من جديد.'}
 };
-const BORDER=['hq','mine','solar','farm','habitat','radio','obs','def','dock'];
+const BORDER=['hq','wall','mine','solar','farm','habitat','radio','obs','def','dock'];
 const PARTS=[['engine','المحرك',[400,400,100,10]],['nav','نظام الملاحة',[650,700,160,20]],['shield','الدرع الحراري',[1000,850,300,30]],['antenna','هوائي الاتصال',[1400,1500,420,45]],['hull','الهيكل',[2200,2000,800,60]]];
 const GAMEOF={mines:'mine',grid:'solar',words:'radio',diff:'obs',survive:'def'};
 const col=load('arcade-colony',{res:{m:300,e:300,f:200,c:20},b:{hq:1,mine:1,solar:1,farm:1,habitat:1,radio:0,obs:0,def:0,dock:0},build:null,last:Date.now(),q:0,ship:{},intro:0,wins:{},surv:0,done:0});
 const colSave=()=>save('arcade-colony',col);
 const cap=()=>Math.round(600*Math.pow(1.7,col.b.hq-1));
 const crew=()=>3+2*col.b.habitat;
-const mult=()=>1+0.04*crew();
+if(col.b.wall==null)col.b.wall=0;
+const mult=()=>1+0.04*crew()+0.03*(col.b.wall||0);
 function rate(k){let r=0;for(const id of BORDER){const B=BLD[id],L=col.b[id];if(B.prod&&B.prod[0]===k&&L>0)r+=B.prod[1]*L*Math.pow(1.15,L-1)}return r*mult()}
 function upCost(id){const L=col.b[id],B=BLD[id],f=Math.pow(1.6,L);return {m:Math.round(B.base[0]*f),e:Math.round(B.base[1]*f),f:Math.round(B.base[2]*f)}}
 const upTime=id=>Math.round(20*Math.pow(1.75,col.b[id]));
@@ -104,6 +106,8 @@ const ADEFS=`<defs>
 <linearGradient id="kDish" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#8d9aab"/></linearGradient>
 <linearGradient id="kHull" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7f9fb"/><stop offset=".5" stop-color="#c3ccd6"/><stop offset="1" stop-color="#6d7887"/></linearGradient>
 <linearGradient id="kHullD" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a8f98"/><stop offset=".5" stop-color="#5d626c"/><stop offset="1" stop-color="#32363e"/></linearGradient>
+<linearGradient id="kWall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c7d0da"/><stop offset=".5" stop-color="#7d8898"/><stop offset="1" stop-color="#4a5262"/></linearGradient>
+<linearGradient id="kPanel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a93a2"/><stop offset="1" stop-color="#4f5868"/></linearGradient>
 <radialGradient id="kLamp"><stop offset="0" stop-color="#fff3c0"/><stop offset=".4" stop-color="#ffd36a" stop-opacity=".6"/><stop offset="1" stop-color="#ffd36a" stop-opacity="0"/></radialGradient>
 <radialGradient id="kShield" cx="50%" cy="90%" r="90%"><stop offset=".6" stop-color="#9fe8ff" stop-opacity="0"/><stop offset="1" stop-color="#9fe8ff" stop-opacity=".35"/></radialGradient>
 </defs>`;
@@ -179,6 +183,12 @@ case 'def':{let s=_sh(30,8);
   s+=`<path d="M8 -22 L28 -32 M9 -19 L29 -29" stroke="#5a6575" stroke-width="3" stroke-linecap="round"/><path d="M8 -22 L28 -32 M9 -19 L29 -29" stroke="#c7cfd8" stroke-width="1.2" stroke-linecap="round"/><circle cx="-2" cy="-20" r="1.8" fill="#ff5d73" class="blink"/>`;
   if(L>=5)s+=`<path d="M-24 -1 l-6 -14 h5 l5 14Z" fill="url(#kMs)"/><circle cx="-27" cy="-16" r="2" fill="#9fe8ff"/>`;
   return s}
+case 'wall':{const st=fenceStyle(Math.max(1,L)),h=st.h*1.8;let s=_sh(40,6);
+  if(L>=3)s+=`<path d="M-36 0 L36 0 L36 ${-h} L-36 ${-h}Z" fill="${st.fill}" stroke="#2a2e3a" stroke-width=".6"/><path d="M-12 0 V${-h} M12 0 V${-h}" stroke="#3a4250" stroke-width=".6"/>`;else s+=`<path d="M-36 -5 H36 M-36 -10 H36" stroke="#b8c2cc" stroke-width="1"/>`;
+  for(const x of [-36,-12,12,36])s+=`<rect x="${x-2}" y="${-h-5}" width="4" height="${h+5}" fill="${st.post}"/><rect x="${x-2.6}" y="${-h-6.5}" width="5.2" height="2.2" fill="${st.cap}"/>`;
+  if(L>=6)s+=`<path d="M-36 ${-h-2} H36" stroke="#5ff2d6" stroke-width="1.6" class="efence"/>`;
+  if(L>=6)s+=`<g transform="translate(26 0)">${_lattice(-4,8,-3,6,0,-36,4,'#aeb8c4')}${_box(-6,-36,12,7,4)}<circle cx="0" cy="-46" r="2" fill="#ff5d73" class="blink"/></g>`;
+  return s}
 case 'dock':{const S=k=>col.ship[k],fly=col.done;let s=_sh(48,10);
   if(L>0){s+=_lattice(-44,6,-43,4,0,-46,5,'#aeb8c4')+_lattice(36,6,37,4,0,-46,5,'#aeb8c4')+`<path d="M-44 -46 H42 V-43 H-44Z" fill="url(#kMf)"/><path d="M-6 -43 V-30" stroke="#8a93a2" stroke-width=".8"/><path d="M-9 -30 h6 l-3 4Z" fill="#ffd34d"/>`}
   s+=`<g transform="rotate(${fly?0:-12}) translate(0 ${fly?-6:-4})">`;
@@ -195,16 +205,55 @@ case 'dock':{const S=k=>col.ship[k],fly=col.done;let s=_sh(48,10);
 }return ''}
 
 /* ---------- full-screen scene (360 x 700 world, sliced to fill the phone) ---------- */
-const SLOT={radio:[58,338,1.25],farm:[178,330,1.25],habitat:[296,338,1.2],mine:[64,452,1.3],hq:[184,456,1.45],dock:[296,446,1.1],solar:[70,566,1.3],obs:[184,570,1.3],def:[298,566,1.3]};
+const SLOT={wall:[178,648,1],radio:[58,338,1.25],farm:[178,330,1.25],habitat:[296,338,1.2],mine:[64,452,1.3],hq:[184,456,1.45],dock:[296,446,1.1],solar:[70,566,1.3],obs:[184,570,1.3],def:[298,566,1.3]};
 const ROADS='M184 456 Q120 470 64 452 M184 456 Q240 470 296 446 M184 456 Q130 520 70 566 M184 456 L184 570 M184 456 Q240 520 298 566 M184 456 Q120 400 58 338 M184 456 L178 330 M184 456 Q250 400 296 338';
 const PRODB={mine:'m',solar:'e',farm:'f',radio:'c'};
+/* ---------- the fence around the base, and the creatures roaming outside it ---------- */
+const FEN={cx:178,cy:468,rx:196,ry:180};
+const fp=a=>[FEN.cx+FEN.rx*Math.cos(a),FEN.cy+FEN.ry*Math.sin(a)];
+function fenceStyle(L){return L>=9?{h:14,fill:'url(#kWall)',post:'#c7cfd8',cap:'#9fe8ff'}:L>=6?{h:11,fill:'url(#kWall)',post:'#aeb8c4',cap:'#5ff2d6'}:L>=3?{h:9,fill:'url(#kPanel)',post:'#9aa4b2',cap:'#ffd34d'}:{h:7,fill:'none',post:'#8a93a2',cap:'#ffd34d'}}
+/* half = 'back' (upper arc, drawn behind the buildings) or 'front' (lower arc, drawn over them) */
+function fenceSVG(half){const L=col.b.wall||0,N=44,gap=0.17,st=fenceStyle(L);let seg='',posts='',strand='',tow='';
+  if(!L){let d='';for(let i=0;i<=N;i++){const a=i/N*Math.PI*2,[x,y]=fp(a),back=y<FEN.cy;if((half==='back')!==back)continue;d+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="1.2" fill="#9fe8ff" opacity=".45"/>`}return d}
+  for(let i=0;i<N;i++){const a0=i/N*Math.PI*2,a1=(i+1)/N*Math.PI*2,mid=(a0+a1)/2;if(Math.abs(((mid-Math.PI/2+Math.PI*3)%(Math.PI*2))-Math.PI)<gap)continue;
+    const [x0,y0]=fp(a0),[x1,y1]=fp(a1),back=(y0+y1)/2<FEN.cy;if((half==='back')!==back)continue;const h=st.h;
+    if(L>=3)seg+=`<path d="M${x0.toFixed(1)} ${y0.toFixed(1)} L${x1.toFixed(1)} ${y1.toFixed(1)} L${x1.toFixed(1)} ${(y1-h).toFixed(1)} L${x0.toFixed(1)} ${(y0-h).toFixed(1)}Z" fill="${st.fill}" stroke="#2a2e3a" stroke-width=".4"/>`;
+    else seg+=`<path d="M${x0.toFixed(1)} ${(y0-2.5).toFixed(1)} L${x1.toFixed(1)} ${(y1-2.5).toFixed(1)} M${x0.toFixed(1)} ${(y0-5.5).toFixed(1)} L${x1.toFixed(1)} ${(y1-5.5).toFixed(1)}" stroke="#b8c2cc" stroke-width=".7"/>`;
+    if(L>=6)strand+=`M${x0.toFixed(1)} ${(y0-h-1).toFixed(1)} L${x1.toFixed(1)} ${(y1-h-1).toFixed(1)}`;
+    posts+=`<rect x="${(x0-1.3).toFixed(1)}" y="${(y0-h-3).toFixed(1)}" width="2.6" height="${h+3}" fill="${st.post}"/><rect x="${(x0-1.7).toFixed(1)}" y="${(y0-h-4).toFixed(1)}" width="3.4" height="1.6" fill="${st.cap}"/>`}
+  if(L>=6)for(const deg of [215,325,145,35]){const a=deg*Math.PI/180,[x,y]=fp(a);if((half==='back')!==(y<FEN.cy))continue;
+    tow+=`<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)})"><ellipse cx="2" cy="1" rx="9" ry="3" fill="#000" opacity=".35"/>${_lattice(-5,10,-4,8,0,-30,4,'#aeb8c4')}${_box(-7,-30,14,8,5)}<rect x="-5" y="-36" width="10" height="6" fill="#26324a"/><rect x="-4" y="-35" width="8" height="3" fill="#5ff2d6" opacity=".8"/><circle cx="0" cy="-40" r="1.8" fill="#ff5d73" class="blink"/><path d="M0 -38 L-26 -60 L-18 -64Z" fill="#fff3c0" opacity=".1" class="sweep"/></g>`}
+  return seg+posts+(strand?`<path d="${strand}" stroke="${L>=9?'#9fe8ff':'#5ff2d6'}" stroke-width="${L>=9?2:1.4}" fill="none" class="efence"/>`:'')+tow}
+function gateSVG(){const L=col.b.wall||0,[x,y]=fp(Math.PI/2),st=fenceStyle(Math.max(1,L));
+  return `<g class="cb${L?'':' empty'}${col.build&&col.build.id==='wall'?' building':''}" data-b="wall" transform="translate(${x.toFixed(1)} ${y.toFixed(1)})" role="button" tabindex="0" aria-label="${BLD.wall.name}"><ellipse cx="0" cy="-12" rx="44" ry="26" fill="transparent"/>
+    ${L?`<g class="bart">${_box(-36,0,9,st.h+12,5)}${_box(27,0,9,st.h+12,5)}<path d="M-32 ${-st.h-14} Q0 ${-st.h-30} 32 ${-st.h-14}" stroke="${st.post}" stroke-width="3" fill="none"/><circle cx="0" cy="${-st.h-22}" r="2.4" fill="${L>=6?'#5ff2d6':'#ffd34d'}" class="blink"/>${L>=6?`<path d="M-27 -4 H27 M-27 -10 H27" stroke="#5ff2d6" stroke-width=".8" opacity=".5" class="efence"/>`:''}</g>`:`<g class="plot"><circle cx="0" cy="-16" r="11" fill="#0b1226cc" stroke="#9fe8ff" stroke-width="1.2"/><path d="M-5 -16h10M0 -21v10" stroke="#9fe8ff" stroke-width="2" stroke-linecap="round"/></g>`}
+    ${L?`<g class="lv" transform="translate(30 ${-st.h-30})"><circle r="8" fill="#0b1226" stroke="#ffd34d" stroke-width="1.4"/><text y="3.2" text-anchor="middle" font-size="9.5" font-weight="700" fill="#ffd34d">${L}</text></g>`:''}</g>`}
+/* creatures: little green aliens, a six-legged crawler, a horned beast, a tentacled blob and a saucer */
+const CRE={
+  alien:`<ellipse cx="0" cy="1" rx="5" ry="1.6" fill="#000" opacity=".35"/><g class="bob"><path d="M-2.5 0 L-2 -6 M2.5 0 L2 -6" stroke="#4fae5a" stroke-width="1.6" stroke-linecap="round"/><ellipse cx="0" cy="-8" rx="3.6" ry="4" fill="#5fd06a"/><ellipse cx="0" cy="-15" rx="5.4" ry="4.6" fill="#7ddc5a"/><ellipse cx="-2" cy="-15" rx="1.6" ry="2.2" fill="#111"/><ellipse cx="2" cy="-15" rx="1.6" ry="2.2" fill="#111"/><circle cx="-1.6" cy="-15.8" r=".5" fill="#fff"/><path d="M-2 -19 L-4 -24 M2 -19 L4 -24" stroke="#5fd06a" stroke-width=".9"/><circle cx="-4" cy="-24.5" r="1.1" fill="#ff5d73"/><circle cx="4" cy="-24.5" r="1.1" fill="#ff5d73"/></g>`,
+  bug:`<ellipse cx="0" cy="1" rx="9" ry="2" fill="#000" opacity=".35"/><g class="skit"><path d="M-5 -2 l-5 3 M-2 -2 l-4 4 M1 -2 l-3 4 M-5 -3 l-6 -1 M3 -2 l5 3 M5 -3 l6 1" stroke="#3a2a1a" stroke-width="1.1" stroke-linecap="round"/><ellipse cx="-1" cy="-4" rx="8" ry="4.6" fill="#8a4a2a"/><ellipse cx="-2" cy="-6" rx="6" ry="2.4" fill="#b8683a"/><ellipse cx="7" cy="-4" rx="3.4" ry="3" fill="#6a3a22"/><circle cx="8.5" cy="-5" r="1" fill="#ff3d3d"/><path d="M9 -6 l4 -4 M9 -5 l5 -2" stroke="#3a2a1a" stroke-width=".7"/></g>`,
+  beast:`<ellipse cx="0" cy="1" rx="16" ry="3.6" fill="#000" opacity=".38"/><g class="stomp"><path d="M-9 0 v-9 M-3 0 v-8 M5 0 v-8 M11 0 v-9" stroke="#3a2450" stroke-width="3.4" stroke-linecap="round"/><path d="M-14 -8 C-16 -22 8 -26 14 -14 C16 -8 10 -6 0 -6 C-8 -6 -13 -5 -14 -8Z" fill="#6a3a8a"/><path d="M-10 -18 l2 -3 l2 3 M-3 -21 l2 -3 l2 3 M4 -20 l2 -3 l2 3" fill="#9a6abf"/><path d="M12 -15 C20 -18 24 -12 20 -8 C17 -6 13 -8 12 -10Z" fill="#7a4a9a"/><path d="M15 -17 l-2 -7 l4 4 M20 -16 l2 -7 l1 6" fill="#e6d6b0"/><circle cx="19" cy="-12" r="1.5" fill="#ffd34d"/><path d="M18 -8.5 l1.5 1.5 l1 -1.5" stroke="#fff" stroke-width=".6" fill="none"/><path d="M-14 -10 C-20 -10 -22 -4 -19 -2" stroke="#6a3a8a" stroke-width="2" fill="none"/></g>`,
+  blob:`<ellipse cx="0" cy="1" rx="13" ry="3" fill="#000" opacity=".35"/><g class="ooze"><path d="M-12 0 C-14 -14 -6 -24 0 -24 C6 -24 14 -14 12 0 Q8 -4 6 0 Q2 -5 0 0 Q-3 -5 -6 0 Q-9 -4 -12 0Z" fill="#c0304a"/><path d="M-8 -12 C-6 -20 4 -22 6 -18" stroke="#ff7a8a" stroke-width="2" fill="none" opacity=".7"/><circle cx="-4" cy="-14" r="3" fill="#fff"/><circle cx="4" cy="-15" r="2.4" fill="#fff"/><circle cx="-3.4" cy="-14" r="1.4" fill="#111"/><circle cx="4.4" cy="-15" r="1.1" fill="#111"/><circle cx="0" cy="-20" r="1.8" fill="#fff" opacity=".9"/><circle cx="0.4" cy="-20" r=".9" fill="#111"/><path d="M-4 -8 Q0 -5 4 -8" stroke="#3a0a14" stroke-width="1" fill="none"/></g>`,
+  ufo:`<g class="hover"><path d="M-6 6 L-14 40 L14 40 L6 6Z" fill="#9fffb8" opacity=".14" class="beam"/><ellipse cx="0" cy="4" rx="16" ry="4.6" fill="#7a8494"/><ellipse cx="0" cy="2.6" rx="16" ry="3.4" fill="#c7cfd8"/><path d="M-7 2 C-7 -6 7 -6 7 2Z" fill="#7fe8ff" opacity=".85"/><circle cx="-10" cy="4.6" r="1.2" fill="#ffd34d" class="blink"/><circle cx="0" cy="5.6" r="1.2" fill="#ff5d73" class="blink"/><circle cx="10" cy="4.6" r="1.2" fill="#5ff2d6" class="blink"/><circle cx="-1" cy="-2" r="1.6" fill="#5fd06a"/></g>`};
+const ROAM=[
+  ['alien','M-55 700 C20 684 90 716 150 700',17],['beast','M-50 340 C-38 420 -56 500 -42 590',30],
+  ['blob','M406 360 C396 430 412 500 400 590',26],['bug','M415 736 C360 716 300 750 230 728',13],
+  ['alien','M-45 728 C30 710 100 742 160 728',19],['alien','M402 640 C380 670 330 690 290 708',15],
+  ['ufo','M-40 236 C60 200 140 250 220 214 S360 230 420 210',22],['bug','M-58 620 C-40 650 0 680 30 702',14],
+  ['beast','M300 762 C240 750 140 772 60 758',34]];
+function creaturesSVG(){const n=Math.min(ROAM.length,3+Math.floor(col.b.hq/2)+(col.b.def?1:0));let s='';
+  for(let i=0;i<n;i++){const [t,path,dur]=ROAM[i];
+    s+=`<g class="cre" data-cre="${t}" role="button" tabindex="0" aria-label="كائن فضائي"><animateMotion dur="${dur}s" repeatCount="indefinite" keyPoints="0;1;0" keyTimes="0;.5;1" calcMode="linear" path="${path}" begin="-${(i*3.7)%dur}s"/><g transform="scale(${t==='ufo'?1.3:1.55})"><ellipse cx="0" cy="-10" rx="16" ry="14" fill="transparent"/>${CRE[t]}</g></g>`}
+  return s}
+function zapSVG(){if((col.b.wall||0)<3)return '';let s='';for(const [deg,d] of [[160,0],[20,2.6],[200,5.1],[95,7.4],[340,9.3]]){const [x,y]=fp(deg*Math.PI/180),h=fenceStyle(col.b.wall).h;
+  s+=`<g class="zap" style="animation-delay:${d}s" transform="translate(${x.toFixed(1)} ${(y-h/2).toFixed(1)})"><circle r="7" fill="#9fe8ff" opacity=".35"/><path d="M-6 -4 L-1 -1 L-4 2 L3 0 L0 4 L6 1" stroke="#fff" stroke-width="1.1" fill="none"/></g>`}return s}
 function sceneSVG(){const R=rng(7);let stars='',tw='';
   for(let k=0;k<230;k++){const x=(R()*1000-320).toFixed(0),y=(R()*620-370).toFixed(0),r=(R()*1.2+0.3).toFixed(1),o=(0.3+R()*0.7).toFixed(2);
     if(k%5===0)tw+=`<circle class="tw" style="animation-delay:${(R()*4).toFixed(1)}s" cx="${x}" cy="${y}" r="${(+r+0.4).toFixed(1)}" fill="#fff"/>`;else stars+=`<circle cx="${x}" cy="${y}" r="${r}" fill="#fff" opacity="${o}"/>`}
   let crat='';for(let k=0;k<44;k++){const x=R()*760-200,y=290+R()*560,r=4+R()*12;crat+=`<ellipse cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" rx="${r.toFixed(1)}" ry="${(r*0.4).toFixed(1)}" fill="url(#cCrat)" opacity=".8"/>`}
   let rocks='';for(let k=0;k<60;k++){const x=R()*760-200,y=286+R()*560,r=1.5+R()*4;rocks+=`<path d="M${(x-r).toFixed(1)} ${y.toFixed(1)} l${(r*0.6).toFixed(1)} ${(-r).toFixed(1)} l${(r*1.1).toFixed(1)} ${(r*0.3).toFixed(1)} l${(r*0.5).toFixed(1)} ${(r*0.7).toFixed(1)}Z" fill="#7a5a6a"/><path d="M${(x-r).toFixed(1)} ${y.toFixed(1)} l${(r*0.6).toFixed(1)} ${(-r).toFixed(1)} l${(r*0.3).toFixed(1)} ${r.toFixed(1)}Z" fill="#a07a8a"/>`}
   let dust='';for(let k=0;k<20;k++)dust+=`<circle class="dust" style="animation-delay:${(R()*9).toFixed(1)}s;animation-duration:${(7+R()*6).toFixed(1)}s" cx="${(R()*360).toFixed(0)}" cy="${(320+R()*360).toFixed(0)}" r="${(0.8+R()*1.4).toFixed(1)}" fill="#ffd9c0"/>`;
-  const order=Object.keys(SLOT).sort((a,b)=>SLOT[a][1]-SLOT[b][1]);let g='';
+  const order=Object.keys(SLOT).filter(k=>k!=='wall').sort((a,b)=>SLOT[a][1]-SLOT[b][1]);let g='';
   for(const id of order){const [x,y,base]=SLOT[id],L=col.b[id],bl=col.build&&col.build.id===id,sc=(base*(0.92+Math.min(10,L)*0.02)).toFixed(3);
     g+=`<g class="cb${L?'':' empty'}${bl?' building':''}" data-b="${id}" transform="translate(${x} ${y})" role="button" tabindex="0" aria-label="${BLD[id].name}"><ellipse cx="0" cy="-20" rx="50" ry="46" fill="transparent"/>`;
     if(L||id==='dock')g+=`<g class="bart" transform="scale(${sc})">${art(id,L)}</g>`;
@@ -234,24 +283,24 @@ function sceneSVG(){const R=rng(7);let stars='',tw='';
     <path d="M-720 286 Q-600 274 -480 284 T-240 280 T0 286 Q60 274 120 284 T240 280 T360 284 T600 280 T1080 284 V1300 H-720Z" fill="url(#cGround)"/>${crat}${rocks}
     <path d="${ROADS}" stroke="#1a1424" stroke-width="9" fill="none" stroke-linecap="round" opacity=".6"/><path d="${ROADS}" stroke="#d0a8bc" stroke-width=".7" fill="none" stroke-dasharray="4 6" opacity=".5"/>
     <g class="rover"><animateMotion dur="26s" repeatCount="indefinite" rotate="auto" path="${roverPath}"/><rect x="-7" y="-5" width="14" height="6" rx="2" fill="#e6ecf1"/><rect x="-3" y="-8" width="6" height="3" rx="1" fill="#9fb0c4"/><circle cx="-5" cy="2" r="2" fill="#2a2e3a"/><circle cx="5" cy="2" r="2" fill="#2a2e3a"/><circle cx="7.5" cy="-3" r="1.3" fill="#fff3c0"/><path d="M8 -3 l14 -4 v8Z" fill="#fff3c0" opacity=".18"/></g>
-    ${dust}${g}<g id="cfx"></g>
+    ${dust}${fenceSVG('back')}${g}${fenceSVG('front')}${gateSVG()}${creaturesSVG()}${zapSVG()}<g id="cfx"></g>
     <g class="drone"><animateMotion dur="18s" repeatCount="indefinite" path="M-20 300 C80 250 160 330 240 280 S380 300 400 270"/><ellipse cx="0" cy="0" rx="6" ry="2" fill="#c7cfd8"/><path d="M-8 -2h5M3 -2h5" stroke="#9aa4b2" stroke-width="1"/><circle cx="0" cy="1.5" r="1" fill="#5ff2d6" class="blink"/></g>
     </svg>`}
 /* camera: the colony opens zoomed out to fit; pinch, drag, mouse wheel or the +/- buttons move it */
 const cam={z:1,x:180,y:null};
 function camView(){const svg=$('cscene');if(!svg)return;const r=svg.getBoundingClientRect();if(!r.width||!r.height)return;
-  const W=460/cam.z,H=W*r.height/r.width,u=W/r.width,bottomPad=120*u,topPad=100*u;
-  if(cam.y==null){const lo=262-topPad+H/2,hi=640+bottomPad-H/2;cam.y=lo>hi?hi:Math.max(lo,Math.min(hi,(lo+hi)/2))}
-  const mnx=-110+W/2,mxx=470-W/2;cam.x=mnx>mxx?180:Math.max(mnx,Math.min(mxx,cam.x));
+  const W=500/cam.z,H=W*r.height/r.width,u=W/r.width,bottomPad=118*u,topPad=100*u;
+  if(cam.y==null){const lo=262-topPad+H/2,hi=748+bottomPad-H/2;cam.y=lo>hi?hi:Math.max(lo,Math.min(hi,(lo+hi)/2))}
+  const mnx=-130+W/2,mxx=490-W/2;cam.x=mnx>mxx?180:Math.max(mnx,Math.min(mxx,cam.x));
   const mny=-260+H/2,mxy=900-H/2;cam.y=mny>mxy?(mny+mxy)/2:Math.max(mny,Math.min(mxy,cam.y));
   svg.setAttribute('viewBox',`${(cam.x-W/2).toFixed(1)} ${(cam.y-H/2).toFixed(1)} ${W.toFixed(1)} ${H.toFixed(1)}`)}
-function camZoom(f,px,py){const svg=$('cscene');if(!svg)return;const r=svg.getBoundingClientRect(),W=460/cam.z,H=W*r.height/r.width;
+function camZoom(f,px,py){const svg=$('cscene');if(!svg)return;const r=svg.getBoundingClientRect(),W=500/cam.z,H=W*r.height/r.width;
   const ux=cam.x-W/2+((px==null?r.width/2:px-r.left)/r.width)*W,uy=cam.y-H/2+((py==null?r.height/2:py-r.top)/r.height)*H;
   const nz=Math.max(0.8,Math.min(3,cam.z*f)),k=cam.z/nz;cam.x=ux+(cam.x-ux)*k;cam.y=uy+(cam.y-uy)*k;cam.z=nz;camView()}
 let camDrag=false;
 function camBind(){const svg=$('cscene');if(!svg)return;const pts=new Map();let start=null,pinch=0;camDrag=false;
   svg.addEventListener('pointerdown',e=>{pts.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pts.size===1){start={x:e.clientX,y:e.clientY,cx:cam.x,cy:cam.y};camDrag=false}if(pts.size===2){const [a,b]=[...pts.values()];pinch=Math.hypot(a.x-b.x,a.y-b.y)}});
-  svg.addEventListener('pointermove',e=>{if(!pts.has(e.pointerId))return;pts.set(e.pointerId,{x:e.clientX,y:e.clientY});const r=svg.getBoundingClientRect(),u=(460/cam.z)/r.width;
+  svg.addEventListener('pointermove',e=>{if(!pts.has(e.pointerId))return;pts.set(e.pointerId,{x:e.clientX,y:e.clientY});const r=svg.getBoundingClientRect(),u=(500/cam.z)/r.width;
     if(pts.size===2){const [a,b]=[...pts.values()],d=Math.hypot(a.x-b.x,a.y-b.y);if(pinch){camZoom(d/pinch,(a.x+b.x)/2,(a.y+b.y)/2)}pinch=d;camDrag=true;return}
     if(start){const dx=e.clientX-start.x,dy=e.clientY-start.y;if(!camDrag&&Math.hypot(dx,dy)>8){camDrag=true;try{svg.setPointerCapture(e.pointerId)}catch(_){}}if(camDrag){cam.x=start.cx-dx*u;cam.y=start.cy-dy*u;camView()}}});
   const up=e=>{pts.delete(e.pointerId);if(pts.size<2)pinch=0;if(!pts.size){start=null;setTimeout(()=>{camDrag=false},0)}};
@@ -269,7 +318,7 @@ function fxRing(id){const L=$('cfx');if(!L||!SLOT[id])return;const [x,y]=SLOT[id
 function resBar(){return Object.entries(RES).map(([k,[n,em,c]])=>`<div class="cr" style="--c:${c}"><span class="ce">${em}</span><b data-r="${k}">${fmtN(col.res[k])}</b><small>${k==='c'?'+'+rate('c').toFixed(1):'+'+fmtN(rate(k))}/س</small></div>`).join('')}
 function costHTML(c){return Object.entries(c).map(([k,n])=>`<span class="cc${col.res[k]>=n?'':' no'}" data-k="${k}" data-n="${n}">${RES[k][1]} ${fmtN(n)}</span>`).join('')}
 function cardHTML(id){const B=BLD[id],L=col.b[id],locked=B.req&&col.b.hq<B.req,max=L>=(B.max||10),G=B.game&&GAMES.find(x=>x.id===B.game),c=upCost(id);
-  const info=B.prod&&L?`${RES[B.prod[0]][1]} +${B.prod[0]==='c'?(B.prod[1]*L*Math.pow(1.15,L-1)*mult()).toFixed(1):fmtN(B.prod[1]*L*Math.pow(1.15,L-1)*mult())}/س`:id==='hq'?`📦 ${fmtN(cap())}`:id==='habitat'?`🧑‍🚀 ${crew()}`:id==='def'&&L?`غنائم +${col.b.def*20}%`:'';
+  const info=B.prod&&L?`${RES[B.prod[0]][1]} +${B.prod[0]==='c'?(B.prod[1]*L*Math.pow(1.15,L-1)*mult()).toFixed(1):fmtN(B.prod[1]*L*Math.pow(1.15,L-1)*mult())}/س`:id==='hq'?`📦 ${fmtN(cap())}`:id==='habitat'?`🧑‍🚀 ${crew()}`:id==='wall'&&L?`إنتاج +${3*L}%`:id==='def'&&L?`غنائم +${col.b.def*20}%`:'';
   let h=`<div class="cbc${locked?' locked':''}"><div class="ch"><span class="ci"><svg viewBox="-52 -64 104 76">${art(id,Math.max(1,L))}</svg></span><span class="ctt"><b>${B.name}</b><small>${locked?'<span class="golink" data-to="b:hq" role="button" tabindex="0">🔒 القيادة '+B.req+' ‹</span>':L?'مستوى '+L+(info?' · '+info:''):'غير مبني'}</small></span></div>`;
   if(col.build&&col.build.id===id)h+=`<p class="cd">🏗️ قيد البناء…</p>`;
   else if(!locked&&!max&&id!=='hq'&&L>col.b.hq)h+='<button class="cd need" type="button" data-to="b:hq">🔒 يحتاج القيادة '+L+' ‹</button>';
@@ -301,6 +350,7 @@ function renderColony(){const host=$('colony');if(!host)return;accrue();questChe
   host.querySelectorAll('[data-z]').forEach(b=>b.onclick=()=>{snd('tap');const z=b.dataset.z;if(z==='fit'){cam.z=1;cam.x=180;cam.y=null;camView()}else camZoom(z==='in'?1.3:1/1.3)});camBind();
   bindActions(host);const rb=host.querySelector('[data-rush]');if(rb)rb.onclick=rush;
   host.querySelectorAll('.cb').forEach(g=>{const go=()=>{if(camDrag)return;snd('tap');g.classList.remove('tap');void g.getBoundingClientRect();g.classList.add('tap');openSheet(g.dataset.b)};g.onclick=go;g.onkeydown=e=>{if(e.key==='Enter')go()}});
+  host.querySelectorAll('.cre').forEach(c=>{const go=()=>{if(camDrag)return;snd('tap');if(col.b.def){const G=GAMES.find(x=>x.id==='survive');closeSheet();if(G)openGame(G)}else{toast('👾 ابنِ منظومة الدفاع لصدّهم');focusB('def')}};c.onclick=go;c.onkeydown=e=>{if(e.key==='Enter')go()}});
   renderSheet();colSave();
   if(!col.intro){col.intro=1;colSave();storyBox('تحطّمت المركبة!','ابنِ المستعمرة وأصلح المركبة. كل فوز في الألعاب يجلب موارد.','لنبدأ')}
 }
