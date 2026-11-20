@@ -759,3 +759,6 @@ body.colfull .tabbar{background:rgba(10,14,30,.92)}
 .cscene .pship image{transform-box:fill-box;transform-origin:50% 80%;transform:rotate(-6deg)}
 .cscene .pship.fixed image{transform:none;filter:drop-shadow(0 0 6px #5ff2d6aa)}
 .cscene .tbob{animation:crebob .6s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:50% 100%}
+.astro .aimg{transform-box:fill-box;transform-origin:50% 100%}
+.astro.walk .aimg{animation:astroW .28s ease-in-out infinite alternate}
+@keyframes astroW{from{transform:translateY(0) rotate(-3deg)}to{transform:translateY(-1.2px) rotate(3deg)}}

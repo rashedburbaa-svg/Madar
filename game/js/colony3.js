@@ -57,6 +57,7 @@ function crewInit(svg){const sh=svg.querySelector('#cshots');if(!sh)return;let g
   const suits=['#f2f5fb','#ffd34d','#7ffcf0','#ff9f6b','#b9a4ff'];
   for(let i=0;i<n;i++){const p=pts[i%pts.length],e=svgEl('g',{class:'astro'});const su=suits[i%suits.length];
     e.innerHTML=`<ellipse cy="0.5" rx="4" ry="1.3" fill="#0005"/><g class="aflip"><rect x="-2.6" y="-7" width="5.2" height="6" rx="2" fill="${su}"/><rect x="-3.9" y="-6.4" width="1.6" height="4" rx=".8" fill="#9aa6bd"/><circle cy="-9.4" r="3.1" fill="${su}"/><path d="M-.6 -10.6 h2.6 a1.3 1.3 0 0 1 0 2.6 h-2.6z" fill="#2a3a7a"/><circle cx="1.6" cy="-10" r=".5" fill="#9ff"/><rect class="al1" x="-2" y="-1.4" width="1.6" height="2.4" rx=".7" fill="#9aa6bd"/><rect class="al2" x=".4" y="-1.4" width="1.6" height="2.4" rx=".7" fill="#9aa6bd"/></g>`;
+    if(typeof ART!=='undefined'&&ART.astro){const h=21,w=h*ART.astroR,hue=[0,140,200,280,330,60,100,240][i%8];e.innerHTML=`<ellipse cy="0.5" rx="4" ry="1.3" fill="#0005"/><g class="aflip"><g class="aimg"><image href="${ART.astro}" x="${(-w/2).toFixed(1)}" y="${-h}" width="${w.toFixed(1)}" height="${h}"${hue?` style="filter:hue-rotate(${hue}deg)"`:''}/></g></g>`}
     g.appendChild(e);const q=pts[(i*3+1)%pts.length];CREW.w.push({e,f:e.firstChild.nextSibling,x:p.x,y:p.y,tx:q.x,ty:q.y,wait:Math.random()*3,sp:9+Math.random()*5})}
   CREW.w.forEach(w=>w.e.setAttribute('transform',`translate(${w.x.toFixed(1)} ${w.y.toFixed(1)}) scale(1.25)`))}
 function crewTick(dt){if(!CREW.w.length)return;let pts=null;
