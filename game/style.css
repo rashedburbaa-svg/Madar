@@ -523,3 +523,8 @@ body.colfull .tabbar{background:rgba(10,14,30,.92)}
 @keyframes cring{0%{opacity:1;transform:scale(.4)}100%{opacity:0;transform:scale(1.8)}}
 @media (prefers-reduced-motion:reduce){.cscene .meteor,.cscene .shuttle,.cscene .dust,.cscene .rover,.cscene .drone{display:none}}
 .cscene .cb:focus{outline:none}.cscene .cb:focus-visible .bart{filter:drop-shadow(0 0 4px #ffd34d)}
+#colony .cscene{touch-action:none;user-select:none;-webkit-user-select:none}
+.czoom{position:absolute;right:10px;top:calc(env(safe-area-inset-top) + 74px);display:flex;flex-direction:column;gap:6px}
+.czoom button{width:36px;height:36px;border-radius:50%;border:1px solid rgba(159,232,255,.25);background:rgba(8,12,30,.55);color:#dfe7ff;font-size:18px;line-height:1;cursor:pointer;display:grid;place-items:center}
+.czoom button:active{transform:scale(.92)}
+.czoom{top:calc(env(safe-area-inset-top) + 112px)}

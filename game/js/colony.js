@@ -199,11 +199,11 @@ const SLOT={radio:[58,338,1.25],farm:[178,330,1.25],habitat:[296,338,1.2],mine:[
 const ROADS='M184 456 Q120 470 64 452 M184 456 Q240 470 296 446 M184 456 Q130 520 70 566 M184 456 L184 570 M184 456 Q240 520 298 566 M184 456 Q120 400 58 338 M184 456 L178 330 M184 456 Q250 400 296 338';
 const PRODB={mine:'m',solar:'e',farm:'f',radio:'c'};
 function sceneSVG(){const R=rng(7);let stars='',tw='';
-  for(let k=0;k<90;k++){const x=(R()*360).toFixed(0),y=(R()*250).toFixed(0),r=(R()*1.2+0.3).toFixed(1),o=(0.3+R()*0.7).toFixed(2);
+  for(let k=0;k<230;k++){const x=(R()*1000-320).toFixed(0),y=(R()*620-370).toFixed(0),r=(R()*1.2+0.3).toFixed(1),o=(0.3+R()*0.7).toFixed(2);
     if(k%5===0)tw+=`<circle class="tw" style="animation-delay:${(R()*4).toFixed(1)}s" cx="${x}" cy="${y}" r="${(+r+0.4).toFixed(1)}" fill="#fff"/>`;else stars+=`<circle cx="${x}" cy="${y}" r="${r}" fill="#fff" opacity="${o}"/>`}
-  let crat='';for(let k=0;k<22;k++){const x=R()*360,y=290+R()*400,r=4+R()*12;crat+=`<ellipse cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" rx="${r.toFixed(1)}" ry="${(r*0.4).toFixed(1)}" fill="url(#cCrat)" opacity=".8"/>`}
-  let rocks='';for(let k=0;k<30;k++){const x=R()*360,y=286+R()*410,r=1.5+R()*4;rocks+=`<path d="M${(x-r).toFixed(1)} ${y.toFixed(1)} l${(r*0.6).toFixed(1)} ${(-r).toFixed(1)} l${(r*1.1).toFixed(1)} ${(r*0.3).toFixed(1)} l${(r*0.5).toFixed(1)} ${(r*0.7).toFixed(1)}Z" fill="#7a5a6a"/><path d="M${(x-r).toFixed(1)} ${y.toFixed(1)} l${(r*0.6).toFixed(1)} ${(-r).toFixed(1)} l${(r*0.3).toFixed(1)} ${r.toFixed(1)}Z" fill="#a07a8a"/>`}
-  let dust='';for(let k=0;k<14;k++)dust+=`<circle class="dust" style="animation-delay:${(R()*9).toFixed(1)}s;animation-duration:${(7+R()*6).toFixed(1)}s" cx="${(R()*360).toFixed(0)}" cy="${(320+R()*360).toFixed(0)}" r="${(0.8+R()*1.4).toFixed(1)}" fill="#ffd9c0"/>`;
+  let crat='';for(let k=0;k<44;k++){const x=R()*760-200,y=290+R()*560,r=4+R()*12;crat+=`<ellipse cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" rx="${r.toFixed(1)}" ry="${(r*0.4).toFixed(1)}" fill="url(#cCrat)" opacity=".8"/>`}
+  let rocks='';for(let k=0;k<60;k++){const x=R()*760-200,y=286+R()*560,r=1.5+R()*4;rocks+=`<path d="M${(x-r).toFixed(1)} ${y.toFixed(1)} l${(r*0.6).toFixed(1)} ${(-r).toFixed(1)} l${(r*1.1).toFixed(1)} ${(r*0.3).toFixed(1)} l${(r*0.5).toFixed(1)} ${(r*0.7).toFixed(1)}Z" fill="#7a5a6a"/><path d="M${(x-r).toFixed(1)} ${y.toFixed(1)} l${(r*0.6).toFixed(1)} ${(-r).toFixed(1)} l${(r*0.3).toFixed(1)} ${r.toFixed(1)}Z" fill="#a07a8a"/>`}
+  let dust='';for(let k=0;k<20;k++)dust+=`<circle class="dust" style="animation-delay:${(R()*9).toFixed(1)}s;animation-duration:${(7+R()*6).toFixed(1)}s" cx="${(R()*360).toFixed(0)}" cy="${(320+R()*360).toFixed(0)}" r="${(0.8+R()*1.4).toFixed(1)}" fill="#ffd9c0"/>`;
   const order=Object.keys(SLOT).sort((a,b)=>SLOT[a][1]-SLOT[b][1]);let g='';
   for(const id of order){const [x,y,base]=SLOT[id],L=col.b[id],bl=col.build&&col.build.id===id,sc=(base*(0.92+Math.min(10,L)*0.02)).toFixed(3);
     g+=`<g class="cb${L?'':' empty'}${bl?' building':''}" data-b="${id}" transform="translate(${x} ${y})" role="button" tabindex="0" aria-label="${BLD[id].name}"><ellipse cx="0" cy="-20" rx="50" ry="46" fill="transparent"/>`;
@@ -213,7 +213,7 @@ function sceneSVG(){const R=rng(7);let stars='',tw='';
     if(L)g+=`<g class="lv" transform="translate(${id==='hq'?34:24} ${id==='hq'?-70:-54})"><circle r="8" fill="#0b1226" stroke="#ffd34d" stroke-width="1.4"/><text y="3.2" text-anchor="middle" font-size="9.5" font-weight="700" fill="#ffd34d">${L}</text></g>`;
     g+='</g>'}
   const roverPath='M184 470 Q120 486 64 466 Q40 500 70 580 Q130 600 184 584 Q240 600 298 580 Q330 500 296 462 Q240 486 184 470Z';
-  return `<svg class="cscene" viewBox="0 0 360 700" preserveAspectRatio="xMidYMid slice" aria-label="خريطة المستعمرة">${ADEFS}<defs>
+  return `<svg class="cscene" id="cscene" viewBox="-20 0 400 780" preserveAspectRatio="xMidYMid slice" aria-label="خريطة المستعمرة">${ADEFS}<defs>
     <linearGradient id="cSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#04061a"/><stop offset=".55" stop-color="#1c1640"/><stop offset=".85" stop-color="#4a2c58"/><stop offset="1" stop-color="#7a4462"/></linearGradient>
     <linearGradient id="cGround" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7a5266"/><stop offset=".15" stop-color="#5a4058"/><stop offset="1" stop-color="#1a1224"/></linearGradient>
     <linearGradient id="cHill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a3350"/><stop offset="1" stop-color="#3a2a44"/></linearGradient>
@@ -223,20 +223,42 @@ function sceneSVG(){const R=rng(7);let stars='',tw='';
     <radialGradient id="cNeb2" cx="50%" cy="50%"><stop offset="0" stop-color="#5ff2d6" stop-opacity=".16"/><stop offset="1" stop-color="#5ff2d6" stop-opacity="0"/></radialGradient>
     <radialGradient id="cCrat" cx="40%" cy="35%"><stop offset="0" stop-color="#1a1222"/><stop offset=".8" stop-color="#3a2a44"/><stop offset="1" stop-color="#9a7088"/></radialGradient>
     <linearGradient id="cMeteor" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff"/></linearGradient></defs>
-    <rect y="-40" width="360" height="760" fill="url(#cSky)"/><ellipse cx="90" cy="120" rx="140" ry="60" fill="url(#cNeb)"/><ellipse cx="280" cy="210" rx="120" ry="50" fill="url(#cNeb2)"/>${stars}${tw}
+    <rect x="-700" y="-900" width="1760" height="1250" fill="#04061a"/><rect x="-700" y="-40" width="1760" height="330" fill="url(#cSky)"/><ellipse cx="90" cy="120" rx="140" ry="60" fill="url(#cNeb)"/><ellipse cx="280" cy="210" rx="120" ry="50" fill="url(#cNeb2)"/>${stars}${tw}
     <g class="meteor"><path d="M0 0 L60 0" stroke="url(#cMeteor)" stroke-width="1.6" stroke-linecap="round"/><circle cx="60" cy="0" r="1.8" fill="#fff"/></g>
     <g class="meteor m2"><path d="M0 0 L44 0" stroke="url(#cMeteor)" stroke-width="1.2" stroke-linecap="round"/><circle cx="44" cy="0" r="1.4" fill="#fff"/></g>
     <g class="planet"><circle cx="268" cy="118" r="52" fill="url(#cPlanet)"/><path d="M226 100 Q268 92 312 104 M220 124 Q268 116 318 130" stroke="#a24a2a" stroke-width="5" fill="none" opacity=".35"/><ellipse cx="268" cy="118" rx="84" ry="15" fill="none" stroke="#ffd9a0" stroke-opacity=".5" stroke-width="3" transform="rotate(-14 268 118)"/></g>
     <g class="moon"><circle cx="120" cy="196" r="11" fill="#c9d3dc"/><circle cx="116" cy="193" r="3" fill="#9aa4b2" opacity=".7"/><circle cx="124" cy="200" r="2" fill="#9aa4b2" opacity=".6"/></g>
     <g class="shuttle"><path d="M-10 0 L8 -3 L12 0 L8 3Z" fill="#dfe6ee"/><path d="M-10 -1 L-16 0 L-10 1Z" fill="#ff9a3c"/><circle cx="0" cy="-3" r="1" fill="#ff5d73" class="blink"/></g>
-    <path d="M0 262 L28 236 L52 252 L90 220 L124 250 L158 238 L196 254 L236 224 L268 246 L304 230 L334 248 L360 236 V300 H0Z" fill="url(#cHill2)"/>
-    <path d="M0 276 L36 254 L70 268 L104 248 L140 270 L176 258 L214 272 L250 252 L290 268 L326 256 L360 266 V300 H0Z" fill="url(#cHill)"/><path d="M104 248 L114 262 L106 266Z M250 252 L260 264 L254 268Z" fill="#6a4a6a" opacity=".6"/>
-    <path d="M0 286 Q60 274 120 284 T240 280 T360 284 V720 H0Z" fill="url(#cGround)"/>${crat}${rocks}
+    <path d="M-720 292 L-720 252 L-690 247 L-649 237 L-621 238 L-580 252 L-547 254 L-506 240 L-465 246 L-435 253 L-405 227 L-363 246 L-337 235 L-309 256 L-282 250 L-256 229 L-222 243 L-184 233 L-145 246 L-105 223 L-75 227 L-46 261 L-5 253 L34 231 L69 245 L107 239 L146 239 L182 235 L208 228 L239 234 L275 223 L304 233 L336 237 L370 251 L398 243 L439 258 L467 246 L497 261 L536 231 L565 260 L592 247 L628 240 L662 242 L689 250 L717 258 L744 224 L783 250 L817 256 L844 223 L880 249 L910 226 L948 247 L990 247 L1019 237 L1061 251 L1080 292Z" fill="url(#cHill2)"/>
+    <path d="M-720 306 L-720 263 L-681 269 L-648 252 L-620 267 L-578 251 L-548 267 L-519 256 L-486 256 L-444 249 L-403 272 L-368 275 L-336 262 L-306 254 L-266 254 L-235 250 L-201 257 L-160 251 L-124 250 L-84 268 L-55 270 L-27 251 L2 251 L45 272 L80 264 L111 249 L139 273 L173 251 L207 267 L237 272 L265 262 L308 261 L342 264 L382 271 L412 256 L444 271 L473 274 L505 255 L534 273 L574 249 L609 271 L653 275 L692 252 L736 259 L766 252 L797 252 L836 263 L876 270 L904 265 L942 276 L973 270 L1015 268 L1045 267 L1080 306Z" fill="url(#cHill)"/>
+    <path d="M-720 286 Q-600 274 -480 284 T-240 280 T0 286 Q60 274 120 284 T240 280 T360 284 T600 280 T1080 284 V1300 H-720Z" fill="url(#cGround)"/>${crat}${rocks}
     <path d="${ROADS}" stroke="#1a1424" stroke-width="9" fill="none" stroke-linecap="round" opacity=".6"/><path d="${ROADS}" stroke="#d0a8bc" stroke-width=".7" fill="none" stroke-dasharray="4 6" opacity=".5"/>
     <g class="rover"><animateMotion dur="26s" repeatCount="indefinite" rotate="auto" path="${roverPath}"/><rect x="-7" y="-5" width="14" height="6" rx="2" fill="#e6ecf1"/><rect x="-3" y="-8" width="6" height="3" rx="1" fill="#9fb0c4"/><circle cx="-5" cy="2" r="2" fill="#2a2e3a"/><circle cx="5" cy="2" r="2" fill="#2a2e3a"/><circle cx="7.5" cy="-3" r="1.3" fill="#fff3c0"/><path d="M8 -3 l14 -4 v8Z" fill="#fff3c0" opacity=".18"/></g>
     ${dust}${g}<g id="cfx"></g>
     <g class="drone"><animateMotion dur="18s" repeatCount="indefinite" path="M-20 300 C80 250 160 330 240 280 S380 300 400 270"/><ellipse cx="0" cy="0" rx="6" ry="2" fill="#c7cfd8"/><path d="M-8 -2h5M3 -2h5" stroke="#9aa4b2" stroke-width="1"/><circle cx="0" cy="1.5" r="1" fill="#5ff2d6" class="blink"/></g>
     </svg>`}
+/* camera: the colony opens zoomed out to fit; pinch, drag, mouse wheel or the +/- buttons move it */
+const cam={z:1,x:180,y:null};
+function camView(){const svg=$('cscene');if(!svg)return;const r=svg.getBoundingClientRect();if(!r.width||!r.height)return;
+  const W=460/cam.z,H=W*r.height/r.width,u=W/r.width,bottomPad=120*u,topPad=100*u;
+  if(cam.y==null){const lo=262-topPad+H/2,hi=640+bottomPad-H/2;cam.y=lo>hi?hi:Math.max(lo,Math.min(hi,(lo+hi)/2))}
+  const mnx=-110+W/2,mxx=470-W/2;cam.x=mnx>mxx?180:Math.max(mnx,Math.min(mxx,cam.x));
+  const mny=-260+H/2,mxy=900-H/2;cam.y=mny>mxy?(mny+mxy)/2:Math.max(mny,Math.min(mxy,cam.y));
+  svg.setAttribute('viewBox',`${(cam.x-W/2).toFixed(1)} ${(cam.y-H/2).toFixed(1)} ${W.toFixed(1)} ${H.toFixed(1)}`)}
+function camZoom(f,px,py){const svg=$('cscene');if(!svg)return;const r=svg.getBoundingClientRect(),W=460/cam.z,H=W*r.height/r.width;
+  const ux=cam.x-W/2+((px==null?r.width/2:px-r.left)/r.width)*W,uy=cam.y-H/2+((py==null?r.height/2:py-r.top)/r.height)*H;
+  const nz=Math.max(0.8,Math.min(3,cam.z*f)),k=cam.z/nz;cam.x=ux+(cam.x-ux)*k;cam.y=uy+(cam.y-uy)*k;cam.z=nz;camView()}
+let camDrag=false;
+function camBind(){const svg=$('cscene');if(!svg)return;const pts=new Map();let start=null,pinch=0;camDrag=false;
+  svg.addEventListener('pointerdown',e=>{pts.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pts.size===1){start={x:e.clientX,y:e.clientY,cx:cam.x,cy:cam.y};camDrag=false}if(pts.size===2){const [a,b]=[...pts.values()];pinch=Math.hypot(a.x-b.x,a.y-b.y)}});
+  svg.addEventListener('pointermove',e=>{if(!pts.has(e.pointerId))return;pts.set(e.pointerId,{x:e.clientX,y:e.clientY});const r=svg.getBoundingClientRect(),u=(460/cam.z)/r.width;
+    if(pts.size===2){const [a,b]=[...pts.values()],d=Math.hypot(a.x-b.x,a.y-b.y);if(pinch){camZoom(d/pinch,(a.x+b.x)/2,(a.y+b.y)/2)}pinch=d;camDrag=true;return}
+    if(start){const dx=e.clientX-start.x,dy=e.clientY-start.y;if(!camDrag&&Math.hypot(dx,dy)>8){camDrag=true;try{svg.setPointerCapture(e.pointerId)}catch(_){}}if(camDrag){cam.x=start.cx-dx*u;cam.y=start.cy-dy*u;camView()}}});
+  const up=e=>{pts.delete(e.pointerId);if(pts.size<2)pinch=0;if(!pts.size){start=null;setTimeout(()=>{camDrag=false},0)}};
+  svg.addEventListener('pointerup',up);svg.addEventListener('pointercancel',up);
+  svg.addEventListener('wheel',e=>{e.preventDefault();camZoom(e.deltaY<0?1.12:1/1.12,e.clientX,e.clientY)},{passive:false});
+  camView()}
+addEventListener('resize',()=>camView());
 /* floating "+n" over producing buildings, a ring burst on finished builds */
 function fxFloat(id,txt,col2){const L=$('cfx');if(!L||!SLOT[id])return;const [x,y]=SLOT[id],t=document.createElementNS('http://www.w3.org/2000/svg','text');
   t.setAttribute('x',x);t.setAttribute('y',y-58);t.setAttribute('text-anchor','middle');t.setAttribute('class','flt');t.setAttribute('fill',col2||'#fff');t.textContent=txt;L.appendChild(t);setTimeout(()=>t.remove(),1900)}
@@ -274,10 +296,11 @@ function renderColony(){const host=$('colony');if(!host)return;accrue();questChe
     h+=`<div class="cbuild"><span>🏗️ <b>${B.name}</b> ← ${col.b[col.build.id]+1}</span><span class="ct" data-t>${fmtDur(left)}</span><button class="btn" type="button" data-rush aria-label="إنهاء الآن">⚡ 💎 <span data-rc>${Math.max(1,Math.ceil(left/60))}</span></button><i><u data-p style="width:${pc}%"></u></i></div>`}
   if(Q)h+=`<button class="qt" type="button" data-to="${Q.go?'g:'+Q.go:'b:'+Q.b}"><span class="qi">🎯</span><b></b><span class="qr">${Object.entries(Q.r).map(([k,n])=>'+'+n+' '+RES[k][1]).join(' ')}</span><i class="qa" aria-hidden="true">‹</i></button>`;
   else h+=`<div class="qt"><span class="qi">🚀</span><b>الفصل الثاني قريباً</b></div>`;
-  h+='</div>';host.innerHTML=h;
+  h+='</div><div class="czoom"><button type="button" data-z="in" aria-label="تكبير">＋</button><button type="button" data-z="out" aria-label="تصغير">－</button><button type="button" data-z="fit" aria-label="عرض الكل">⤢</button></div>';host.innerHTML=h;
   if(Q)host.querySelector('.qt b').textContent=Q.t;
+  host.querySelectorAll('[data-z]').forEach(b=>b.onclick=()=>{snd('tap');const z=b.dataset.z;if(z==='fit'){cam.z=1;cam.x=180;cam.y=null;camView()}else camZoom(z==='in'?1.3:1/1.3)});camBind();
   bindActions(host);const rb=host.querySelector('[data-rush]');if(rb)rb.onclick=rush;
-  host.querySelectorAll('.cb').forEach(g=>{const go=()=>{snd('tap');g.classList.remove('tap');void g.getBoundingClientRect();g.classList.add('tap');openSheet(g.dataset.b)};g.onclick=go;g.onkeydown=e=>{if(e.key==='Enter')go()}});
+  host.querySelectorAll('.cb').forEach(g=>{const go=()=>{if(camDrag)return;snd('tap');g.classList.remove('tap');void g.getBoundingClientRect();g.classList.add('tap');openSheet(g.dataset.b)};g.onclick=go;g.onkeydown=e=>{if(e.key==='Enter')go()}});
   renderSheet();colSave();
   if(!col.intro){col.intro=1;colSave();storyBox('تحطّمت المركبة!','ابنِ المستعمرة وأصلح المركبة. كل فوز في الألعاب يجلب موارد.','لنبدأ')}
 }
