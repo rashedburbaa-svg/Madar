@@ -1,6 +1,6 @@
 /* ================= hub ================= */
 
-const GAMES=[SurviveGame,GridGame,SudokuGame,WordsGame,NonoGame,MinesGame,Game2048,GolfGame,DiffGame,MemoryGame];
+const GAMES=[SurviveGame,GridGame,WordsGame,MinesGame,DiffGame];
 function renderHub(){
   drawPrefs();drawRank();drawMissions();
   const k=todayKey(),doneToday=daily.done[k]||{},alive=daily.last===k||daily.last===yesterdayKey(),streak=alive?daily.streak:0;
@@ -18,18 +18,15 @@ function renderHub(){
   let sum=document.getElementById('dsum');if(!sum){sum=document.createElement('p');sum.id='dsum';sum.className='dsum';list.after(sum)}
   sum.textContent=nDone===DG.length?'👑 أنهيت كل تحديات اليوم! عُد غداً لتحديات جديدة.':`أنجزت ${nDone} من ${DG.length} تحديات اليوم`;
   $('dailyDot').hidden=nDone>0;
-  let total=0;const cards=$('cards');cards.innerHTML='';
-  GAMES.forEach(G=>{const p=G.progress();total+=p.stars;const c=document.createElement('button');c.type='button';c.className='gcard';
-    c.innerHTML=`<span class="gi">${G.icon}</span><b></b><small></small><span class="prog"><span>المستوى ${p.level}</span><em>★ ${p.stars}</em></span>`;
-    c.querySelector('b').textContent=G.name;c.querySelector('small').textContent=G.desc;c.onclick=()=>openGame(G);cards.appendChild(c)});
+  let total=0;GAMES.forEach(G=>{total+=G.progress().stars});renderColony();
   $('totalStars').textContent=total;
   const bs=$('badges');bs.innerHTML='';let got=0;
   ACH.forEach(([id,em,label])=>{const on=!!ach.got[id];if(on)got++;const el=document.createElement('div');el.className='badge'+(on?' got':'');el.innerHTML=`<span class="em">${em}</span><small></small>`;el.querySelector('small').textContent=label;bs.appendChild(el)});
   $('achCount').textContent=got+' من '+ACH.length;$('achBar').style.width=Math.round(got/ACH.length*100)+'%';
 }
-let hubTab='pGames';try{const t=localStorage.getItem('arcade-tab');if(['pDaily','pGames','pBadges'].includes(t))hubTab=t}catch(e){}
+let hubTab='pColony';try{const t=localStorage.getItem('arcade-tab');if(['pDaily','pColony','pBadges'].includes(t))hubTab=t}catch(e){}
 function showTab(id){hubTab=id;try{localStorage.setItem('arcade-tab',id)}catch(e){}
-  ['pDaily','pGames','pBadges'].forEach(p=>{$(p).hidden=p!==id});
+  ['pDaily','pColony','pBadges'].forEach(p=>{$(p).hidden=p!==id});if(id==='pColony')renderColony();
   document.querySelectorAll('#tabbar [role=tab]').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===id));scrollTo(0,0)}
 document.querySelectorAll('#tabbar [role=tab]').forEach(b=>b.onclick=()=>{if(b.dataset.tab!==hubTab)snd('tap');showTab(b.dataset.tab)});
 function openGame(G,m){

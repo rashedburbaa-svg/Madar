@@ -7,14 +7,14 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="قاعة المدار">
+<meta name="apple-mobile-web-app-title" content="مستعمرة المدار">
 <link rel="icon" href="../icon-192.png">
 <link rel="apple-touch-icon" href="../icon-192.png">
 <link rel="manifest" href="manifest.json">
 <script>if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));</script>
-<title>قاعة المدار</title>
+<title>مستعمرة المدار</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@500;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="style.css?v=ce9721db">
+<link rel="stylesheet" href="style.css?v=6f74c091">
 </head>
 <body style="padding-top:env(safe-area-inset-top,0px)">
 
@@ -22,7 +22,7 @@
 <div class="wrap" dir="rtl" lang="ar">
   <section id="hub" class="inner">
     <div class="hubhead">
-      <h1>قاعة <span>المدار</span></h1>
+      <h1>مستعمرة <span>المدار</span></h1>
       <div class="pill" title="مجموع نجومك"><svg viewBox="0 0 100 100"><path d="M50 6c5 28 16 39 44 44-28 5-39 16-44 44-5-28-16-39-44-44 28-5 39-16 44-44z"/></svg><span id="totalStars">0</span></div>
       <button class="tog" id="sndBtn" type="button" aria-label="الأصوات">🔊</button>
       <button class="tog" id="vibBtn" type="button" aria-label="الاهتزاز">📳</button>
@@ -33,9 +33,8 @@
       <div class="daily" id="daily"></div>
       <div class="missions" id="missions"></div>
     </div>
-    <div class="panel" id="pGames" role="tabpanel" aria-labelledby="tGames">
-      <p class="hubsub">ألعاب من مدار الفضاء بلا نهاية. كل مستوى أصعب من الذي قبله، وتقدّمك محفوظ دائماً.</p>
-      <div class="cards" id="cards"></div>
+    <div class="panel" id="pColony" role="tabpanel" aria-labelledby="tColony">
+      <div id="colony"></div>
     </div>
     <div class="panel" id="pBadges" role="tabpanel" aria-labelledby="tBadges">
       <div class="achhead"><b>أوسمتك</b><span id="achCount"></span></div>
@@ -46,7 +45,7 @@
 
   <section id="play" class="inner" hidden>
     <div class="topbar">
-      <button class="icon" id="back" type="button" aria-label="رجوع إلى القاعة"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+      <button class="icon" id="back" type="button" aria-label="رجوع إلى المستعمرة"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
       <h2 id="gTitle">لعبة</h2>
       <span class="tag" id="dailyTag" hidden>تحدي اليوم</span>
       <button class="icon" id="pauseBtn" type="button" aria-label="إيقاف مؤقت"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1.2"/><rect x="14" y="5" width="4" height="14" rx="1.2"/></svg></button>
@@ -59,15 +58,15 @@
     <p class="help" id="help"></p>
   </section>
 </div>
-<nav class="tabbar" id="tabbar" dir="rtl" lang="ar" role="tablist" aria-label="أقسام القاعة">
+<nav class="tabbar" id="tabbar" dir="rtl" lang="ar" role="tablist" aria-label="أقسام المستعمرة">
   <div class="tb">
+    <button type="button" role="tab" id="tColony" data-tab="pColony" aria-controls="pColony">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18"/><path d="M5 20v-5a7 7 0 0 1 14 0v5"/><path d="M12 8V4M10 4h4"/><path d="M9.5 20v-3h5v3"/></svg>
+      <span>المستعمرة</span>
+    </button>
     <button type="button" role="tab" id="tDaily" data-tab="pDaily" aria-controls="pDaily">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="M12 13.5l.9 1.8 2 .3-1.45 1.4.35 2-1.8-.95-1.8.95.35-2-1.45-1.4 2-.3z" fill="currentColor" stroke="none"/></svg>
       <span>التحديات اليومية</span><i class="dot" id="dailyDot" hidden></i>
-    </button>
-    <button type="button" role="tab" id="tGames" data-tab="pGames" aria-controls="pGames">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="11" rx="5"/><path d="M7 10.5v4M5 12.5h4"/><circle cx="15.5" cy="11.5" r="1" fill="currentColor"/><circle cx="18" cy="14" r="1" fill="currentColor"/></svg>
-      <span>الألعاب</span>
     </button>
     <button type="button" role="tab" id="tBadges" data-tab="pBadges" aria-controls="pBadges">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="6"/><path d="M8.5 13.9L7 22l5-3 5 3-1.5-8.1"/></svg>
@@ -77,18 +76,14 @@
 </nav>
 <div class="toast" id="toast" hidden></div>
 
-<script src="js/core.js?v=733a5ebe"></script>
+<script src="js/core.js?v=c4d1bdb8"></script>
 <script src="js/grid.js?v=2bf735d9"></script>
-<script src="js/sudoku.js?v=df80faae"></script>
-<script src="js/golf.js?v=0243faa4"></script>
 <script src="js/diff.js?v=d4f5f415"></script>
-<script src="js/memory.js?v=f899b8f0"></script>
-<script src="js/g2048.js?v=d8c423df"></script>
 <script src="js/mines.js?v=bcdcb64c"></script>
-<script src="js/nono.js?v=6f07825e"></script>
 <script src="js/words.js?v=e358dcc4"></script>
-<script src="js/survive.js?v=efbb9603"></script>
-<script src="js/hub.js?v=ab0791cd"></script>
+<script src="js/survive.js?v=81abb439"></script>
+<script src="js/colony.js?v=290c40d1"></script>
+<script src="js/hub.js?v=7c9cdd8f"></script>
 
 </body>
 </html>

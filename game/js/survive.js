@@ -484,7 +484,7 @@ const SurviveGame=(()=>{
     for(let k=0;k<30;k++){const a=Math.random()*6.28,s=60+Math.random()*160;parts.push({x:p.x,y:p.y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,l:0.8,col:'#3fd6c0'})}
     stats();
     const earned=crys+Math.floor(kills/5)+wave*2;st.crys=(st.crys||0)+earned;gSave('survive',st);
-    addXP(Math.floor(t/6)+bossKills*15);mission('survive',{time:t});
+    addXP(Math.floor(t/6)+bossKills*15);mission('survive',{time:t});if(typeof colonyReward==='function')colonyReward('survive',0,{time:t,boss:bossKills,kills});
     snd('err');buzz([40,40,80]);
     const show=()=>{const o=document.createElement('div');o.className='overlay';
       o.innerHTML='<h3></h3><p></p><p class="gain"></p><button class="btn main" type="button">جولة جديدة</button><button class="btn" type="button">🔬 مختبر المدار</button><button class="btn" type="button">رجوع إلى القاعة</button><button class="btn share" type="button">📤 مشاركة النتيجة</button>';

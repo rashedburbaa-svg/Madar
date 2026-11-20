@@ -88,11 +88,11 @@ function dailyDone(id){return (daily.done[todayKey()]||{})[id]}
 /* achievements */
 const ACH=[
   ['first','🎉','أول فوز'],['three','⭐','أول 3 نجوم'],['s50','🌟','50 نجمة'],['s150','💫','150 نجمة'],
-  ['grid10','🔗','الشبكة: المستوى 10'],['grid9','🧩','لوحة 9×9'],['wrap','🌀','أول شبكة ملتفّة'],['sud_clean','🧠','سودوكو بلا أخطاء'],
-  ['sud_fast','⚡','سودوكو في أقل من 5 دقائق'],['sud10','🔢','سودوكو: المستوى 10'],['ace','🏆','ضربة واحدة في الجولف'],['under','🐦','تحت البار'],['beat_cpu','🤖','فوز على الكمبيوتر في الجولف'],
-  ['eagle_eye','🦅','اختلافات بلا أخطاء'],['diff_fast','⏱️','اختلافات في أقل من دقيقة'],['memory','🃏','ذاكرة مثالية'],['mem_cpu','🧠','فوز على الكمبيوتر في الذاكرة'],['allfive','🎮','فوز في كل الألعاب'],
-  ['t2048','🔷','الوصول إلى 2048'],['mines_clean','☄️','حقل كويكبات بلا خسارة قلب'],['nono_clean','🖼️','نونوجرام بلا مساعدة'],['words_clean','📝','كلمات متقاطعة بلا أخطاء'],
+  ['grid10','🔗','الشبكة: المستوى 10'],['grid9','🧩','لوحة 9×9'],['wrap','🌀','أول شبكة ملتفّة'],
+  ['eagle_eye','🦅','اختلافات بلا أخطاء'],['diff_fast','⏱️','اختلافات في أقل من دقيقة'],['allfive','🎮','فوز في كل الألعاب'],
+  ['mines_clean','☄️','حقل كويكبات بلا خسارة قلب'],['words_clean','📝','كلمات متقاطعة بلا أخطاء'],
   ['surv2','🛡️','الصمود دقيقتين'],['surv5','⚔️','الصمود 5 دقائق'],['surv_boss','👹','هزيمة أول زعيم'],['surv_k1000','💀','1000 عدو في الصمود'],['surv_all_boss','🌌','هزيمة زعماء الكواكب الستة'],['surv_evo','✨','أول سلاح خارق بالدمج'],['surv_lab','🔬','إكمال كل تطويرات المختبر'],
+  ['col_hq5','🏛️','مركز القيادة: المستوى 5'],['col_all','🏗️','بناء كل المباني'],['col_ship','🚀','إصلاح المركبة'],
   ['daily1','📅','أول تحدي يومي'],['streak3','🔥','سلسلة 3 أيام'],['streak7','☄️','سلسلة 7 أيام'],['dailyall','👑','كل تحديات اليوم']
 ];
 const ach=load('arcade-ach',{got:{},won:{}});
@@ -113,6 +113,7 @@ function onWin(id,level,stars,info){
   if(id==='mines'&&info.lives===3)unlock('mines_clean');
   if(id==='nono'&&info.clean)unlock('nono_clean');
   if(id==='words'&&info.clean)unlock('words_clean');
+  if(typeof colonyReward==='function')colonyReward(id,stars,info);
   if(mode&&mode.daily){const k=todayKey();const first=!daily.done[k]||!Object.keys(daily.done[k]).length;
     daily.done[k]=daily.done[k]||{};daily.done[k][id]=Math.max(daily.done[k][id]||0,stars);
     if(first){daily.streak=daily.last===yesterdayKey()?daily.streak+1:daily.last===k?daily.streak:1;daily.last=k;daily.count++}
@@ -134,7 +135,7 @@ function drawRank(){const el=$('rank');if(!el)return;const i=rankOf(prof.xp),cur
 
 /* weekly missions: three per week, the same for the whole week, with an XP reward */
 function weekKey(d){d=d||new Date();const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const day=(t.getUTCDay()+1)%7;t.setUTCDate(t.getUTCDate()-day);return t.getUTCFullYear()*10000+(t.getUTCMonth()+1)*100+t.getUTCDate()}
-const GNAMES={grid:'شبكة المدار',sudoku:'سودوكو',words:'الكلمات المتقاطعة',nono:'نونوجرام',mines:'حقل الكويكبات',g2048:'2048',golf:'جولف المدار',diff:'أوجد الاختلاف',memory:'الذاكرة'};
+const GNAMES={survive:'صمود المدار',grid:'شبكة المدار',words:'الكلمات المتقاطعة',mines:'حقل الكويكبات',diff:'أوجد الاختلاف'};
 function missionsFor(wk){const R=rng(wk*31+7),games=Object.keys(GNAMES),G=games[Math.floor(R()*games.length)];
   const a=R()<0.5?{id:'wins',t:'اربح 12 مستوى في أي لعبة',n:12,xp:120}:{id:'stars3',t:'احصل على 3 نجوم في 6 مستويات',n:6,xp:140};
   const b={id:'game_'+G,t:`اربح 4 مستويات في ${GNAMES[G]}`,n:4,xp:120};
