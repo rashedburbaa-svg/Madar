@@ -247,6 +247,10 @@ const SurviveGame=(()=>{
   /* painted sprites (player's Gemini artwork); art faces left */
   const SPR={};function spr(k){if(typeof ART==='undefined'||!ART[k])return null;let im=SPR[k];if(!im){im=SPR[k]=new Image();im.src=ART[k]}return im.complete&&im.naturalWidth?im:null}
   const SPRK={grunt:'cre_alien',runner:'cre_bug',tank:'cre_beast',spitter:'cre_ufo'};
+  {const d0=draw;let lastT=performance.now();draw=function(){const now=performance.now(),dt=Math.min(0.1,(now-lastT)/1000);lastT=now;
+    if(shk>0&&!paused){shk-=dt;const a=shkA*Math.max(0,shk)/0.7;ctx.save();ctx.translate((Math.random()-.5)*a*2,(Math.random()-.5)*a*2);d0();ctx.restore()}else{shk=0;d0()}
+    if(FT.length){ctx.save();ctx.textAlign='center';ctx.lineJoin='round';for(let i=FT.length-1;i>=0;i--){const f=FT[i];if(!paused){f.l-=dt;f.y-=dt*28}if(f.l<=0){FT.splice(i,1);continue}
+      ctx.globalAlpha=Math.min(1,f.l*2.5);ctx.font=`900 ${f.big?15:11}px system-ui,sans-serif`;ctx.lineWidth=3;ctx.strokeStyle='rgba(0,0,0,.75)';ctx.strokeText(f.v,f.x,f.y);ctx.fillStyle=f.big?'#ffd34d':'#fff';ctx.fillText(f.v,f.x,f.y)}ctx.restore()}}}
   ['astro','cre_alien','cre_bug','cre_beast','cre_ufo','cre_blob','bg0','bg1','bg2','bg3','bg4','bg5'].forEach(k=>spr(k));
   function drawSprite(im,x,y,h,faceRight,flash,filt){const w=h*im.naturalWidth/im.naturalHeight;ctx.save();ctx.translate(x,y);if(faceRight)ctx.scale(-1,1);
     ctx.filter=(flash?'brightness(2.3) ':'')+(filt||'');if(ctx.filter==='')ctx.filter='none';ctx.drawImage(im,-w/2,-h*0.62,w,h);ctx.restore();ctx.filter='none'}
@@ -281,6 +285,7 @@ const SurviveGame=(()=>{
     if(e.flash>0){ctx.fillStyle='rgba(255,255,255,.75)';ctx.beginPath();ctx.arc(x,y,r*1.05,0,6.283);ctx.fill()}
   }
   function drawAstronaut(){
+    if(typeof Astro3D!=='undefined'&&Astro3D.draw(ctx,p.x,p.y+p.r*0.6,p.r*4.4,p.aim,(p.stillT||0)<0.1,t,p.hurt,((CHARS[st.char]||CHARS.scout).visor||[])[0]))return;
     {const im=spr('astro');if(im){const a=p.aim,x=p.x,y=p.y,right=Math.cos(a)>=0,step=(p.stillT||0)<0.1?Math.abs(Math.sin(t*12))*-1.5:0;
       ctx.save();ctx.translate(x,y+step);if(!right)ctx.scale(-1,1);ctx.filter=p.hurt>0?'sepia(1) saturate(4) hue-rotate(-40deg)':'none';const h=p.r*3.4,w=h*im.naturalWidth/im.naturalHeight;ctx.drawImage(im,-w/2,-h*0.66,w,h);ctx.restore();ctx.filter='none';
       ctx.strokeStyle='#3a4652';ctx.lineWidth=4;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(x+Math.cos(a)*4,y+Math.sin(a)*4);ctx.lineTo(x+Math.cos(a)*17,y+Math.sin(a)*17);ctx.stroke();
@@ -360,7 +365,9 @@ const SurviveGame=(()=>{
     stage.appendChild(o);snd('win');buzz([20,30,40]);
   }
   function nearest(){let b=null,bd=1e9;for(const e of en){if(e.under>0)continue;if(e.x<-5||e.x>W+5||e.y<-5||e.y>H+5)continue;const d=(e.x-p.x)**2+(e.y-p.y)**2;if(d<bd){bd=d;b=e}}return b}
-  function hurt(e,d){e.hp-=d;e.flash=0.08;if(e.hp<=0&&!e.dead)kill(e)}
+  const FT=[];let shk=0,shkA=0;function shake(a,d){if(a>=shkA*shk/Math.max(.01,d)){shkA=a;shk=d}}
+  function hurt(e,d){e.hp-=d;e.flash=0.08;e.acc=(e.acc||0)+d;if(!e.accT||t-e.accT>0.28||e.hp<=0){if(e.acc>=1&&FT.length<45)FT.push({x:e.x+(Math.random()-.5)*8,y:e.y-e.r,v:Math.round(e.acc),l:0.8,big:e.acc>=40||e.boss});e.acc=0;e.accT=t}
+    if(e.hp<=0&&!e.dead){if(e.boss)shake(9,0.7);else if(e.elite)shake(4,0.25);kill(e)}}
   function kill(e){
     e.dead=true;kills++;st.totalKills=(st.totalKills||0)+1;if(ch&&ch.type==='kill')ch.prog++;
     for(let k=0;k<(e.boss?40:11);k++){const a=Math.random()*6.28,s=40+Math.random()*150;parts.push({x:e.x,y:e.y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,l:0.35+Math.random()*0.35,col:k%4?e.col:'#fff',s:1.2+Math.random()*2.6})}parts.push({x:e.x,y:e.y,vx:0,vy:0,l:0.22,col:'#ffffff',s:e.r*1.3,pop:1})
@@ -383,7 +390,7 @@ const SurviveGame=(()=>{
   }
   function hitP(d){if(buff.shield>0||p.inv>0)return false;
     if(p.bar){p.bar=0;p.barT=Math.max(4,12-2*(lv.barrier||0));p.inv=0.8;rings.push({x:p.x,y:p.y,r:0,R:42,l:0.3});snd('rot');buzz(20);return false}
-    p.hp-=d*(1-Math.min(0.5,0.1*(lv.armor||0)));p.hurt=0.15;feel();return true}
+    p.hp-=d*(1-Math.min(0.5,0.1*(lv.armor||0)));p.hurt=0.15;if(d>6)shake(Math.min(6,d/3),0.18);feel();return true}
   function update(dt){
     t+=dt;waveT+=dt;
     // movement: joystick or keyboard
