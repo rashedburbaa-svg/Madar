@@ -86,7 +86,7 @@ function imgArt(id,L){const r=ART[id+'R']||1,w=(60+Math.min(10,L)*2.4)*Math.sqrt
   let s=`<ellipse cx="0" cy="4" rx="${(w*0.46).toFixed(1)}" ry="${(w*0.12).toFixed(1)}" fill="#000" opacity=".35"/>`;
   if(L>=4)s+=`<ellipse cx="0" cy="0" rx="${(w*0.5).toFixed(1)}" ry="${(w*0.16).toFixed(1)}" fill="none" stroke="${L>=10?'#ffd34d':L>=7?'#c58bff':'#5ff2d6'}" stroke-width="2" opacity=".75" class="aura"/>`;
   s+=`<image href="${ART[id]}" x="${(-w/2).toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" preserveAspectRatio="xMidYMax meet"${hue?` style="filter:hue-rotate(${hue}deg) saturate(1.15)"`:''}/>`;
-  if(L>=10)s+=`<path d="M-6 ${(y+4).toFixed(1)} L0 ${(y-40).toFixed(1)} L6 ${(y+4).toFixed(1)}z" fill="#ffd34d" opacity=".35" class="beam"/>`;
+  if(L>=10)s+=`<g class="beam"><circle cx="0" cy="${(y+2).toFixed(1)}" r="9" fill="#ffd34d" opacity=".25"/><path d="M0 ${(y-8).toFixed(1)} l2.2 7.8 7.8 2.2 -7.8 2.2 -2.2 7.8 -2.2 -7.8 -7.8 -2.2 7.8 -2.2z" fill="#fff6c8"/></g>`;
   return s}
 
 /* ---------- painted creatures (player's Gemini artwork); art faces left, so mirror to the game's right-facing default ---------- */
@@ -102,3 +102,6 @@ function towerImg(tier){const w=24,h=w/ART.x_towerR,hue=tier==='plasma'?235:tier
 
 /* ---------- the colony backs you up in «صمود المدار» ---------- */
 function survBonus(){const b=col.b;return {dmg:Math.min(60,4*(b.def||0)+2*(b.tower||0)),hp:Math.min(120,8*(b.habitat||0)+4*(b.wall||0)),rate:Math.min(40,3*(b.solar||0))}}
+
+/* the tower card/list icon uses the painted tower too */
+if(typeof ART!=='undefined'&&ART.x_tower){ART.tower=ART.x_tower;ART.towerR=ART.x_towerR}
