@@ -27,11 +27,18 @@ const IC={
 /* settings, sound, vibration */
 const prefs=load('arcade-prefs',{sound:true,vibe:true,aim:true});
 let AC=null;
+/* real recorded effects (CC0, Kenney) decoded once, synth tones stay as fallback */
+const SFXB={},sfxLast={};let sfxLoading=false,sfxHold=0;
+const SFXVOL={laser:.16,plasma:.2,strike:.4,boom:.3,bigboom:.6,build:.5,done:.5,coin:.35,alarm:.45,meteor:.4,ok:.4,win:.5,ach:.5,err:.35};
+function sfxLoad(){if(sfxLoading||typeof SFXDATA==='undefined'||!AC)return;sfxLoading=true;
+  for(const [k,b64] of Object.entries(SFXDATA)){try{const bin=atob(b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);AC.decodeAudioData(u.buffer).then(b=>{SFXB[k]=b},()=>{})}catch(e){}}}
+function sfxPlay(k){const b=SFXB[k];if(!b)return false;const now=AC.currentTime,gap=(k==='laser'||k==='plasma')?0.09:0.05;if(sfxLast[k]&&now-sfxLast[k]<gap)return true;sfxLast[k]=now;
+  const s=AC.createBufferSource(),g=AC.createGain();g.gain.value=SFXVOL[k]||.4;s.buffer=b;if(k==='laser'||k==='boom')s.playbackRate.value=0.88+Math.random()*0.24;s.connect(g);g.connect(AC.destination);s.start();return true}
 function snd(type){
-  if(!prefs.sound)return;
-  try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();
+  if(!prefs.sound||sfxHold)return;
+  try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();sfxLoad();if(sfxPlay(type))return;
     const seqs={tap:[[620,.04]],rot:[[430,.04]],ok:[[660,.07],[880,.09]],win:[[523,.11],[659,.11],[784,.12],[1047,.25]],err:[[170,.16]],splash:[[260,.1],[150,.2]],hit:[[240,.03]],flip:[[700,.03]],sink:[[880,.07],[660,.07],[990,.18]],ach:[[784,.09],[1175,.09],[1568,.22]]};
-    let at=AC.currentTime;(seqs[type]||seqs.tap).forEach(([f,d])=>{const o=AC.createOscillator(),g=AC.createGain();o.type=type==='err'?'square':type==='splash'?'triangle':'sine';o.frequency.value=f;
+    if(!seqs[type]&&!['tap'].includes(type))return;let at=AC.currentTime;(seqs[type]||seqs.tap).forEach(([f,d])=>{const o=AC.createOscillator(),g=AC.createGain();o.type=type==='err'?'square':type==='splash'?'triangle':'sine';o.frequency.value=f;
       g.gain.setValueAtTime(.0001,at);g.gain.exponentialRampToValueAtTime(type==='err'?.08:.16,at+.012);g.gain.exponentialRampToValueAtTime(.0001,at+d);o.connect(g);g.connect(AC.destination);o.start(at);o.stop(at+d+.03);
       if(type!=='err'&&type!=='tap'&&type!=='hit'){const o2=AC.createOscillator(),g2=AC.createGain();o2.type='triangle';o2.frequency.value=f*2;g2.gain.setValueAtTime(.0001,at);g2.gain.exponentialRampToValueAtTime(.045,at+.015);g2.gain.exponentialRampToValueAtTime(.0001,at+d*1.4);o2.connect(g2);g2.connect(AC.destination);o2.start(at);o2.stop(at+d*1.4+.03)}
       at+=d*.85});
