@@ -19,11 +19,11 @@ function exStep(now){const dt=Math.min(0.05,(now-EX.last)/1000);EX.last=now;EX.r
   EX.x+=dx/d*sp;EX.y+=dy/d*sp;exPos();
   if(cam.z>1.05){cam.x+=(EX.x-cam.x)*0.08;cam.y+=(EX.y-30-cam.y)*0.08;camView()}
   EX.raf=requestAnimationFrame(exStep)}
-function exToggle(){EX.on=!EX.on;snd('tap');if(EX.on){EX.tx=null;toast('🧑‍🚀 المس الأرض لتمشي، والمس أي مبنى لتدخله');if(cam.z<1.5){const svg=$('cscene');cam.z=1.6;cam.x=EX.x;cam.y=EX.y-30;camView()}}else{EX.tx=null}
+function exToggle(){EX.on=!EX.on;snd('tap');if(EX.on){EX.tx=null;if(cam.z<1.5){const svg=$('cscene');cam.z=1.6;cam.x=EX.x;cam.y=EX.y-30;camView()}}else{EX.tx=null}
   const b=document.querySelector('.cexp');if(b)b.classList.toggle('on',EX.on);exDraw()}
 function exPoint(e){const svg=$('cscene'),pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;return pt.matrixTransform(svg.getScreenCTM().inverse())}
 // taps in explorer mode: a building → walk to its door then go in; open ground → walk there
-function exClick(e){if(!EX.on||camDrag)return;const t=e.target;if(!t.closest||!t.closest('#cscene'))return;if(t.closest('.cre,.bub,.trader'))return;
+function exClick(e){if(!EX.on||camDrag)return;const t=e.target;if(!t.closest||!t.closest('#cscene'))return;if(t.closest('.cre,.bub,.trader,.arkpad'))return;
   const cb=t.closest('.cb[data-b]');e.stopPropagation();e.preventDefault();
   if(cb){const id=cb.dataset.b;if(id==='wall'){exGo(...EXDOOR('hq').map((v,i)=>i?v+40:v));return}if(!(col.b[id]>0)){openSheet(id);return}const dd=EXDOOR(id);snd('tap');exGo(dd[0],dd[1],id);return}
   if(t.closest('.tow'))return;const p=exPoint(e);exGo(p.x,p.y)}
@@ -79,3 +79,32 @@ function enterB(id){if(!(col.b[id]>0))return;const B=BLD[id],L=col.b[id];snd('ok
   o.querySelector('[data-iu]').onclick=()=>{close();setTimeout(()=>openSheet(id),260)};const ic=o.querySelector('[data-ic]');if(ic)ic.onclick=()=>{collect(id);ic.remove();o.querySelectorAll('.ichips span').forEach(s=>{if(s.textContent.startsWith('📦 في'))s.textContent='📦 في المخزن 0'})};
   col.visits=col.visits||{};col.visits[id]=1;colSave();if(Object.keys(col.visits).length>=10&&typeof unlock==='function')unlock('explorer')}
 if(typeof ACH!=='undefined')ACH.push(['explorer','🚶','زيارة كل المباني من الداخل']);
+
+/* joystick: in explorer mode, drag anywhere on the map and the astronaut walks that way (like «صمود المدار»); the camera follows */
+const JOY={on:false,id:null,ox:0,oy:0,x:0,y:0,moved:false,raf:0,last:0,el:null,near:null};
+function joyEl(){if(!JOY.el){const d=document.createElement('div');d.className='cjoy';d.innerHTML='<i></i>';document.body.appendChild(d);JOY.el=d}return JOY.el}
+function joyDraw(){const d=joyEl();if(!JOY.on){d.hidden=true;return}d.hidden=false;d.style.left=JOY.ox+'px';d.style.top=JOY.oy+'px';
+  const dx=JOY.x-JOY.ox,dy=JOY.y-JOY.oy,L=Math.hypot(dx,dy),k=L>44?44/L:1;d.firstChild.style.transform=`translate(${dx*k}px,${dy*k}px)`}
+function inScene(e){return e.target&&e.target.closest&&e.target.closest('#cscene')&&!e.target.closest('.cre,.bub,.trader,.arkpad')}
+document.addEventListener('pointerdown',e=>{if(!EX.on||!inScene(e)||JOY.on)return;JOY.on=true;JOY.id=e.pointerId;JOY.ox=JOY.x=e.clientX;JOY.oy=JOY.y=e.clientY;JOY.moved=false;e.stopPropagation()},true);
+document.addEventListener('pointermove',e=>{if(!JOY.on||e.pointerId!==JOY.id)return;JOY.x=e.clientX;JOY.y=e.clientY;e.stopPropagation();
+  if(!JOY.moved&&Math.hypot(JOY.x-JOY.ox,JOY.y-JOY.oy)>10){JOY.moved=true;EX.tx=null;EX.goal=null;exDraw();if(!JOY.raf){JOY.last=performance.now();JOY.raf=requestAnimationFrame(joyStep)}}if(JOY.moved)joyDraw()},true);
+const joyUp=e=>{if(!JOY.on||e.pointerId!==JOY.id)return;JOY.on=false;joyDraw();e.stopPropagation();if(JOY.moved){const b=$('cscene')&&$('cscene').querySelector('#pav .pavb');if(b)b.classList.remove('walk');setTimeout(()=>{JOY.moved=false},0);JOY.block=Date.now()}};
+document.addEventListener('pointerup',joyUp,true);document.addEventListener('pointercancel',joyUp,true);
+// a drag must not count as a tap
+document.addEventListener('click',e=>{if(EX.on&&JOY.block&&Date.now()-JOY.block<350&&inScene(e)){e.stopPropagation();e.preventDefault()}},true);
+function joyStep(now){const dt=Math.min(0.05,(now-JOY.last)/1000);JOY.last=now;JOY.raf=0;if(!EX.on||!JOY.on||!JOY.moved)return;
+  const dx=JOY.x-JOY.ox,dy=JOY.y-JOY.oy,L=Math.hypot(dx,dy);
+  if(L>6){const k=Math.min(1,L/44),sp=115*k*dt;let nx=EX.x+dx/L*sp,ny=EX.y+dy/L*sp;
+    if(!exInside(nx,ny)){const a=Math.atan2((ny-FEN.cy)/FEN.ry,(nx-FEN.cx)/FEN.rx);nx=FEN.cx+Math.cos(a)*FEN.rx*0.92;ny=FEN.cy+Math.sin(a)*FEN.ry*0.92}
+    EX.x=nx;EX.y=ny;if(Math.abs(dx)>2)EX.dir=dx<0?-1:1;exPos();const b=$('cscene')&&$('cscene').querySelector('#pav .pavb');if(b)b.classList.add('walk');
+    cam.x+=(EX.x-cam.x)*0.12;cam.y+=(EX.y-30-cam.y)*0.12;camView()}
+  exNear();JOY.raf=requestAnimationFrame(joyStep)}
+// standing at a door shows an «enter» button
+function exNear(){let best=null,bd=34;for(const id of Object.keys(SLOT)){if(id==='wall'||id==='tower'||!(col.b[id]>0))continue;const d=EXDOOR(id),dist=Math.hypot(d[0]-EX.x,d[1]-EX.y);if(dist<bd){bd=dist;best=id}}
+  if(best===JOY.near)return;JOY.near=best;let b=document.querySelector('.center');if(!best){if(b)b.hidden=true;return}
+  if(!b){b=document.createElement('button');b.type='button';b.className='center';document.body.appendChild(b);b.onclick=()=>{const id=JOY.near;if(!id)return;if(typeof doorOpen==='function')doorOpen(id);snd('ok');setTimeout(()=>enterB(id),400)}}
+  b.hidden=false;b.textContent='🚪 ادخل '+BLD[best].name}
+{const _st=exStep;exStep=function(now){_st(now);exNear()}}
+{const _tg=exToggle;exToggle=function(){_tg();if(!EX.on){JOY.near=null;const b=document.querySelector('.center');if(b)b.hidden=true}else{exNear();toast('🕹️ اسحب إصبعك على الخريطة لتحريك رائدك، أو المس مبنى لتدخله')}}}
+setInterval(()=>{const b=document.querySelector('.center');if(b&&!b.hidden&&(!EX.on||$('hub').hidden||$('pColony').hidden||$('interior'))){b.hidden=true;JOY.near=null}},700);

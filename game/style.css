@@ -884,3 +884,22 @@ canvas.pcv{margin:0 auto;background:#050816}
 .pgcols{display:grid;grid-template-columns:1fr 1fr;gap:8px}.pgcols>div,.pgnext{background:#ffffff0c;border:1px solid #ffffff1c;border-radius:12px;padding:8px 10px}
 .pgcard ul{margin:4px 0 0;padding-inline-start:16px}.pgnext{border-color:#ffd34d55;background:#ffd34d10}
 .pgreq{display:flex;gap:6px;flex-wrap:wrap}.pgreq span{border-radius:999px;padding:4px 10px;background:#ff5d7322;border:1px solid #ff5d7355}.pgreq span.ok{background:#5ff2d622;border-color:#5ff2d655}
+.cjoy{position:fixed;z-index:30;width:88px;height:88px;margin:-44px 0 0 -44px;border-radius:50%;border:2px solid #ffffff55;background:#ffffff10;pointer-events:none}
+.cjoy i{position:absolute;left:50%;top:50%;width:36px;height:36px;margin:-18px 0 0 -18px;border-radius:50%;background:#ffffff66;box-shadow:0 0 12px #5ff2d6}
+.center{position:fixed;z-index:31;left:50%;bottom:150px;transform:translateX(-50%);background:linear-gradient(135deg,#ffd34d,#ff9a3c);color:#2a1a00;border:0;border-radius:999px;padding:10px 18px;font:inherit;font-weight:900;font-size:15px;box-shadow:0 4px 16px #0008;animation:pgGlow 1.6s ease-in-out infinite}
+/* ark ship */
+.arkpad{cursor:pointer}.arkglow{animation:iLight .5s ease-in-out infinite alternate}
+.arkl{display:flex;flex-direction:column;gap:6px;margin-top:4px}.arkr{display:flex;align-items:center;gap:8px;background:#ffffff0c;border:1px solid #ffffff1c;border-radius:12px;padding:6px 8px}
+.arkr.done{border-color:#5ff2d655;background:#5ff2d612}.arkr .ae{font-size:22px}.arkr .an{flex:1;display:flex;flex-direction:column}.arkr .an small{opacity:.8;font-size:11.5px}.arkr .btn{min-width:84px}
+.flight{position:fixed;inset:0;z-index:90;background:#02040c;overflow:hidden;display:grid;place-items:center}
+.fstars{position:absolute;inset:-50%;background-image:radial-gradient(2px 2px at 20% 30%,#fff,transparent),radial-gradient(1.5px 1.5px at 70% 60%,#fff,transparent),radial-gradient(1px 1px at 40% 80%,#fff,transparent),radial-gradient(2px 2px at 85% 15%,#9fe8ff,transparent),radial-gradient(1px 1px at 10% 70%,#fff,transparent);background-size:180px 180px;animation:fStars .5s linear infinite}
+@keyframes fStars{to{transform:translateY(180px)}}
+.flight.arrive .fstars{animation-duration:3s}
+.fship{position:relative;width:150px;transform:rotate(-90deg);animation:fShip 3.2s ease-in forwards}.fship img{width:100%;display:block;filter:drop-shadow(0 0 12px #5ff2d6)}
+.fflame{position:absolute;right:100%;top:50%;width:70px;height:22px;margin-top:-11px;background:radial-gradient(ellipse at right,#fff 0,#ffd34d 30%,#ff6a2a 60%,transparent 75%);animation:fFlame .08s linear infinite alternate}
+@keyframes fFlame{from{transform:scaleX(.85)}to{transform:scaleX(1.15)}}
+@keyframes fShip{0%{transform:translateY(160px) rotate(-90deg) scale(.9)}20%{transform:translateY(120px) rotate(-90deg) scale(1)}100%{transform:translateY(-40px) rotate(-90deg) scale(1)}}
+.flight.arrive .fship{animation:fLand 1.8s ease-out forwards}@keyframes fLand{from{transform:translateY(-40px) rotate(-90deg)}to{transform:translateY(-120px) rotate(-90deg) scale(.35);opacity:.2}}
+.fplanet{position:absolute;bottom:-60vw;left:50%;width:30vw;height:30vw;margin-left:-15vw;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff8,var(--pc) 45%,#000 100%);box-shadow:0 0 60px var(--pc);opacity:0;transition:all 1.8s ease-out}
+.flight.arrive .fplanet{opacity:1;bottom:-50vw;width:140vw;height:140vw;margin-left:-70vw}
+.ftxt{position:absolute;top:18%;width:100%;text-align:center;color:#fff;font-size:22px;font-weight:900;text-shadow:0 2px 12px #000}
