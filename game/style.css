@@ -794,3 +794,15 @@ canvas.pcv{margin:0 auto;background:#050816}
 .plb.on{border-color:#5ff2d6;background:#5ff2d61a;box-shadow:0 0 10px #5ff2d633}.plb.lock img{filter:grayscale(.7) brightness(.8)}.plb:disabled{opacity:.5}
 .hg{max-height:180px}.overlay.pov{overflow:auto}
 .plb img.pic{width:100%;height:64px;object-fit:cover;border-radius:8px}.plb img.top{width:64px;height:64px;object-fit:contain}
+/* terraforming */
+.cterra{position:relative;background:linear-gradient(135deg,#2f8a5a,#2f6fd6);border:0;border-radius:999px;width:38px;height:38px;font-size:19px;color:#fff;box-shadow:0 2px 10px #0006}
+.cterra i{position:absolute;top:-4px;inset-inline-end:-4px;background:#ffd34d;color:#2a1a00;font-style:normal;font-size:10px;font-weight:900;border-radius:999px;min-width:16px;height:16px;display:grid;place-items:center}
+.tfti{background:#ffffff0c;border-radius:14px;padding:10px 12px;margin:6px 0 8px;display:flex;flex-direction:column;gap:3px}.tfti b{font-size:24px;color:#7ddc5a}.tfti small{opacity:.8}
+.tfti i{display:block;height:8px;background:#ffffff14;border-radius:99px;overflow:hidden}.tfti u{display:block;height:100%;background:linear-gradient(90deg,#d97a4a,#7ddc5a,#4aa6d0)}
+.tfgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:6px}.tfv{background:#ffffff0a;border-radius:10px;padding:6px 2px;text-align:center;display:flex;flex-direction:column}.tfv span{font-size:11px;opacity:.85}.tfv b{font-size:15px}.tfv small{font-size:10px;color:#7ddc5a}
+.tfm{display:flex;flex-direction:column;gap:6px;margin:8px 0}.tfr{display:flex;align-items:center;gap:8px;background:#ffffff0a;border-radius:12px;padding:8px}.tfr .te{font-size:24px}.tfr .tn{flex:1;display:flex;flex-direction:column}.tfr .tn small{opacity:.75;font-size:11px}.tfr .btn{width:auto;margin:0;padding:7px 10px;font-size:12px;flex:none}.tfr.lock{opacity:.55}
+.tfstages{display:flex;gap:4px;justify-content:center;margin-top:6px}.tfstages span{width:24px;height:24px;border-radius:50%;background:#ffffff12;display:grid;place-items:center;font-size:11px}.tfstages .got{background:#2f8a5a}.tfstages .cur{box-shadow:0 0 0 2px #ffd34d}
+.cscene .tfcloud{animation:tfdrift 60s linear infinite}@keyframes tfdrift{from{transform:translateX(-120px)}to{transform:translateX(220px)}}
+.cscene .tfshine{animation:auraP 3s ease-in-out infinite}
+.cscene .tftree{transform-box:fill-box;transform-origin:50% 100%;animation:tfsway 4s ease-in-out infinite alternate}@keyframes tfsway{to{transform:rotate(2.5deg)}}
+.cscene .tfbfly{animation:tffly 8s ease-in-out infinite alternate}@keyframes tffly{50%{transform:translate(var(--dx),-14px)}to{transform:translate(calc(var(--dx) * -1),6px)}}
