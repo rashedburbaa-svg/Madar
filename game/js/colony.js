@@ -11,8 +11,8 @@ const BLD={
   radio:{name:'برج الاتصالات',base:[150,120,40],req:2,prod:['c',0.6],desc:'يلتقط إشارات غامضة، وينتج قليلاً من الكريستال.'},
   obs:{name:'المرصد',base:[160,140,60],req:2,desc:'يدرس صور الكوكب بحثاً عن أرض خصبة وكنوز.'},
   def:{name:'منظومة الدفاع',base:[220,180,60],req:3,game:'survive',task:'صد غارة الكائنات',desc:'تحمي المستعمرة، وكل مستوى يزيد غنائم الغارات 20%.'},
-  tower:{name:'أبراج الدفاع',base:[160,140,40],req:2,desc:'أبراج على السور تقتل الوحوش؛ كل مستوى يضيف برجاً ويقوّي السلاح.'},
-  wall:{name:'السور',base:[90,70,20],desc:'يحمي المستعمرة من الكائنات، وكل مستوى يرفع الإنتاج 3%.'},
+  tower:{name:'أبراج الدفاع',base:[160,140,40],req:2,desc:'أبراج حول القبة تقتل الوحوش؛ كل مستوى يضيف برجاً ويقوّي السلاح.'},
+  wall:{name:'القبة الزجاجية',base:[90,70,20],desc:'قبة زجاجية تحمي المستعمرة من الكائنات، ترتفع مع كل تطوير حتى تكتمل في المستوى 10، وكل مستوى يرفع الإنتاج 3%.'},
   lab:{name:'المختبر',base:[220,200,90],req:3,desc:'أبحاث تقوّي الإنتاج والدفاع والبناء.'},
   dock:{name:'حوض الإصلاح',base:[250,200,80],req:2,game:'pilot',task:'دورية فضائية',desc:'هنا تُصلَح أجزاء المركبة لتنطلق من جديد.'}
 };
@@ -223,11 +223,14 @@ case 'def':{let s=_sh(30,8);
   if(L>=10)s+=`<path d="M-36 -2 A36 42 0 0 1 36 -2 Z" fill="url(#kShield)" stroke="#9fe8ff" stroke-width="1.6" stroke-opacity=".9" class="shieldarc"/><path d="M-4 -21 L-22 -32 M-3 -18 L-21 -29" stroke="#5a6575" stroke-width="3" stroke-linecap="round"/><path d="M-4 -21 L-22 -32 M-3 -18 L-21 -29" stroke="#c7cfd8" stroke-width="1.2" stroke-linecap="round"/>`;
   return s}
 case 'tower':{const t=tierOf(Math.max(1,L));return _sh(16,5)+_lattice(-9,18,-6,12,0,-34,4,'#aeb8c4')+_box(-11,-32,22,7,6)+`<g transform="translate(3 -44) rotate(-20) scale(1.5)">${HEAD[t]}</g>`+(L>=4?'<circle cx="-8" cy="-36" r="1.6" fill="#ff5d73" class="blink"/>':'')}
-case 'wall':{const st=fenceStyle(Math.max(1,L)),h=st.h*1.8;let s=_sh(40,6);
-  if(L>=3)s+=`<path d="M-36 0 L36 0 L36 ${-h} L-36 ${-h}Z" fill="${st.fill}" stroke="#2a2e3a" stroke-width=".6"/><path d="M-12 0 V${-h} M12 0 V${-h}" stroke="#3a4250" stroke-width=".6"/>`;else s+=`<path d="M-36 -5 H36 M-36 -10 H36" stroke="#b8c2cc" stroke-width="1"/>`;
-  for(const x of [-36,-12,12,36])s+=`<rect x="${x-2}" y="${-h-5}" width="4" height="${h+5}" fill="${st.post}"/><rect x="${x-2.6}" y="${-h-6.5}" width="5.2" height="2.2" fill="${st.cap}"/>`;
-  if(L>=6)s+=`<path d="M-36 ${-h-2} H36" stroke="#5ff2d6" stroke-width="1.6" class="efence"/>`;
-  if(L>=6)s+=`<g transform="translate(26 0)">${_lattice(-4,8,-3,6,0,-36,4,'#aeb8c4')}${_box(-6,-36,12,7,4)}<circle cx="0" cy="-46" r="2" fill="#ff5d73" class="blink"/></g>`;
+case 'wall':{const tm=Math.min(1,L/10)*Math.PI/2,R=40,Ry=11,H=50,P=(a,th)=>`${(R*Math.cos(th)*Math.cos(a)).toFixed(1)} ${(Ry*Math.cos(th)*Math.sin(a)-H*Math.sin(th)).toFixed(1)}`;let s=_sh(42,8),poly='',rib='',rim='';
+  for(let i=0;i<=24;i++)poly+=(i?'L':'M')+P(Math.PI*i/24,0);for(let i=24;i>=0;i--)poly+='L'+P(Math.PI*i/24,tm);for(let i=24;i>=0;i--)poly+='L'+P(Math.PI+Math.PI*i/24,tm);
+  for(let k=0;k<=8;k++){const a=Math.PI*k/8;rib+='M'+P(a,0);for(let j=1;j<=6;j++)rib+='L'+P(a,tm*j/6)}
+  for(let j=1;j<=Math.max(1,L);j++){const th=tm*j/Math.max(1,L);for(let i=0;i<=24;i++)rib+=(i?'L':'M')+P(Math.PI*i/24,th)}
+  for(let i=0;i<=48;i++)rim+=(i?'L':'M')+P(Math.PI*2*i/48,tm);
+  s+=`<path d="${poly}" fill="#bff3ff" fill-opacity=".28" stroke="none"/><path d="${rib}" fill="none" stroke="#e6fbff" stroke-width=".7" opacity=".8"/><ellipse cx="0" cy="0" rx="${R}" ry="${Ry}" fill="none" stroke="#8b96a6" stroke-width="3"/>`;
+  s+=L>=10?`<circle cx="0" cy="${-H-3}" r="2.6" fill="#ff5d73" class="blink"/>`:`<path d="${rim}" fill="none" stroke="#5ff2d6" stroke-width="1.6" class="efence"/>`;
+  if(L>=3)s+=`<path d="M${P(2.5,tm*0.15)} L${P(2.5,tm*0.85)}" stroke="#fff" stroke-opacity=".5" stroke-width="3" stroke-linecap="round"/>`;
   return s}
 case 'lab':return labArt(L);
 case 'dock':{const S=k=>col.ship[k],fly=col.done;let s=_sh(48,10);
@@ -258,10 +261,28 @@ const PRODB={mine:'m',solar:'e',farm:'f',radio:'c'};
 const FEN={cx:178,cy:468,rx:196,ry:180};
 const fp=a=>[FEN.cx+FEN.rx*Math.cos(a),FEN.cy+FEN.ry*Math.sin(a)];
 function fenceStyle(L){return L>=9?{h:14,fill:'url(#kWall)',post:'#c7cfd8',cap:'#9fe8ff'}:L>=6?{h:11,fill:'url(#kWall)',post:'#aeb8c4',cap:'#5ff2d6'}:L>=3?{h:9,fill:'url(#kPanel)',post:'#9aa4b2',cap:'#ffd34d'}:{h:7,fill:'none',post:'#8a93a2',cap:'#ffd34d'}}
+/* the protective glass dome: every level raises the glass higher until it closes over the colony at level 10 */
+const DOME_H=95;
+const dp=(a,th)=>[FEN.cx+FEN.rx*Math.cos(th)*Math.cos(a),FEN.cy+FEN.ry*Math.cos(th)*Math.sin(a)-DOME_H*Math.sin(th)];
+function domeSVG(half,L){const f=Math.min(1,L/10),tm=f*Math.PI/2*(L>=10?1:0.999),back=half==='back',a0=back?Math.PI:0,a1=back?Math.PI*2:Math.PI,NA=40,NL=Math.max(1,L),P=(a,th)=>dp(a,th).map(v=>v.toFixed(1)).join(' ');
+  let poly='';for(let i=0;i<=NA;i++)poly+=(i?'L':'M')+P(a0+(a1-a0)*i/NA,0);for(let i=NA;i>=0;i--)poly+='L'+P(a0+(a1-a0)*i/NA,tm);poly+='Z';
+  let rib='';for(let j=1;j<=NL;j++){const th=tm*j/NL;for(let i=0;i<=NA;i++)rib+=(i?'L':'M')+P(a0+(a1-a0)*i/NA,th)}
+  for(let k=0;k<16;k++){const a=a0+(a1-a0)*(k+0.5)/16;rib+='M'+P(a,0);for(let j=1;j<=8;j++)rib+='L'+P(a,tm*j/8)}
+  let rim='';for(let i=0;i<=NA;i++)rim+=(i?'L':'M')+P(a0+(a1-a0)*i/NA,tm);
+  let foot='';for(let i=0;i<=NA;i++)foot+=(i?'L':'M')+P(a0+(a1-a0)*i/NA,0);
+  let s=back?`<defs><linearGradient id="gDomeG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e8fbff" stop-opacity=".34"/><stop offset=".55" stop-color="#9fe8ff" stop-opacity=".16"/><stop offset="1" stop-color="#5ff2d6" stop-opacity=".22"/></linearGradient><linearGradient id="gDomeF" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity=".2"/><stop offset=".6" stop-color="#bff3ff" stop-opacity=".07"/><stop offset="1" stop-color="#9fe8ff" stop-opacity=".16"/></linearGradient></defs>`:'';
+  s+=`<g class="dome" pointer-events="none"><path d="${poly}" fill="url(#${back?'gDomeG':'gDomeF'})"/><path d="${rib}" fill="none" stroke="#d9f6ff" stroke-opacity="${back?.4:.5}" stroke-width="${back?.6:.8}"/>`;
+  s+=`<path d="${foot}" fill="none" stroke="#8b96a6" stroke-width="4"/><path d="${foot}" fill="none" stroke="#5ff2d6" stroke-width="1" opacity=".7"/>`;
+  if(L<10){s+=`<path d="${rim}" fill="none" stroke="#5ff2d6" stroke-width="2.2" class="efence"/>`;
+    if(!back)for(const a of [0.5,1.3,2.2,2.9]){const [x,y]=dp(a,tm);s+=`<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)})"><circle r="3.2" fill="#fff6c0" class="blink"/><path d="M-5 0H5M0 -5V5" stroke="#ffd34d" stroke-width="1" class="blink"/></g>`}}
+  else if(!back){const [x,y]=dp(0,Math.PI/2);s+=`<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)})"><ellipse rx="22" ry="7" fill="#aeb8c4" stroke="#5a6478"/><ellipse rx="12" ry="4" fill="#5ff2d6" opacity=".8" class="efence"/><rect x="-2" y="-16" width="4" height="12" fill="#aeb8c4"/><circle cy="-19" r="3.4" fill="#ff5d73" class="blink"/></g>`}
+  if(!back&&L>=3){let hl='';for(let j=0;j<=10;j++)hl+=(j?'L':'M')+P(2.45,tm*0.92*j/10);s+=`<path d="${hl}" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width="5" stroke-linecap="round"/>`}
+  return s+'</g>'}
 /* half = 'back' (upper arc, drawn behind the buildings) or 'front' (lower arc, drawn over them) */
 function fenceSVG(half){return tint(fenceRaw(half),col.b.wall||0)}
 function fenceRaw(half){const L=col.b.wall||0,N=44,gap=0.17,st=fenceStyle(L);let seg='',posts='',strand='',tow='';
   if(!L){let d='';for(let i=0;i<=N;i++){const a=i/N*Math.PI*2,[x,y]=fp(a),back=y<FEN.cy;if((half==='back')!==back)continue;d+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="1.2" fill="#9fe8ff" opacity=".45"/>`}return d}
+  seg=domeSVG(half,L);if(0)
   for(let i=0;i<N;i++){const a0=i/N*Math.PI*2,a1=(i+1)/N*Math.PI*2,mid=(a0+a1)/2;if(Math.abs(((mid-Math.PI/2+Math.PI*3)%(Math.PI*2))-Math.PI)<gap)continue;
     const [x0,y0]=fp(a0),[x1,y1]=fp(a1),back=(y0+y1)/2<FEN.cy;if((half==='back')!==back)continue;const h=st.h;
     if(L>=3)seg+=`<path d="M${x0.toFixed(1)} ${y0.toFixed(1)} L${x1.toFixed(1)} ${y1.toFixed(1)} L${x1.toFixed(1)} ${(y1-h).toFixed(1)} L${x0.toFixed(1)} ${(y0-h).toFixed(1)}Z" fill="${st.fill}" stroke="#2a2e3a" stroke-width=".4"/>`;
@@ -633,12 +654,12 @@ function chestBox(){const y=new Date();y.setDate(y.getDate()-1);const cont=col.d
 const raidsOn=()=>col.b.def>0||col.q>=10;
 const raidPower=()=>10+col.b.hq*10+5*(col.raidWins||0);
 const defPower=()=>col.b.wall*9+col.b.def*14+(col.b.tower||0)*12+crew();
-function raidPlan(from){const first=!col.raidN;col.raid={at:(from||Date.now())+(3+Math.random()*3)*3600000,str:Math.round(raidPower()*(0.85+Math.random()*0.35)*(first?0.5:1)),mine:0,first};colSave();if(first)setTimeout(()=>toast('🤖 نجم: أول غارة ستكون ضعيفة — جهّز السور والأبراج','ach'),1500)}
+function raidPlan(from){const first=!col.raidN;col.raid={at:(from||Date.now())+(3+Math.random()*3)*3600000,str:Math.round(raidPower()*(0.85+Math.random()*0.35)*(first?0.5:1)),mine:0,first};colSave();if(first)setTimeout(()=>toast('🤖 نجم: أول غارة ستكون ضعيفة — جهّز القبة والأبراج','ach'),1500)}
 function raidCheck(){if(!raidsOn())return;if(!col.raid)raidPlan();const now=Date.now();
   if(now>=col.raid.at){const R=col.raid,won=R.mine||defPower()>=R.str;let txt;
     col.raidN=(col.raidN||0)+1;if(won)col.raidWins=(col.raidWins||0)+1;
-    if(won){const c=5+col.b.hq+(R.mine?10:0),mm=Math.round(R.str*6);gain('c',c);gain('m',mm);txt=(R.mine?'صددت الغارة بنفسك! ':'السور والدفاع صدّا الغارة! ')+`+${c} 💎 +${mm} ⛏️`;if(R.mine)unlock&&0}
-    else{const lost={};for(const k of 'mef'){lost[k]=Math.floor(col.res[k]*0.12);col.res[k]-=lost[k]}txt=`اخترقت الكائنات السور وسرقت: ${Object.entries(lost).map(([k,n])=>'-'+fmtN(n)+' '+RES[k][1]).join(' ')}. طوّر السور والدفاع.`}
+    if(won){const c=5+col.b.hq+(R.mine?10:0),mm=Math.round(R.str*6);gain('c',c);gain('m',mm);txt=(R.mine?'صددت الغارة بنفسك! ':'القبة والدفاع صدّا الغارة! ')+`+${c} 💎 +${mm} ⛏️`;if(R.mine)unlock&&0}
+    else{const lost={};for(const k of 'mef'){lost[k]=Math.floor(col.res[k]*0.12);col.res[k]-=lost[k]}txt=`اخترقت الكائنات القبة وسرقت: ${Object.entries(lost).map(([k,n])=>'-'+fmtN(n)+' '+RES[k][1]).join(' ')}. طوّر القبة والدفاع.`}
     col.raidLog={won,txt,seen:0};raidPlan(now);colSave()}}
 function raidSoon(){return raidsOn()&&col.raid&&!col.raid.mine&&col.raid.at-Date.now()<20*60000}
 function raidShow(){const L=col.raidLog;if(!L||L.seen)return;L.seen=1;colSave();const m=storyBox(L.won?'🛡️ صددنا الغارة':'⚠️ غارة ناجحة',L.txt,'حسناً');if(L.won)celebrate(m.querySelector('.hbox'));else{snd('err');buzz([60,40,60])}}

@@ -9,7 +9,7 @@ function renderHub(){
   drawPrefs();drawRank();drawMissions();
   const d=$('daily'),sv=gState('survive')||{},best=col.surv||0,hero=typeof ART!=='undefined'&&ART.splash?`<img class="svhero" src="${ART.splash}" alt="">`:'';
   const bonus=typeof survBonus==='function'?survBonus():null;
-  d.innerHTML=`<div class="svcard">${hero}<div class="svbody"><h2>صمود المدار</h2><p>اخرج من السور وواجه موجات الكائنات. كل ثانية صمود تجلب موارد للمستعمرة.</p>
+  d.innerHTML=`<div class="svcard">${hero}<div class="svbody"><h2>صمود المدار</h2><p>اخرج من القبة وواجه موجات الكائنات. كل ثانية صمود تجلب موارد للمستعمرة.</p>
     <div class="svstats"><span><b>${fmtTime?fmtTime(best):best}</b><small>أطول صمود</small></span><span><b>${col.skills||0}</b><small>أكثر قتلى</small></span><span><b>${col.sboss||0}</b><small>زعماء</small></span><span><b>${col.sruns||0}</b><small>جولات</small></span></div>
     ${bonus?`<div class="svbonus">🏗️ دعم المستعمرة: <b>+${bonus.dmg}%</b> ضرر · <b>+${bonus.hp}</b> صحة · <b>+${bonus.rate}%</b> سرعة إطلاق</div>`:''}
     <button class="btn main svplay" type="button">⚔️ ابدأ جولة</button></div></div>

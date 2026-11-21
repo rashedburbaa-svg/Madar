@@ -43,7 +43,7 @@ function specApply(){const k=col.tspec;if(!k||(col.b.tower||0)<4)return;
   if(gh)s+=`<g class="ghost gtowers">${tint(gh,Math.max(1,L)).replace(/class="tow/g,'class="gtow')}</g>`;return s}}
 
 /* ---------- planet hazards and guardians ---------- */
-const HAZ=[{b:'wall',L:3,t:'عواصف رملية',need:'السور 3'},{b:'lab',L:3,t:'ضغط الأعماق',need:'المختبر 3'},{b:'farm',L:5,t:'أبواغ سامّة',need:'المزرعة 5'},{b:'solar',L:6,t:'برد قارس',need:'الطاقة 6'},{b:'def',L:6,t:'حمم متطايرة',need:'الدفاع 6'},{b:'hq',L:8,t:'حقل الجاذبية',need:'القيادة 8'}];
+const HAZ=[{b:'wall',L:3,t:'عواصف رملية',need:'القبة 3'},{b:'lab',L:3,t:'ضغط الأعماق',need:'المختبر 3'},{b:'farm',L:5,t:'أبواغ سامّة',need:'المزرعة 5'},{b:'solar',L:6,t:'برد قارس',need:'الطاقة 6'},{b:'def',L:6,t:'حمم متطايرة',need:'الدفاع 6'},{b:'hq',L:8,t:'حقل الجاذبية',need:'القيادة 8'}];
 const GUARD=[{n:'عقرب زيرون',h:-30},{n:'أخطبوط الأعماق',h:170},{n:'حارس الغابة',h:90},{n:'عملاق الجليد',h:200},{n:'تنين الحمم',h:-60},{n:'ظل النواة',h:250}];
 const hazOk=i=>(col.b[HAZ[i].b]||0)>=HAZ[i].L;
 {const _claim=expClaim;expClaim=function(){const x=col.exp;if(!x||Date.now()<x.end)return _claim();const i=x.i,first=!col.gal.done[i],ok=hazOk(i);
