@@ -14,7 +14,6 @@ const artCount=()=>Object.keys(col.gal.art||{}).length;
 const planetOpen=i=>i===0||!!col.gal.done[i-1];
 function expStart(i){if(col.exp){toast('🚀 المركبة في رحلة');return}if(!planetOpen(i)){toast('🔒 زر الكوكب السابق أولاً');return}
   const P=PLANETS[i];col.exp={i,end:Date.now()+P.t*1000,len:P.t};colSave();snd('win');buzz([20,40,60]);toast('🚀 انطلقت المركبة نحو '+P.n,'ach');renderColony();galaxyBox()}
-function expTick(){const x=col.exp;if(!x||Date.now()<x.end)return false;return true}
 function expClaim(){const x=col.exp;if(!x||Date.now()<x.end)return;const P=PLANETS[x.i],first=!col.gal.done[x.i],k=1+0.08*col.b.hq;
   const got=Object.entries(P.r).map(([r,n])=>[r,Math.round(n*(first?1.5:1)*(r==='c'?1:k))]);got.forEach(([r,n])=>gain(r,n));
   col.gal.done[x.i]=(col.gal.done[x.i]||0)+1;if(first)col.gal.art[x.i]=1;col.exp=null;addXP(first?80:30);colSave();

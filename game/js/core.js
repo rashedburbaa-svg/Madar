@@ -75,24 +75,15 @@ function celebrate(host){
       if(T<1.8&&c.isConnected)requestAnimationFrame(step);else c.remove()};requestAnimationFrame(step)}catch(e){}
 }
 
-function loseBox({title,text,onRetry}){
-  try{if(typeof col!=='undefined'&&col.streak&&active&&col.streak[active.id]){col.streak[active.id]=0;save('arcade-colony',col)}}catch(e){}
-  snd('err');buzz([40,40,80]);const o=document.createElement('div');o.className='overlay';
-  o.innerHTML='<h3></h3><p></p><button class="btn main" type="button">حاول مرة أخرى</button><button class="btn" type="button">رجوع إلى القاعة</button>';
-  o.querySelector('h3').textContent=title;o.querySelector('p').textContent=text;const [b1,b2]=o.querySelectorAll('button');
-  b1.onclick=()=>{o.remove();onRetry()};b2.onclick=()=>{o.remove();goHub()};setTimeout(()=>{stage.appendChild(o);b1.focus()},400);
-}
 /* progress */
 function gState(id,extra){return load('arcade-'+id,Object.assign({level:1,best:1,stars:{}},extra||{}))}
 function gSave(id,st){save('arcade-'+id,st)}
 function starTotal(st){return Object.values(st.stars||{}).reduce((a,b)=>a+b,0)}
-function allStars(){return GAMES.reduce((a,G)=>a+starTotal(gState(G.id)),0)}
 
 /* daily */
 function todayKey(d){d=d||new Date();return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate()}
 function yesterdayKey(){const d=new Date();d.setDate(d.getDate()-1);return todayKey(d)}
 const daily=load('arcade-daily',{streak:0,last:0,done:{},count:0});
-function dailyDone(id){return (daily.done[todayKey()]||{})[id]}
 
 /* achievements */
 const ACH=[
@@ -163,12 +154,6 @@ async function shareResult(o){
     const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='madar.png';document.body.appendChild(a);a.click();a.remove();toast('حُفظت الصورة في التنزيلات')
   }catch(e){if(e&&e.name!=='AbortError')toast('تعذّرت المشاركة')}}
 /* record + next */
-function finishLevel(G,st,level,stars,info,title,text){
-  if(mode&&mode.daily){onWin(G.id,level,stars,info);winBox({title,text,stars,label:'رجوع إلى القاعة',onNext:goHub});return}
-  st.stars[level]=Math.max(st.stars[level]||0,stars);st.level=Math.max(st.level,level+1);st.best=Math.max(st.best,level+1);gSave(G.id,st);
-  onWin(G.id,level,stars,info);
-  winBox({title,text,stars,onNext:()=>G.play(level+1)});
-}
 /* level picker */
 function openPicker(){
   if(!active||(mode&&mode.daily))return;const st=gState(active.id);clearOverlays();

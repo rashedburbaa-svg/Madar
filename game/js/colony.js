@@ -64,8 +64,7 @@ function colonyReward(id,stars,info){const bid=GAMEOF[id];if(!bid)return;accrue(
     got=[['m',sc*0.12*k],['e',sc*0.1*k],['f',sc*0.06*k],['c',(info.crys||0)+Math.floor((info.wave||0)/2)]]}
   else if(id==='survive'){const t=info.time||0;if(t>=60&&raidSoon()){col.raid.mine=1;setTimeout(()=>toast('🛡️ صددت الغارة القادمة!','ach'),1800)}if(t<10)return;const d=1+0.2*col.b.def;col.surv=Math.max(col.surv||0,t);col.skills=Math.max(col.skills||0,info.kills||0);col.sboss=(col.sboss||0)+(info.boss||0);col.sruns=(col.sruns||0)+1;if(typeof dtask==='function')dtask('mission',1);
     got=[['m',t*1.4*d],['e',t*1.2*d],['f',t*0.9*d],['c',Math.floor(t/30)+(info.boss||0)*5]]}
-  else{col.wins[id]=(col.wins[id]||0)+1;if(typeof dtask==='function')dtask('mission',1);const base=(50+30*stars)*k;
-    got=id==='mines'?[['m',base*1.4],['c',stars]]:id==='grid'?[['e',base*1.4],['c',stars]]:id==='words'?[['c',2+2*stars],['f',base*0.6]]:[['f',base*1.2],['c',1+stars]]}
+  else return;
   if(id!=='survive'){if(!col.streak)col.streak={};col.streak[id]=(col.streak[id]||0)+1}const sk=id==='survive'?0:Math.min(5,(col.streak[id]||1)-1);
   got=got.map(([r,n])=>[r,Math.round(n*(1+0.1*sk))]).filter(x=>x[1]>0);got.forEach(([r,n])=>gain(r,n));colSave();questCheck();
   setTimeout(()=>toast((sk?`🔥×${sk+1} +${sk*10}% `:'')+got.map(([r,n])=>'+'+fmtN(n)+' '+RES[r][1]).join('  ')),900)}
@@ -427,7 +426,6 @@ function battleInit(){const svg=$('cscene');BT.cr=[];BT.tw=[];BT.shots=[];if(!sv
   svg.querySelectorAll('.wgun').forEach(el=>{const d=+el.dataset.deg,[x,y]=fp(d*Math.PI/180),h=fenceStyle(col.b.wall).h+5;BT.tw.push({x,y:y-h,head:el.querySelector('.thead'),tier:'gun',dmg:1,cd:d/180,rate:0.9,range:150,ox:0,oy:-h,ang:0})});
   crewInit(svg);specApply();
   if(!BT.raf){BT.last=performance.now();BT.raf=requestAnimationFrame(battleTick)}}
-function crPos(c,now){let u=((now/1000+c.off)/c.dur)%1;const fwd=u<0.5;u=fwd?u*2:2-u*2;const pt=c.p.getPointAtLength(u*c.len);return {x:pt.x,y:pt.y,fwd}}
 function svgEl(tag,attrs){const e=document.createElementNS('http://www.w3.org/2000/svg',tag);for(const k in attrs)e.setAttribute(k,attrs[k]);return e}
 /* a pack of the fallen returns together from one edge of the map */
 function spawnPack(list){const side=Math.floor(Math.random()*3);let px,py;for(let k=0;k<40;k++){px=side===0?-88:side===1?448:-80+Math.random()*520;py=side===2?760:330+Math.random()*420;if(okSpot('alien',px,py))break}
