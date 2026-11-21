@@ -821,3 +821,22 @@ canvas.pcv{margin:0 auto;background:#050816}
 .cshop{position:relative;background:linear-gradient(135deg,#7a4ad6,#d64a9a);border:0;border-radius:999px;width:38px;height:38px;font-size:19px;color:#fff;box-shadow:0 2px 10px #0006}
 .cshop.on{box-shadow:0 0 0 2px #ffd34d,0 2px 12px #ffd34d88}
 .cshop i{position:absolute;top:-4px;inset-inline-end:-4px;background:#ffd34d;color:#2a1a00;font-style:normal;font-size:10px;border-radius:999px;min-width:16px;height:16px;display:grid;place-items:center}
+/* living buildings */
+.bfx *{transform-box:fill-box;transform-origin:center}
+.fx-smk{opacity:0;animation:fxSmk 2.6s ease-out infinite}
+@keyframes fxSmk{0%{opacity:0;transform:translate(0,0) scale(.6)}15%{opacity:.85}100%{opacity:0;transform:translate(-10px,-34px) scale(2.4)}}
+.fx-bub{opacity:0;animation:fxBub 2.4s ease-in infinite}
+@keyframes fxBub{0%{opacity:0;transform:translateY(0)}20%{opacity:.9}100%{opacity:0;transform:translateY(-30px)}}
+.fx-win{animation:fxWin 3.4s steps(1) infinite}
+@keyframes fxWin{0%,100%{opacity:.95}40%{opacity:.25}55%{opacity:.95}80%{opacity:.5}}
+.fx-ping,.fx-sig{animation:fxPing 2.4s ease-out infinite}
+@keyframes fxPing{0%{opacity:.9;transform:scale(.5)}100%{opacity:0;transform:scale(3.2)}}
+.fx-glint{opacity:0;animation:fxGlint 4.5s ease-in-out infinite}
+@keyframes fxGlint{0%,55%{opacity:0;transform:skewX(-25deg) translateX(0)}65%{opacity:.6}85%{opacity:0;transform:skewX(-25deg) translateX(60px)}100%{opacity:0}}
+.fx-beam{transform-origin:50% 100%!important;animation:fxBeam 6s ease-in-out infinite alternate}
+@keyframes fxBeam{0%{transform:rotate(-28deg)}100%{transform:rotate(28deg)}}
+.fx-radar{transform-origin:0 100%!important;transform-box:fill-box;animation:fxRad 2.8s linear infinite}
+@keyframes fxRad{to{transform:rotate(-360deg)}}
+.fx-spark{opacity:0;animation:fxSpark 1.6s steps(1) infinite}
+@keyframes fxSpark{0%,100%{opacity:0}10%{opacity:1}20%{opacity:0}30%{opacity:1}38%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.bfx{display:none}}
