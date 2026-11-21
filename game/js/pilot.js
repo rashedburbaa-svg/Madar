@@ -19,7 +19,7 @@ const PilotGame=(function(){
     ['سحابة الجليد',[[70,150,200,'60,160,230'],[300,430,220,'40,200,220'],[200,610,170,'120,120,240']]],['قطاع الحرّاس',[[70,140,190,'60,200,120'],[300,420,230,'30,120,90'],[190,620,170,'170,220,80']]],['أطراف المجرة',[[60,160,200,'230,60,160'],[300,420,230,'120,40,200'],[200,620,170,'255,190,80']]]];
   let bgY=0,novaFx=0,bombs=0,combo=0,comboT=0,mult=1,lasers=[],sect=-1;
   const EN={scout:{hp:14,r:15,sc:60,px:64},diver:{hp:10,r:14,sc:70,px:60},bomber:{hp:60,r:24,sc:180,px:96},ufo:{hp:30,r:18,sc:120},mini:{hp:300,r:30,sc:600},cruiser:{hp:90,r:26,sc:260,px:96},mine:{hp:16,r:12,sc:50},rock:{hp:24,r:16,sc:40},boss:{hp:900,r:70,sc:3000,px:300}};
-  const DIFF={easy:{n:'سهل',em:'🟢',d:'للتجربة والاستمتاع',hp:0.7,dmg:0.55,fr:0.7,bs:0.8,rw:0.6},normal:{n:'متوسط',em:'🟡',d:'أعداء أقوى ونيران أكثف',hp:1.4,dmg:1.35,fr:1.3,bs:1.12,rw:1},hard:{n:'صعب',em:'🔴',d:'للمحترفين · مكافأة ×1.7',hp:2.1,dmg:2,fr:1.75,bs:1.3,rw:1.7}};
+  const DIFF={easy:{n:'سهل',em:'🟢',d:'للتجربة والاستمتاع',hp:0.85,dmg:0.7,fr:0.85,bs:0.9,rw:0.6,ex:0},normal:{n:'متوسط',em:'🟡',d:'أعداء أقوى ونيران كثيفة',hp:1.85,dmg:1.75,fr:1.6,bs:1.25,rw:1,ex:1},hard:{n:'صعب',em:'🔴',d:'للمحترفين · مكافأة ×2',hp:2.8,dmg:2.6,fr:2.1,bs:1.45,rw:2,ex:3}};
   const DF=()=>DIFF[(st&&st.diff)||'normal']||DIFF.normal;
   const diffHTML=()=>'<div class="diffs">'+Object.entries(DIFF).map(([k,v])=>`<button type="button" class="dfb${((st.diff||'normal')===k)?' on':''}" data-df="${k}"><b>${v.em} ${v.n}</b><small>${v.d}</small></button>`).join('')+'</div>';
   function reset(){const S=shipStats();P={x:W/2,y:H-100,r:13,hp:S.hull,max:S.hull,dm:S.dmg,wl:1+hl('start'),cd:0,mcd:0,inv:0,shield:hl('shield'),bank:0,vx:0,mag:70+25*hl('mag'),pw:0,rt:(1+0.06*hl('rate'))*plane().rate,spd:plane().spd,pl:plane(),dcd:0};bombs=2+hl('bomb');combo=0;comboT=0;mult=1;lasers=[];sect=-1;neb=null;
@@ -33,8 +33,8 @@ const PilotGame=(function(){
     banner={txt:boss?'⚠️ السفينة الأم!':'الموجة '+w,sub:boss?'اهزمها لتنقذ المدار':SECT[Math.max(0,sect)][0],l:2.4};
     if(boss){addQ(1.6,()=>spawnBoss());return}
     const pats=['line','v','divers','rocks'];if(w>=2)pats.push('bomber','ufo');if(w>=4)pats.push('swarm');if(w>=3)pats.push('mines');if(w>=6)pats.push('cruiser');
-    const n=3+Math.min(6,Math.floor(w/2));
-    for(let i=0;i<n;i++){const p=pats[Math.floor(Math.random()*pats.length)];addQ(at,()=>formation(p,w));at+=rnd(2.2,3.4)-Math.min(1.2,w*0.06)}
+    const n=4+Math.min(8,Math.floor(w/2))+(DF().ex||0);
+    for(let i=0;i<n;i++){const p=pats[Math.floor(Math.random()*pats.length)];addQ(at,()=>formation(p,w));at+=rnd(2,3.1)-Math.min(1.5,w*0.08)}
     addQ(at+2.2,()=>spawnMini(w))}
   /* a mini-boss closes every wave; the mothership takes waves 5, 10, 15… */
   const MINI=[{n:'الصقر الأحمر',spr:'scout',sc:3.3,hue:0,f:'spread'},{n:'ملك الصحون',img:'cre_ufo',sc:3.2,f:'ring'},{n:'الصخرة العملاقة',rock:1,sc:3.2,f:'split'},{n:'قائد الطرّادات',spr:'bomber',sc:2.6,hue:150,f:'laser'},{n:'النسر البرتقالي',spr:'diver',sc:3.4,hue:0,f:'dive'}];
@@ -46,7 +46,7 @@ const PilotGame=(function(){
     else if(M.f==='split'){for(let k=0;k<2;k++)mk('rock',e.x+(k?20:-20),e.y+20,{pat:'rock',vy:rnd(110,150),vx:(k?1:-1)*rnd(40,80),rot:rnd(-3,3),sz:rnd(.8,1.1)});eb.push({x:e.x,y:e.y,vx:Math.cos(a0)*170,vy:Math.sin(a0)*170,r:7,c:'#ffb070',big:1})}
     else if(M.f==='laser'){lasers.push({x:clamp(P.x,20,W-20),y:e.y+30,t:1.3});for(const s of [-1,1])eb.push({x:e.x+s*30,y:e.y+10,vx:s*40,vy:170,r:5,c:'#ff5df2'})}
     else if(M.f==='dive'){if(!e.dv){e.dv=1;e.dvx=e.x;e.dvy=e.y;e.tx=P.x;e.ty=P.y;e.dvT=0}for(let k=-1;k<=1;k++){const a=a0+k*0.15;eb.push({x:e.x,y:e.y,vx:Math.cos(a)*220,vy:Math.sin(a)*220,r:4,c:'#ffd34d'})}}}
-  function mk(k,x,y,o){const T=EN[k],hm=(1+0.12*(wave-1))*DF().hp;const e=Object.assign({k,x,y,vx:0,vy:60,hp:T.hp*hm,max:T.hp*hm,r:T.r,t:0,sc:T.sc,fire:rnd(1,2.5),ph:Math.random()*6},o||{});en.push(e);return e}
+  function mk(k,x,y,o){const T=EN[k],hm=(1+0.17*(wave-1))*DF().hp;const e=Object.assign({k,x,y,vx:0,vy:60,hp:T.hp*hm,max:T.hp*hm,r:T.r,t:0,sc:T.sc,fire:rnd(1,2.5),ph:Math.random()*6},o||{});en.push(e);return e}
   function formation(p,w){const sp=1+Math.min(0.8,w*0.05);
     if(p==='line'){const n=5;for(let i=0;i<n;i++)mk('scout',40+i*(W-80)/(n-1),-30-i*14,{pat:'sine',vy:70*sp,amp:40})}
     else if(p==='v'){for(let i=0;i<7;i++){const d=Math.abs(i-3);mk('scout',W/2+(i-3)*38,-30-d*30,{pat:'down',vy:85*sp})}}

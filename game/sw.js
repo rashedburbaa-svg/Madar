@@ -1,4 +1,4 @@
-const C='madar-v51';
+const C='madar-v52';
 const ASSETS=['./','./index.html','./manifest.json','./style.css','./js/sfxdata.js','./js/artdata.js','./js/core.js','./js/three.min.js','./js/astro3d.js','./js/survive.js','./js/ship3d.js','./js/pilot.js','./js/colony.js','./js/colony2.js','./js/colony3.js','./js/colony4.js','./js/anim.js','./js/terra.js','./js/survival.js','./js/meta.js','./js/explore.js','./js/interior2.js','./js/prestige.js','./js/sfx.js','./js/hub.js','../icon-192.png','../icon-512.png','../icon-maskable-512.png'];
 self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(C).then(c=>Promise.all(ASSETS.map(a=>c.add(a).catch(()=>{})))))});
 // only clear older game caches; the radar's cache on the same site stays untouched
