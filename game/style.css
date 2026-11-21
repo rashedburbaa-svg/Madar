@@ -793,3 +793,4 @@ canvas.pcv{margin:0 auto;background:#050816}
 .plb img{width:64px;height:64px;object-fit:contain}.plb b{font-size:13px}.plb small{font-size:10px;opacity:.75;line-height:1.35}.plb em{font-style:normal;font-size:11px;color:#5ff2d6;margin-top:2px}
 .plb.on{border-color:#5ff2d6;background:#5ff2d61a;box-shadow:0 0 10px #5ff2d633}.plb.lock img{filter:grayscale(.7) brightness(.8)}.plb:disabled{opacity:.5}
 .hg{max-height:180px}.overlay.pov{overflow:auto}
+.plb img.pic{width:100%;height:64px;object-fit:cover;border-radius:8px}.plb img.top{width:64px;height:64px;object-fit:contain}
