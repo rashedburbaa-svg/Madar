@@ -390,11 +390,11 @@ const SurviveGame=(()=>{
     const now=performance.now();if(now-hitSndT>90){snd('hit');hitSndT=now}
     if(e.boss){drop(e.x-12,e.y,'chip');drop(e.x+12,e.y,'chip');drop(e.x,e.y+12,'heart');unlock('surv_boss');bossAlive=en.some(x=>x.boss&&!x.dead);
       bossKills++;crys+=20;toast('👑 هزمت '+(e.name||'الزعيم')+' · 💎 +20','ach');st.bossDone=st.bossDone||{};if(e.kind)st.bossDone[e.kind]=1;gSave('survive',st);if(BOSSES.every(B=>st.bossDone[B.kind]))unlock('surv_all_boss')}
-    else if(e.elite){drop(e.x,e.y,Math.random()<0.5?'crys':['heart','rapid','shield','chip'][Math.floor(Math.random()*4)])}
-    else if(Math.random()<0.035*(1+0.25*mlv('luck')))drop(e.x,e.y,'crys');
-    else if(Math.random()<0.075*(1+0.25*mlv('luck'))){const r=Math.random();drop(e.x,e.y,r<0.4?'heart':r<0.6?'rapid':r<0.75?'shield':r<0.85?'bomb':'chip')}
+    else if(e.elite&&Math.random()<0.45){drop(e.x,e.y,Math.random()<0.5?'crys':['heart','rapid','shield','chip'][Math.floor(Math.random()*4)])}
+    else if(Math.random()<0.018*(1+0.25*mlv('luck')))drop(e.x,e.y,'crys');
+    else if(Math.random()<0.028*(1+0.25*mlv('luck'))){const r=Math.random();drop(e.x,e.y,r<0.4?'heart':r<0.6?'rapid':r<0.75?'shield':r<0.85?'bomb':'chip')}
   }
-  function drop(x,y,k){drops.push({x:Math.max(12,Math.min(W-12,x)),y:Math.max(30,Math.min(H-12,y)),k,life:12})}
+  function drop(x,y,k){if(drops.length>=5)return;drops.push({x:Math.max(12,Math.min(W-12,x)),y:Math.max(30,Math.min(H-12,y)),k,life:9})}
   function take(d){
     if(d.k==='heart'){p.hp=Math.min(p.max,p.hp+30);toast('❤️ صحة إضافية 30')}
     else if(d.k==='rapid'){buff.rapid=8;toast('⚡ إطلاق مضاعف 8 ثوانٍ')}
