@@ -6,15 +6,20 @@ const PilotGame=(function(){
   const rnd=(a,b)=>a+Math.random()*(b-a),clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
   /* the colony backs the ship: dock level and repaired parts */
   function shipStats(){const L=(typeof col!=='undefined'&&col.b&&col.b.dock)||0,pr=(typeof col!=='undefined'&&col.ship)?Object.values(col.ship).filter(Boolean).length:0;
-    return {hull:Math.round((100+12*L+10*pr)*(1+0.12*hl('hull'))),dmg:(1+0.06*L+0.04*pr)*(1+0.08*hl('dmg')),L,pr}}
+    const pl=plane();return {hull:Math.round((100+12*L+10*pr)*(1+0.12*hl('hull'))*pl.hull),dmg:(1+0.06*L+0.04*pr)*(1+0.08*hl('dmg'))*pl.dmg,L,pr}}
   const HANG=[{id:'hull',em:'🛡️',n:'هيكل مدرّع',d:'+12% هيكل',max:5,c:12},{id:'dmg',em:'💥',n:'مدافع أقوى',d:'+8% ضرر',max:5,c:14},{id:'rate',em:'⚡',n:'تبريد المدافع',d:'+6% سرعة إطلاق',max:5,c:14},
     {id:'mag',em:'🧲',n:'مغناطيس',d:'+25 مدى الجمع',max:3,c:8},{id:'start',em:'🔫',n:'سلاح جاهز',d:'تبدأ بمستوى سلاح أعلى',max:2,c:30},{id:'bomb',em:'☢️',n:'مخزن القنابل',d:'+1 قنبلة نوفا',max:2,c:25},{id:'shield',em:'🔰',n:'درع البداية',d:'تبدأ بدرع',max:1,c:20}];
+  const PLANES=[{id:'orbit',m:'fighter',n:'المدار-1',d:'متوازنة: هيكل وضرر وسرعة متوسطة',cost:0,hull:1,dmg:1,rate:1,spd:1},
+    {id:'ghost',m:'stealth',n:'الشبح',d:'سريعة جداً، إطلاق مضاعف، هيكل خفيف',cost:60,hull:.75,dmg:.75,rate:1.55,spd:1.35},
+    {id:'tank',m:'heavy',n:'المدرّعة',d:'هيكل ضخم ومدفعان جانبيان، لكنها أبطأ',cost:90,hull:1.6,dmg:1.2,rate:.85,spd:.8,side:1},
+    {id:'nova',m:'star',n:'النجمة',d:'ترافقها طائرتان مسيّرتان تطلقان معها',cost:150,hull:1,dmg:.95,rate:1,spd:1.05,drones:1}];
+  const plane=()=>PLANES.find(x=>x.id===((st&&st.plane)||'orbit'))||PLANES[0];
   const hl=k=>(st&&st.up&&st.up[k])||0,hcost=h=>Math.round(h.c*Math.pow(hl(h.id)+1,1.6));
   const SECT=[['حزام الكويكبات',[[60,140,180,'120,60,200'],[300,420,220,'40,120,200'],[200,620,160,'200,60,120']]],['مدار المريخ',[[80,160,200,'210,80,50'],[290,440,220,'160,50,40'],[180,620,170,'240,140,60']]],
     ['سحابة الجليد',[[70,150,200,'60,160,230'],[300,430,220,'40,200,220'],[200,610,170,'120,120,240']]],['قطاع الحرّاس',[[70,140,190,'60,200,120'],[300,420,230,'30,120,90'],[190,620,170,'170,220,80']]],['أطراف المجرة',[[60,160,200,'230,60,160'],[300,420,230,'120,40,200'],[200,620,170,'255,190,80']]]];
   let novaFx=0,bombs=0,combo=0,comboT=0,mult=1,lasers=[],sect=-1;
   const EN={scout:{hp:14,r:15,sc:60,px:64},diver:{hp:10,r:14,sc:70,px:60},bomber:{hp:60,r:24,sc:180,px:96},ufo:{hp:30,r:18,sc:120},mini:{hp:300,r:30,sc:600},cruiser:{hp:90,r:26,sc:260,px:96},mine:{hp:16,r:12,sc:50},rock:{hp:24,r:16,sc:40},boss:{hp:900,r:70,sc:3000,px:300}};
-  function reset(){const S=shipStats();P={x:W/2,y:H-100,r:13,hp:S.hull,max:S.hull,dm:S.dmg,wl:1+hl('start'),cd:0,mcd:0,inv:0,shield:hl('shield'),bank:0,vx:0,mag:70+25*hl('mag'),pw:0,rt:1+0.06*hl('rate')};bombs=2+hl('bomb');combo=0;comboT=0;mult=1;lasers=[];sect=-1;neb=null;
+  function reset(){const S=shipStats();P={x:W/2,y:H-100,r:13,hp:S.hull,max:S.hull,dm:S.dmg,wl:1+hl('start'),cd:0,mcd:0,inv:0,shield:hl('shield'),bank:0,vx:0,mag:70+25*hl('mag'),pw:0,rt:(1+0.06*hl('rate'))*plane().rate,spd:plane().spd,pl:plane(),dcd:0};bombs=2+hl('bomb');combo=0;comboT=0;mult=1;lasers=[];sect=-1;neb=null;
     bul=[];eb=[];en=[];drops=[];parts=[];FT=[];t=0;wave=0;queue=[];gap=1.2;score=0;crys=0;kills=0;bossOn=null;banner=null;shk=0;
     stars=[];for(let i=0;i<90;i++)stars.push({x:Math.random()*W,y:Math.random()*H,z:rnd(.2,1)});planet=null}
   if(location.hostname==='localhost')window.__pv={mini:i=>{const e=spawnMini(1);if(bossOn){bossOn.mi=i;bossOn.bname=MINI[i].n}},get P(){return P}};
@@ -53,7 +58,7 @@ const PilotGame=(function(){
   /* ---------- weapons ---------- */
   function fire(){const d=10*P.dm,x=P.x,y=P.y-22,b=(dx,ang,k)=>bul.push({x:x+dx,y,vx:Math.sin(ang)*640,vy:-Math.cos(ang)*640,d:d*(k||1),c:'#5ff2d6'});
     const w=P.wl;if(w===1)b(0,0);else if(w===2){b(-7,0);b(7,0)}else{b(0,0,1.1);b(-9,-0.12);b(9,0.12)}
-    if(w>=4){b(-16,-0.3,0.8);b(16,0.3,0.8)}if(w>=6){b(-4,0,1.1);b(4,0,1.1)}snd('laser')}
+    if(w>=4){b(-16,-0.3,0.8);b(16,0.3,0.8)}if(w>=6){b(-4,0,1.1);b(4,0,1.1)}if(P.pl.side&&(P.sideT=(P.sideT||0)+1)%2===0){b(-26,-0.06,1.4);b(26,0.06,1.4)}snd('laser')}
   function missile(){const tg=nearest(P.x,P.y);bul.push({x:P.x+(Math.random()<.5?-14:14),y:P.y,vx:rnd(-80,80),vy:-200,d:22*P.dm,c:'#ffb347',mis:1,tg})}
   function nearest(x,y){let b=null,bd=1e9;for(const e of en){if(e.dead||e.y<-20)continue;const d=(e.x-x)**2+(e.y-y)**2;if(d<bd){bd=d;b=e}}return b}
   /* ---------- fx ---------- */
@@ -69,9 +74,10 @@ const PilotGame=(function(){
   function update(dt){t+=dt;if(banner){banner.l-=dt;if(banner.l<=0)banner=null}
     // move
     let tx=P.x,ty=P.y;if(drag){tx=drag.x+drag.ox;ty=drag.y+drag.oy}const kx=(keys.ArrowRight||keys.d?1:0)-(keys.ArrowLeft||keys.a?1:0),ky=(keys.ArrowDown||keys.s?1:0)-(keys.ArrowUp||keys.w?1:0);
-    if(kx||ky){tx=P.x+kx*300*dt;ty=P.y+ky*300*dt}const nx=clamp(P.x+(tx-P.x)*Math.min(1,dt*14),18,W-18),ny=clamp(P.y+(ty-P.y)*Math.min(1,dt*14),70,H-30);
+    if(kx||ky){tx=P.x+kx*300*P.spd*dt;ty=P.y+ky*300*P.spd*dt}const nx=clamp(P.x+(tx-P.x)*Math.min(1,dt*14*P.spd),18,W-18),ny=clamp(P.y+(ty-P.y)*Math.min(1,dt*14*P.spd),70,H-30);
     P.vx=(nx-P.x)/Math.max(dt,1e-3);P.x=nx;P.y=ny;P.bank+=(clamp(P.vx/260,-2,2)-P.bank)*Math.min(1,dt*10);P.inv=Math.max(0,P.inv-dt);
     // shoot
+    if(P.pl.drones){P.dcd-=dt;if(P.dcd<=0){P.dcd=0.32;for(const s of [-1,1]){const dx=P.x+s*30,dy=P.y+8+Math.sin(t*4+s)*4;bul.push({x:dx,y:dy-8,vx:0,vy:-600,d:6*P.dm,c:'#b6fff5'})}}}
     P.cd-=dt;if(P.cd<=0){P.cd=Math.max(0.08,(0.17-0.01*P.wl)/P.rt);fire()}if(P.wl>=5){P.mcd-=dt;if(P.mcd<=0){P.mcd=0.75;missile()}}
     for(const b of bul){if(b.mis){if(!b.tg||b.tg.dead)b.tg=nearest(b.x,b.y);if(b.tg){const a=Math.atan2(b.tg.y-b.y,b.tg.x-b.x);b.vx+=Math.cos(a)*900*dt;b.vy+=Math.sin(a)*900*dt;const s=Math.hypot(b.vx,b.vy);if(s>420){b.vx*=420/s;b.vy*=420/s}}
         if(Math.random()<.6)parts.push({x:b.x,y:b.y,vx:0,vy:0,l:.25,c:'#ffb347',s:1.6})}b.x+=b.vx*dt;b.y+=b.vy*dt;
@@ -136,7 +142,8 @@ const PilotGame=(function(){
     for(const e of en)drawEnemy(e);
     // player
     if(!over){const fl=0.7+Math.random()*0.3;ctx.save();ctx.globalCompositeOperation='lighter';for(const s of [-1,1]){const gx=P.x+s*7,gy=P.y+22;const g=ctx.createRadialGradient(gx,gy,0,gx,gy,14*fl);g.addColorStop(0,'rgba(180,255,250,.95)');g.addColorStop(1,'rgba(95,242,214,0)');ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(gx,gy+6,5,14*fl,0,0,6.283);ctx.fill()}ctx.restore();
-      if(!(P.inv>0&&Math.floor(t*20)%2)){const b=Math.round(clamp(P.bank,-2,2)),sp=sprite('fighter',160,b);if(sp)ctx.drawImage(sp,P.x-34,P.y-34,68,68);else{ctx.fillStyle='#e6ecf1';ctx.beginPath();ctx.moveTo(P.x,P.y-22);ctx.lineTo(P.x+18,P.y+16);ctx.lineTo(P.x-18,P.y+16);ctx.closePath();ctx.fill()}}
+      if(!(P.inv>0&&Math.floor(t*20)%2)){const b=Math.round(clamp(P.bank,-2,2)),sp=sprite(P.pl.m,160,b);if(sp)ctx.drawImage(sp,P.x-34,P.y-34,68,68);else{ctx.fillStyle='#e6ecf1';ctx.beginPath();ctx.moveTo(P.x,P.y-22);ctx.lineTo(P.x+18,P.y+16);ctx.lineTo(P.x-18,P.y+16);ctx.closePath();ctx.fill()}}
+      if(P.pl.drones){for(const s of [-1,1]){const dx=P.x+s*30,dy=P.y+8+Math.sin(t*4+s)*4;const ds=sprite('star',96,0);ctx.save();ctx.globalAlpha=.95;if(ds)ctx.drawImage(ds,dx-13,dy-13,26,26);ctx.restore();ctx.save();ctx.globalCompositeOperation='lighter';ctx.fillStyle='rgba(95,242,214,.5)';ctx.beginPath();ctx.ellipse(dx,dy+12,2.5,6,0,0,6.283);ctx.fill();ctx.restore()}}
       if(P.shield>0){ctx.strokeStyle=`rgba(159,232,255,${0.5+0.3*Math.sin(t*6)})`;ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(P.x,P.y,26,0,6.283);ctx.stroke()}}
     ctx.save();ctx.globalCompositeOperation='lighter';ctx.lineCap='round';
     for(const b of bul){if(b.mis){ctx.fillStyle='#ffd8a0';ctx.beginPath();ctx.arc(b.x,b.y,3,0,6.283);ctx.fill();continue}ctx.strokeStyle='rgba(95,242,214,.4)';ctx.lineWidth=6;ctx.beginPath();ctx.moveTo(b.x,b.y);ctx.lineTo(b.x-b.vx*0.02,b.y-b.vy*0.02);ctx.stroke();ctx.strokeStyle='#e8fffb';ctx.lineWidth=2;ctx.stroke()}
@@ -180,8 +187,12 @@ const PilotGame=(function(){
   function intro(){const S=shipStats();const o=overlay(`<h3>🚀 طيّار المدار</h3><p>${st.best?`رقمك القياسي ${st.best.toLocaleString('en')} · أعلى موجة ${st.bestWave||1}`:'حرّك إصبعك لتقود المركبة، والمدافع تطلق وحدها. اجمع ⚡ لتقوية السلاح.'}</p>
       <div class="svbonus">🛠️ مركبتك: هيكل <b>${S.hull}</b> · ضرر <b>+${Math.round((S.dmg-1)*100)}%</b> · ☢️ <b>${2+hl('bomb')}</b></div>${hangarHTML()}<button class="btn main" type="button">انطلق</button>`);
     bindHangar(o,intro);o.querySelector('.btn.main').onclick=()=>{snd('tap');begin()}}
-  function hangarHTML(){return `<div class="hang"><div class="hh">🛠️ الحظيرة <b>💎 ${st.gems||0}</b></div><div class="hg">${HANG.map(h=>{const L=hl(h.id),mx=L>=h.max,c=hcost(h);return `<button type="button" class="hb${mx?' mx':''}" data-h="${h.id}" ${mx||(st.gems||0)<c?'disabled':''}><span>${h.em}</span><b>${h.n}</b><small>${h.d}</small><i>${'●'.repeat(L)}${'○'.repeat(h.max-L)}</i><em>${mx?'الأعلى':'💎 '+c}</em></button>`}).join('')}</div></div>`}
-  function bindHangar(o,again){o.querySelectorAll('[data-h]').forEach(b=>b.onclick=()=>{const h=HANG.find(x=>x.id===b.dataset.h),c=hcost(h);if((st.gems||0)<c||hl(h.id)>=h.max)return;st.gems-=c;st.up=st.up||{};st.up[h.id]=hl(h.id)+1;gSave('pilot',st);snd('ach');again()})}
+  function planeImg(m){try{const c=sprite(m,160,0);return c?c.toDataURL():''}catch(e){return ''}}
+  function planesHTML(){const own=st.planes||['orbit'];return `<div class="hh">✈️ الطائرات</div><div class="pl">${PLANES.map(q=>{const has=own.includes(q.id),sel=plane().id===q.id;
+    return `<button type="button" class="plb${sel?' on':''}${has?'':' lock'}" data-pl="${q.id}" ${!has&&(st.gems||0)<q.cost?'disabled':''}><img src="${planeImg(q.m)}" alt=""><b>${q.n}</b><small>${q.d}</small><em>${sel?'✔ مختارة':has?'اختر':'💎 '+q.cost}</em></button>`}).join('')}</div>`}
+  function hangarHTML(){return `<div class="hang">${planesHTML()}<div class="hh">🛠️ الحظيرة <b>💎 ${st.gems||0}</b></div><div class="hg">${HANG.map(h=>{const L=hl(h.id),mx=L>=h.max,c=hcost(h);return `<button type="button" class="hb${mx?' mx':''}" data-h="${h.id}" ${mx||(st.gems||0)<c?'disabled':''}><span>${h.em}</span><b>${h.n}</b><small>${h.d}</small><i>${'●'.repeat(L)}${'○'.repeat(h.max-L)}</i><em>${mx?'الأعلى':'💎 '+c}</em></button>`}).join('')}</div></div>`}
+  function bindHangar(o,again){o.querySelectorAll('[data-pl]').forEach(b=>b.onclick=()=>{const q=PLANES.find(x=>x.id===b.dataset.pl);st.planes=st.planes||['orbit'];
+      if(!st.planes.includes(q.id)){if((st.gems||0)<q.cost)return;st.gems-=q.cost;st.planes.push(q.id);snd('ach');toast('✈️ حصلت على '+q.n)}else snd('tap');st.plane=q.id;gSave('pilot',st);again()});o.querySelectorAll('[data-h]').forEach(b=>b.onclick=()=>{const h=HANG.find(x=>x.id===b.dataset.h),c=hcost(h);if((st.gems||0)<c||hl(h.id)>=h.max)return;st.gems-=c;st.up=st.up||{};st.up[h.id]=hl(h.id)+1;gSave('pilot',st);snd('ach');again()})}
   function begin(){clearOv();reset();running=true;paused=false;over=false;last=performance.now();stats()}
   function die(){over=true;running=false;boom(P.x,P.y,'#ffb347',60,true);shake(9,0.8);snd('bigboom');
     const nb=score>(st.best||0);st.best=Math.max(st.best||0,score);st.bestWave=Math.max(st.bestWave||1,wave);st.runs=(st.runs||0)+1;st.gems=(st.gems||0)+crys;gSave('pilot',st);if(wave>=10&&typeof unlock==='function')unlock('pilot_w10');
@@ -196,7 +207,7 @@ const PilotGame=(function(){
     pauseExt(){if(running&&!over)paused=true},resumeExt(){if(running&&!over&&!stage.querySelector('.overlay')){paused=false;last=performance.now()}},
     forfeit(){if(running&&!over){clearOv();P.hp=0;die();return true}return false},
     play(){intro()},
-    start(){st=gState('pilot',{best:0,bestWave:1,runs:0,gems:0,up:{}});reset();running=false;paused=true;over=false;
+    start(){st=gState('pilot',{best:0,bestWave:1,runs:0,gems:0,up:{},plane:'orbit',planes:['orbit']});reset();running=false;paused=true;over=false;
       setStats([['s1','النقاط','gold'],['s2','الموجة'],['s3','الهيكل'],['s4','الرقم القياسي']]);$('lvlBtn').hidden=true;
       cv=document.createElement('canvas');cv.className='pcv';stage.appendChild(cv);ctx=cv.getContext('2d');resize();this.rs=()=>resize();addEventListener('resize',this.rs);
       cv.addEventListener('pointerdown',ev=>{if(!running||paused)return;const [x,y]=toLocal(ev);if((x-(W-36))**2+(y-(H-40))**2<34*34){nova();ev.preventDefault();return}drag={x,y,ox:P.x-x,oy:P.y-y,id:ev.pointerId};try{cv.setPointerCapture(ev.pointerId)}catch(e){}ev.preventDefault()});
@@ -206,7 +217,7 @@ const PilotGame=(function(){
       this.ku=ev=>{keys[ev.key]=false};addEventListener('keydown',this.kd);addEventListener('keyup',this.ku);
       this.vis=()=>{if(document.hidden)pause()};document.addEventListener('visibilitychange',this.vis);
       btn('رحلة جديدة',IC.reset,()=>{snd('tap');begin()});
-      ['fighter','scout','bomber','diver'].forEach(k=>{try{sprite(k,k==='fighter'?160:EN[k].px*2,0)}catch(e){}});
+      ['fighter','stealth','heavy','star','scout','bomber','diver'].forEach(k=>{try{sprite(k,k==='fighter'?160:EN[k].px*2,0)}catch(e){}});
       stats();intro();last=performance.now();raf=requestAnimationFrame(step)},
     stop(){cancelAnimationFrame(raf);running=false;paused=true;drag=null;keys={};removeEventListener('resize',this.rs);removeEventListener('keydown',this.kd);removeEventListener('keyup',this.ku);document.removeEventListener('visibilitychange',this.vis)}};
 })();
