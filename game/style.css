@@ -840,3 +840,34 @@ canvas.pcv{margin:0 auto;background:#050816}
 .fx-spark{opacity:0;animation:fxSpark 1.6s steps(1) infinite}
 @keyframes fxSpark{0%,100%{opacity:0}10%{opacity:1}20%{opacity:0}30%{opacity:1}38%{opacity:0}}
 @media (prefers-reduced-motion:reduce){.bfx{display:none}}
+/* explorer mode */
+.czoom .cexp{font-size:18px}.czoom .cexp.on{background:#ffd34d!important;box-shadow:0 0 0 3px #ffd34d66}
+#pav .pavb.walk{animation:pavBob .32s ease-in-out infinite alternate}
+@keyframes pavBob{from{transform:translateY(0)}to{transform:translateY(-3px)}}
+#pav .pavring{animation:pavRing 1.6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes pavRing{0%,100%{opacity:.9;transform:scale(.9)}50%{opacity:.3;transform:scale(1.15)}}
+#pavt .pavtg{animation:pavRing 1s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+.interior{position:fixed;inset:0;z-index:60;background:#070b18f2;display:flex;flex-direction:column;gap:10px;padding:14px 14px 20px;opacity:0;transform:scale(1.04);transition:.25s;overflow:auto}
+.interior.on{opacity:1;transform:none}
+.ihead{display:flex;align-items:center;gap:10px;color:#fff;font-size:17px}.ihead b{flex:1}
+.ix{width:36px;height:36px;border-radius:50%;border:0;background:#ffffff1a;color:#fff;font-size:16px}
+.iscene{border-radius:16px;overflow:hidden;border:2px solid #ffffff22;box-shadow:0 8px 24px #0008;aspect-ratio:6/5}.iscene svg{width:100%;height:100%;display:block}
+.idesc{color:#c9d3ec;font-size:14px;margin:0;line-height:1.7}
+.ichips{display:flex;flex-wrap:wrap;gap:6px}.ichips span{background:#ffffff12;border:1px solid #ffffff22;border-radius:999px;padding:5px 10px;color:#e8ecff;font-size:12.5px}
+.ibtns{display:flex;gap:8px;flex-wrap:wrap}.ibtns .btn{flex:1;min-width:100px}
+.iscene *{transform-box:fill-box}
+.iwalk{animation:iWalk 9s ease-in-out infinite alternate}
+@keyframes iWalk{0%{transform:translateX(70px)}100%{transform:translateX(300px)}}
+.iwalk image{animation:pavBob .35s ease-in-out infinite alternate}
+.ibar{transform-origin:50% 100%;animation:iBar 1.4s ease-in-out infinite alternate}@keyframes iBar{from{transform:scaleY(.25)}to{transform:scaleY(1)}}
+.iwave{animation:iWave 1.2s linear infinite}@keyframes iWave{to{transform:translateX(-24px)}}
+.iradar{transform-origin:0 100%;animation:fxRad 2.4s linear infinite}
+.ihol{transform-origin:center;animation:iSpin 6s linear infinite}.ihol2{transform-origin:center;animation:iSpin 4s linear infinite reverse}@keyframes iSpin{to{transform:rotate(360deg)}}
+.idrill{transform-origin:50% 30%;animation:iDrill .25s linear infinite alternate}@keyframes iDrill{from{transform:translateX(-2px)}to{transform:translateX(2px)}}
+.iore{animation:iOre 6s linear infinite}@keyframes iOre{from{transform:translateX(0)}to{transform:translateX(270px)}}
+.ichg{transform-origin:50% 100%;animation:iChg 3s ease-in-out infinite alternate}@keyframes iChg{from{opacity:.65}to{opacity:1}}
+.isway{animation:iSway 2.6s ease-in-out infinite alternate}@keyframes iSway{from{transform:rotate(-6deg)}to{transform:rotate(6deg)}}
+.ibub{animation:iBub 1.6s ease-in infinite}@keyframes iBub{0%{opacity:0;transform:translateY(0)}20%{opacity:1}100%{opacity:0;transform:translateY(-34px)}}
+.iscope{transform-origin:30% 100%;animation:iScope 7s ease-in-out infinite alternate}@keyframes iScope{from{transform:rotate(-8deg)}to{transform:rotate(10deg)}}
+.ispark{animation:fxSpark 1.2s steps(1) infinite}
+.ilight{animation:iLight 4s ease-in-out infinite alternate}@keyframes iLight{from{opacity:.6}to{opacity:1}}
