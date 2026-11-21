@@ -747,3 +747,34 @@ canvas.pcv{margin:0 auto;background:#050816}
 .iout.on{opacity:1;transform:none;animation:iOut 4s forwards}@keyframes iOut{0%,80%{opacity:1}100%{opacity:0}}
 .iscene.tall{aspect-ratio:360/400}
 .iscan{animation:iScan 3s linear infinite}@keyframes iScan{from{transform:translateY(0)}to{transform:translateY(77px)}}
+/* ===== مزرعة المدار ===== */
+.farmg{position:relative;display:flex;flex-direction:column;gap:10px;padding:4px 2px 24px;color:#e8ecff}
+.fhead{display:flex;align-items:center;gap:8px;font-size:13px;background:#ffffff0c;border:1px solid #ffffff1a;border-radius:12px;padding:8px 10px}
+.fxp{flex:1;height:8px;border-radius:4px;background:#1a2436;overflow:hidden}.fxp i{display:block;height:100%;background:linear-gradient(90deg,#5ac85a,#9dff5a)}
+.fcaps{display:flex;gap:10px;overflow-x:auto;padding:6px 2px 10px;scroll-snap-type:x mandatory;background:radial-gradient(ellipse at 50% 0,#c58bff33,transparent 70%),linear-gradient(#0d1a2a,#071019);border-radius:16px;border:1px solid #ffffff14}
+.fcap{flex:0 0 112px;scroll-snap-align:start;display:flex;flex-direction:column;align-items:center}
+.fcapt{font-size:11px;opacity:.75;margin-bottom:4px}
+.fglass{position:relative;width:100%;display:flex;flex-direction:column;gap:5px;padding:12px 8px;border-radius:56px 56px 14px 14px;background:linear-gradient(90deg,#bfefff22,#ffffff0a 35%,#bfefff10 70%,#bfefff30);border:2px solid #9fe8ff88;box-shadow:inset 0 0 18px #c58bff33,0 0 16px #5ff2d622}
+.fglass::before{content:'';position:absolute;top:10px;bottom:10px;inset-inline-start:10px;width:5px;border-radius:3px;background:#fff;opacity:.25}
+.fglass::after{content:'';position:absolute;top:4px;left:50%;width:44px;height:6px;margin-left:-22px;border-radius:3px;background:#c58bff;box-shadow:0 4px 14px #c58bff;opacity:.9}
+.fbase{width:90%;height:14px;margin-top:-4px;border-radius:0 0 10px 10px;background:linear-gradient(#8b96a6,#4a5262);box-shadow:0 4px 8px #0008}
+.fcap.locked .fglass{min-height:330px;justify-content:center;align-items:center;text-align:center;opacity:.5;font-size:24px;gap:6px}.fcap.locked small{font-size:10.5px}
+.ftray{position:relative;height:74px;border:0;border-bottom:4px solid #5a6478;border-radius:10px;background:linear-gradient(#ffffff08,#5ac85a22);color:#fff;font:inherit;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:2px 4px 3px;overflow:hidden}
+.ftray.empty{background:#ffffff06;border-style:dashed;border-width:0 0 4px}.fplus{font-size:22px;opacity:.4;margin:auto}
+.fpl{font-size:20px;line-height:1;transition:transform .3s}.ftray.s0 .fpl{font-size:14px}.ftray.s1 .fpl{font-size:18px}.ftray.s2 .fpl{font-size:24px;opacity:.85;filter:saturate(.6)}
+.ftray.s3 .fpl{font-size:32px;animation:pavBob .6s ease-in-out infinite alternate;filter:drop-shadow(0 0 6px #ffd34d)}.ftray.s3{background:linear-gradient(#ffd34d22,#5ac85a33);border-bottom-color:#ffd34d}
+.ftray small{font-size:9.5px;opacity:.85}.fbar{width:86%;height:4px;border-radius:2px;background:#0008;overflow:hidden;margin:2px 0}.fbar i{display:block;height:100%;background:#9dff5a}
+.ftray.thirsty{border-bottom-color:#5fb4ff}.fwat{position:absolute;top:2px;inset-inline-end:4px;font-size:14px;animation:pavBob .5s ease-in-out infinite alternate}
+.ftray.bug{border-bottom-color:#ff5d73}.fbug{position:absolute;top:6px;inset-inline-start:6px;font-size:16px;animation:fBug .4s steps(2) infinite}@keyframes fBug{50%{transform:translateX(4px) rotate(10deg)}}
+.fh{margin:6px 2px 0;font-size:14px}
+.finv{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.finv span{background:#ffffff10;border-radius:999px;padding:4px 10px;font-size:14px}.finv .btn{flex-basis:100%}.finv small{opacity:.7}
+.forders{display:flex;flex-direction:column;gap:6px}.ford{display:grid;grid-template-columns:auto 1fr auto;grid-template-rows:auto auto;gap:2px 8px;align-items:center;background:#ffffff0a;border:1px solid #ffffff1a;border-radius:12px;padding:7px 10px}
+.ford b{grid-row:1}.ford span{grid-row:1;font-size:15px}.ford small{grid-column:1/3;opacity:.8}.ford .btn{grid-column:3;grid-row:1/3;min-width:70px}.ford.ok{border-color:#9dff5a88;background:#9dff5a12}
+.fupg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}.fup{display:flex;flex-direction:column;gap:3px;text-align:center;align-items:center;background:#ffffff0a;border:1px solid #ffffff1a;border-radius:12px;padding:8px 4px;color:#e8ecff;font:inherit}
+.fup b{font-size:12px}.fup small{font-size:10px;opacity:.75}.fup i{font-style:normal;font-size:12px;color:#ffd34d}.fup.ok{border-color:#ffd34d88}.fup:disabled{opacity:.55}
+.fpick{position:absolute;inset:0;z-index:5;background:#000a;display:flex;align-items:flex-end;border-radius:14px}
+.fpk{width:100%;background:#101a2c;border-radius:18px 18px 0 0;padding:12px;display:flex;flex-direction:column;gap:10px;max-height:85%;overflow:auto}.fpk h4{margin:0}.fpk h4 small{opacity:.7;font-weight:400;font-size:11px}
+.fseeds{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.fseed{display:flex;flex-direction:column;align-items:center;gap:1px;background:#ffffff0c;border:1px solid #ffffff22;border-radius:12px;padding:7px 2px;color:#fff;font:inherit}
+.fseed span{font-size:26px}.fseed b{font-size:12px}.fseed small{font-size:9.5px;opacity:.8}.fseed:disabled{opacity:.45}
+.ffx{position:absolute;z-index:6;transform:translate(-50%,0);font-weight:900;font-size:16px;color:#fff;text-shadow:0 2px 6px #000;pointer-events:none;animation:fFx 1.1s ease-out forwards}@keyframes fFx{to{transform:translate(-50%,-50px);opacity:0}}
+.fvcard .pvhero svg{width:84px;height:84px}
