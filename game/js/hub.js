@@ -20,13 +20,14 @@ function renderHub(){
   $('dailyDot').hidden=true;
   let total=0;GAMES.forEach(G=>{total+=G.progress().stars});renderColony();
   $('totalStars').textContent=total;
-  const bs=$('badges');bs.innerHTML='';let got=0;
-  ACH.forEach(([id,em,label])=>{const on=!!ach.got[id];if(on)got++;const el=document.createElement('div');el.className='badge'+(on?' got':'');el.innerHTML=`<span class="em">${em}</span><small></small>`;el.querySelector('small').textContent=label;bs.appendChild(el)});
-  $('achCount').textContent=got+' من '+ACH.length;$('achBar').style.width=Math.round(got/ACH.length*100)+'%';
+  drawBadges();
 }
+function drawBadges(){const bs=$('badges');if(!bs)return;bs.innerHTML='';let got=0;
+  [...ACH].sort((x,y)=>(!!ach.got[y[0]])-(!!ach.got[x[0]])).forEach(([id,em,label])=>{const on=!!ach.got[id];if(on)got++;const el=document.createElement('div');el.className='badge'+(on?' got':'');el.innerHTML=`<span class="em">${em}</span><small></small>`;el.querySelector('small').textContent=label;bs.appendChild(el)});
+  $('achCount').textContent=got+' من '+ACH.length;$('achBar').style.width=Math.round(got/ACH.length*100)+'%'}
 let hubTab='pColony';try{const t=localStorage.getItem('arcade-tab');if(['pDaily','pColony','pBadges'].includes(t))hubTab=t}catch(e){}
 function showTab(id){hubTab=id;try{localStorage.setItem('arcade-tab',id)}catch(e){}
-  ['pDaily','pColony','pBadges'].forEach(p=>{$(p).hidden=p!==id});document.body.classList.toggle('colfull',id==='pColony');if(id==='pColony')renderColony();else if(typeof closeSheet==='function')closeSheet();
+  ['pDaily','pColony','pBadges'].forEach(p=>{$(p).hidden=p!==id});document.body.classList.toggle('colfull',id==='pColony');if(id==='pColony')renderColony();if(id==='pBadges')drawBadges();else if(typeof closeSheet==='function')closeSheet();
   document.querySelectorAll('#tabbar [role=tab]').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===id));scrollTo(0,0)}
 document.querySelectorAll('#tabbar [role=tab]').forEach(b=>b.onclick=()=>{if(b.dataset.tab!==hubTab)snd('tap');showTab(b.dataset.tab)});
 function openGame(G,m){

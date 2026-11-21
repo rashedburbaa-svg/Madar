@@ -6,7 +6,7 @@ const PilotGame=(function(){
   const rnd=(a,b)=>a+Math.random()*(b-a),clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
   /* the colony backs the ship: dock level and repaired parts */
   function shipStats(){const L=(typeof col!=='undefined'&&col.b&&col.b.dock)||0,pr=(typeof col!=='undefined'&&col.ship)?Object.values(col.ship).filter(Boolean).length:0;
-    const pl=plane();return {hull:Math.round((100+12*L+10*pr)*(1+0.12*hl('hull'))*pl.hull),dmg:(1+0.06*L+0.04*pr)*(1+0.08*hl('dmg'))*pl.dmg,L,pr}}
+    const pl=plane(),CB=typeof pilotBonus==='function'?pilotBonus():{hull:0,dmg:0};return {hull:Math.round((100+12*L+10*pr)*(1+0.12*hl('hull'))*pl.hull)+CB.hull,dmg:(1+0.06*L+0.04*pr)*(1+0.08*hl('dmg'))*pl.dmg*(1+CB.dmg/100),L,pr,CB}}
   const HANG=[{id:'hull',em:'🛡️',n:'هيكل مدرّع',d:'+12% هيكل',max:5,c:12},{id:'dmg',em:'💥',n:'مدافع أقوى',d:'+8% ضرر',max:5,c:14},{id:'rate',em:'⚡',n:'تبريد المدافع',d:'+6% سرعة إطلاق',max:5,c:14},
     {id:'mag',em:'🧲',n:'مغناطيس',d:'+25 مدى الجمع',max:3,c:8},{id:'start',em:'🔫',n:'سلاح جاهز',d:'تبدأ بمستوى سلاح أعلى',max:2,c:30},{id:'bomb',em:'☢️',n:'مخزن القنابل',d:'+1 قنبلة نوفا',max:2,c:25},{id:'shield',em:'🔰',n:'درع البداية',d:'تبدأ بدرع',max:1,c:20}];
   const PLANES=[{id:'orbit',m:'fighter',n:'المدار-1',d:'متوازنة: هيكل وضرر وسرعة متوسطة',cost:0,hull:1,dmg:1,rate:1,spd:1},
@@ -191,7 +191,7 @@ const PilotGame=(function(){
   function clearOv(){stage.querySelectorAll('.overlay').forEach(o=>o.remove())}
   function overlay(html){clearOv();const o=document.createElement('div');o.className='overlay pov';o.innerHTML=html;stage.appendChild(o);return o}
   function intro(){const S=shipStats();const o=overlay(`<h3>🚀 طيّار المدار</h3><p>${st.best?`رقمك القياسي ${st.best.toLocaleString('en')} · أعلى موجة ${st.bestWave||1}`:'حرّك إصبعك لتقود المركبة، والمدافع تطلق وحدها. اجمع ⚡ لتقوية السلاح.'}</p>
-      <div class="svbonus">🛠️ مركبتك: هيكل <b>${S.hull}</b> · ضرر <b>+${Math.round((S.dmg-1)*100)}%</b> · ☢️ <b>${2+hl('bomb')}</b></div>${diffHTML()}${hangarHTML()}<button class="btn main" type="button">انطلق</button>`);
+      <div class="svbonus">🛠️ مركبتك: هيكل <b>${S.hull}</b> · ضرر <b>+${Math.round((S.dmg-1)*100)}%</b> · ☢️ <b>${2+hl('bomb')}</b></div><div class="svbonus">🏗️ دعم المستعمرة: هيكل <b>+${S.CB.hull}</b> · ضرر <b>+${S.CB.dmg}%</b> <small>(الدفاع والأبراج والقبة والمساكن)</small></div>${diffHTML()}${hangarHTML()}<button class="btn main" type="button">انطلق</button>`);
     bindHangar(o,intro);o.querySelectorAll('[data-df]').forEach(b=>b.onclick=()=>{st.diff=b.dataset.df;gSave('pilot',st);snd('tap');o.querySelectorAll('[data-df]').forEach(x=>x.classList.toggle('on',x===b))});o.querySelector('.btn.main').onclick=()=>{snd('tap');begin()}}
   const CARD={orbit:'pl_orbit',ghost:'card_ghost',tank:'card_tank',nova:'card_star'};function planeImg(m,id){if(typeof ART!=='undefined'&&ART[CARD[id]])return ART[CARD[id]];try{const c=sprite(m,160,0);return c?c.toDataURL():''}catch(e){return ''}}
   function planesHTML(){const own=st.planes||['orbit'];return `<div class="hh">✈️ الطائرات</div><div class="pl">${PLANES.map(q=>{const has=own.includes(q.id),sel=plane().id===q.id;
@@ -202,7 +202,7 @@ const PilotGame=(function(){
   function begin(){clearOv();reset();running=true;paused=false;over=false;last=performance.now();stats()}
   function die(){over=true;running=false;boom(P.x,P.y,'#ffb347',60,true);shake(9,0.8);snd('bigboom');
     const nb=score>(st.best||0);st.best=Math.max(st.best||0,score);st.bestWave=Math.max(st.bestWave||1,wave);st.runs=(st.runs||0)+1;crys=Math.round(crys*DF().rw);st.gems=(st.gems||0)+crys;gSave('pilot',st);if(wave>=10&&typeof unlock==='function')unlock('pilot_w10');
-    if(typeof addXP==='function')addXP(Math.floor(score/400)+wave*3);if(typeof colonyReward==='function')colonyReward('pilot',0,{score,wave,crys,kills});
+    if(typeof addXP==='function')addXP(Math.floor(score/400)+wave*3);if(typeof colonyReward==='function')colonyReward('pilot',0,{score,wave,crys,kills,diff:st.diff||'normal',plane:plane().id,planes:(st.planes||[]).length});
     const show=()=>{const o=overlay(`<h3>${nb?'🏆 رقم قياسي جديد!':'💥 تحطّمت المركبة'}</h3><p>النقاط <b>${score.toLocaleString('en')}</b> · الموجة <b>${wave}</b> · 💎 <b>+${crys}</b> · أسقطت <b>${kills}</b></p>${hangarHTML()}<button class="btn main" type="button">حلّق مجدداً</button>`);
       bindHangar(o,show);o.querySelector('.btn.main').onclick=()=>{snd('tap');begin()}};setTimeout(show,900)}
   function pause(){if(!running||over)return;paused=true;const o=overlay('<h3>⏸️ متوقف</h3><button class="btn main" type="button">أكمل</button>');o.querySelector('.btn').onclick=()=>{clearOv();paused=false;last=performance.now()}}

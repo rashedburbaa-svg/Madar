@@ -533,7 +533,7 @@ const SurviveGame=(()=>{
     for(let k=0;k<30;k++){const a=Math.random()*6.28,s=60+Math.random()*160;parts.push({x:p.x,y:p.y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,l:0.8,col:'#3fd6c0'})}
     stats();
     const earned=Math.round((crys+Math.floor(kills/5)+wave*2)*DF().rw);st.crys=(st.crys||0)+earned;gSave('survive',st);
-    addXP(Math.floor(t/6)+bossKills*15);mission('survive',{time:t,kills,boss:bossKills,wave});unlock('first');if(typeof colonyReward==='function')colonyReward('survive',0,{time:t,boss:bossKills,kills});
+    addXP(Math.floor(t/6)+bossKills*15);mission('survive',{time:t,kills,boss:bossKills,wave});unlock('first');if(typeof colonyReward==='function')colonyReward('survive',0,{time:t,boss:bossKills,kills,wave,diff:st.diff||'normal',char:st.char||'scout'});
     snd('err');buzz([40,40,80]);
     const show=()=>{const o=document.createElement('div');o.className='overlay';
       o.innerHTML='<h3></h3><p></p><p class="gain"></p><button class="btn main" type="button">جولة جديدة</button><button class="btn" type="button">🔬 مختبر المدار</button><button class="btn" type="button">رجوع إلى القاعة</button><button class="btn share" type="button">📤 مشاركة النتيجة</button>';
@@ -630,7 +630,7 @@ const SurviveGame=(()=>{
     o.querySelector('button').onclick=()=>{o.remove();paused=false;last=performance.now()};stage.appendChild(o)}
   function intro(){
     const o=document.createElement('div');o.className='overlay';
-    o.innerHTML='<h3>صمود المدار</h3><p></p>'+diffHTML()+'<div class="chars"></div><button class="btn main" type="button">ابدأ</button><button class="btn" type="button"></button>';
+    o.innerHTML='<h3>صمود المدار</h3><p></p>'+(typeof survBonus==='function'?(B=>`<div class="svbonus">🏗️ دعم المستعمرة: ضرر <b>+${B.dmg}%</b> · صحة <b>+${B.hp}</b> · إطلاق <b>+${B.rate}%</b></div>`)(survBonus()):'')+diffHTML()+'<div class="chars"></div><button class="btn main" type="button">ابدأ</button><button class="btn" type="button"></button>';
     const cb=o.querySelector('.chars');Object.entries(CHARS).forEach(([k,c])=>{const b=document.createElement('button');b.type='button';b.className='chr'+((st.char||'scout')===k?' on':'');
       b.innerHTML='<span class="em"></span><b></b><small></small>';b.querySelector('.em').textContent=c.em;b.querySelector('b').textContent=c.name;b.querySelector('small').textContent=c.d;
       b.onclick=()=>{st.char=k;gSave('survive',st);snd('tap');cb.querySelectorAll('.chr').forEach(x=>x.classList.toggle('on',x===b))};cb.appendChild(b)});
