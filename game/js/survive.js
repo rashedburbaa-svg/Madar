@@ -50,7 +50,10 @@ const SurviveGame=(()=>{
     boss:{r:26,hp:520,spd:38,dps:28,col:'#b05cff',shoots:2.8,boss:true}
   };
   // enemy toughness grows gently; the weapon levels up with every wave so the two stay in step
-  const hpMul=w=>1.1+0.25*(w-1)+0.02*(w-1)*(w-1);
+  const DIFF={easy:{n:'سهل',em:'🟢',d:'للتجربة والاستمتاع',hp:0.7,dmg:0.55,sp:0.8,rw:0.6},normal:{n:'متوسط',em:'🟡',d:'كائنات أقوى وأكثر',hp:1.45,dmg:1.4,sp:1.25,rw:1},hard:{n:'صعب',em:'🔴',d:'للمحترفين · مكافأة ×1.7',hp:2.2,dmg:2.1,sp:1.6,rw:1.7}};
+  const DF=()=>DIFF[(st&&st.diff)||'normal']||DIFF.normal;
+  const diffHTML=()=>'<div class="diffs">'+Object.entries(DIFF).map(([k,v])=>`<button type="button" class="dfb${((st.diff||'normal')===k)?' on':''}" data-df="${k}"><b>${v.em} ${v.n}</b><small>${v.d}</small></button>`).join('')+'</div>';
+  const hpMul=w=>(1.1+0.25*(w-1)+0.02*(w-1)*(w-1))*DF().hp;
   const wpn=w=>1+0.05*(w-1);
   // one boss per planet; the planet of a boss wave decides which one comes
   const BOSSES=[
@@ -401,7 +404,7 @@ const SurviveGame=(()=>{
     else{const a=avail();if(a.length){const u=a[Math.floor(Math.random()*a.length)];applyUp(u);toast('⬆️ تطوير: '+u.name)}else{p.hp=p.max}}
     snd('ok');
   }
-  function hitP(d){if(buff.shield>0||p.inv>0)return false;
+  function hitP(d){if(buff.shield>0||p.inv>0)return false;d*=DF().dmg;
     if(p.bar){p.bar=0;p.barT=Math.max(4,12-2*(lv.barrier||0));p.inv=0.8;rings.push({x:p.x,y:p.y,r:0,R:42,l:0.3});snd('rot');buzz(20);return false}
     p.hp-=d*(1-Math.min(0.5,0.1*(lv.armor||0)));p.hurt=0.15;if(d>6)shake(Math.min(6,d/3),0.18);feel();return true}
   function update(dt){
@@ -414,7 +417,7 @@ const SurviveGame=(()=>{
     const ps=p.spd*(p.slow>0?0.5:1);p.x=Math.max(p.r,Math.min(W-p.r,p.x+mx*ps*dt));p.y=Math.max(p.r,Math.min(H-p.r,p.y+my*ps*dt));
     // spawning
     spawnT-=dt;
-    if(spawnT<=0&&en.length<130){const n=1+Math.floor(wave/3);for(let k=0;k<n;k++)spawn(pickType());spawnT=Math.max(0.22,0.95-0.07*wave)}
+    if(spawnT<=0&&en.length<130){const n=Math.max(1,Math.round((1+Math.floor(wave/3))*DF().sp));for(let k=0;k<n;k++)spawn(pickType());spawnT=Math.max(0.2,0.95-0.07*wave)/DF().sp}
     // gun
     gun.cd-=dt*(buff.rapid>0?2:1);const tg=nearest();
     if(tg)p.aim=Math.atan2(tg.y-p.y,tg.x-p.x);
@@ -529,7 +532,7 @@ const SurviveGame=(()=>{
     if((st.totalKills||0)>=1000)unlock('surv_k1000');
     for(let k=0;k<30;k++){const a=Math.random()*6.28,s=60+Math.random()*160;parts.push({x:p.x,y:p.y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,l:0.8,col:'#3fd6c0'})}
     stats();
-    const earned=crys+Math.floor(kills/5)+wave*2;st.crys=(st.crys||0)+earned;gSave('survive',st);
+    const earned=Math.round((crys+Math.floor(kills/5)+wave*2)*DF().rw);st.crys=(st.crys||0)+earned;gSave('survive',st);
     addXP(Math.floor(t/6)+bossKills*15);mission('survive',{time:t,kills,boss:bossKills,wave});unlock('first');if(typeof colonyReward==='function')colonyReward('survive',0,{time:t,boss:bossKills,kills});
     snd('err');buzz([40,40,80]);
     const show=()=>{const o=document.createElement('div');o.className='overlay';
@@ -627,10 +630,11 @@ const SurviveGame=(()=>{
     o.querySelector('button').onclick=()=>{o.remove();paused=false;last=performance.now()};stage.appendChild(o)}
   function intro(){
     const o=document.createElement('div');o.className='overlay';
-    o.innerHTML='<h3>صمود المدار</h3><p></p><div class="chars"></div><button class="btn main" type="button">ابدأ</button><button class="btn" type="button"></button>';
+    o.innerHTML='<h3>صمود المدار</h3><p></p>'+diffHTML()+'<div class="chars"></div><button class="btn main" type="button">ابدأ</button><button class="btn" type="button"></button>';
     const cb=o.querySelector('.chars');Object.entries(CHARS).forEach(([k,c])=>{const b=document.createElement('button');b.type='button';b.className='chr'+((st.char||'scout')===k?' on':'');
       b.innerHTML='<span class="em"></span><b></b><small></small>';b.querySelector('.em').textContent=c.em;b.querySelector('b').textContent=c.name;b.querySelector('small').textContent=c.d;
       b.onclick=()=>{st.char=k;gSave('survive',st);snd('tap');cb.querySelectorAll('.chr').forEach(x=>x.classList.toggle('on',x===b))};cb.appendChild(b)});
+    o.querySelectorAll('[data-df]').forEach(b=>b.onclick=()=>{st.diff=b.dataset.df;gSave('survive',st);snd('tap');o.querySelectorAll('[data-df]').forEach(x=>x.classList.toggle('on',x===b))});
     o.querySelector('p').textContent=st.bestTime?`رقمك القياسي ${fmtTime(st.bestTime)} · أعلى موجة ${st.bestWave}`:'حرّك إصبعك على الملعب للمشي، وسلاحك يطلق وحده';
     const [b1,b2]=o.querySelectorAll(':scope > .btn');b1.onclick=()=>begin();b2.textContent='🔬 مختبر المدار · 💎 '+(st.crys||0);b2.onclick=()=>openLab(intro);stage.appendChild(o)}
   const toLocal=ev=>{const r=cv.getBoundingClientRect();return [(ev.clientX-r.left)*W/r.width,(ev.clientY-r.top)*H/r.height]};

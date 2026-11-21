@@ -19,6 +19,9 @@ const PilotGame=(function(){
     ['سحابة الجليد',[[70,150,200,'60,160,230'],[300,430,220,'40,200,220'],[200,610,170,'120,120,240']]],['قطاع الحرّاس',[[70,140,190,'60,200,120'],[300,420,230,'30,120,90'],[190,620,170,'170,220,80']]],['أطراف المجرة',[[60,160,200,'230,60,160'],[300,420,230,'120,40,200'],[200,620,170,'255,190,80']]]];
   let bgY=0,novaFx=0,bombs=0,combo=0,comboT=0,mult=1,lasers=[],sect=-1;
   const EN={scout:{hp:14,r:15,sc:60,px:64},diver:{hp:10,r:14,sc:70,px:60},bomber:{hp:60,r:24,sc:180,px:96},ufo:{hp:30,r:18,sc:120},mini:{hp:300,r:30,sc:600},cruiser:{hp:90,r:26,sc:260,px:96},mine:{hp:16,r:12,sc:50},rock:{hp:24,r:16,sc:40},boss:{hp:900,r:70,sc:3000,px:300}};
+  const DIFF={easy:{n:'سهل',em:'🟢',d:'للتجربة والاستمتاع',hp:0.7,dmg:0.55,fr:0.7,bs:0.8,rw:0.6},normal:{n:'متوسط',em:'🟡',d:'أعداء أقوى ونيران أكثف',hp:1.4,dmg:1.35,fr:1.3,bs:1.12,rw:1},hard:{n:'صعب',em:'🔴',d:'للمحترفين · مكافأة ×1.7',hp:2.1,dmg:2,fr:1.75,bs:1.3,rw:1.7}};
+  const DF=()=>DIFF[(st&&st.diff)||'normal']||DIFF.normal;
+  const diffHTML=()=>'<div class="diffs">'+Object.entries(DIFF).map(([k,v])=>`<button type="button" class="dfb${((st.diff||'normal')===k)?' on':''}" data-df="${k}"><b>${v.em} ${v.n}</b><small>${v.d}</small></button>`).join('')+'</div>';
   function reset(){const S=shipStats();P={x:W/2,y:H-100,r:13,hp:S.hull,max:S.hull,dm:S.dmg,wl:1+hl('start'),cd:0,mcd:0,inv:0,shield:hl('shield'),bank:0,vx:0,mag:70+25*hl('mag'),pw:0,rt:(1+0.06*hl('rate'))*plane().rate,spd:plane().spd,pl:plane(),dcd:0};bombs=2+hl('bomb');combo=0;comboT=0;mult=1;lasers=[];sect=-1;neb=null;
     bul=[];eb=[];en=[];drops=[];parts=[];FT=[];t=0;wave=0;queue=[];gap=1.2;score=0;crys=0;kills=0;bossOn=null;banner=null;shk=0;
     stars=[];for(let i=0;i<90;i++)stars.push({x:Math.random()*W,y:Math.random()*H,z:rnd(.2,1)});planet=null}
@@ -35,15 +38,15 @@ const PilotGame=(function(){
     addQ(at+2.2,()=>spawnMini(w))}
   /* a mini-boss closes every wave; the mothership takes waves 5, 10, 15… */
   const MINI=[{n:'الصقر الأحمر',spr:'scout',sc:3.3,hue:0,f:'spread'},{n:'ملك الصحون',img:'cre_ufo',sc:3.2,f:'ring'},{n:'الصخرة العملاقة',rock:1,sc:3.2,f:'split'},{n:'قائد الطرّادات',spr:'bomber',sc:2.6,hue:150,f:'laser'},{n:'النسر البرتقالي',spr:'diver',sc:3.4,hue:0,f:'dive'}];
-  function spawnMini(w){const i=(w-1)%5===4?(w%MINI.length):((w-1)%5+Math.floor((w-1)/5))%MINI.length,M=MINI[i],hp=(200+40*w)*(1+0.08*w);
+  function spawnMini(w){const i=(w-1)%5===4?(w%MINI.length):((w-1)%5+Math.floor((w-1)/5))%MINI.length,M=MINI[i],hp=(200+40*w)*(1+0.08*w)*DF().hp;
     const e=mk('mini',W/2,-70,{pat:'mini',vy:70,hp,max:hp,r:30,sc:500+120*w,mi:i,bname:M.n,fire:1.6,rotA:0});bossOn=e;queue=[];banner={txt:'⚠️ '+M.n,sub:'زعيم الموجة '+w,l:1.8};shake(3,0.3);snd('alarm')}
-  function miniFire(e,dt){e.fire-=dt;if(e.fire>0)return;const M=MINI[e.mi],hp=e.hp/e.max,a0=Math.atan2(P.y-e.y,P.x-e.x);e.fire=(hp<0.4?0.75:1.15)+Math.random()*0.3;
+  function miniFire(e,dt){e.fire-=dt*DF().fr;if(e.fire>0)return;const M=MINI[e.mi],hp=e.hp/e.max,a0=Math.atan2(P.y-e.y,P.x-e.x);e.fire=(hp<0.4?0.75:1.15)+Math.random()*0.3;
     if(M.f==='spread'){for(let k=-2;k<=2;k++){const a=a0+k*0.2;eb.push({x:e.x,y:e.y+20,vx:Math.cos(a)*190,vy:Math.sin(a)*190,r:5,c:'#ff5d73'})}}
     else if(M.f==='ring'){const n=12;for(let k=0;k<n;k++){const a=k/n*6.283+e.t;eb.push({x:e.x,y:e.y,vx:Math.cos(a)*120,vy:Math.sin(a)*120,r:5,c:'#9dff5a'})}}
     else if(M.f==='split'){for(let k=0;k<2;k++)mk('rock',e.x+(k?20:-20),e.y+20,{pat:'rock',vy:rnd(110,150),vx:(k?1:-1)*rnd(40,80),rot:rnd(-3,3),sz:rnd(.8,1.1)});eb.push({x:e.x,y:e.y,vx:Math.cos(a0)*170,vy:Math.sin(a0)*170,r:7,c:'#ffb070',big:1})}
     else if(M.f==='laser'){lasers.push({x:clamp(P.x,20,W-20),y:e.y+30,t:1.3});for(const s of [-1,1])eb.push({x:e.x+s*30,y:e.y+10,vx:s*40,vy:170,r:5,c:'#ff5df2'})}
     else if(M.f==='dive'){if(!e.dv){e.dv=1;e.dvx=e.x;e.dvy=e.y;e.tx=P.x;e.ty=P.y;e.dvT=0}for(let k=-1;k<=1;k++){const a=a0+k*0.15;eb.push({x:e.x,y:e.y,vx:Math.cos(a)*220,vy:Math.sin(a)*220,r:4,c:'#ffd34d'})}}}
-  function mk(k,x,y,o){const T=EN[k],hm=1+0.12*(wave-1);const e=Object.assign({k,x,y,vx:0,vy:60,hp:T.hp*hm,max:T.hp*hm,r:T.r,t:0,sc:T.sc,fire:rnd(1,2.5),ph:Math.random()*6},o||{});en.push(e);return e}
+  function mk(k,x,y,o){const T=EN[k],hm=(1+0.12*(wave-1))*DF().hp;const e=Object.assign({k,x,y,vx:0,vy:60,hp:T.hp*hm,max:T.hp*hm,r:T.r,t:0,sc:T.sc,fire:rnd(1,2.5),ph:Math.random()*6},o||{});en.push(e);return e}
   function formation(p,w){const sp=1+Math.min(0.8,w*0.05);
     if(p==='line'){const n=5;for(let i=0;i<n;i++)mk('scout',40+i*(W-80)/(n-1),-30-i*14,{pat:'sine',vy:70*sp,amp:40})}
     else if(p==='v'){for(let i=0;i<7;i++){const d=Math.abs(i-3);mk('scout',W/2+(i-3)*38,-30-d*30,{pat:'down',vy:85*sp})}}
@@ -54,7 +57,7 @@ const PilotGame=(function(){
     else if(p==='mines'){for(let i=0;i<4;i++)mk('mine',rnd(30,W-30),-20-i*60,{pat:'rock',vy:rnd(55,80),vx:rnd(-15,15),rot:2})}
     else if(p==='cruiser'){mk('cruiser',rnd(80,W-80),-50,{pat:'hover',vy:45,stop:rnd(90,140),fire:2.2,lz:0})}
     else if(p==='swarm'){for(let i=0;i<10;i++)mk('scout',rnd(30,W-30),-20-i*25,{pat:'sine',vy:110*sp,amp:rnd(20,60)})}}
-  function spawnBoss(){const lvl=wave/5,hp=EN.boss.hp*(1+0.6*(lvl-1));bossOn=mk('boss',W/2,-120,{pat:'boss',vy:40,hp,max:hp,r:70,sc:3000*lvl,phase:0,fire:1.5});shake(4,0.5);snd('alarm')}
+  function spawnBoss(){const lvl=wave/5,hp=EN.boss.hp*(1+0.6*(lvl-1))*DF().hp;bossOn=mk('boss',W/2,-120,{pat:'boss',vy:40,hp,max:hp,r:70,sc:3000*lvl,phase:0,fire:1.5});shake(4,0.5);snd('alarm')}
   /* ---------- weapons ---------- */
   function fire(){const d=10*P.dm,x=P.x,y=P.y-22,b=(dx,ang,k)=>bul.push({x:x+dx,y,vx:Math.sin(ang)*640,vy:-Math.cos(ang)*640,d:d*(k||1),c:'#5ff2d6'});
     const w=P.wl;if(w===1)b(0,0);else if(w===2){b(-7,0);b(7,0)}else{b(0,0,1.1);b(-9,-0.12);b(9,0.12)}
@@ -69,7 +72,7 @@ const PilotGame=(function(){
     else{if(big)shake(3,0.2);const r=Math.random();if(r<0.07)drops.push({x:e.x,y:e.y,k:'pow',vy:60});else if(r<0.1)drops.push({x:e.x,y:e.y,k:'hp',vy:60});else if(r<0.13)drops.push({x:e.x,y:e.y,k:'shield',vy:60});else if(r<0.145)drops.push({x:e.x,y:e.y,k:'bomb',vy:60});else if(r<0.45)drops.push({x:e.x,y:e.y,k:'gem',vy:70})}}
   function hit(e,d){e.hp-=d;e.fl=0.06;e.acc=(e.acc||0)+d;if(!e.accT||t-e.accT>0.25||e.hp<=0){if(FT.length<40)FT.push({x:e.x+rnd(-6,6),y:e.y-e.r*0.6,v:Math.round(e.acc),l:.7,big:e.k==='boss'||e.k==='mini'});e.acc=0;e.accT=t}if(e.hp<=0&&!e.dead)kill(e)}
   function hurtP(d){if(P.inv>0||over)return;if(P.shield>0){P.shield--;P.inv=0.6;snd('err');boom(P.x,P.y,'#9fe8ff',14);return}
-    P.hp-=d;P.inv=0.7;shake(Math.min(7,2+d/6),0.25);snd('err');if(typeof buzz==='function')buzz(40);if(P.wl>1&&d>=20)P.wl--;if(P.hp<=0)die()}
+    d*=DF().dmg;P.hp-=d;P.inv=0.7;shake(Math.min(7,2+d/6),0.25);snd('err');if(typeof buzz==='function')buzz(40);if(P.wl>1&&d>=20)P.wl--;if(P.hp<=0)die()}
   /* ---------- loop ---------- */
   function update(dt){t+=dt;if(banner){banner.l-=dt;if(banner.l<=0)banner=null}
     // move
@@ -99,14 +102,14 @@ const PilotGame=(function(){
         else{e.x=W/2+Math.sin(e.t*(M.f==='spread'?1.3:0.8))*(W/2-50);e.y=120+Math.sin(e.t*1.7)*18}if(M.rock)e.rotA+=dt*0.8;miniFire(e,dt)}}
       else if(e.pat==='boss'){if(e.y<130)e.y+=e.vy*dt;else{e.x=W/2+Math.sin(e.t*0.6)*90;bossFire(e,dt)}}
       // enemy shots
-      if(e.k==='cruiser'&&e.y>40){e.fire-=dt;if(e.fire<=0){e.fire=rnd(2.6,3.4);lasers.push({x:e.x,y:e.y+20,t:1.4})}}
-      if(e.k==='bomber'||e.k==='ufo'||(e.k==='scout'&&wave>=3)){e.fire-=dt;if(e.fire<=0&&e.y>20&&e.y<H*0.7){e.fire=e.k==='bomber'?rnd(1.2,1.8):e.k==='ufo'?rnd(1.6,2.4):rnd(2.5,4);
+      if(e.k==='cruiser'&&e.y>40){e.fire-=dt*DF().fr;if(e.fire<=0){e.fire=rnd(2.6,3.4);lasers.push({x:e.x,y:e.y+20,t:1.4})}}
+      if(e.k==='bomber'||e.k==='ufo'||(e.k==='scout'&&wave>=3)){e.fire-=dt*DF().fr;if(e.fire<=0&&e.y>20&&e.y<H*0.7){e.fire=e.k==='bomber'?rnd(1.2,1.8):e.k==='ufo'?rnd(1.6,2.4):rnd(2.5,4);
         if(e.k==='ufo'){for(let k=-1;k<=1;k++){const a=Math.PI/2+k*0.35;eb.push({x:e.x,y:e.y,vx:Math.cos(a)*150,vy:Math.sin(a)*150,r:5,c:'#9dff5a'})}}
         else{const a=Math.atan2(P.y-e.y,P.x-e.x),s=e.k==='bomber'?190:160;eb.push({x:e.x,y:e.y+10,vx:Math.cos(a)*s,vy:Math.sin(a)*s,r:e.k==='bomber'?6:4,c:'#ff5d73'})}}}
       if(!e.dead&&(e.x-P.x)**2+(e.y-P.y)**2<(e.r*0.8+P.r)**2){if(e.k==='boss'||e.k==='mini'){hurtP(25);P.inv=Math.max(P.inv,0.9)}else{hurtP(e.k==='bomber'||e.k==='cruiser'?30:e.k==='rock'?18:e.k==='mine'?20:15);kill(e)}}
       if(e.y>H+60||e.x<-80||e.x>W+80)e.dead=1}
     en=en.filter(e=>!e.dead);
-    for(const b of eb){b.x+=b.vx*dt;b.y+=b.vy*dt;if((b.x-P.x)**2+(b.y-P.y)**2<(b.r+P.r*0.7)**2){b.gone=1;hurtP(b.big?16:9)}}eb=eb.filter(b=>!b.gone&&b.y<H+20&&b.y>-40&&b.x>-20&&b.x<W+20);
+    const bsd=dt*DF().bs;for(const b of eb){b.x+=b.vx*bsd;b.y+=b.vy*bsd;if((b.x-P.x)**2+(b.y-P.y)**2<(b.r+P.r*0.7)**2){b.gone=1;hurtP(b.big?16:9)}}eb=eb.filter(b=>!b.gone&&b.y<H+20&&b.y>-40&&b.x>-20&&b.x<W+20);
     for(const d of drops){const dx=P.x-d.x,dy=P.y-d.y,dd=Math.hypot(dx,dy);if(dd<P.mag){d.x+=dx/dd*320*dt;d.y+=dy/dd*320*dt}else d.y+=d.vy*dt;
       if(dd<P.r+12){d.gone=1;pick(d.k)}}drops=drops.filter(d=>!d.gone&&d.y<H+20);
     for(const q of parts){q.x+=q.vx*dt;q.y+=q.vy*dt;q.vx*=0.94;q.vy*=0.94;q.l-=dt}parts=parts.filter(q=>q.l>0);
@@ -115,7 +118,7 @@ const PilotGame=(function(){
     for(const s of stars){s.y+=(30+140*s.z)*dt;if(s.y>H){s.y=-2;s.x=Math.random()*W}}
     if(!planet&&Math.random()<dt*0.04){const ks=['bg1','bg2','bg3','bg4'];planet={k:ks[Math.floor(Math.random()*ks.length)],x:rnd(40,W-40),y:-160,r:rnd(50,110)}}if(planet){planet.y+=22*dt;if(planet.y>H+220)planet=null}
     stats()}
-  function bossFire(e,dt){e.fire-=dt;if(e.fire>0)return;e.phase=(e.phase+1)%(wave>=10?4:3);if(e.phase===3){for(let k=0;k<3;k++)lasers.push({x:clamp(P.x+(k-1)*70,20,W-20),y:e.y+40,t:1.2+k*0.25});e.fire=1.6;return}const hp=e.hp/e.max;e.fire=hp<0.4?0.9:1.4;
+  function bossFire(e,dt){e.fire-=dt*DF().fr;if(e.fire>0)return;e.phase=(e.phase+1)%(wave>=10?4:3);if(e.phase===3){for(let k=0;k<3;k++)lasers.push({x:clamp(P.x+(k-1)*70,20,W-20),y:e.y+40,t:1.2+k*0.25});e.fire=1.6;return}const hp=e.hp/e.max;e.fire=hp<0.4?0.9:1.4;
     if(e.phase===0){for(let k=0;k<14;k++){const a=k/14*Math.PI*2+e.t;eb.push({x:e.x,y:e.y+20,vx:Math.cos(a)*130,vy:Math.sin(a)*130,r:6,c:'#ff3d5a',big:1})}}
     else if(e.phase===1){for(const s of [-1,1]){const a=Math.atan2(P.y-e.y,P.x-(e.x+s*45));for(let k=0;k<3;k++)eb.push({x:e.x+s*45,y:e.y+40,vx:Math.cos(a)*(200+k*30),vy:Math.sin(a)*(200+k*30),r:5,c:'#ffd34d'})}}
     else{for(let k=-3;k<=3;k++){const a=Math.PI/2+k*0.18;eb.push({x:e.x,y:e.y+50,vx:Math.cos(a)*170,vy:Math.sin(a)*170,r:6,c:'#ff5df2',big:1})}}
@@ -188,8 +191,8 @@ const PilotGame=(function(){
   function clearOv(){stage.querySelectorAll('.overlay').forEach(o=>o.remove())}
   function overlay(html){clearOv();const o=document.createElement('div');o.className='overlay pov';o.innerHTML=html;stage.appendChild(o);return o}
   function intro(){const S=shipStats();const o=overlay(`<h3>🚀 طيّار المدار</h3><p>${st.best?`رقمك القياسي ${st.best.toLocaleString('en')} · أعلى موجة ${st.bestWave||1}`:'حرّك إصبعك لتقود المركبة، والمدافع تطلق وحدها. اجمع ⚡ لتقوية السلاح.'}</p>
-      <div class="svbonus">🛠️ مركبتك: هيكل <b>${S.hull}</b> · ضرر <b>+${Math.round((S.dmg-1)*100)}%</b> · ☢️ <b>${2+hl('bomb')}</b></div>${hangarHTML()}<button class="btn main" type="button">انطلق</button>`);
-    bindHangar(o,intro);o.querySelector('.btn.main').onclick=()=>{snd('tap');begin()}}
+      <div class="svbonus">🛠️ مركبتك: هيكل <b>${S.hull}</b> · ضرر <b>+${Math.round((S.dmg-1)*100)}%</b> · ☢️ <b>${2+hl('bomb')}</b></div>${diffHTML()}${hangarHTML()}<button class="btn main" type="button">انطلق</button>`);
+    bindHangar(o,intro);o.querySelectorAll('[data-df]').forEach(b=>b.onclick=()=>{st.diff=b.dataset.df;gSave('pilot',st);snd('tap');o.querySelectorAll('[data-df]').forEach(x=>x.classList.toggle('on',x===b))});o.querySelector('.btn.main').onclick=()=>{snd('tap');begin()}}
   const CARD={orbit:'pl_orbit',ghost:'card_ghost',tank:'card_tank',nova:'card_star'};function planeImg(m,id){if(typeof ART!=='undefined'&&ART[CARD[id]])return ART[CARD[id]];try{const c=sprite(m,160,0);return c?c.toDataURL():''}catch(e){return ''}}
   function planesHTML(){const own=st.planes||['orbit'];return `<div class="hh">✈️ الطائرات</div><div class="pl">${PLANES.map(q=>{const has=own.includes(q.id),sel=plane().id===q.id;
     return `<button type="button" class="plb${sel?' on':''}${has?'':' lock'}" data-pl="${q.id}" ${!has&&(st.gems||0)<q.cost?'disabled':''}><img class="${q.id==='orbit'?'top':'pic'}" src="${planeImg(q.m,q.id)}" alt=""><b>${q.n}</b><small>${q.d}</small><em>${sel?'✔ مختارة':has?'اختر':'💎 '+q.cost}</em></button>`}).join('')}</div>`}
@@ -198,7 +201,7 @@ const PilotGame=(function(){
       if(!st.planes.includes(q.id)){if((st.gems||0)<q.cost)return;st.gems-=q.cost;st.planes.push(q.id);snd('ach');toast('✈️ حصلت على '+q.n)}else snd('tap');st.plane=q.id;gSave('pilot',st);again()});o.querySelectorAll('[data-h]').forEach(b=>b.onclick=()=>{const h=HANG.find(x=>x.id===b.dataset.h),c=hcost(h);if((st.gems||0)<c||hl(h.id)>=h.max)return;st.gems-=c;st.up=st.up||{};st.up[h.id]=hl(h.id)+1;gSave('pilot',st);snd('ach');again()})}
   function begin(){clearOv();reset();running=true;paused=false;over=false;last=performance.now();stats()}
   function die(){over=true;running=false;boom(P.x,P.y,'#ffb347',60,true);shake(9,0.8);snd('bigboom');
-    const nb=score>(st.best||0);st.best=Math.max(st.best||0,score);st.bestWave=Math.max(st.bestWave||1,wave);st.runs=(st.runs||0)+1;st.gems=(st.gems||0)+crys;gSave('pilot',st);if(wave>=10&&typeof unlock==='function')unlock('pilot_w10');
+    const nb=score>(st.best||0);st.best=Math.max(st.best||0,score);st.bestWave=Math.max(st.bestWave||1,wave);st.runs=(st.runs||0)+1;crys=Math.round(crys*DF().rw);st.gems=(st.gems||0)+crys;gSave('pilot',st);if(wave>=10&&typeof unlock==='function')unlock('pilot_w10');
     if(typeof addXP==='function')addXP(Math.floor(score/400)+wave*3);if(typeof colonyReward==='function')colonyReward('pilot',0,{score,wave,crys,kills});
     const show=()=>{const o=overlay(`<h3>${nb?'🏆 رقم قياسي جديد!':'💥 تحطّمت المركبة'}</h3><p>النقاط <b>${score.toLocaleString('en')}</b> · الموجة <b>${wave}</b> · 💎 <b>+${crys}</b> · أسقطت <b>${kills}</b></p>${hangarHTML()}<button class="btn main" type="button">حلّق مجدداً</button>`);
       bindHangar(o,show);o.querySelector('.btn.main').onclick=()=>{snd('tap');begin()}};setTimeout(show,900)}
