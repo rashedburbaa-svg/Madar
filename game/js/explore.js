@@ -15,7 +15,7 @@ function exGo(x,y,goal){if(!exInside(x,y)){const a=Math.atan2((y-FEN.cy)/FEN.ry,
   EX.tx=x;EX.ty=y;EX.goal=goal||null;exDraw();if(!EX.raf){EX.last=performance.now();EX.raf=requestAnimationFrame(exStep)}}
 function exStep(now){const dt=Math.min(0.05,(now-EX.last)/1000);EX.last=now;EX.raf=0;if(!EX.on||EX.tx==null)return;
   const dx=EX.tx-EX.x,dy=EX.ty-EX.y,d=Math.hypot(dx,dy),sp=95*dt;if(Math.abs(dx)>1)EX.dir=dx<0?-1:1;
-  if(d<=sp){EX.x=EX.tx;EX.y=EX.ty;EX.tx=null;exDraw();const g=EX.goal;EX.goal=null;if(g)setTimeout(()=>enterB(g),120);return}
+  if(d<=sp){EX.x=EX.tx;EX.y=EX.ty;EX.tx=null;exDraw();const g=EX.goal;EX.goal=null;if(g){if(typeof doorOpen==='function')doorOpen(g);snd('ok');setTimeout(()=>enterB(g),450)}return}
   EX.x+=dx/d*sp;EX.y+=dy/d*sp;exPos();
   if(cam.z>1.05){cam.x+=(EX.x-cam.x)*0.08;cam.y+=(EX.y-30-cam.y)*0.08;camView()}
   EX.raf=requestAnimationFrame(exStep)}
