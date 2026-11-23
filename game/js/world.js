@@ -8,12 +8,12 @@ const WORLD={
   spot:['#5e4670','#c9e2f2','#5a2e22','#d6c8ee','#2f6b47','#2a1d4a'],
   fog:[0x2a2040,0xbcd6ea,0x4a1a10,0xc9bde0,0x10301f,0x0a0618],
   mon:{small:{hp:26,dmg:8,spd:84,r:13},big:{hp:95,dmg:16,spd:56,r:20},grow:0.8,dgrow:0.5},
-  guard:{hp:1400,grow:1,dmg:22,r:44,cd:5*60000,kills:25},   // a beaten guardian returns after 5 min, or sooner after 25 kills in its region
+  guard:{hp:1400,grow:1,dmg:22,r:44,cd:BAL.world.guard.respawnS*1000,kills:BAL.world.guard.fastKills},   // a beaten guardian returns after 5 min, or sooner after 25 kills in its region
   player:{hp:120,dmg:12,rate:2.6,spd:150,range:270},
-  nodes:14,nodeCd:120000,poi:{c:15,mat:20},maxMon:55,
-  spawn:{rate:3.2,min:3,max:6,d0:520,d1:780},  // packs per second (chance), pack size, spawn ring around the hero
+  nodes:14,nodeCd:120000,poi:{c:15,mat:20},maxMon:BAL.world.enemy.maxActive,
+  spawn:{rate:3.2,min:BAL.world.enemy.packMin,max:BAL.world.enemy.packMax,d0:520,d1:780},  // packs per second (chance), pack size, spawn ring around the hero
   // XP Hero style: the hero levels up from kills; each region has a monster level band and a gate (previous guardian + hero level)
-  LV:[1,5,10,15,20,25],hpGrow:1.15,dmgGrow:1.1,heroDmg:1.1,heroHp:12,xpNext:lv=>Math.round(20*Math.pow(lv,1.5)),
+  LV:BAL.world.enemy.zoneLv,hpGrow:1.15,dmgGrow:1.1,heroDmg:1.1,heroHp:12,xpNext:lv=>Math.round(20*Math.pow(lv,1.5)),
   xp:{small:4,big:10,guard:120},
   WEAP:[{id:'rifle',n:'بندقية الطاقة',em:'🔫',kind:'shot',rate:2.6,mul:1,mat:'alloy',cost:null},
     {id:'spread',n:'القاذف الثلاثي',em:'💥',kind:'spread',rate:2.0,mul:0.75,mat:'ice',cost:{ice:20,alloy:20}},
@@ -27,7 +27,7 @@ document.head.insertAdjacentHTML('beforeend','<style>body.wfull{overflow:hidden;
 const WorldGame=(()=>{
   const W=432,{RW,GRID}=WORLD,WW=RW*3,WH=RW*2;
   let H=624,cv,ctx,c3,raf=0,last=0,st,running=false,joy=null,keys={},hud,mini,t=0,saveT=0,msgT=0,view='2d',R3=null,iv=0;
-  let p,mons=[],shots=[],eshots=[],nodes=[],props=[],pools=[],parts=[],guards=[],pois=[],orbs=[],fx=[],cam={x:0,y:0,yaw:-Math.PI/2};
+  let evT=0,evN=0,mets=[],p,mons=[],shots=[],eshots=[],nodes=[],props=[],pools=[],parts=[],guards=[],pois=[],orbs=[],fx=[],cam={x:0,y:0,yaw:-Math.PI/2};
   const IMG={};const img=k=>{if(typeof ART==='undefined'||!ART[k])return null;if(!IMG[k]){const i=new Image();i.src=ART[k];IMG[k]=i}return IMG[k].complete&&IMG[k].naturalWidth?IMG[k]:null};
   const regAt=(x,y)=>{const c=Math.floor(x/RW),r=Math.floor(y/RW);return c<0||r<0||c>2||r>1?-1:GRID[r][c]};
   const regPos=i=>{for(let r=0;r<2;r++)for(let c=0;c<3;c++)if(GRID[r][c]===i)return {x:c*RW,y:r*RW};return {x:0,y:0}};
@@ -93,23 +93,28 @@ const WorldGame=(()=>{
     for(const s of shots){s.x+=s.vx*dt;s.y+=s.vy*dt;s.l-=dt;for(const m of mons){if(m.hp<=0)continue;if((m.x-s.x)**2+(m.y-s.y)**2<(m.r+4)**2){m.hp-=p.dmg;m.fl=0.08;s.l=0;if(m.hp<=0)kill(m);break}}}
     shots=shots.filter(s=>s.l>0);
     // monsters
-    for(const m of mons){if(m.hp<=0)continue;m.fl=Math.max(0,m.fl-dt);const dx=p.x-m.x,dy=p.y-m.y,d=Math.hypot(dx,dy)||1;let vx=0,vy=0;
+    const E=BAL.world.enemy;for(const m of mons){if(m.hp<=0)continue;m.fl=Math.max(0,m.fl-dt);const dx=p.x-m.x,dy=p.y-m.y,d=Math.hypot(dx,dy)||1;let vx=0,vy=0;
       if(m.guard){const hd=Math.hypot(m.x-m.guard.hx,m.y-m.guard.hy);
         if(d<420){vx=dx/d*m.spd;vy=dy/d*m.spd;m.t1-=dt;m.t2-=dt;
-          if(m.t1<=0){m.t1=2.6;for(let k=0;k<10;k++){const a=k*0.628+t;eshots.push({x:m.x,y:m.y,vx:Math.cos(a)*170,vy:Math.sin(a)*170,l:2.4,dmg:m.dmg*0.6})}snd('err')}
-          if(m.t2<=0){m.t2=7;for(let k=0;k<3;k++){const s=monStats(m.reg,false,WORLD.LV[m.reg]),a=Math.random()*6.283;mons.push({x:m.x+Math.cos(a)*50,y:m.y+Math.sin(a)*50,reg:m.reg,big:false,lv:s.lv,hp:s.hp,max:s.hp,dmg:s.dmg,spd:s.spd,r:s.r,wt:0,hit:0,fl:0})}}}
+          if(!m.p2&&m.hp<=m.max*BAL.world.guard.phase2At){m.p2=1;snd('err');buzz([60,40,60]);toast('😡 '+'حارس '+PLN[m.reg].n+' غاضب!');fx.push({k:'rage',x:m.x,y:m.y,r:120,l:0.6})}
+          if(m.t1<=0){m.t1=2.6/(m.p2?BAL.world.guard.fireMul:1);for(let k=0;k<10;k++){const a=k*0.628+t;eshots.push({x:m.x,y:m.y,vx:Math.cos(a)*170,vy:Math.sin(a)*170,l:2.4,dmg:m.dmg*0.6})}snd('err')}
+          if(m.t2<=0){m.t2=7;for(let k=0;k<3+(m.p2?BAL.world.guard.summonBonus:0);k++){const s=monStats(m.reg,false,WORLD.LV[m.reg]),a=Math.random()*6.283;mons.push({x:m.x+Math.cos(a)*50,y:m.y+Math.sin(a)*50,reg:m.reg,big:false,lv:s.lv,hp:s.hp,max:s.hp,dmg:s.dmg,spd:s.spd,r:s.r,wt:0,hit:0,fl:0})}}}
         else if(hd>8){vx=(m.guard.hx-m.x)/hd*m.spd;vy=(m.guard.hy-m.y)/hd*m.spd;m.hp=Math.min(m.max,m.hp+m.max*0.05*dt)}}
+      else if(m.st==='wind'){m.sT-=dt;if(m.sT<=0){m.st='lunge';m.sT=E.lungeMs/1000;m.hitDone=0}}
+      else if(m.st==='lunge'){m.sT-=dt;vx=m.lx*m.spd*E.lungeMul;vy=m.ly*m.spd*E.lungeMul;if(!m.hitDone&&d<m.r+p.r+4){m.hitDone=1;hitP(m.dmg*E.hitMul,false)}if(m.sT<=0){m.st='rec';m.sT=E.recoverMs/1000}}
+      else if(m.st==='rec'){m.sT-=dt;vx=dx/d*m.spd*0.35;vy=dy/d*m.spd*0.35;if(m.sT<=0)m.st=''}
+      else if(d<m.r+p.r+E.reach){m.st='wind';m.sT=E.windupMs/1000;m.lx=dx/d;m.ly=dy/d}   // crouch and flash, then lunge where the hero WAS
       else if(d<340){vx=dx/d*m.spd;vy=dy/d*m.spd}
       else{m.wt-=dt;if(m.wt<=0){m.wt=rnd(1.5,3.5);const a=Math.random()*6.283;m.wx=Math.cos(a)*m.spd*0.35;m.wy=Math.sin(a)*m.spd*0.35}vx=m.wx;vy=m.wy}
       let nx=m.x+vx*dt,ny=m.y+vy*dt;if(regAt(nx,ny)!==m.reg&&!m.guard){m.wt=0;nx=m.x;ny=m.y}
       const bd2=Math.hypot(nx-WORLD.base.x,ny-WORLD.base.y);if(bd2<WORLD.base.r+m.r){nx=m.x;ny=m.y}
       const mvd=Math.hypot(nx-m.x,ny-m.y);m.mv=mvd>dt*4;m.ph=(m.ph||0)+mvd/(m.r*0.55);if(Math.abs(nx-m.x)>0.3)m.fx=nx<m.x?-1:1;
-      m.x=nx;m.y=ny;if(d<m.r+p.r)hitP(m.dmg*dt,false)}
+      m.x=nx;m.y=ny;if(m.guard&&d<m.r+p.r)hitP(m.dmg*dt,false)}
     mons=mons.filter(m=>m.hp>0&&(m.guard||Math.hypot(m.x-p.x,m.y-p.y)<1300));
     for(const s of eshots){s.x+=s.vx*dt;s.y+=s.vy*dt;s.l-=dt;if((s.x-p.x)**2+(s.y-p.y)**2<(p.r+5)**2){s.l=0;hitP(s.dmg,false)}}eshots=eshots.filter(s=>s.l>0);
     for(const q of parts){q.x+=q.vx*dt;q.y+=q.vy*dt;q.l-=dt}parts=parts.filter(q=>q.l>0);for(const f of fx)f.l-=dt;fx=fx.filter(f=>f.l>0);
     // XP gems fly to the hero
-    for(const o of orbs){const dx=p.x-o.x,dy=p.y-o.y,d=Math.hypot(dx,dy);if(d<110||o.pull){o.pull=1;const v=Math.min(520,180+(110-Math.min(110,d))*6);o.x+=dx/d*v*dt;o.y+=dy/d*v*dt}if(d<16){o.l=0;gainXP(o.v)}o.t=(o.t||0)+dt;if(o.t>40)o.l=0}orbs=orbs.filter(o=>o.l!==0);
+    for(const o of orbs){const dx=p.x-o.x,dy=p.y-o.y,d=Math.hypot(dx,dy);if(d<110||o.pull){o.pull=1;const v=Math.min(520,180+(110-Math.min(110,d))*6);o.x+=dx/d*v*dt;o.y+=dy/d*v*dt}if(d<16){o.l=0;if(o.gp){st.gp=(st.gp||0)+1;snd('ach');float(p.x,p.y-40,'🧩 قطعة سلاح نادرة');toast('🧩 قطعة سلاح نادرة! تخفّض كلفة تطوير سلاح في الورشة');gSave('world',st)}else gainXP(o.v)}o.t=(o.t||0)+dt;if(o.t>40&&!o.gp)o.l=0}orbs=orbs.filter(o=>o.l!==0);
     // material nodes: stand on one to gather it
     const now=Date.now();for(const n of nodes){if(n.cd>now){n.prog=0;continue}const d=Math.hypot(n.x-p.x,n.y-p.y);if(d<30){n.prog+=dt;if(n.prog>=0.9){n.prog=0;n.cd=now+WORLD.nodeCd;const q=2+Math.floor(Math.random()*3);addMat(REG[n.reg].mat,q);st.mat=(st.mat||0)+q;snd('coin');float(n.x,n.y,'+'+q+' '+REG[n.reg].me);dirty()}}else n.prog=Math.max(0,n.prog-dt)}
     // signals: one-time story finds
@@ -117,9 +122,19 @@ const WorldGame=(()=>{
       storyBox('📡 إشارة قديمة في '+PLN[o.reg].n,POIS[o.reg]+' · +'+WORLD.poi.mat+' '+REG[o.reg].me+' · +'+WORLD.poi.c+' 💎','رائع');dirty()}}
     for(const g of guards)if(!g.alive&&Math.hypot(g.hx-p.x,g.hy-p.y)<480)wakeGuard(g);
     if(Math.random()<dt*WORLD.spawn.rate)spawnMon();
+    worldEvent(dt);
     p.hurt=Math.max(0,p.hurt-dt);saveT-=dt;if(saveT<=0){saveT=4;st.x=Math.round(p.x);st.y=Math.round(p.y);gSave('world',st);if(st._d){st._d=0;colSave()}}
     hudTick()}
   const dirty=()=>{st._d=1};
+  /* random world events: a monster invasion or a meteor shower; meteors mark the ground first so the hero walks out of them */
+  function worldEvent(dt){const V=BAL.world.events,inB=Math.hypot(p.x-WORLD.base.x,p.y-WORLD.base.y)<WORLD.base.r+60;
+    for(const q of mets){q.w-=dt;if(q.w<=0&&!q.hit){q.hit=1;fx.push({k:'boom',x:q.x,y:q.y,r:q.r,l:0.35});snd('hit');buzz(30);if(Math.hypot(p.x-q.x,p.y-q.y)<q.r)hitP(p.max*V.meteorDmg,false);
+      for(const m of mons)if(!m.guard&&m.hp>0&&Math.hypot(m.x-q.x,m.y-q.y)<q.r){m.hp-=p.dmg*2;m.fl=0.08;if(m.hp<=0)kill(m)}}}
+    mets=mets.filter(q=>!q.hit);
+    evT+=dt;if(evT<V.everyS||inB)return;evT=0;const reg=regAt(p.x,p.y);if(reg<0||!open(reg))return;const kind=V.types[evN++%V.types.length];
+    if(kind==='invasion'){snd('err');toast('👾 غزو وحوش! '+V.invasionExtra+' وحوش تهاجم');for(let k=0;k<V.invasionExtra;k++){const a=k/V.invasionExtra*6.283,d=rnd(300,380),x=clamp(p.x+Math.cos(a)*d,10,WW-10),y=clamp(p.y+Math.sin(a)*d,10,WH-10);if(regAt(x,y)!==reg)continue;
+      const big=k%4===0,lv=Math.max(1,bandLv(reg,x,y)+(big?1:0)),s=monStats(reg,big,lv);mons.push({x,y,reg,big,lv,hp:s.hp,max:s.hp,dmg:s.dmg,spd:s.spd,r:s.r,wx:0,wy:0,wt:0,hit:0,fl:0})}}
+    else{snd('err');toast('☄️ مطر نيازك! ابتعد عن الدوائر الحمراء');for(let k=0;k<V.meteorN;k++){const a=Math.random()*6.283,d=k===0?0:rnd(60,260);mets.push({x:p.x+Math.cos(a)*d,y:p.y+Math.sin(a)*d,r:V.meteorR,w:V.meteorWarnMs/1000+k*0.18,w0:V.meteorWarnMs/1000+k*0.18})}}}
   function gainXP(n){st.xp=(st.xp||0)+n;st.lv=st.lv||1;let up=false;while(st.xp>=WORLD.xpNext(st.lv)){st.xp-=WORLD.xpNext(st.lv);st.lv++;up=true}
     if(up){restat(true);snd('ach');buzz([30,40,60]);float(p.x,p.y-50,'⬆️ المستوى '+st.lv);fx.push({k:'lvl',x:p.x,y:p.y,r:90,l:0.6});if(st.lv>=10)unlock('w_lv10');if(st.lv>=25)unlock('w_lv25');
       for(let i=1;i<6;i++)if(st.lv===WORLD.LV[i]&&(st.gk||{})[i-1]>0&&!open(i))toast('🔓 '+PLN[i].n+' مفتوحة الآن، امشِ إليها');gSave('world',st)}}
@@ -132,6 +147,7 @@ const WorldGame=(()=>{
       unlock('w_guard1');if(Object.keys(st.gk).length>=6)unlock('w_guard6');const nx=g.reg+1;if(nx<6&&!open(nx))toast('🚪 '+(gateOk(nx)?PLN[nx].n+' مفتوحة الآن، امشِ إليها':'بوابة '+PLN[nx].n+': '+gateTxt(nx)))}
     else{guardTick(m.reg);const k=m.big?2:1;gain('m',Math.round(12*k*(1+m.reg)));gain('e',Math.round(8*k*(1+m.reg)));if(Math.random()<0.25){addMat(REG[m.reg].mat,1);float(m.x,m.y-10,'+1 '+REG[m.reg].me)}}
     {const v=Math.round((m.guard?WORLD.xp.guard:m.big?WORLD.xp.big:WORLD.xp.small)*(1+0.12*((m.lv||1)-1)));const n=m.guard?8:m.big?2:1;for(let j=0;j<n;j++)orbs.push({x:m.x+rnd(-14,14),y:m.y+rnd(-14,14),v:Math.ceil(v/n)})}
+    {const G=BAL.world.gear,tier=((col.b&&col.b.hq)||1)+m.reg,ch=m.guard?G.guard:G.base+G.perTier*tier;if(Math.random()<ch)orbs.push({x:m.x,y:m.y-6,v:0,gp:1})}
     if(st.kills>=100)unlock('w_kill100');dirty()}
   // a sleeping guardian wakes early once enough monsters fall in its region
   function guardTick(reg){if(!((st.gd||{})[reg]>Date.now()))return;st.gq=st.gq||{};st.gq[reg]=(st.gq[reg]||0)+1;
@@ -146,12 +162,13 @@ const WorldGame=(()=>{
       if(b.dataset.x==='close'){forge(false);return}st.wo=st.wo||{rifle:1};st.wu=st.wu||{};
       if(b.dataset.x==='make'){for(const [k,n] of Object.entries(w.cost))if(matN(k)<n){snd('err');toast(`تحتاج ${n} ${matIcon(k)} ${matName(k)}`);return}for(const [k,n] of Object.entries(w.cost))col.wm.mat[k]-=n;st.wo[id]=1;st.wp=id;snd('win');toast('⚒️ صنعت '+w.n,'ach');if(Object.keys(st.wo).length>=5)unlock('w_weap5')}
       if(b.dataset.x==='eq'){st.wp=id;snd('tap')}
-      if(b.dataset.x==='up'){const l=wLv(id),c=WORLD.upCost(l);if(l>=5)return;if(col.res.c<c.c||matN(w.mat)<c.m){snd('err');toast(`تحتاج 💎 ${c.c} و${matIcon(w.mat)} ${c.m}`);return}col.res.c-=c.c;col.wm.mat[w.mat]-=c.m;st.wu[id]=l+1;snd('build');toast('⬆️ '+w.n+' · المستوى '+(l+1),'ach')}
+      if(b.dataset.x==='up'){const l=wLv(id),c=Object.assign({},WORLD.upCost(l)),usePart=(st.gp||0)>0;if(usePart)c.c=Math.ceil(c.c*(1-BAL.world.gear.discount));if(l>=5)return;if(col.res.c<c.c||matN(w.mat)<c.m){snd('err');toast(`تحتاج 💎 ${c.c} و${matIcon(w.mat)} ${c.m}`);return}col.res.c-=c.c;col.wm.mat[w.mat]-=c.m;if(usePart)st.gp--;st.wu[id]=l+1;snd('build');toast('⬆️ '+w.n+' · المستوى '+(l+1),'ach')}
       restat(false);gSave('world',st);colSave();forge(true)}}
   let forgeOn=false;
   function forge(on){forgeOn=on;const f=hud.querySelector('.wforge');f.hidden=!on;if(!on)return;st.wo=st.wo||{rifle:1};
     let h=`<div class="wfh"><b>⚒️ ورشة الأسلحة</b><button type="button" data-x="close" aria-label="إغلاق">✕</button></div><small>💎 ${fmtN(col.res.c)} · ${REG.map(R=>R.me+' '+matN(R.mat)).join(' ')}</small>`;
-    for(const w of WORLD.WEAP){const own=st.wo[w.id],l=wLv(w.id),eq=(st.wp||'rifle')===w.id,c=WORLD.upCost(l);
+    if(st.gp)h+=`<small>🧩 ${st.gp} قطعة نادرة: كل قطعة تخفّض 💎 تطوير واحد ${Math.round(BAL.world.gear.discount*100)}%</small>`;
+    for(const w of WORLD.WEAP){const own=st.wo[w.id],l=wLv(w.id),eq=(st.wp||'rifle')===w.id,c=Object.assign({},WORLD.upCost(l));if(st.gp)c.c=Math.ceil(c.c*(1-BAL.world.gear.discount));
       h+=`<div class="wfw${eq?' on':''}"><span class="ae">${w.em}</span><span class="an"><b>${w.n}${own?' · '+l+'/5':''}</b><small>${WTXT[w.kind]}</small>${own?'':`<small>${Object.entries(w.cost).map(([k,n])=>`${matIcon(k)} ${matN(k)}/${n}`).join(' · ')}</small>`}</span>
         ${own?`${eq?'<b class="ok">✅</b>':`<button type="button" class="btn" data-x="eq" data-id="${w.id}">جهّز</button>`}${l<5?`<button type="button" class="btn main" data-x="up" data-id="${w.id}">⬆️ 💎${c.c} ${matIcon(w.mat)}${c.m}</button>`:''}`:`<button type="button" class="btn main" data-x="make" data-id="${w.id}">اصنع</button>`}</div>`}
     f.innerHTML=h}
@@ -213,8 +230,11 @@ const WorldGame=(()=>{
     for(const o of pois)if(open(o.reg)&&!(st.poi||{})[o.reg]&&vis(o.x,o.y))L.push([o.y,()=>{ctx.font='26px sans-serif';ctx.textAlign='center';ctx.fillText('📡',o.x,o.y);ctx.strokeStyle='#ff7ad9';ctx.globalAlpha=0.5+0.5*Math.sin(t*4);ctx.beginPath();ctx.arc(o.x,o.y-8,22+6*Math.sin(t*4),0,6.283);ctx.stroke();ctx.globalAlpha=1}]);
     for(const m of mons)if(vis(m.x,m.y))L.push([m.y,()=>drawMon(m)]);
     L.push([p.y,drawPlayer]);L.sort((a,b)=>a[0]-b[0]);for(const x of L)x[1]();
-    for(const o of orbs){ctx.fillStyle='#7dff9a';ctx.shadowColor='#7dff9a';ctx.shadowBlur=8;ctx.beginPath();ctx.moveTo(o.x,o.y-6);ctx.lineTo(o.x+4,o.y);ctx.lineTo(o.x,o.y+6);ctx.lineTo(o.x-4,o.y);ctx.fill();ctx.shadowBlur=0}
+    for(const q of mets){const k=1-q.w/q.w0;ctx.strokeStyle='#ff4a3a';ctx.lineWidth=2;ctx.fillStyle='#ff4a3a33';ctx.beginPath();ctx.ellipse(q.x,q.y,q.r,q.r*0.62,0,0,6.283);ctx.fill();ctx.stroke();ctx.fillStyle='#ff4a3a66';ctx.beginPath();ctx.ellipse(q.x,q.y,q.r*k,q.r*0.62*k,0,0,6.283);ctx.fill();
+      if(q.w<0.45){const hy=q.w*700;ctx.fillStyle='#ffb04a';ctx.beginPath();ctx.arc(q.x+hy*0.3,q.y-hy,7,0,6.283);ctx.fill()}}
+    for(const o of orbs){if(o.gp){ctx.font='18px sans-serif';ctx.textAlign='center';ctx.fillText('🧩',o.x,o.y+6+2*Math.sin(t*5));continue}ctx.fillStyle='#7dff9a';ctx.shadowColor='#7dff9a';ctx.shadowBlur=8;ctx.beginPath();ctx.moveTo(o.x,o.y-6);ctx.lineTo(o.x+4,o.y);ctx.lineTo(o.x,o.y+6);ctx.lineTo(o.x-4,o.y);ctx.fill();ctx.shadowBlur=0}
     for(const f of fx){ctx.globalAlpha=Math.min(1,f.l*6);if(f.k==='slash'){ctx.strokeStyle='#ffe27a';ctx.lineWidth=6;ctx.beginPath();ctx.arc(f.x,f.y-10,f.r*0.85,f.a-1.1,f.a+1.1);ctx.stroke()}
+      else if(f.k==='boom'||f.k==='rage'){ctx.fillStyle=f.k==='boom'?'#ffb04a':'#ff3a3a';ctx.globalAlpha=Math.min(0.7,f.l*3);ctx.beginPath();ctx.ellipse(f.x,f.y,f.r*(1.2-f.l),f.r*0.62*(1.2-f.l),0,0,6.283);ctx.fill()}
       else if(f.k==='nova'||f.k==='lvl'){ctx.strokeStyle=f.k==='lvl'?'#7dff9a':'#ff8ad8';ctx.lineWidth=4;ctx.beginPath();ctx.arc(f.x,f.y-8,f.r*(1-f.l*2),0,6.283);ctx.stroke()}
       else if(f.k==='bolt'){ctx.strokeStyle='#bfe9ff';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(f.x,f.y-14);ctx.lineTo((f.x+f.x2)/2+rnd(-8,8),(f.y+f.y2)/2+rnd(-8,8));ctx.lineTo(f.x2,f.y2);ctx.stroke()}ctx.globalAlpha=1}
     ctx.fillStyle='#7ffcff';for(const s of shots){ctx.beginPath();ctx.arc(s.x,s.y,3.2,0,6.283);ctx.fill()}
@@ -232,17 +252,21 @@ const WorldGame=(()=>{
     const R=ART[k+'R']||im.naturalWidth/im.naturalHeight;c=document.createElement('canvas');c.height=ph;c.width=Math.max(4,Math.round(ph*R));const g=c.getContext('2d');g.imageSmoothingQuality='high';g.drawImage(im,0,0,c.width,ph);
     if(flash){g.globalCompositeOperation='source-atop';g.fillStyle='#ffffffb0';g.fillRect(0,0,c.width,ph)}if(SC.size>400)SC.clear();SC.set(key,c);return c}
   // creatures painted in the air get real legs so everything walks on the ground
+  const c2=k=>!!(ART[k+'_w1']&&ART[k+'_w2']);   // two walking frames from Gemini replace the split-leg trick
   const LEGS={pl0_small:1,pl3_small:1,pl5_small:1,pl5_big:1};
   function legs(w,h,lh,ph,mv,col){const st=mv?Math.sin(ph):0,lw=Math.max(2,h*0.075);ctx.lineCap='round';ctx.lineJoin='round';
     for(const s of [-1,1]){const sw=st*s,hx=s*w*0.13,hy=-lh,fx=hx+sw*w*0.16,fy=-Math.max(0,sw)*lh*0.35,kx=(hx+fx)/2+w*0.07,ky=(hy+fy)/2;
       ctx.strokeStyle=s<0?'#1b2030':col;ctx.lineWidth=lw;ctx.beginPath();ctx.moveTo(hx,hy);ctx.lineTo(kx,ky);ctx.lineTo(fx,fy);ctx.stroke();
       ctx.fillStyle=s<0?'#1b2030':col;ctx.beginPath();ctx.ellipse(fx+lw*0.5,fy-lw*0.2,lw*0.9,lw*0.5,0,0,6.283);ctx.fill()}}
   function drawMon(m){const k='pl'+m.reg+'_'+(m.big?'big':'small'),R=ART[k+'R']||1,h=m.guard?m.r*3.4:m.r*2.8,w=h*R,flip=(m.fx||(p.x>m.x?1:-1))>0,c=sprC(k,h,m.fl>0);
-    const ph=m.ph||0,mv=!!m.mv,bob=mv?Math.abs(Math.cos(ph))*h*0.05:(1+Math.sin(t*2.2+m.x))*h*0.008,tilt=mv?Math.sin(ph)*0.05:0,leg=LEGS[k]?h*0.3:0;
+    const ph=m.ph||0,mv=!!m.mv&&m.st!=='wind',bob=mv?Math.abs(Math.cos(ph))*h*0.05:(1+Math.sin(t*2.2+m.x))*h*0.008,tilt=mv?Math.sin(ph)*0.05:0,leg=LEGS[k]&&!c2(k)?h*0.3:0;
     ctx.fillStyle='#00000066';ctx.beginPath();ctx.ellipse(m.x,m.y,w*0.3*(1-bob/h),4.5,0,0,6.283);ctx.fill();
+    if(m.st==='wind'){const k=1-m.sT/(BAL.world.enemy.windupMs/1000);ctx.strokeStyle='#ff4a3a';ctx.lineWidth=2;ctx.globalAlpha=0.5+0.5*k;ctx.beginPath();ctx.moveTo(m.x,m.y);ctx.lineTo(m.x+m.lx*(m.r+BAL.world.enemy.reach)*k,m.y+m.ly*(m.r+BAL.world.enemy.reach)*k);ctx.stroke();ctx.beginPath();ctx.ellipse(m.x,m.y,w*0.38,7,0,0,6.283);ctx.stroke();ctx.globalAlpha=1}
+    if(m.p2){ctx.strokeStyle='#ff3a3a';ctx.globalAlpha=0.4+0.3*Math.sin(t*8);ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(m.x,m.y,w*0.5,12,0,0,6.283);ctx.stroke();ctx.globalAlpha=1}
     if(m.guard){ctx.strokeStyle='#ffd34d';ctx.globalAlpha=0.6;ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(m.x,m.y,w*0.45,10,0,0,6.283);ctx.stroke();ctx.globalAlpha=1}
-    ctx.save();ctx.translate(m.x,m.y);if(flip)ctx.scale(-1,1);
+    ctx.save();ctx.translate(m.x,m.y);if(flip)ctx.scale(-1,1);if(m.st==='wind')ctx.scale(1.08,0.88);else if(m.st==='lunge')ctx.scale(0.92,1.1);
     if(!c){ctx.fillStyle='#c060ff';ctx.beginPath();ctx.arc(0,-m.r,m.r,0,6.283);ctx.fill()}
+    else if(c2(k)){const f=sprC(k+'_w'+(mv?(Math.sin(ph)>0?1:2):1),h,m.fl>0)||c;ctx.translate(0,-bob);ctx.rotate(tilt);ctx.drawImage(f,-w/2,-h,w,h)}
     else if(leg){legs(w,h,leg+bob,ph,mv,WORLD.spot[m.reg]);ctx.translate(0,-leg-bob);ctx.rotate(tilt);ctx.drawImage(c,-w/2,-h*0.92,w,h*0.92)}
     else{const cw=c.width,ch=c.height,cut=0.68,lift=mv?h*0.09:0,fw=mv?Math.cos(ph)*w*0.05:0,a=mv?Math.max(0,Math.sin(ph)):0,b=mv?Math.max(0,-Math.sin(ph)):0,lb=h*(1-cut);
       // lower band split in two: each half is a leg group that lifts and swings in turn
@@ -298,11 +322,11 @@ const WorldGame=(()=>{
       for(const o of pois){o.m3.visible=open(o.reg)&&!(st.poi||{})[o.reg];o.m3.rotation.y=t*2}
       // monsters are billboards of the painted creatures
       const used=new Set();for(const m of mons){let s=m.s3;if(!s){const k='pl'+m.reg+'_'+(m.big?'big':'small');s=spr(k,m.guard?m.r*3.4:m.r*2.8);if(!s){s=new THREE.Sprite(new THREE.SpriteMaterial({color:0xc060ff}));s.scale.set(20,20,1)}scene.add(s);m.s3=s}
-        s.position.set(m.x,m.mv?Math.abs(Math.cos(m.ph||0))*m.r*0.18:0,m.y);s.material.rotation=m.mv?Math.sin(m.ph||0)*0.07:0;s.material.color.setHex(m.fl>0?0xffffff:0xdddddd);if(m.fl>0)s.material.color.setRGB(2,2,2);used.add(s)}
+        s.position.set(m.x,m.mv?Math.abs(Math.cos(m.ph||0))*m.r*0.18:0,m.y);s.material.rotation=m.mv?Math.sin(m.ph||0)*0.07:0;s.material.color.setHex(m.st==='wind'?0xff7a6a:m.p2?0xffaaaa:0xdddddd);if(m.fl>0)s.material.color.setRGB(2,2,2);used.add(s)}
       scene.children.filter(o=>o.isSprite&&o.userData.mon&&!used.has(o)).forEach(o=>{scene.remove(o);o.material.dispose()});used.forEach(s=>s.userData.mon=1);
-      sync(bul,shots,bg,bm,16);sync(ebul,eshots,eg,em,16);sync(orb3,orbs,og,om,8);
+      sync(met3,mets,mg,mm,1);met3.forEach(o=>{o.rotation.x=-Math.PI/2;o.scale.set(1,0.62,1)});sync(bul,shots,bg,bm,16);sync(ebul,eshots,eg,em,16);sync(orb3,orbs,og,om,8);
       sync(fx3,fx.filter(f=>f.k!=='bolt'),rg,rm,6);fx3.forEach((m,j)=>{const f=fx.filter(q=>q.k!=='bolt')[j];if(f){m.rotation.x=-Math.PI/2;const k=f.k==='slash'?f.r*0.85:f.r*(1-f.l*2);m.scale.set(k/20,k/20,1)}});R.render(scene,camera)}
-    const orb3=[],fx3=[],og=new THREE.OctahedronGeometry(4,0),om=new THREE.MeshBasicMaterial({color:0x7dff9a}),rg=new THREE.TorusGeometry(20,1.2,4,32),rm=new THREE.MeshBasicMaterial({color:0xffe27a,transparent:true,opacity:0.8});
+    const met3=[],mg=new THREE.RingGeometry(BAL.world.events.meteorR-4,BAL.world.events.meteorR,28),mm=new THREE.MeshBasicMaterial({color:0xff4a3a,side:THREE.DoubleSide}),orb3=[],fx3=[],og=new THREE.OctahedronGeometry(4,0),om=new THREE.MeshBasicMaterial({color:0x7dff9a}),rg=new THREE.TorusGeometry(20,1.2,4,32),rm=new THREE.MeshBasicMaterial({color:0xffe27a,transparent:true,opacity:0.8});
     function unlockReg(i){if(gmat[i])gmat[i].color.setHex(0xffffff)}
     function dispose(){try{R.dispose();R.forceContextLoss&&R.forceContextLoss()}catch(e){}}
     return {draw,unlockReg,dispose}}
@@ -318,10 +342,10 @@ const WorldGame=(()=>{
     kd=e=>{keys[e.key]=true},ku=e=>{keys[e.key]=false};
   const POIS=['حطام قمر صناعي قديم يحمل خريطة للمناطق المجاورة.','تحت الجليد جهاز يبث نفس الإشارة الغامضة.','داخل البركان بقايا محطة تعدين لم يعد منها أحد.','الكريستال هنا يغنّي حين تلمسه… ويحفظ أصوات من مرّوا قبلك.','في قلب الغابة بذرة عملاقة تنبض بضوء أخضر.','في السديم بوابة نجمية صغيرة مطفأة… من بناها؟'];
   return {id:'world',name:'عالم المدار',noDaily:true,desc:'عالم مفتوح: امشِ بين المناطق الست واجمع المواد وقاتل الوحوش والحرّاس',
-    help:'حرّك الرائد بإصبعك في أي مكان على الشاشة (عصا تحكم). يطلق الرائد النار تلقائياً على أقرب وحش. قف فوق البلورات المضيئة لتجمع مادة المنطقة. 📡 إشارة قديمة في كل منطقة لها مكافأة مرة واحدة، و👑 حارس قوي في كل منطقة يعود بعد 5 دقائق من هزيمته، أو أسرع إذا قتلت 25 وحشاً في منطقته. داخل قبة القاعدة تُشفى بسرعة، والحمم تحرقك. زر 🎥 يبدّل بين المنظور العلوي والثلاثي الأبعاد. كل وحش تقتله يُسقط جواهر خبرة خضراء ترفع مستواك وقوتك. كل منطقة لها مستوى وحوش، وبوابتها تنفتح بهزيمة حارس المنطقة السابقة وبلوغ مستواها. داخل القبة تجد ⚒️ ورشة الأسلحة لتصنع وتطوّر خمسة أسلحة بمواد المناطق. قوتك تزيد أيضاً بدعم المستعمرة ومعدات الورشة.',
+    help:'حرّك الرائد بإصبعك في أي مكان على الشاشة (عصا تحكم). يطلق الرائد النار تلقائياً على أقرب وحش. قف فوق البلورات المضيئة لتجمع مادة المنطقة. 📡 إشارة قديمة في كل منطقة لها مكافأة مرة واحدة، و👑 حارس قوي في كل منطقة يعود بعد 5 دقائق من هزيمته، أو أسرع إذا قتلت 25 وحشاً في منطقته. داخل قبة القاعدة تُشفى بسرعة، والحمم تحرقك. زر 🎥 يبدّل بين المنظور العلوي والثلاثي الأبعاد. كل وحش تقتله يُسقط جواهر خبرة خضراء ترفع مستواك وقوتك. كل منطقة لها مستوى وحوش، وبوابتها تنفتح بهزيمة حارس المنطقة السابقة وبلوغ مستواها. داخل القبة تجد ⚒️ ورشة الأسلحة لتصنع وتطوّر خمسة أسلحة بمواد المناطق. قوتك تزيد أيضاً بدعم المستعمرة ومعدات الورشة. الوحوش تنحني وتومض بخط أحمر قبل أن تنقضّ، فابتعد عن اتجاهها. الحارس يغضب عند نصف صحته. أحياناً يهجم غزو وحوش أو يسقط مطر نيازك: اخرج من الدوائر الحمراء. 🧩 القطع النادرة تخفّض كلفة تطوير الأسلحة.',
     icon:'<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" fill="#1e4733"/><path d="M4 24h40M24 4v40" stroke="#ffffff30"/><circle cx="17" cy="18" r="6" fill="#9fbfd6"/><circle cx="32" cy="30" r="7" fill="#ad9cc8"/><text x="24" y="31" font-size="16" text-anchor="middle">🧑‍🚀</text></svg>',
     progress(){const s=gState('world',{});return {level:Object.keys(s.gk||{}).length+1,stars:0}},play(){},
-    start(){st=gState('world',{kills:0});buildWorld();p=newPlayer();mons=[];shots=[];eshots=[];parts=[];t=0;stage.innerHTML='';stage.classList.add('wstage');document.body.classList.add('wfull');
+    start(){st=gState('world',{kills:0});buildWorld();p=newPlayer();mons=[];mets=[];evT=0;shots=[];eshots=[];parts=[];t=0;stage.innerHTML='';stage.classList.add('wstage');document.body.classList.add('wfull');
       cv=document.createElement('canvas');c3=document.createElement('canvas');c3.className='w3';stage.appendChild(cv);stage.appendChild(c3);ctx=cv.getContext('2d');hudBuild();resize();
       setView(st.view==='3d'?'3d':'2d');stage.addEventListener('pointerdown',pd);addEventListener('pointermove',pm);addEventListener('pointerup',pu);addEventListener('pointercancel',pu);addEventListener('keydown',kd);addEventListener('keyup',ku);addEventListener('resize',resize);
       running=true;last=performance.now();raf=requestAnimationFrame(frame);snd('win')},
