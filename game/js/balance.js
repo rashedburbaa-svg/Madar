@@ -16,6 +16,7 @@ const BAL={
     enemy:{windupMs:420,lungeMul:1.65,lungeMs:300,reach:46,hitMul:1.2,recoverMs:1100,packMin:3,packMax:6,maxActive:55,zoneLv:[1,5,10,15,20,25]},
     guard:{phase2At:0.5,fireMul:1.35,summonBonus:2,respawnS:300,fastKills:25},
     gear:{base:0.04,guard:0.25,perTier:0.005,discount:0.5},   // rare weapon part: chance per kill; tier = HQ level + region; one part halves an upgrade's 💎 cost
+    bot:{rate:1.1,dmgMul:0.35,range:240},   // companion drone: shots per second, share of the hero's damage, reach
     events:{everyS:110,types:['invasion','meteors'],invasionExtra:10,meteorWarnMs:1100,meteorN:7,meteorR:42,meteorDmg:0.18}  // meteor damage = share of max health
   }
 };

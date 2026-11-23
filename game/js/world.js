@@ -10,6 +10,7 @@ const WORLD={
   mon:{small:{hp:26,dmg:8,spd:84,r:13},big:{hp:95,dmg:16,spd:56,r:20},grow:0.8,dgrow:0.5},
   guard:{hp:1400,grow:1,dmg:22,r:44,cd:BAL.world.guard.respawnS*1000,kills:BAL.world.guard.fastKills},   // a beaten guardian returns after 5 min, or sooner after 25 kills in its region
   player:{hp:120,dmg:12,rate:2.6,spd:150,range:270},
+  moon:{x:1480,y:930,h:150},                  // the moon-zone diorama inside Orbit-1
   nodes:14,nodeCd:120000,poi:{c:15,mat:20},maxMon:BAL.world.enemy.maxActive,
   spawn:{rate:3.2,min:BAL.world.enemy.packMin,max:BAL.world.enemy.packMax,d0:520,d1:780},  // packs per second (chance), pack size, spawn ring around the hero
   // XP Hero style: the hero levels up from kills; each region has a monster level band and a gate (previous guardian + hero level)
@@ -27,7 +28,7 @@ document.head.insertAdjacentHTML('beforeend','<style>body.wfull{overflow:hidden;
 const WorldGame=(()=>{
   const W=432,{RW,GRID}=WORLD,WW=RW*3,WH=RW*2;
   let H=624,cv,ctx,c3,raf=0,last=0,st,running=false,joy=null,keys={},hud,mini,t=0,saveT=0,msgT=0,view='2d',R3=null,iv=0;
-  let evT=0,evN=0,mets=[],p,mons=[],shots=[],eshots=[],nodes=[],props=[],pools=[],parts=[],guards=[],pois=[],orbs=[],fx=[],cam={x:0,y:0,yaw:-Math.PI/2};
+  let bot={x:0,y:0,cd:0},bshots=[],evT=0,evN=0,mets=[],p,mons=[],shots=[],eshots=[],nodes=[],props=[],pools=[],parts=[],guards=[],pois=[],orbs=[],fx=[],cam={x:0,y:0,yaw:-Math.PI/2};
   const IMG={};const img=k=>{if(typeof ART==='undefined'||!ART[k])return null;if(!IMG[k]){const i=new Image();i.src=ART[k];IMG[k]=i}return IMG[k].complete&&IMG[k].naturalWidth?IMG[k]:null};
   const regAt=(x,y)=>{const c=Math.floor(x/RW),r=Math.floor(y/RW);return c<0||r<0||c>2||r>1?-1:GRID[r][c]};
   const regPos=i=>{for(let r=0;r<2;r++)for(let c=0;c<3;c++)if(GRID[r][c]===i)return {x:c*RW,y:r*RW};return {x:0,y:0}};
@@ -41,7 +42,7 @@ const WorldGame=(()=>{
   function buildWorld(){props=[];pools=[];nodes=[];guards=[];pois=[];
     for(let i=0;i<6;i++){const o=regPos(i),R=seeded(97+i*131),far=(x,y)=>Math.hypot(x-WORLD.base.x,y-WORLD.base.y)>WORLD.base.r+60;
       const kinds=[['debris','crater'],['spike','frost'],['rock','vent'],['crystal','shard'],['shroom','fern'],['float','star']][i];
-      for(let k=0;k<70;k++){const x=o.x+20+R()*(RW-40),y=o.y+20+R()*(RW-40);if(far(x,y))props.push({x,y,k:kinds[k%2],s:0.7+R()*0.8,reg:i})}
+      for(let k=0;k<70;k++){const x=o.x+20+R()*(RW-40),y=o.y+20+R()*(RW-40);if(far(x,y)&&Math.hypot(x-WORLD.moon.x,y-WORLD.moon.y)>140)props.push({x,y,k:kinds[k%2],s:0.7+R()*0.8,reg:i})}
       if(i===2)for(let k=0;k<9;k++){const x=o.x+120+R()*(RW-240),y=o.y+120+R()*(RW-240);pools.push({x,y,r:40+R()*36})}
       for(let k=0;k<WORLD.nodes;k++){const x=o.x+60+R()*(RW-120),y=o.y+60+R()*(RW-120);if(far(x,y))nodes.push({x,y,reg:i,cd:0,prog:0})}
       const m=regMid(i),gx=i===0?o.x+RW*0.84:m.x+(R()-0.5)*300,gy=i===0?o.y+RW*0.9:m.y+(R()-0.5)*300;guards.push({reg:i,x:gx,y:gy,hx:gx,hy:gy});
@@ -123,6 +124,10 @@ const WorldGame=(()=>{
     for(const g of guards)if(!g.alive&&Math.hypot(g.hx-p.x,g.hy-p.y)<480)wakeGuard(g);
     if(Math.random()<dt*WORLD.spawn.rate)spawnMon();
     worldEvent(dt);
+    {const B=BAL.world.bot,tx=p.x-26,ty=p.y-34,k=Math.min(1,dt*5);bot.x+=(tx-bot.x)*k;bot.y+=(ty-bot.y)*k;bot.cd-=dt;   // companion drone follows and helps
+      if(bot.cd<=0&&p.dead<=0){let tg=null,bd=B.range;for(const m of mons){const d=Math.hypot(m.x-bot.x,m.y-bot.y)-m.r;if(d<bd){bd=d;tg=m}}
+        if(tg){bot.cd=1/B.rate;const a=Math.atan2(tg.y-bot.y,tg.x-bot.x);bshots.push({x:bot.x,y:bot.y,vx:Math.cos(a)*520,vy:Math.sin(a)*520,l:0.6})}}
+      for(const s of bshots){s.x+=s.vx*dt;s.y+=s.vy*dt;s.l-=dt;for(const m of mons){if(m.hp<=0)continue;if((m.x-s.x)**2+(m.y-s.y)**2<(m.r+4)**2){m.hp-=p.dmg*B.dmgMul;m.fl=0.08;s.l=0;if(m.hp<=0)kill(m);break}}}bshots=bshots.filter(s=>s.l>0)}
     p.hurt=Math.max(0,p.hurt-dt);saveT-=dt;if(saveT<=0){saveT=4;st.x=Math.round(p.x);st.y=Math.round(p.y);gSave('world',st);if(st._d){st._d=0;colSave()}}
     hudTick()}
   const dirty=()=>{st._d=1};
@@ -228,7 +233,9 @@ const WorldGame=(()=>{
       ctx.fillStyle=c;ctx.shadowColor=c;ctx.shadowBlur=10;ctx.beginPath();ctx.moveTo(n.x,n.y-26-2*Math.sin(t*3+n.x));ctx.lineTo(n.x+8,n.y-10);ctx.lineTo(n.x,n.y);ctx.lineTo(n.x-8,n.y-10);ctx.fill();ctx.shadowBlur=0;
       if(n.prog>0){ctx.strokeStyle='#fff';ctx.lineWidth=3;ctx.beginPath();ctx.arc(n.x,n.y-12,18,-1.57,-1.57+6.283*n.prog/0.9);ctx.stroke()}}]);
     for(const o of pois)if(open(o.reg)&&!(st.poi||{})[o.reg]&&vis(o.x,o.y))L.push([o.y,()=>{ctx.font='26px sans-serif';ctx.textAlign='center';ctx.fillText('📡',o.x,o.y);ctx.strokeStyle='#ff7ad9';ctx.globalAlpha=0.5+0.5*Math.sin(t*4);ctx.beginPath();ctx.arc(o.x,o.y-8,22+6*Math.sin(t*4),0,6.283);ctx.stroke();ctx.globalAlpha=1}]);
+    {const M=WORLD.moon,im=img('zone_moon');if(im&&vis(M.x,M.y)){const w=M.h*(ART.zone_moonR||1.5);L.push([M.y,()=>ctx.drawImage(sprC('zone_moon',M.h)||im,M.x-w/2,M.y-M.h*0.8,w,M.h)])}}
     for(const m of mons)if(vis(m.x,m.y))L.push([m.y,()=>drawMon(m)]);
+    L.push([bot.y+40,drawBot]);
     L.push([p.y,drawPlayer]);L.sort((a,b)=>a[0]-b[0]);for(const x of L)x[1]();
     for(const q of mets){const k=1-q.w/q.w0;ctx.strokeStyle='#ff4a3a';ctx.lineWidth=2;ctx.fillStyle='#ff4a3a33';ctx.beginPath();ctx.ellipse(q.x,q.y,q.r,q.r*0.62,0,0,6.283);ctx.fill();ctx.stroke();ctx.fillStyle='#ff4a3a66';ctx.beginPath();ctx.ellipse(q.x,q.y,q.r*k,q.r*0.62*k,0,0,6.283);ctx.fill();
       if(q.w<0.45){const hy=q.w*700;ctx.fillStyle='#ffb04a';ctx.beginPath();ctx.arc(q.x+hy*0.3,q.y-hy,7,0,6.283);ctx.fill()}}
@@ -253,7 +260,7 @@ const WorldGame=(()=>{
     if(flash){g.globalCompositeOperation='source-atop';g.fillStyle='#ffffffb0';g.fillRect(0,0,c.width,ph)}if(SC.size>400)SC.clear();SC.set(key,c);return c}
   // creatures painted in the air get real legs so everything walks on the ground
   const c2=k=>!!(ART[k+'_w1']&&ART[k+'_w2']);   // two walking frames from Gemini replace the split-leg trick
-  const LEGS={pl0_small:1,pl3_small:1,pl5_small:1,pl5_big:1};
+  const LEGS={pl3_small:1,pl5_small:1,pl5_big:1};
   function legs(w,h,lh,ph,mv,col){const st=mv?Math.sin(ph):0,lw=Math.max(2,h*0.075);ctx.lineCap='round';ctx.lineJoin='round';
     for(const s of [-1,1]){const sw=st*s,hx=s*w*0.13,hy=-lh,fx=hx+sw*w*0.16,fy=-Math.max(0,sw)*lh*0.35,kx=(hx+fx)/2+w*0.07,ky=(hy+fy)/2;
       ctx.strokeStyle=s<0?'#1b2030':col;ctx.lineWidth=lw;ctx.beginPath();ctx.moveTo(hx,hy);ctx.lineTo(kx,ky);ctx.lineTo(fx,fy);ctx.stroke();
@@ -276,6 +283,9 @@ const WorldGame=(()=>{
     ctx.restore();const top=m.y-h-leg-bob;
     if(m.hp<m.max&&!m.guard){ctx.fillStyle='#0008';ctx.fillRect(m.x-14,top-8,28,4);ctx.fillStyle='#ff5a6a';ctx.fillRect(m.x-14,top-8,28*m.hp/m.max,4)}
     if(m.lv){const lv=st.lv||1;ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.fillStyle=m.lv>lv+3?'#ff5a6a':m.lv>lv?'#ffd34d':'#ffffffcc';ctx.fillText('Lv'+m.lv,m.x,top-11)}}
+  function drawBot(){if(p.dead>0)return;const im=img('bot'),h=24,w=h*(ART.botR||1),z=Math.sin(t*3)*3;ctx.fillStyle='#0004';ctx.beginPath();ctx.ellipse(bot.x,bot.y+30,8,3,0,0,6.283);ctx.fill();
+    if(im)ctx.drawImage(sprC('bot',h)||im,bot.x-w/2,bot.y-h/2+z,w,h);else{ctx.fillStyle='#f3f4f7';ctx.beginPath();ctx.arc(bot.x,bot.y+z,9,0,6.283);ctx.fill()}
+    ctx.fillStyle='#7ffcff';for(const s of bshots){ctx.beginPath();ctx.arc(s.x,s.y,2.4,0,6.283);ctx.fill()}}
   function drawPlayer(){if(p.dead>0)return;if(typeof Astro3D!=='undefined'&&Astro3D.draw(ctx,p.x,p.y+p.r*0.6,p.r*4.4,p.aim,p.moving,t,p.hurt,'#00e5ff',false))return;
     ctx.fillStyle='#f3f4f7';ctx.beginPath();ctx.arc(p.x,p.y-14,12,0,6.283);ctx.fill();ctx.fillStyle='#0b1530';ctx.beginPath();ctx.arc(p.x+Math.cos(p.aim)*4,p.y-15,6,0,6.283);ctx.fill()}
   /* ---------- 3D view (three.js): same world, camera behind the astronaut ---------- */
@@ -301,6 +311,8 @@ const WorldGame=(()=>{
     const spr=(k,h)=>{const T=tex(k);if(!T)return null;const s=new THREE.Sprite(new THREE.SpriteMaterial({map:T,transparent:true,alphaTest:0.1}));const w=h*(ART[k+'R']||1);s.scale.set(w,h,1);s.center.set(0.5,0);return s};
     const hq=spr('hq',90);if(hq){hq.position.set(b.x,0,b.y);scene.add(hq)}
     for(let i=0;i<6;i++){const s=(col.wm&&col.wm.lm[i])||0;if(!s)continue;const m=i===0?{x:b.x+260,y:b.y-40}:regMid(i),L=spr('pl'+i+'_s'+s,i===5&&s===3?170:120);if(L){L.position.set(m.x,0,m.y);scene.add(L)}}
+    {const L=spr('zone_moon',WORLD.moon.h);if(L){L.position.set(WORLD.moon.x,0,WORLD.moon.y);scene.add(L)}}
+    const B3=spr('bot',20);if(B3)scene.add(B3);
     // nodes, signals
     const NM={};for(const n of nodes){const c=new THREE.Color(MATC[REG[n.reg].mat]);const m=new THREE.Mesh(new THREE.OctahedronGeometry(9,0),new THREE.MeshLambertMaterial({color:c,emissive:c,emissiveIntensity:0.6}));m.position.set(n.x,14,n.y);m.scale.y=1.6;scene.add(m);n.m3=m}
     for(const o of pois){const m=new THREE.Mesh(new THREE.TorusGeometry(16,2.5,6,20),new THREE.MeshBasicMaterial({color:0xff7ad9}));m.position.set(o.x,20,o.y);scene.add(m);o.m3=m}
@@ -316,7 +328,7 @@ const WorldGame=(()=>{
     function draw(){const w=c3.clientWidth,h=c3.clientHeight;if(c3.width!==Math.round(w*R.getPixelRatio())||c3.height!==Math.round(h*R.getPixelRatio())){R.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
       const reg=Math.max(0,regAt(p.x,p.y));if(reg!==fogReg){fogReg=reg}const fc=new THREE.Color(WORLD.fog[reg]);scene.fog.color.lerp(fc,0.05);scene.background.lerp(fc,0.05);
       A.position.set(p.x,0,p.y);A.rotation.y=Math.atan2(Math.cos(p.aim),Math.sin(p.aim));A.visible=p.dead<=0;const sw=p.moving?Math.sin(t*11):0;legL.rotation.x=sw*0.7;legR.rotation.x=-sw*0.7;armL.rotation.x=-sw*0.5;armR.rotation.x=sw*0.5;
-      wm.emissive.setHex(p.hurt>0?0x661020:0x000000);
+      wm.emissive.setHex(p.hurt>0?0x661020:0x000000);if(B3){B3.position.set(bot.x,22+3*Math.sin(t*3),bot.y);B3.visible=p.dead<=0}
       const f={x:Math.cos(cam.yaw),y:Math.sin(cam.yaw)};camera.position.set(p.x-f.x*120,78,p.y-f.y*120);camera.lookAt(p.x+f.x*70,14,p.y+f.y*70);
       const now=Date.now();for(const n of nodes){n.m3.visible=n.cd<now&&open(n.reg);if(n.m3.visible){n.m3.rotation.y=t*1.5;n.m3.position.y=14+2*Math.sin(t*3+n.x)}}
       for(const o of pois){o.m3.visible=open(o.reg)&&!(st.poi||{})[o.reg];o.m3.rotation.y=t*2}
@@ -324,7 +336,7 @@ const WorldGame=(()=>{
       const used=new Set();for(const m of mons){let s=m.s3;if(!s){const k='pl'+m.reg+'_'+(m.big?'big':'small');s=spr(k,m.guard?m.r*3.4:m.r*2.8);if(!s){s=new THREE.Sprite(new THREE.SpriteMaterial({color:0xc060ff}));s.scale.set(20,20,1)}scene.add(s);m.s3=s}
         s.position.set(m.x,m.mv?Math.abs(Math.cos(m.ph||0))*m.r*0.18:0,m.y);s.material.rotation=m.mv?Math.sin(m.ph||0)*0.07:0;s.material.color.setHex(m.st==='wind'?0xff7a6a:m.p2?0xffaaaa:0xdddddd);if(m.fl>0)s.material.color.setRGB(2,2,2);used.add(s)}
       scene.children.filter(o=>o.isSprite&&o.userData.mon&&!used.has(o)).forEach(o=>{scene.remove(o);o.material.dispose()});used.forEach(s=>s.userData.mon=1);
-      sync(met3,mets,mg,mm,1);met3.forEach(o=>{o.rotation.x=-Math.PI/2;o.scale.set(1,0.62,1)});sync(bul,shots,bg,bm,16);sync(ebul,eshots,eg,em,16);sync(orb3,orbs,og,om,8);
+      sync(met3,mets,mg,mm,1);met3.forEach(o=>{o.rotation.x=-Math.PI/2;o.scale.set(1,0.62,1)});sync(bul,shots.concat(bshots),bg,bm,16);sync(ebul,eshots,eg,em,16);sync(orb3,orbs,og,om,8);
       sync(fx3,fx.filter(f=>f.k!=='bolt'),rg,rm,6);fx3.forEach((m,j)=>{const f=fx.filter(q=>q.k!=='bolt')[j];if(f){m.rotation.x=-Math.PI/2;const k=f.k==='slash'?f.r*0.85:f.r*(1-f.l*2);m.scale.set(k/20,k/20,1)}});R.render(scene,camera)}
     const met3=[],mg=new THREE.RingGeometry(BAL.world.events.meteorR-4,BAL.world.events.meteorR,28),mm=new THREE.MeshBasicMaterial({color:0xff4a3a,side:THREE.DoubleSide}),orb3=[],fx3=[],og=new THREE.OctahedronGeometry(4,0),om=new THREE.MeshBasicMaterial({color:0x7dff9a}),rg=new THREE.TorusGeometry(20,1.2,4,32),rm=new THREE.MeshBasicMaterial({color:0xffe27a,transparent:true,opacity:0.8});
     function unlockReg(i){if(gmat[i])gmat[i].color.setHex(0xffffff)}
@@ -342,10 +354,10 @@ const WorldGame=(()=>{
     kd=e=>{keys[e.key]=true},ku=e=>{keys[e.key]=false};
   const POIS=['حطام قمر صناعي قديم يحمل خريطة للمناطق المجاورة.','تحت الجليد جهاز يبث نفس الإشارة الغامضة.','داخل البركان بقايا محطة تعدين لم يعد منها أحد.','الكريستال هنا يغنّي حين تلمسه… ويحفظ أصوات من مرّوا قبلك.','في قلب الغابة بذرة عملاقة تنبض بضوء أخضر.','في السديم بوابة نجمية صغيرة مطفأة… من بناها؟'];
   return {id:'world',name:'عالم المدار',noDaily:true,desc:'عالم مفتوح: امشِ بين المناطق الست واجمع المواد وقاتل الوحوش والحرّاس',
-    help:'حرّك الرائد بإصبعك في أي مكان على الشاشة (عصا تحكم). يطلق الرائد النار تلقائياً على أقرب وحش. قف فوق البلورات المضيئة لتجمع مادة المنطقة. 📡 إشارة قديمة في كل منطقة لها مكافأة مرة واحدة، و👑 حارس قوي في كل منطقة يعود بعد 5 دقائق من هزيمته، أو أسرع إذا قتلت 25 وحشاً في منطقته. داخل قبة القاعدة تُشفى بسرعة، والحمم تحرقك. زر 🎥 يبدّل بين المنظور العلوي والثلاثي الأبعاد. كل وحش تقتله يُسقط جواهر خبرة خضراء ترفع مستواك وقوتك. كل منطقة لها مستوى وحوش، وبوابتها تنفتح بهزيمة حارس المنطقة السابقة وبلوغ مستواها. داخل القبة تجد ⚒️ ورشة الأسلحة لتصنع وتطوّر خمسة أسلحة بمواد المناطق. قوتك تزيد أيضاً بدعم المستعمرة ومعدات الورشة. الوحوش تنحني وتومض بخط أحمر قبل أن تنقضّ، فابتعد عن اتجاهها. الحارس يغضب عند نصف صحته. أحياناً يهجم غزو وحوش أو يسقط مطر نيازك: اخرج من الدوائر الحمراء. 🧩 القطع النادرة تخفّض كلفة تطوير الأسلحة.',
+    help:'حرّك الرائد بإصبعك في أي مكان على الشاشة (عصا تحكم). يطلق الرائد النار تلقائياً على أقرب وحش. قف فوق البلورات المضيئة لتجمع مادة المنطقة. 📡 إشارة قديمة في كل منطقة لها مكافأة مرة واحدة، و👑 حارس قوي في كل منطقة يعود بعد 5 دقائق من هزيمته، أو أسرع إذا قتلت 25 وحشاً في منطقته. داخل قبة القاعدة تُشفى بسرعة، والحمم تحرقك. زر 🎥 يبدّل بين المنظور العلوي والثلاثي الأبعاد. كل وحش تقتله يُسقط جواهر خبرة خضراء ترفع مستواك وقوتك. كل منطقة لها مستوى وحوش، وبوابتها تنفتح بهزيمة حارس المنطقة السابقة وبلوغ مستواها. داخل القبة تجد ⚒️ ورشة الأسلحة لتصنع وتطوّر خمسة أسلحة بمواد المناطق. قوتك تزيد أيضاً بدعم المستعمرة ومعدات الورشة. الوحوش تنحني وتومض بخط أحمر قبل أن تنقضّ، فابتعد عن اتجاهها. الحارس يغضب عند نصف صحته. أحياناً يهجم غزو وحوش أو يسقط مطر نيازك: اخرج من الدوائر الحمراء. 🧩 القطع النادرة تخفّض كلفة تطوير الأسلحة. 🤖 الروبوت المرافق يتبعك ويطلق على أقرب وحش.',
     icon:'<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" fill="#1e4733"/><path d="M4 24h40M24 4v40" stroke="#ffffff30"/><circle cx="17" cy="18" r="6" fill="#9fbfd6"/><circle cx="32" cy="30" r="7" fill="#ad9cc8"/><text x="24" y="31" font-size="16" text-anchor="middle">🧑‍🚀</text></svg>',
     progress(){const s=gState('world',{});return {level:Object.keys(s.gk||{}).length+1,stars:0}},play(){},
-    start(){st=gState('world',{kills:0});buildWorld();p=newPlayer();mons=[];mets=[];evT=0;shots=[];eshots=[];parts=[];t=0;stage.innerHTML='';stage.classList.add('wstage');document.body.classList.add('wfull');
+    start(){st=gState('world',{kills:0});buildWorld();p=newPlayer();mons=[];mets=[];evT=0;bshots=[];bot={x:p.x-26,y:p.y-34,cd:0};shots=[];eshots=[];parts=[];t=0;stage.innerHTML='';stage.classList.add('wstage');document.body.classList.add('wfull');
       cv=document.createElement('canvas');c3=document.createElement('canvas');c3.className='w3';stage.appendChild(cv);stage.appendChild(c3);ctx=cv.getContext('2d');hudBuild();resize();
       setView(st.view==='3d'?'3d':'2d');stage.addEventListener('pointerdown',pd);addEventListener('pointermove',pm);addEventListener('pointerup',pu);addEventListener('pointercancel',pu);addEventListener('keydown',kd);addEventListener('keyup',ku);addEventListener('resize',resize);
       running=true;last=performance.now();raf=requestAnimationFrame(frame);snd('win')},
