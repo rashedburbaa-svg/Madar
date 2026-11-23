@@ -13,7 +13,7 @@ if(!col.gal)col.gal={done:{},art:{}};
 const galOpen=()=>!!col.done;
 const artCount=()=>Object.keys(col.gal.art||{}).length;
 const expDur=i=>Math.round(PLANETS[i].t*(1-BAL.techIon*techLv('ion')));
-const planetOpen=i=>i===0||!!col.gal.done[i-1];
+let planetOpen=i=>i===0||!!col.gal.done[i-1];
 function expStart(i){if(col.exp){toast('🚀 المركبة في رحلة');return}if(!planetOpen(i)){toast('🔒 زر الكوكب السابق أولاً');return}
   const P=PLANETS[i],T=expDur(i);col.exp={i,end:Date.now()+T*1000,len:T};colSave();snd('win');buzz([20,40,60]);toast('🚀 انطلقت المركبة نحو '+P.n,'ach');renderColony();galaxyBox()}
 function expClaim(){const x=col.exp;if(!x||Date.now()<x.end)return;const P=PLANETS[x.i],first=!col.gal.done[x.i],k=1+0.08*col.b.hq;

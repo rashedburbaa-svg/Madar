@@ -24,7 +24,7 @@ const colSave=()=>save('arcade-colony',col);
 const cap=()=>Math.round(600*Math.pow(1.7,col.b.hq-1)*(1+0.15*((col.tech&&col.tech.store)||0)));
 const crew=()=>3+2*col.b.habitat;
 if(col.b.wall==null)col.b.wall=0;if(col.b.tower==null)col.b.tower=0;if(col.b.lab==null)col.b.lab=0;
-const techLv=k=>(col.tech&&col.tech[k])||0,TK={m:'mine',e:'power',f:'agri'},tMul=k=>1+BAL.techProd*(TK[k]?techLv(TK[k]):0);
+const techLv=k=>(col.tech&&col.tech[k])||0,TK={m:'mine',e:'power',f:'agri'};let tMul=k=>1+BAL.techProd*(TK[k]?techLv(TK[k]):0);
 const mult=()=>1+(typeof festOn==='function'&&festOn()?0.25:0)+(typeof terraBonus==='function'?terraBonus():0)+(typeof moraleBonus==='function'?moraleBonus():0)+0.04*crew()+0.03*(col.b.wall||0)+(typeof artCount==='function'?0.05*artCount():0);
 function rate(k){let r=0;for(const id of BORDER){const B=BLD[id],L=col.b[id];if(B.prod&&B.prod[0]===k&&L>0)r+=B.prod[1]*L*Math.pow(1.15,L-1)}return r*mult()*tMul(k)}
 function upCost(id){const L=col.b[id],B=BLD[id],f=Math.pow(1.6,L);return {m:Math.round(B.base[0]*f),e:Math.round(B.base[1]*f),f:Math.round(B.base[2]*f*BAL.foodCostMul)}}

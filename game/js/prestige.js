@@ -1,7 +1,7 @@
 /* relaunch (prestige): leave a grown colony for a harder new planet, keeping permanent bonuses */
 const PLN=[{n:'المدار-1',em:'🔴',tint:null},{n:'زيفيروس الجليدي',em:'❄️',tint:'#6fc4ff'},{n:'كوكب الحمم',em:'🌋',tint:'#ff5a1f'},{n:'كوكب الكريستال',em:'💠',tint:'#b77dff'},{n:'العملاق الأخضر',em:'🟢',tint:'#4fc85a'},{n:'سديم المدار',em:'🌸',tint:'#ff5da8'}];
 const PG=()=>col.pg||0,PLANET=()=>PLN[Math.min(PG(),PLN.length-1)];
-const PREQ=()=>({hq:8+Math.min(2,PG()),ship:true});
+const PREQ=()=>({hq:6,ship:true});  // the ship is now the exploration ship of the map (worldmap.js)
 const ARK=[['hull','هيكل السفينة','🛸',[3000,2500,800]],['engine','محركات الدفع','🔥',[2500,3500,600]],['fuel','خزانات الوقود','⛽',[2000,4000,1000]],['pods','كبسولات الطاقم','🧑‍🚀',[2500,2000,2500]],['nav','الملاحة الكوكبية','🧭',[3500,3000,1200]]];
 const ARKMIN=20;
 const arkCost=p=>{const f=1+0.6*PG();return {m:Math.round(p[3][0]*f),e:Math.round(p[3][1]*f),f:Math.round(p[3][2]*f)}};
@@ -42,7 +42,7 @@ function doRelaunch(P,nx){{
 {const _fc=festChip;festChip=function(){const show=col.b.hq>=6||PG()>0;return (show?`<button class="cpg${pgReady()?' ready':''}" type="button" aria-label="إعادة الانطلاق">${PLANET().em}${PG()?`<i>${PG()+1}</i>`:''}</button>`:'')+_fc()}}
 document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('.cpg')){snd('tap');openSheet('prestige')}});
 // each planet tints the ground in its own colour
-{const _sv=sceneSVG;sceneSVG=function(){const s=_sv.apply(this,arguments),t=PLANET().tint;if(!t)return s;let i=s.indexOf('<g class="corr"');if(i<0)i=s.indexOf('<g class="cb');if(i<0)return s;return s.slice(0,i)+`<rect x="-700" y="225" width="1760" height="1100" fill="${t}" opacity=".38" style="mix-blend-mode:color" pointer-events="none"/>`+s.slice(i)}}
+{const _sv=sceneSVG;sceneSVG=function(){const s=_sv.apply(this,arguments),t=(col.wm?PLN[Math.min(5,col.wm.at||0)]:PLANET()).tint;if(!t)return s;let i=s.indexOf('<g class="corr"');if(i<0)i=s.indexOf('<g class="cb');if(i<0)return s;return s.slice(0,i)+`<rect x="-700" y="225" width="1760" height="1100" fill="${t}" opacity=".38" style="mix-blend-mode:color" pointer-events="none"/>`+s.slice(i)}}
 if(typeof ACH!=='undefined')ACH.push(['pg1','🌍','أول إعادة انطلاق'],['pg3','🌋','الوصول للكوكب الرابع'],['pg5','🌸','سديم المدار']);
 
 function flight(nx,done){const o=document.createElement('div');o.className='flight';const im=ART&&ART.x_ship;
@@ -62,13 +62,13 @@ function padSVG(){if(!(col.b.hq>=6||PG()>0))return '';const n=arkN(),full=n===AR
 document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('.arkpad')&&!(typeof camDrag!=='undefined'&&camDrag)){snd('tap');openSheet('prestige')}});
 
 /* ---------- each planet's own look (player's planet art): creatures, a landmark that grows with HQ, and its sky ---------- */
-const PSET=()=>{const r=Math.min(PG(),5);return typeof ART!=='undefined'&&ART['pl'+r+'_big']?r:-1};
+const PSET=()=>{const r=col.wm?Math.min(5,col.wm.at||0):Math.min(PG(),5);return typeof ART!=='undefined'&&ART['pl'+r+'_big']?r:-1};
 (function(){const r=PSET();if(r<0)return;const fly={0:1,3:1,5:1};
   const H={alien:44,bug:30,beast:40,blob:30,ufo:34},pick={alien:'big',beast:'big',bug:'small',blob:'small',ufo:'small'};
   for(const t of Object.keys(H)){const k=pick[t],src=ART['pl'+r+'_'+k],R=ART['pl'+r+'_'+k+'R']||1,h=H[t],w=h*R,lift=(t==='ufo'||(k==='small'&&fly[r]))?10:0;CTOP[t]=-h-lift-2;
     CRE[t]=`<ellipse cx="0" cy="1" rx="${(w*0.34).toFixed(1)}" ry="${(2+h*0.06).toFixed(1)}" fill="#000" opacity="${lift?.22:.4}"/><g class="cimg ${t}"><image href="${src}" x="${(-w/2).toFixed(1)}" y="${(-h-lift).toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}"/></g>`}})();
-const pStage=()=>col.b.hq>=7?3:col.b.hq>=4?2:1;
-function landmarkSVG(){const r=PSET();if(r<0)return '';const k='pl'+r+'_s'+pStage(),R=ART[k+'R']||1;
+const pStage=()=>col.wm?(col.wm.lm[PSET()]||0):(col.b.hq>=7?3:col.b.hq>=4?2:1);
+function landmarkSVG(){const r=PSET();if(r<0||!pStage())return '';const k='pl'+r+'_s'+pStage(),R=ART[k+'R']||1;
   if(r===0){const w=110,h=w/R;return `<g class="plm sky"><image href="${ART[k]}" x="${(120-w/2).toFixed(1)}" y="${(150-h/2).toFixed(1)}" width="${w}" height="${h.toFixed(1)}"/></g>`}
   const h=r===5&&pStage()===3?130:88,w=h*R;return `<g class="plm"><ellipse cx="${PLM.x}" cy="${PLM.y+2}" rx="${(w*0.4).toFixed(1)}" ry="6" fill="#000" opacity=".35"/><image href="${ART[k]}" x="${(PLM.x-w/2).toFixed(1)}" y="${(PLM.y-h).toFixed(1)}" width="${w.toFixed(1)}" height="${h}"/></g>`}
 const PLM={x:112,y:240};
