@@ -15,6 +15,8 @@ bfx:2 · puff:3 · rise:4 · lights:5 · CORR:23 · corridorsSVG:24 · dur:30 ·
 
 ## js/artdata5.js — 76KB — صور خطوات المشي (base64) — لا تقرأه
 
+## js/artdata6.js — 112KB — صور الزعماء والطائرات (base64) — لا تقرأه
+
 ## js/astro3d.js — 57 سطر، 6KB
 Astro3D:2 · mat:4 · build:5 · cap:15 · limb:30 · init:40 · pose:45 · draw:51 · dir:52
 
@@ -73,7 +75,7 @@ Ship3D:2 · cache:3 · init:4 · glowM:9 · box:10 · cone:11 · fighter:13 · s
 ## js/survival.js — 99 سطر، 18KB
 svInit:5 · svOn:6 · NEED:7 · svTarget:8 · moraleBonus:9 · svTick:10 · mood:18 · choiceBox:21 · svApply:26 · out:26 · svResult:31 · EVENTS:35 · svEvent:57 · STAT:63 · chance:64 · ADV:65 · advHTML:82 · advStart:91 · loot:92 · add:92 · scene:93 · finish:95 · advBtn:98
 
-## js/survive.js — 696 سطر، 86KB
+## js/survive.js — 696 سطر، 87KB
 SurviveGame:2 · UP:7 · EVO:30 · CHARS:37 · DROPS:43 · DCOL:44 · TYPES:45 · DIFF:59 · DF:60 · diffHTML:61 · hpMul:62 · wpn:63 · BOSSES:65 · bossFor:73 · GUARDS:74 · spawnBoss:77 · bossAI:82 · shot:84 · drawBoss:116 · META:160 · mlv:172 · mcost:173 · openLab:174 · draw:176 · BIOMES:190 · makeBg:199 · blot:204 · pts:224 · makeAmb:246 · stepAmb:249 · drawAmb:258 · setBiome:266 · eyes:268 · SPR:271 · spr:271 · drawFx:274 · SPRK:282 · SFLT:283 · SSZ:284 · drawSprite:290 · BSPR:292 · drawAlien:293 · drawAstronaut:326 · VC:337 · shadow:340 · resize:341 · reset:342 · spawn:349 · pickType:356 · startWave:359 · CH:369 · setChallenge:372 · chText:380 · chProgress:383 · endChallenge:386 · avail:390 · applyUp:391 · chooseUpgrade:392 · nearest:408 · FT:409 · shake:409 · hurt:410 · kill:412 · drop:424 · take:425 · hitP:434 · update:437 · srcs:463 · pts:487 · push:523 · feel:558 · die:559 · show:569 · stats:577 · draw:578 · sz:616 · mx2:618 · step:646 · frame:650 · begin:657 · pause:658 · intro:662 · toLocal:671 · end:685 · lab:692
 
 ## js/terra.js — 69 سطر، 9KB
@@ -89,7 +91,7 @@ REG:3 · LMCOST:16 · LMRATE:17 · GEAR:18 · WM:29 · matN:30 · regOpen:31 · 
 
 ## style.css — 839 سطر، 85KB
 
-## index.html — 114 سطر، 6KB
+## index.html — 115 سطر، 6KB
 
 ## sw.js — 12 سطر، 1KB
 ASSETS:2

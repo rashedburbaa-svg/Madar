@@ -1,7 +1,7 @@
 # يولّد CODEMAP.md (في جذر المستودع): خريطة مختصرة للدوال والثوابت بأرقام الأسطر، ليقرأ Claude الجزء المطلوب فقط.
 import re,os,glob
 os.chdir(os.path.join(os.path.dirname(os.path.abspath(__file__)),'game'))
-SKIP={'artdata.js':'الصور فقط (base64) — لا تقرأه؛ ابحث بـ grep عن ART.اسم','three.min.js':'مكتبة three.js — لا تقرأه','sfxdata.js':'الأصوات (base64) — لا تقرأه','artdata2.js':'صور إضافية (base64) — لا تقرأه','artdata3.js':'صور إضافية (base64) — لا تقرأه','artdata4.js':'صور إضافية (base64) — لا تقرأه','artdata5.js':'صور خطوات المشي (base64) — لا تقرأه','i18n-en.js':'جدول الترجمة الإنجليزية — ابحث فيه بـ grep فقط'}
+SKIP={'artdata.js':'الصور فقط (base64) — لا تقرأه؛ ابحث بـ grep عن ART.اسم','three.min.js':'مكتبة three.js — لا تقرأه','sfxdata.js':'الأصوات (base64) — لا تقرأه','artdata2.js':'صور إضافية (base64) — لا تقرأه','artdata3.js':'صور إضافية (base64) — لا تقرأه','artdata4.js':'صور إضافية (base64) — لا تقرأه','artdata5.js':'صور خطوات المشي (base64) — لا تقرأه','artdata6.js':'صور الزعماء والطائرات (base64) — لا تقرأه','i18n-en.js':'جدول الترجمة الإنجليزية — ابحث فيه بـ grep فقط'}
 DEF=re.compile(r'(?:^|[;{}\s])(?:function\s+([A-Za-z_$][\w$]*)|(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:\(|function|\{|\[|[A-Za-z_$][\w$]*\s*=>|\(\)\s*=>))')
 out=['# خريطة الكود — مستعمرة المدار','','مولّدة آلياً بـ `python3 codemap.py`. اقرأ هذا الملف أولاً، ثم افتح الأسطر المطلوبة فقط (`sed -n` أو Read مع offset).','']
 for f in sorted(glob.glob('js/*.js'))+['style.css','index.html','sw.js']:
