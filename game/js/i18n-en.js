@@ -1768,5 +1768,19 @@ const EN={
 "المادة الأساسية":"Main material",
 "المكافأة الدائمة":"Permanent bonus",
 "ادخل المنطقة":"Enter the region",
-"لاحقاً":"Later"
+"لاحقاً":"Later",
+"اسحب أي مبنى إلى مكان جديد على الشبكة، والممرات تتبعه":"Drag any building to a new spot on the grid; the corridors follow it",
+"المس مبنيين لإضافة ممر بينهما أو إزالته، أو المس ممراً لإزالته":"Tap two buildings to add or remove a corridor between them, or tap a corridor to remove it",
+"تحريك":"Move",
+"الممرات":"Corridors",
+"توصيل تلقائي":"Auto-link",
+"الافتراضي":"Default",
+"تم":"Done",
+"تخطيط المستعمرة":"Colony layout",
+"أُزيل الممر":"Corridor removed",
+"أُضيف ممر":"Corridor added",
+"اختر المبنى الثاني":"Pick the second building",
+"لا يمكن وضعه هنا":"It can't go here",
+"وُصلت المباني بأقصر الممرات":"Buildings linked with the shortest corridors",
+"إعادة المباني والممرات إلى الترتيب الافتراضي؟":"Put the buildings and corridors back to the default layout?"
 };

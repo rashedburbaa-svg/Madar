@@ -871,3 +871,20 @@ body.gfull #play .controls{flex-wrap:nowrap}body.gfull #play .controls>*{flex:1}
 .pano .penter{min-height:54px;font-size:18px;border-radius:16px;box-shadow:0 0 0 1px #f5c451,0 6px 24px rgba(0,229,255,.25)}
 .pano .plater{background:none;border:0;color:var(--muted);font-size:14px;padding:8px;cursor:pointer}
 @media (prefers-reduced-motion: reduce){.pano .pstars,.pano .pcard{animation:none}}
+
+/* colony layout editor (layout.js) */
+.czoom .clay.on{background:#00e5ff33;border-color:#00e5ff;color:#fff}
+body.layedit #colony .cbot,body.layedit #colony .qwrap,body.layedit #colony .qmini{display:none}
+.cscene.lay .cb{cursor:grab;touch-action:none}
+.cscene.lay .lfoot{fill:#00e5ff;fill-opacity:.1;stroke:#00e5ff;stroke-opacity:.7;stroke-width:1.2;stroke-dasharray:5 4}
+.cscene.lay .cb.ldrag{cursor:grabbing;filter:drop-shadow(0 10px 10px rgba(0,0,0,.45)) brightness(1.08)}
+.cscene.lay .cb.ldrag .lfoot{fill:#f5c451;fill-opacity:.18;stroke:#f5c451;stroke-dasharray:none}
+.cscene.lay .cb.lbad .lfoot{fill:#ff4d5e;fill-opacity:.22;stroke:#ff4d5e}
+.cscene.lay .cb.lsel .lfoot{fill:#f5c451;fill-opacity:.25;stroke:#f5c451;stroke-width:2;stroke-dasharray:none}
+.cscene.lay .lhit{stroke:transparent;stroke-width:20;fill:none;pointer-events:stroke;cursor:pointer}
+.laybar{position:absolute;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:6;background:rgba(7,11,22,.9);border:1px solid rgba(245,196,81,.4);border-radius:18px;padding:10px;display:flex;flex-direction:column;gap:8px;backdrop-filter:blur(8px);box-shadow:0 8px 30px rgba(0,0,0,.45)}
+.layhint{margin:0;font-size:13px;color:#cfe9ff;text-align:center;line-height:1.5}
+.laybtns{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.laybtns button{min-height:48px;border-radius:12px;border:1px solid var(--line);background:var(--tile);color:var(--fg);font:inherit;font-size:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:4px 2px;cursor:pointer}
+.laybtns button.on{border-color:#00e5ff;background:#00e5ff22;color:#fff}
+.laybtns button.main{background:linear-gradient(180deg,#ffd97a,#f5c451);color:#1a1405;border-color:#f5c451;font-weight:600}

@@ -21,17 +21,16 @@ function bfx(id,L,w,h,y){const top=y,mid=y+h*0.45,R=(a,b)=>(a+Math.random()*(b-a
 
 /* glass corridors between built buildings (replacing the dirt roads) and an outer door on every building */
 const CORR=[['hq','mine','M184 456 Q120 470 64 452'],['hq','dock','M184 456 Q240 470 296 446'],['hq','solar','M184 456 Q130 520 70 566'],['hq','obs','M184 456 L184 570'],['hq','def','M184 456 Q240 520 298 566'],['hq','lab','M184 456 Q150 420 118 396'],['lab','radio','M118 396 Q80 370 58 338'],['hq','farm','M184 456 L178 330'],['hq','habitat','M184 456 Q250 400 296 338']];
-function corridorsSVG(){let base='',body='',hi='',rib='',pods='';
-  for(const [a,b,d] of CORR){if(!(col.b[a]>0&&col.b[b]>0))continue;
+function corridorsSVG(){let base='',body='',hi='',rib='',pods='',plan='';
+  for(const [a,b,d] of (typeof corrList==='function'?corrList():CORR)){if(!(col.b[a]>0&&col.b[b]>0)){if(typeof LAY!=='undefined'&&LAY.on)plan+=`<path d="${d}" stroke="#00e5ff" stroke-opacity=".55" stroke-width="3" fill="none" stroke-dasharray="6 6" stroke-linecap="round"/>`;continue}
     base+=`<path d="${d}" transform="translate(1.5 3)" stroke="#000" stroke-opacity=".35" stroke-width="15" fill="none" stroke-linecap="round"/>`;
     body+=`<path d="${d}" stroke="#bfefff" stroke-opacity=".28" stroke-width="14" fill="none" stroke-linecap="round"/><path d="${d}" stroke="#2a3448" stroke-opacity=".7" stroke-width="5" fill="none" stroke-linecap="round"/>`;
     rib+=`<path d="${d}" stroke="#e6fbff" stroke-opacity=".75" stroke-width="14.5" fill="none" stroke-dasharray="1.3 10"/>`;
     hi+=`<path d="${d}" transform="translate(0 -4)" stroke="#fff" stroke-opacity=".5" stroke-width="2" fill="none" stroke-linecap="round"/><path d="${d}" stroke="#00e5ff" stroke-opacity=".45" stroke-width="1" fill="none" stroke-dasharray="3 5" class="cflow"/>`;
     const dur=(4+Math.random()*3).toFixed(1);pods+=`<circle r="2.4" fill="#ffd34d"><animateMotion dur="${dur}s" repeatCount="indefinite" path="${d}" keyPoints="0;1;0" keyTimes="0;.5;1" calcMode="linear"/></circle>`}
-  return `<g class="corr" pointer-events="none">${base}${body}${rib}${pods}${hi}</g>`}
+  return `${typeof layGridSVG==='function'?layGridSVG():''}<g class="corr" pointer-events="none">${base}${body}${rib}${pods}${hi}${plan}</g>`}
 function doorSVG(){return `<g class="bdoor" transform="translate(0 6) scale(.85)"><ellipse cx="0" cy="1" rx="13" ry="3" fill="#000" opacity=".35"/><rect x="-12" y="-1.5" width="24" height="3" rx="1.5" fill="#8b96a6"/><path d="M-9 -1 V-13 a9 9 0 0 1 18 0 V-1Z" fill="#6a7486" stroke="#2a2e3a" stroke-width=".8"/><path d="M-6.6 -1 V-12.4 a6.6 6.6 0 0 1 13.2 0 V-1Z" fill="#050912"/>
   <g class="dl"><path d="M-6.6 -1 V-12.4 a6.6 6.6 0 0 1 6.6 -6.6 V-1Z" fill="#3a4a66"/><rect x="-5" y="-12" width="3" height="4" rx="1" fill="#9fe8ff" opacity=".7"/></g><g class="dr"><path d="M0 -1 V-19 a6.6 6.6 0 0 1 6.6 6.6 V-1Z" fill="#33425c"/><rect x="2" y="-12" width="3" height="4" rx="1" fill="#9fe8ff" opacity=".7"/></g>
   <circle cy="-24" r="1.8" fill="#00e5ff" class="blink"/></g>`}
 {const _ia2=imgArt;imgArt=function(id,L){const out=_ia2(id,L);return L&&id!=='dock'?out+doorSVG():out}}
-{const _sv2=sceneSVG;sceneSVG=function(){const s=_sv2.apply(this,arguments);return s.replace(/<path d="M184 456 Q120[^"]*" stroke="#1a1424"[^>]*\/><path d="M184 456 Q120[^"]*" stroke="#d0a8bc"[^>]*\/>/,corridorsSVG())}}
 function doorOpen(id){const d=document.querySelector(`#cscene .cb[data-b="${id}"] .bdoor`);if(d){d.classList.add('open');setTimeout(()=>d.classList.remove('open'),2200)}}

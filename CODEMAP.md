@@ -2,8 +2,8 @@
 
 مولّدة آلياً بـ `python3 codemap.py`. اقرأ هذا الملف أولاً، ثم افتح الأسطر المطلوبة فقط (`sed -n` أو Read مع offset).
 
-## js/anim.js — 37 سطر، 6KB
-bfx:2 · puff:3 · rise:4 · lights:5 · CORR:23 · corridorsSVG:24 · dur:30 · doorSVG:32 · doorOpen:37
+## js/anim.js — 36 سطر، 6KB
+bfx:2 · puff:3 · rise:4 · lights:5 · CORR:23 · corridorsSVG:24 · dur:30 · doorSVG:32 · doorOpen:36
 
 ## js/artdata.js — 1480KB — الصور فقط (base64) — لا تقرأه؛ ابحث بـ grep عن ART.اسم
 
@@ -47,13 +47,16 @@ FarmGame:2 · CROPS:3 · CR:7 · UPG:9 · fl:11 · speed:12 · init:13 · save:1
 ## js/hub.js — 43 سطر، 4KB
 GAMES:3 · pilotCard:4 · renderHub:8 · drawBadges:25 · showTab:29 · openGame:33 · goHub:41
 
-## js/i18n-en.js — 146KB — جدول الترجمة الإنجليزية — ابحث فيه بـ grep فقط
+## js/i18n-en.js — 147KB — جدول الترجمة الإنجليزية — ابحث فيه بـ grep فقط
 
 ## js/i18n.js — 53 سطر، 4KB
 LANG:3 · I18N:4 · UNIT:7 · trCore:8 · nums:11 · SPLITS:21 · trDeep:22 · tr:27 · TATTR:33 · trAttr:34 · trText:35 · trNode:36 · setLang:42 · run:48
 
 ## js/interior2.js — 75 سطر، 13KB
 TIERC:3 · TIERN:4 · iGain:5 · IST:7 · iReady:18 · iStations:26 · iPlayer:27 · say:34 · walk:35 · step:36 · upd:38 · pt:39 · left:47 · IROLE:51 · ecoNow:52 · iScreenSVG:54 · iScreenUpd:62 · bar:71
+
+## js/layout.js — 73 سطر، 9KB
+LAY:5 · LAY_G:8 · LAY_B:9 · layApply:10 · laySnap:12 · layOk:16 · LAY_PAIRS:20 · layPath:21 · corrList:23 · layAuto:25 · done:25 · layEnsure:28 · layHas:29 · layToggle:30 · layGridSVG:33 · layToolbar:38 · layOpen:40 · laySvgPt:41 · layBind:42 · keep:57 · end:58 · layClick:65
 
 ## js/meta.js — 112 سطر، 14KB
 pilotBonus:4 · DIFFM:7 · before:8 · got:10 · SHOP:17 · shopOn:23 · shopHTML:25 · act:26 · shopWhy:29 · shopBuy:32 · got:35 · shieldTick:39 · battleBadges:59 · metaBadges:65 · rw:70 · MUS:81 · NOTE:82 · SONG:84 · mtone:86 · mpad:88 · mkick:90 · mschedule:91 · arp:100 · mstart:104 · mstop:107 · musSync:108 · draw:112
@@ -92,9 +95,9 @@ WORLD:3 · WorldGame:28 · bot:31 · IMG:32 · img:32 · regAt:33 · regPos:34 �
 ## js/worldmap.js — 130 سطر، 17KB
 REG:3 · GEAR:18 · WM:29 · matN:30 · regOpen:31 · regReq:32 · regReady:33 · wmBonus:36 · gearOn:39 · tripDur:44 · tripStart:45 · tripRush:49 · addMat:50 · tripTick:51 · hrs:53 · got:60 · lmBuild:68 · gearMake:70 · regGo:72 · MAPV:76 · closeMap:77 · mapBox:78 · tripLine:81 · shipLine:83 · left:83 · matBar:85 · mapHTML:86 · regHTML:91 · gearHTML:106 · mapRender:111 · on:114
 
-## style.css — 873 سطر، 93KB
+## style.css — 890 سطر، 95KB
 
-## index.html — 117 سطر، 6KB
+## index.html — 118 سطر، 6KB
 
 ## sw.js — 12 سطر، 2KB
 ASSETS:2

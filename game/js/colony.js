@@ -256,7 +256,7 @@ case 'dock':{const S=k=>col.ship[k],fly=col.done;let s=_sh(48,10);
 
 /* ---------- full-screen scene (360 x 700 world, sliced to fill the phone) ---------- */
 const SLOT={wall:[178,648,1],tower:[-6,530,1],lab:[118,396,1.2],radio:[58,338,1.25],farm:[178,330,1.25],habitat:[296,338,1.2],mine:[64,452,1.3],hq:[184,456,1.45],dock:[296,446,1.1],solar:[70,566,1.3],obs:[184,570,1.3],def:[298,566,1.3]};
-const ROADS='M184 456 Q120 470 64 452 M184 456 Q240 470 296 446 M184 456 Q130 520 70 566 M184 456 L184 570 M184 456 Q240 520 298 566 M184 456 Q150 420 118 396 M118 396 Q80 370 58 338 M184 456 L178 330 M184 456 Q250 400 296 338';
+// the glass corridors between buildings are drawn by corridorsSVG (anim.js); their layout lives in layout.js
 const PRODB={mine:'m',solar:'e',farm:'f',radio:'c'};
 /* ---------- the fence around the base, and the creatures roaming outside it ---------- */
 const FEN={cx:178,cy:468,rx:196,ry:180};
@@ -502,7 +502,7 @@ function sceneSVG(){const R=rng(7);let stars='',tw='';
     <path d="M-720 292 L-720 252 L-690 247 L-649 237 L-621 238 L-580 252 L-547 254 L-506 240 L-465 246 L-435 253 L-405 227 L-363 246 L-337 235 L-309 256 L-282 250 L-256 229 L-222 243 L-184 233 L-145 246 L-105 223 L-75 227 L-46 261 L-5 253 L34 231 L69 245 L107 239 L146 239 L182 235 L208 228 L239 234 L275 223 L304 233 L336 237 L370 251 L398 243 L439 258 L467 246 L497 261 L536 231 L565 260 L592 247 L628 240 L662 242 L689 250 L717 258 L744 224 L783 250 L817 256 L844 223 L880 249 L910 226 L948 247 L990 247 L1019 237 L1061 251 L1080 292Z" fill="url(#cHill2)"/>
     <path d="M-720 306 L-720 263 L-681 269 L-648 252 L-620 267 L-578 251 L-548 267 L-519 256 L-486 256 L-444 249 L-403 272 L-368 275 L-336 262 L-306 254 L-266 254 L-235 250 L-201 257 L-160 251 L-124 250 L-84 268 L-55 270 L-27 251 L2 251 L45 272 L80 264 L111 249 L139 273 L173 251 L207 267 L237 272 L265 262 L308 261 L342 264 L382 271 L412 256 L444 271 L473 274 L505 255 L534 273 L574 249 L609 271 L653 275 L692 252 L736 259 L766 252 L797 252 L836 263 L876 270 L904 265 L942 276 L973 270 L1015 268 L1045 267 L1080 306Z" fill="url(#cHill)"/>
     <path d="M-720 286 Q-600 274 -480 284 T-240 280 T0 286 Q60 274 120 284 T240 280 T360 284 T600 280 T1080 284 V1300 H-720Z" fill="url(#cGround)"/>${crat}${rocks}
-    <path d="${ROADS}" stroke="#1a1424" stroke-width="9" fill="none" stroke-linecap="round" opacity=".6"/><path d="${ROADS}" stroke="#d0a8bc" stroke-width=".7" fill="none" stroke-dasharray="4 6" opacity=".5"/>
+    ${typeof corridorsSVG==='function'?corridorsSVG():''}
     <g class="rover"><animateMotion dur="26s" repeatCount="indefinite" rotate="auto" path="${roverPath}"/><rect x="-7" y="-5" width="14" height="6" rx="2" fill="#e6ecf1"/><rect x="-3" y="-8" width="6" height="3" rx="1" fill="#9fb0c4"/><circle cx="-5" cy="2" r="2" fill="#2a2e3a"/><circle cx="5" cy="2" r="2" fill="#2a2e3a"/><circle cx="7.5" cy="-3" r="1.3" fill="#fff3c0"/><path d="M8 -3 l14 -4 v8Z" fill="#fff3c0" opacity=".18"/></g>
     ${dust}${fenceSVG('back')}${towersSVG('back')}${g}${fenceSVG('front')}${towersSVG('front')}${gateSVG()}${traderSVG()}${creaturesSVG()}${zapSVG()}${nightLights()}${guideSVG()}${bubbleSVG()}<g id="cfx"></g>
     <g class="drone"><animateMotion dur="18s" repeatCount="indefinite" path="M-20 300 C80 250 160 330 240 280 S380 300 400 270"/><ellipse cx="0" cy="0" rx="6" ry="2" fill="#c7cfd8"/><path d="M-8 -2h5M3 -2h5" stroke="#9aa4b2" stroke-width="1"/><circle cx="0" cy="1.5" r="1" fill="#00e5ff" class="blink"/></g>
