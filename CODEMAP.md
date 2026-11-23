@@ -1,6 +1,6 @@
 # خريطة الكود — مستعمرة المدار
 
-مولّدة آلياً بـ `python3 game/tools/codemap.py`. اقرأ هذا الملف أولاً، ثم افتح الأسطر المطلوبة فقط (`sed -n` أو Read مع offset).
+مولّدة آلياً بـ `python3 codemap.py`. اقرأ هذا الملف أولاً، ثم افتح الأسطر المطلوبة فقط (`sed -n` أو Read مع offset).
 
 ## js/anim.js — 37 سطر، 6KB
 bfx:2 · puff:3 · rise:4 · lights:5 · CORR:23 · corridorsSVG:24 · dur:30 · doorSVG:32 · doorOpen:37
@@ -10,7 +10,7 @@ bfx:2 · puff:3 · rise:4 · lights:5 · CORR:23 · corridorsSVG:24 · dur:30 ·
 ## js/astro3d.js — 57 سطر، 6KB
 Astro3D:2 · mat:4 · build:5 · cap:15 · limb:30 · init:40 · pose:45 · draw:51 · dir:52
 
-## js/balance.js — 14 سطر، 0KB
+## js/balance.js — 21 سطر، 1KB
 BAL:2
 
 ## js/colony.js — 709 سطر، 110KB
@@ -73,8 +73,8 @@ TFM:4 · TFS:9 · tfInit:20 · tfTI:21 · tfStage:22 · tfOpen:23 · tfCost:24 �
 
 ## js/three.min.js — 653KB — مكتبة three.js — لا تقرأه
 
-## js/world.js — 338 سطر، 48KB
-WORLD:3 · WorldGame:27 · IMG:31 · img:31 · regAt:32 · regPos:33 · regMid:34 · open:35 · gateOk:36 · gateTxt:37 · rnd:38 · seeded:39 · buildWorld:41 · kinds:43 · weap:50 · stats:51 · restat:53 · newPlayer:54 · monStats:56 · bandLv:58 · spawnMon:59 · wakeGuard:64 · input:67 · say:72 · update:73 · shot:87 · dirty:122 · gainXP:123 · hitP:126 · float:127 · kill:128 · guardTick:137 · hudBuild:140 · forge:152 · WTXT:158 · hudTick:159 · gw:164 · drawMini:169 · PAT:176 · pat:177 · propSpr:182 · tri:183 · MATC:197 · draw2d:198 · vis:207 · sprC:231 · LEGS:235 · legs:236 · drawMon:240 · drawPlayer:255 · make3D:258 · TX:262 · gmat:264 · GEO:268 · COLR:270 · spr:277 · NM:281 · part:285 · pool:289 · sync:290 · draw:292 · orb3:305 · unlockReg:306 · dispose:307 · setView:309 · frame:313 · resize:314 · pd:316 · POIS:319 · worldCard:333
+## js/world.js — 362 سطر، 53KB
+WORLD:3 · WorldGame:27 · IMG:31 · img:31 · regAt:32 · regPos:33 · regMid:34 · open:35 · gateOk:36 · gateTxt:37 · rnd:38 · seeded:39 · buildWorld:41 · kinds:43 · weap:50 · stats:51 · restat:53 · newPlayer:54 · monStats:56 · bandLv:58 · spawnMon:59 · wakeGuard:64 · input:67 · say:72 · update:73 · shot:87 · dirty:128 · worldEvent:130 · gainXP:138 · hitP:141 · float:142 · kill:143 · guardTick:153 · hudBuild:156 · forge:168 · WTXT:175 · hudTick:176 · gw:181 · drawMini:186 · PAT:193 · pat:194 · propSpr:199 · tri:200 · MATC:214 · draw2d:215 · vis:224 · sprC:251 · c2:255 · LEGS:256 · legs:257 · drawMon:261 · drawPlayer:279 · make3D:282 · TX:286 · gmat:288 · GEO:292 · COLR:294 · spr:301 · NM:305 · part:309 · pool:313 · sync:314 · draw:316 · met3:329 · unlockReg:330 · dispose:331 · setView:333 · frame:337 · resize:338 · pd:340 · POIS:343 · worldCard:357
 
 ## js/worldmap.js — 130 سطر، 17KB
 REG:3 · LMCOST:16 · LMRATE:17 · GEAR:18 · WM:29 · matN:30 · regOpen:31 · regReq:32 · regReady:33 · wmBonus:36 · gearOn:39 · tripDur:44 · tripStart:45 · tripRush:49 · addMat:50 · tripTick:51 · hrs:53 · got:60 · lmBuild:68 · gearMake:70 · regGo:72 · MAPV:76 · closeMap:77 · mapBox:78 · tripLine:81 · shipLine:83 · left:83 · matBar:85 · mapHTML:86 · regHTML:91 · gearHTML:106 · mapRender:111 · on:114
