@@ -8,9 +8,10 @@ const WORLD={
   spot:['#5e4670','#c9e2f2','#5a2e22','#d6c8ee','#2f6b47','#2a1d4a'],
   fog:[0x2a2040,0xbcd6ea,0x4a1a10,0xc9bde0,0x10301f,0x0a0618],
   mon:{small:{hp:26,dmg:8,spd:84,r:13},big:{hp:95,dmg:16,spd:56,r:20},grow:0.8,dgrow:0.5},
-  guard:{hp:1400,grow:1,dmg:22,r:44,cd:30*60000},
+  guard:{hp:1400,grow:1,dmg:22,r:44,cd:5*60000,kills:25},   // a beaten guardian returns after 5 min, or sooner after 25 kills in its region
   player:{hp:120,dmg:12,rate:2.6,spd:150,range:270},
-  nodes:14,nodeCd:120000,poi:{c:15,mat:20},maxMon:30,
+  nodes:14,nodeCd:120000,poi:{c:15,mat:20},maxMon:55,
+  spawn:{rate:3.2,min:3,max:6,d0:520,d1:780},  // packs per second (chance), pack size, spawn ring around the hero
   // XP Hero style: the hero levels up from kills; each region has a monster level band and a gate (previous guardian + hero level)
   LV:[1,5,10,15,20,25],hpGrow:1.15,dmgGrow:1.1,heroDmg:1.1,heroHp:12,xpNext:lv=>Math.round(20*Math.pow(lv,1.5)),
   xp:{small:4,big:10,guard:120},
@@ -21,9 +22,11 @@ const WORLD={
     {id:'nova',n:'نجمة السديم',em:'🌟',kind:'nova',rate:0.9,mul:1.6,range:150,mat:'gas',cost:{gas:25,spore:25}}],
   upCost:l=>({c:15*l,m:8*l})};   // weapon upgrade l→l+1: 💎 15·l and the weapon's material 8·l
 
+/* full phone screen while the open world runs */
+document.head.insertAdjacentHTML('beforeend','<style>body.wfull{overflow:hidden;overscroll-behavior:none}body.wfull #play .stats,body.wfull #play .controls,body.wfull #play .help{display:none}body.wfull #play .stage.wstage{position:fixed;left:0;right:0;bottom:0;top:56px;width:auto;border-radius:0;z-index:20}body.wfull #play .stage.wstage>canvas{height:100%!important}body.wfull #play .topbar{position:relative;z-index:21}body.wfull .wview,body.wfull .wforgeb{bottom:calc(14px + env(safe-area-inset-bottom))}</style>');
 const WorldGame=(()=>{
-  const W=432,H=624,{RW,GRID}=WORLD,WW=RW*3,WH=RW*2;
-  let cv,ctx,c3,raf=0,last=0,st,running=false,joy=null,keys={},hud,mini,t=0,saveT=0,msgT=0,view='2d',R3=null,iv=0;
+  const W=432,{RW,GRID}=WORLD,WW=RW*3,WH=RW*2;
+  let H=624,cv,ctx,c3,raf=0,last=0,st,running=false,joy=null,keys={},hud,mini,t=0,saveT=0,msgT=0,view='2d',R3=null,iv=0;
   let p,mons=[],shots=[],eshots=[],nodes=[],props=[],pools=[],parts=[],guards=[],pois=[],orbs=[],fx=[],cam={x:0,y:0,yaw:-Math.PI/2};
   const IMG={};const img=k=>{if(typeof ART==='undefined'||!ART[k])return null;if(!IMG[k]){const i=new Image();i.src=ART[k];IMG[k]=i}return IMG[k].complete&&IMG[k].naturalWidth?IMG[k]:null};
   const regAt=(x,y)=>{const c=Math.floor(x/RW),r=Math.floor(y/RW);return c<0||r<0||c>2||r>1?-1:GRID[r][c]};
@@ -54,9 +57,9 @@ const WorldGame=(()=>{
   // monsters get stronger the farther they are from the dome inside their band
   const bandLv=(reg,x,y)=>{const d=Math.hypot(x-WORLD.base.x,y-WORLD.base.y)/RW;return WORLD.LV[reg]+Math.min(4,Math.floor(Math.random()*2+(reg?d-0.5:d*3)))};
   function spawnMon(){if(mons.filter(m=>!m.guard).length>=WORLD.maxMon)return;
-    for(let tries=0;tries<6;tries++){const a=Math.random()*6.283,d=rnd(430,650),x=p.x+Math.cos(a)*d,y=p.y+Math.sin(a)*d,reg=regAt(x,y);
+    for(let tries=0;tries<6;tries++){const SP=WORLD.spawn,a=Math.random()*6.283,d=rnd(SP.d0,SP.d1),x=p.x+Math.cos(a)*d,y=p.y+Math.sin(a)*d,reg=regAt(x,y);
       if(reg<0||!open(reg)||Math.hypot(x-WORLD.base.x,y-WORLD.base.y)<WORLD.base.r+120)continue;
-      const n=2+Math.floor(Math.random()*3);for(let k=0;k<n;k++){const big=k===0&&Math.random()<0.45,lv=Math.max(1,bandLv(reg,x,y)+(big?1:0)),s=monStats(reg,big,lv);
+      const n=SP.min+Math.floor(Math.random()*(SP.max-SP.min+1));for(let k=0;k<n;k++){const big=k===0&&Math.random()<0.45,lv=Math.max(1,bandLv(reg,x,y)+(big?1:0)),s=monStats(reg,big,lv);
         mons.push({x:x+rnd(-40,40),y:y+rnd(-40,40),reg,big,lv,hp:s.hp,max:s.hp,dmg:s.dmg,spd:s.spd*rnd(0.85,1.15),r:s.r,wx:0,wy:0,wt:0,hit:0,fl:0})}return}}
   function wakeGuard(g){const now=Date.now(),cd=(st.gd||{})[g.reg]||0;if(g.alive||now<cd||!open(g.reg))return;
     const lv=WORLD.LV[g.reg]+5,hp=Math.round(520*Math.pow(WORLD.hpGrow,lv-1)),dmg=WORLD.guard.dmg*Math.pow(WORLD.dmgGrow,lv-1);g.alive=true;mons.push({guard:g,lv,x:g.hx,y:g.hy,reg:g.reg,big:true,hp,max:hp,dmg,spd:46,r:WORLD.guard.r,t1:2.5,t2:6,hit:0,fl:0})}
@@ -100,6 +103,7 @@ const WorldGame=(()=>{
       else{m.wt-=dt;if(m.wt<=0){m.wt=rnd(1.5,3.5);const a=Math.random()*6.283;m.wx=Math.cos(a)*m.spd*0.35;m.wy=Math.sin(a)*m.spd*0.35}vx=m.wx;vy=m.wy}
       let nx=m.x+vx*dt,ny=m.y+vy*dt;if(regAt(nx,ny)!==m.reg&&!m.guard){m.wt=0;nx=m.x;ny=m.y}
       const bd2=Math.hypot(nx-WORLD.base.x,ny-WORLD.base.y);if(bd2<WORLD.base.r+m.r){nx=m.x;ny=m.y}
+      const mvd=Math.hypot(nx-m.x,ny-m.y);m.mv=mvd>dt*4;m.ph=(m.ph||0)+mvd/(m.r*0.55);if(Math.abs(nx-m.x)>0.3)m.fx=nx<m.x?-1:1;
       m.x=nx;m.y=ny;if(d<m.r+p.r)hitP(m.dmg*dt,false)}
     mons=mons.filter(m=>m.hp>0&&(m.guard||Math.hypot(m.x-p.x,m.y-p.y)<1300));
     for(const s of eshots){s.x+=s.vx*dt;s.y+=s.vy*dt;s.l-=dt;if((s.x-p.x)**2+(s.y-p.y)**2<(p.r+5)**2){s.l=0;hitP(s.dmg,false)}}eshots=eshots.filter(s=>s.l>0);
@@ -112,7 +116,7 @@ const WorldGame=(()=>{
     for(const o of pois){if((st.poi||{})[o.reg]||!open(o.reg))continue;if(Math.hypot(o.x-p.x,o.y-p.y)<34){st.poi=st.poi||{};st.poi[o.reg]=1;addMat(REG[o.reg].mat,WORLD.poi.mat);gain('c',WORLD.poi.c);addXP(40);snd('win');
       storyBox('📡 إشارة قديمة في '+PLN[o.reg].n,POIS[o.reg]+' · +'+WORLD.poi.mat+' '+REG[o.reg].me+' · +'+WORLD.poi.c+' 💎','رائع');dirty()}}
     for(const g of guards)if(!g.alive&&Math.hypot(g.hx-p.x,g.hy-p.y)<480)wakeGuard(g);
-    if(Math.random()<dt*1.6)spawnMon();
+    if(Math.random()<dt*WORLD.spawn.rate)spawnMon();
     p.hurt=Math.max(0,p.hurt-dt);saveT-=dt;if(saveT<=0){saveT=4;st.x=Math.round(p.x);st.y=Math.round(p.y);gSave('world',st);if(st._d){st._d=0;colSave()}}
     hudTick()}
   const dirty=()=>{st._d=1};
@@ -122,13 +126,16 @@ const WorldGame=(()=>{
   function hitP(n,quiet){if(p.dead>0)return;p.hp-=n;if(!quiet)p.hurt=0.2;if(p.hp<=0){p.hp=0;p.dead=3;snd('lose');toast('💫 سقطت! تعود إلى القاعدة…');mons=mons.filter(m=>m.guard);eshots=[]}}
   function float(x,y,txt){parts.push({x,y,vx:0,vy:-40,l:1.1,txt})}
   function kill(m){m.hp=0;st.kills=(st.kills||0)+1;for(let k=0;k<10;k++){const a=Math.random()*6.283;parts.push({x:m.x,y:m.y,vx:Math.cos(a)*120,vy:Math.sin(a)*120,l:0.4,c:m.guard?'#ffd34d':'#ff9a6a'})}
-    if(m.guard){const g=m.guard;g.alive=false;st.gd=st.gd||{};st.gd[g.reg]=Date.now()+WORLD.guard.cd;const first=!(st.gk||{})[g.reg];st.gk=st.gk||{};st.gk[g.reg]=(st.gk[g.reg]||0)+1;
+    if(m.guard){const g=m.guard;g.alive=false;st.gd=st.gd||{};st.gd[g.reg]=Date.now()+WORLD.guard.cd;st.gq=st.gq||{};st.gq[g.reg]=0;const first=!(st.gk||{})[g.reg];st.gk=st.gk||{};st.gk[g.reg]=(st.gk[g.reg]||0)+1;
       const q=first?40:15,c=first?30:10;addMat(REG[g.reg].mat,q);gain('c',c);addXP(first?120:40);snd('win');buzz([40,60,80]);
-      storyBox('🏆 هزمت حارس '+PLN[g.reg].n,'+'+q+' '+REG[g.reg].me+' '+REG[g.reg].mn+' · +'+c+' 💎'+(first?'':' · يعود الحارس بعد 30 دقيقة'),'رائع');
+      storyBox('🏆 هزمت حارس '+PLN[g.reg].n,'+'+q+' '+REG[g.reg].me+' '+REG[g.reg].mn+' · +'+c+' 💎'+(first?'':' · يعود بعد 5 دقائق أو بقتل '+WORLD.guard.kills+' وحشاً في منطقته'),'رائع');
       unlock('w_guard1');if(Object.keys(st.gk).length>=6)unlock('w_guard6');const nx=g.reg+1;if(nx<6&&!open(nx))toast('🚪 '+(gateOk(nx)?PLN[nx].n+' مفتوحة الآن، امشِ إليها':'بوابة '+PLN[nx].n+': '+gateTxt(nx)))}
-    else{const k=m.big?2:1;gain('m',Math.round(12*k*(1+m.reg)));gain('e',Math.round(8*k*(1+m.reg)));if(Math.random()<0.25){addMat(REG[m.reg].mat,1);float(m.x,m.y-10,'+1 '+REG[m.reg].me)}}
+    else{guardTick(m.reg);const k=m.big?2:1;gain('m',Math.round(12*k*(1+m.reg)));gain('e',Math.round(8*k*(1+m.reg)));if(Math.random()<0.25){addMat(REG[m.reg].mat,1);float(m.x,m.y-10,'+1 '+REG[m.reg].me)}}
     {const v=Math.round((m.guard?WORLD.xp.guard:m.big?WORLD.xp.big:WORLD.xp.small)*(1+0.12*((m.lv||1)-1)));const n=m.guard?8:m.big?2:1;for(let j=0;j<n;j++)orbs.push({x:m.x+rnd(-14,14),y:m.y+rnd(-14,14),v:Math.ceil(v/n)})}
     if(st.kills>=100)unlock('w_kill100');dirty()}
+  // a sleeping guardian wakes early once enough monsters fall in its region
+  function guardTick(reg){if(!((st.gd||{})[reg]>Date.now()))return;st.gq=st.gq||{};st.gq[reg]=(st.gq[reg]||0)+1;
+    if(st.gq[reg]>=WORLD.guard.kills){st.gd[reg]=0;st.gq[reg]=0;snd('err');toast('👑 حارس '+PLN[reg].n+' استيقظ!')}}
   /* ---------- HUD (shared by both views) ---------- */
   function hudBuild(){hud=document.createElement('div');hud.className='whud';hud.innerHTML=`<div class="whp"><i></i><b></b></div><div class="whlv"><b></b><i><u></u></i></div><div class="whreg"></div><div class="whmat"></div><div class="wgd" hidden><small></small><i><u></u></i></div>
     <button type="button" class="wview" aria-label="تبديل المنظور">🎥 3D</button><button type="button" class="wforgeb" hidden>⚒️ ورشة الأسلحة</button><div class="wforge" hidden></div><canvas class="wmini" width="120" height="80"></canvas><div class="wjoy" hidden><i></i></div>`;stage.appendChild(hud);mini=hud.querySelector('.wmini');
@@ -154,7 +161,8 @@ const WorldGame=(()=>{
     const fb=hud.querySelector('.wforgeb'),inB=Math.hypot(p.x-WORLD.base.x,p.y-WORLD.base.y)<WORLD.base.r;if(fb.hidden===inB)fb.hidden=!inB;
     hud.querySelector('.whp i').style.width=(100*p.hp/p.max)+'%';hud.querySelector('.whp b').textContent=Math.min(p.max,Math.ceil(p.hp))+' / '+p.max;
     const line=PLN[r].em+' '+PLN[r].n;if(hudLast!==line){hudLast=line;hud.querySelector('.whreg').textContent=line}
-    hud.querySelector('.whmat').textContent=REG[r].me+' '+matN(REG[r].mat)+'  ⚔️ '+(st.kills||0);
+    const gw=(st.gd||{})[r]-Date.now(),gs=gw>0?'  👑 '+Math.floor(gw/60000)+':'+String(Math.floor(gw/1000)%60).padStart(2,'0')+' · '+((st.gq||{})[r]||0)+'/'+WORLD.guard.kills:'';
+    hud.querySelector('.whmat').textContent=REG[r].me+' '+matN(REG[r].mat)+'  ⚔️ '+(st.kills||0)+gs;
     const g=mons.find(m=>m.guard&&Math.hypot(m.x-p.x,m.y-p.y)<520),gb=hud.querySelector('.wgd');gb.hidden=!g;if(g){gb.querySelector('small').textContent='👑 حارس '+PLN[g.reg].n;gb.querySelector('u').style.width=(100*g.hp/g.max)+'%'}
     const j=hud.querySelector('.wjoy');if(joy&&joy.on){j.hidden=false;const rc=stage.getBoundingClientRect();j.style.left=(joy.ox-rc.left)+'px';j.style.top=(joy.oy-rc.top)+'px';const dx=joy.x-joy.ox,dy=joy.y-joy.oy,L=Math.min(36,Math.hypot(dx,dy)),a=Math.atan2(dy,dx);j.firstChild.style.transform=`translate(${Math.cos(a)*L}px,${Math.sin(a)*L}px)`}else j.hidden=true;
     if((t*4|0)%2===0)drawMini()}
@@ -194,11 +202,11 @@ const WorldGame=(()=>{
     for(const q of pools){if(Math.abs(q.x-p.x)>W||Math.abs(q.y-p.y)>H)continue;ctx.fillStyle='#ff5a1f';ctx.globalAlpha=0.85+0.1*Math.sin(t*3+q.x);ctx.beginPath();ctx.ellipse(q.x,q.y,q.r,q.r*0.62,0,0,6.283);ctx.fill();ctx.fillStyle='#ffd34d';ctx.globalAlpha=0.5;ctx.beginPath();ctx.ellipse(q.x,q.y,q.r*0.5,q.r*0.3,0,0,6.283);ctx.fill();ctx.globalAlpha=1}
     // base dome
     const b=WORLD.base,hq=img('hq');ctx.fillStyle='#00e5ff14';ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,6.283);ctx.fill();ctx.strokeStyle='#00e5ff88';ctx.lineWidth=2;ctx.stroke();
-    if(hq){const w=120,h=w/(ART.hqR||1);ctx.drawImage(hq,b.x-w/2,b.y-h*0.7,w,h)}
+    if(hq){const w=120,h=w/(ART.hqR||1),c=sprC('hq',h);ctx.drawImage(c||hq,b.x-w/2,b.y-h*0.7,w,h)}
     // y-sorted things
     const L=[];const vis=(x,y)=>x>cam.x-80&&x<cam.x+W+80&&y>cam.y-80&&y<cam.y+H+120;
     for(const q of props)if(vis(q.x,q.y))L.push([q.y,()=>{const s=propSpr(q.k),z=q.s;ctx.drawImage(s,q.x-32*z,q.y-56*z,64*z,64*z)}]);
-    for(let i=0;i<6;i++){const s=(col.wm&&col.wm.lm[i])||0;if(!s)continue;const k='pl'+i+'_s'+s,im=img(k),m=i===0?{x:b.x+260,y:b.y-40}:regMid(i);if(im&&vis(m.x,m.y)){const h=i===5&&s===3?170:120,w=h*(ART[k+'R']||1);L.push([m.y,()=>ctx.drawImage(im,m.x-w/2,m.y-h,w,h)])}}
+    for(let i=0;i<6;i++){const s=(col.wm&&col.wm.lm[i])||0;if(!s)continue;const k='pl'+i+'_s'+s,im=img(k),m=i===0?{x:b.x+260,y:b.y-40}:regMid(i);if(im&&vis(m.x,m.y)){const h=i===5&&s===3?170:120,w=h*(ART[k+'R']||1);L.push([m.y,()=>ctx.drawImage(sprC(k,h)||im,m.x-w/2,m.y-h,w,h)])}}
     const now=Date.now();for(const n of nodes)if(n.cd<now&&open(n.reg)&&vis(n.x,n.y))L.push([n.y,()=>{const c=MATC[REG[n.reg].mat];ctx.fillStyle='#00000050';ctx.beginPath();ctx.ellipse(n.x,n.y,12,4,0,0,6.283);ctx.fill();
       ctx.fillStyle=c;ctx.shadowColor=c;ctx.shadowBlur=10;ctx.beginPath();ctx.moveTo(n.x,n.y-26-2*Math.sin(t*3+n.x));ctx.lineTo(n.x+8,n.y-10);ctx.lineTo(n.x,n.y);ctx.lineTo(n.x-8,n.y-10);ctx.fill();ctx.shadowBlur=0;
       if(n.prog>0){ctx.strokeStyle='#fff';ctx.lineWidth=3;ctx.beginPath();ctx.arc(n.x,n.y-12,18,-1.57,-1.57+6.283*n.prog/0.9);ctx.stroke()}}]);
@@ -217,12 +225,33 @@ const WorldGame=(()=>{
     for(let r=0;r<2;r++)for(let c=0;c<3;c++){const i=GRID[r][c];if(open(i))continue;const x0=c*RW,y0=r*RW;ctx.fillStyle='#000000b0';ctx.fillRect(x0,y0,RW,RW);
       const cx=lab&&lab[1],cy=lab&&lab[2];if(lab&&lab[0]===i){ctx.fillStyle='#fff';ctx.font='bold 14px sans-serif';ctx.textAlign='center';ctx.fillText('🔒 '+PLN[i].n,cx,cy);ctx.font='12px sans-serif';ctx.fillStyle='#ffd34d';ctx.fillText(gateOk(i)?'🚪 مفتوحة، ادخل':gateTxt(i),cx,cy+18)}}
     ctx.restore();if(p.dead>0){ctx.fillStyle='#000a';ctx.fillRect(0,0,W,H)}}
-  function drawMon(m){const k='pl'+m.reg+'_'+(m.big?'big':'small'),im=img(k),R=ART[k+'R']||1,h=m.guard?m.r*3.4:m.r*2.8,w=h*R,flip=p.x>m.x;
-    ctx.fillStyle='#00000055';ctx.beginPath();ctx.ellipse(m.x,m.y,w*0.32,5,0,0,6.283);ctx.fill();
+  /* pinned sprite canvases: every painting is drawn once at its on-screen pixel size (4px buckets) and reused every frame.
+     The hit flash is baked in too, so no ctx.filter per frame (slow on phones). */
+  const SC=new Map();
+  function sprC(k,h,flash){const im=img(k);if(!im)return null;const S=cv.width/W,ph=Math.max(8,Math.ceil(h*S/4)*4),key=k+'|'+ph+(flash?'f':'');let c=SC.get(key);if(c)return c;
+    const R=ART[k+'R']||im.naturalWidth/im.naturalHeight;c=document.createElement('canvas');c.height=ph;c.width=Math.max(4,Math.round(ph*R));const g=c.getContext('2d');g.imageSmoothingQuality='high';g.drawImage(im,0,0,c.width,ph);
+    if(flash){g.globalCompositeOperation='source-atop';g.fillStyle='#ffffffb0';g.fillRect(0,0,c.width,ph)}if(SC.size>400)SC.clear();SC.set(key,c);return c}
+  // creatures painted in the air get real legs so everything walks on the ground
+  const LEGS={pl0_small:1,pl3_small:1,pl5_small:1,pl5_big:1};
+  function legs(w,h,lh,ph,mv,col){const st=mv?Math.sin(ph):0,lw=Math.max(2,h*0.075);ctx.lineCap='round';ctx.lineJoin='round';
+    for(const s of [-1,1]){const sw=st*s,hx=s*w*0.13,hy=-lh,fx=hx+sw*w*0.16,fy=-Math.max(0,sw)*lh*0.35,kx=(hx+fx)/2+w*0.07,ky=(hy+fy)/2;
+      ctx.strokeStyle=s<0?'#1b2030':col;ctx.lineWidth=lw;ctx.beginPath();ctx.moveTo(hx,hy);ctx.lineTo(kx,ky);ctx.lineTo(fx,fy);ctx.stroke();
+      ctx.fillStyle=s<0?'#1b2030':col;ctx.beginPath();ctx.ellipse(fx+lw*0.5,fy-lw*0.2,lw*0.9,lw*0.5,0,0,6.283);ctx.fill()}}
+  function drawMon(m){const k='pl'+m.reg+'_'+(m.big?'big':'small'),R=ART[k+'R']||1,h=m.guard?m.r*3.4:m.r*2.8,w=h*R,flip=(m.fx||(p.x>m.x?1:-1))>0,c=sprC(k,h,m.fl>0);
+    const ph=m.ph||0,mv=!!m.mv,bob=mv?Math.abs(Math.cos(ph))*h*0.05:(1+Math.sin(t*2.2+m.x))*h*0.008,tilt=mv?Math.sin(ph)*0.05:0,leg=LEGS[k]?h*0.3:0;
+    ctx.fillStyle='#00000066';ctx.beginPath();ctx.ellipse(m.x,m.y,w*0.3*(1-bob/h),4.5,0,0,6.283);ctx.fill();
     if(m.guard){ctx.strokeStyle='#ffd34d';ctx.globalAlpha=0.6;ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(m.x,m.y,w*0.45,10,0,0,6.283);ctx.stroke();ctx.globalAlpha=1}
-    ctx.save();ctx.translate(m.x,m.y);if(flip)ctx.scale(-1,1);if(m.fl>0)ctx.filter='brightness(2.2)';if(im)ctx.drawImage(im,-w/2,-h,w,h);else{ctx.fillStyle='#c060ff';ctx.beginPath();ctx.arc(0,-m.r,m.r,0,6.283);ctx.fill()}ctx.restore();
-    if(m.hp<m.max&&!m.guard){ctx.fillStyle='#0008';ctx.fillRect(m.x-14,m.y-h-8,28,4);ctx.fillStyle='#ff5a6a';ctx.fillRect(m.x-14,m.y-h-8,28*m.hp/m.max,4)}
-    if(m.lv){const lv=st.lv||1;ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.fillStyle=m.lv>lv+3?'#ff5a6a':m.lv>lv?'#ffd34d':'#ffffffcc';ctx.fillText('Lv'+m.lv,m.x,m.y-h-11)}}
+    ctx.save();ctx.translate(m.x,m.y);if(flip)ctx.scale(-1,1);
+    if(!c){ctx.fillStyle='#c060ff';ctx.beginPath();ctx.arc(0,-m.r,m.r,0,6.283);ctx.fill()}
+    else if(leg){legs(w,h,leg+bob,ph,mv,WORLD.spot[m.reg]);ctx.translate(0,-leg-bob);ctx.rotate(tilt);ctx.drawImage(c,-w/2,-h*0.92,w,h*0.92)}
+    else{const cw=c.width,ch=c.height,cut=0.68,lift=mv?h*0.09:0,fw=mv?Math.cos(ph)*w*0.05:0,a=mv?Math.max(0,Math.sin(ph)):0,b=mv?Math.max(0,-Math.sin(ph)):0,lb=h*(1-cut);
+      // lower band split in two: each half is a leg group that lifts and swings in turn
+      ctx.drawImage(c,0,ch*cut,cw/2,ch*(1-cut),-w/2+fw,-lb-a*lift,w/2,lb);
+      ctx.drawImage(c,cw/2,ch*cut,cw/2,ch*(1-cut),-fw,-lb-b*lift,w/2,lb);
+      ctx.translate(0,-lb);ctx.rotate(tilt);const ov=0.07;ctx.drawImage(c,0,0,cw,ch*(cut+ov),-w/2,-h*cut-bob,w,h*(cut+ov))}
+    ctx.restore();const top=m.y-h-leg-bob;
+    if(m.hp<m.max&&!m.guard){ctx.fillStyle='#0008';ctx.fillRect(m.x-14,top-8,28,4);ctx.fillStyle='#ff5a6a';ctx.fillRect(m.x-14,top-8,28*m.hp/m.max,4)}
+    if(m.lv){const lv=st.lv||1;ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.fillStyle=m.lv>lv+3?'#ff5a6a':m.lv>lv?'#ffd34d':'#ffffffcc';ctx.fillText('Lv'+m.lv,m.x,top-11)}}
   function drawPlayer(){if(p.dead>0)return;if(typeof Astro3D!=='undefined'&&Astro3D.draw(ctx,p.x,p.y+p.r*0.6,p.r*4.4,p.aim,p.moving,t,p.hurt,'#00e5ff',false))return;
     ctx.fillStyle='#f3f4f7';ctx.beginPath();ctx.arc(p.x,p.y-14,12,0,6.283);ctx.fill();ctx.fillStyle='#0b1530';ctx.beginPath();ctx.arc(p.x+Math.cos(p.aim)*4,p.y-15,6,0,6.283);ctx.fill()}
   /* ---------- 3D view (three.js): same world, camera behind the astronaut ---------- */
@@ -269,7 +298,7 @@ const WorldGame=(()=>{
       for(const o of pois){o.m3.visible=open(o.reg)&&!(st.poi||{})[o.reg];o.m3.rotation.y=t*2}
       // monsters are billboards of the painted creatures
       const used=new Set();for(const m of mons){let s=m.s3;if(!s){const k='pl'+m.reg+'_'+(m.big?'big':'small');s=spr(k,m.guard?m.r*3.4:m.r*2.8);if(!s){s=new THREE.Sprite(new THREE.SpriteMaterial({color:0xc060ff}));s.scale.set(20,20,1)}scene.add(s);m.s3=s}
-        s.position.set(m.x,0,m.y);s.material.color.setHex(m.fl>0?0xffffff:0xdddddd);if(m.fl>0)s.material.color.setRGB(2,2,2);used.add(s)}
+        s.position.set(m.x,m.mv?Math.abs(Math.cos(m.ph||0))*m.r*0.18:0,m.y);s.material.rotation=m.mv?Math.sin(m.ph||0)*0.07:0;s.material.color.setHex(m.fl>0?0xffffff:0xdddddd);if(m.fl>0)s.material.color.setRGB(2,2,2);used.add(s)}
       scene.children.filter(o=>o.isSprite&&o.userData.mon&&!used.has(o)).forEach(o=>{scene.remove(o);o.material.dispose()});used.forEach(s=>s.userData.mon=1);
       sync(bul,shots,bg,bm,16);sync(ebul,eshots,eg,em,16);sync(orb3,orbs,og,om,8);
       sync(fx3,fx.filter(f=>f.k!=='bolt'),rg,rm,6);fx3.forEach((m,j)=>{const f=fx.filter(q=>q.k!=='bolt')[j];if(f){m.rotation.x=-Math.PI/2;const k=f.k==='slash'?f.r*0.85:f.r*(1-f.l*2);m.scale.set(k/20,k/20,1)}});R.render(scene,camera)}
@@ -282,21 +311,22 @@ const WorldGame=(()=>{
     cv.hidden=view!=='2d';c3.hidden=view!=='3d';if(b)b.textContent=view==='2d'?'🎥 3D':'🗺️ 2D';if(view==='2d')cam.yaw=-Math.PI/2}
   /* ---------- loop, input, lifecycle ---------- */
   function frame(now){raf=requestAnimationFrame(frame);const dt=Math.min(0.05,(now-last)/1000);last=now;if(!running)return;if(!forgeOn&&!document.querySelector('.hmodal'))update(dt);if(view==='3d'&&R3)R3.draw();else draw2d()}
-  function resize(){const w=stage.clientWidth,h=Math.min(Math.round(w*H/W),Math.round(innerHeight*0.78));cv.width=Math.round(w*devicePixelRatio);cv.height=Math.round(h*devicePixelRatio);cv.style.height=h+'px';c3.style.height=h+'px';stage.style.height=h+'px'}
+  function resize(){const tb=document.querySelector('#play .topbar'),top=tb?Math.round(tb.getBoundingClientRect().bottom)+4:0;stage.style.top=top+'px';
+    const w=stage.clientWidth||innerWidth,h=Math.max(300,innerHeight-top);H=Math.round(W*h/w);SC.clear();cv.width=Math.round(w*devicePixelRatio);cv.height=Math.round(h*devicePixelRatio);cv.style.height=h+'px';c3.style.height=h+'px';stage.style.height=h+'px'}
   const pd=e=>{if(e.target.closest&&e.target.closest('button'))return;joy={on:true,id:e.pointerId,ox:e.clientX,oy:e.clientY,x:e.clientX,y:e.clientY};e.preventDefault()},
     pm=e=>{if(joy&&joy.on&&e.pointerId===joy.id){joy.x=e.clientX;joy.y=e.clientY}},pu=e=>{if(joy&&e.pointerId===joy.id)joy.on=false},
     kd=e=>{keys[e.key]=true},ku=e=>{keys[e.key]=false};
   const POIS=['حطام قمر صناعي قديم يحمل خريطة للمناطق المجاورة.','تحت الجليد جهاز يبث نفس الإشارة الغامضة.','داخل البركان بقايا محطة تعدين لم يعد منها أحد.','الكريستال هنا يغنّي حين تلمسه… ويحفظ أصوات من مرّوا قبلك.','في قلب الغابة بذرة عملاقة تنبض بضوء أخضر.','في السديم بوابة نجمية صغيرة مطفأة… من بناها؟'];
   return {id:'world',name:'عالم المدار',noDaily:true,desc:'عالم مفتوح: امشِ بين المناطق الست واجمع المواد وقاتل الوحوش والحرّاس',
-    help:'حرّك الرائد بإصبعك في أي مكان على الشاشة (عصا تحكم). يطلق الرائد النار تلقائياً على أقرب وحش. قف فوق البلورات المضيئة لتجمع مادة المنطقة. 📡 إشارة قديمة في كل منطقة لها مكافأة مرة واحدة، و👑 حارس قوي في كل منطقة يعود بعد 30 دقيقة من هزيمته. داخل قبة القاعدة تُشفى بسرعة، والحمم تحرقك. زر 🎥 يبدّل بين المنظور العلوي والثلاثي الأبعاد. كل وحش تقتله يُسقط جواهر خبرة خضراء ترفع مستواك وقوتك. كل منطقة لها مستوى وحوش، وبوابتها تنفتح بهزيمة حارس المنطقة السابقة وبلوغ مستواها. داخل القبة تجد ⚒️ ورشة الأسلحة لتصنع وتطوّر خمسة أسلحة بمواد المناطق. قوتك تزيد أيضاً بدعم المستعمرة ومعدات الورشة.',
+    help:'حرّك الرائد بإصبعك في أي مكان على الشاشة (عصا تحكم). يطلق الرائد النار تلقائياً على أقرب وحش. قف فوق البلورات المضيئة لتجمع مادة المنطقة. 📡 إشارة قديمة في كل منطقة لها مكافأة مرة واحدة، و👑 حارس قوي في كل منطقة يعود بعد 5 دقائق من هزيمته، أو أسرع إذا قتلت 25 وحشاً في منطقته. داخل قبة القاعدة تُشفى بسرعة، والحمم تحرقك. زر 🎥 يبدّل بين المنظور العلوي والثلاثي الأبعاد. كل وحش تقتله يُسقط جواهر خبرة خضراء ترفع مستواك وقوتك. كل منطقة لها مستوى وحوش، وبوابتها تنفتح بهزيمة حارس المنطقة السابقة وبلوغ مستواها. داخل القبة تجد ⚒️ ورشة الأسلحة لتصنع وتطوّر خمسة أسلحة بمواد المناطق. قوتك تزيد أيضاً بدعم المستعمرة ومعدات الورشة.',
     icon:'<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" fill="#1e4733"/><path d="M4 24h40M24 4v40" stroke="#ffffff30"/><circle cx="17" cy="18" r="6" fill="#9fbfd6"/><circle cx="32" cy="30" r="7" fill="#ad9cc8"/><text x="24" y="31" font-size="16" text-anchor="middle">🧑‍🚀</text></svg>',
     progress(){const s=gState('world',{});return {level:Object.keys(s.gk||{}).length+1,stars:0}},play(){},
-    start(){st=gState('world',{kills:0});buildWorld();p=newPlayer();mons=[];shots=[];eshots=[];parts=[];t=0;stage.innerHTML='';stage.classList.add('wstage');
+    start(){st=gState('world',{kills:0});buildWorld();p=newPlayer();mons=[];shots=[];eshots=[];parts=[];t=0;stage.innerHTML='';stage.classList.add('wstage');document.body.classList.add('wfull');
       cv=document.createElement('canvas');c3=document.createElement('canvas');c3.className='w3';stage.appendChild(cv);stage.appendChild(c3);ctx=cv.getContext('2d');hudBuild();resize();
       setView(st.view==='3d'?'3d':'2d');stage.addEventListener('pointerdown',pd);addEventListener('pointermove',pm);addEventListener('pointerup',pu);addEventListener('pointercancel',pu);addEventListener('keydown',kd);addEventListener('keyup',ku);addEventListener('resize',resize);
       running=true;last=performance.now();raf=requestAnimationFrame(frame);snd('win')},
     stop(){running=false;cancelAnimationFrame(raf);if(st&&p){st.x=Math.round(p.x);st.y=Math.round(p.y);delete st._d;gSave('world',st);colSave()}stage.removeEventListener('pointerdown',pd);removeEventListener('pointermove',pm);removeEventListener('pointerup',pu);removeEventListener('pointercancel',pu);removeEventListener('keydown',kd);removeEventListener('keyup',ku);removeEventListener('resize',resize);
-      if(R3){R3.dispose();R3=null}stage.classList.remove('wstage');stage.style.height='';hud=null},
+      if(R3){R3.dispose();R3=null}stage.classList.remove('wstage');document.body.classList.remove('wfull');stage.style.height='';stage.style.top='';hud=null},
     pauseExt(){running=false},resumeExt(){running=true;last=performance.now()},forfeit(){return false}}})();
 if(typeof ACH!=='undefined')ACH.push(['w_lv10','⭐','عالم المدار: المستوى 10'],['w_lv25','🌟','عالم المدار: المستوى 25'],['w_weap5','⚒️','اصنع كل الأسلحة الخمسة'],['w_kill100','⚔️','عالم المدار: 100 وحش'],['w_guard1','👑','هزمت أول حارس منطقة'],['w_guard6','🌟','هزمت حرّاس المناطق الست']);
 /* entry points: a card in the battles tab and a button in the map */
