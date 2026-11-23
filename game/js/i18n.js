@@ -15,19 +15,19 @@ function trCore(s){
   // trailing punctuation or separators are kept too
   const sm=s.match(/^(.+?)([\s.!؟?:،…·—]+)$/);if(sm){const r=trCore(sm[1]);if(r!=null)return r+sm[2].replace('؟','?').replace('،',',')}
   return null}
+// compound lines are split level by level (lines, sections, label:value, sentences, brackets) and each part is looked up again
+const SPLITS=[/(\n)/,/(\s—\s|\s·\s|\s←\s|\s\|\s|\s{2,})/,/(:\s)/,/((?<=[.!؟…])\s)/,/(\s(?=\())/];
+function trDeep(s,l){
+  const lead=s.match(/^\s*/)[0],tail=s.match(/\s*$/)[0],core=s.trim();if(!core||!AR_RE.test(core))return s;
+  const r=trCore(core);if(r!=null)return lead+r+tail;
+  for(let k=l;k<SPLITS.length;k++){const parts=core.split(SPLITS[k]);if(parts.length>1)return lead+parts.map((p,i)=>i%2?p:trDeep(p,k+1)).join('')+tail}
+  return s}
 function tr(s){
   if(!I18N.on||typeof s!=='string'||!AR_RE.test(s))return s;
   const c=I18N.cache.get(s);if(c!=null)return c;
-  const lead=s.match(/^\s*/)[0],tail=s.match(/\s*$/)[0],core=s.trim();
-  let out=trCore(core);
-  if(out==null){
-    // try the parts of a compound line separately
-    const parts=core.split(/(\s·\s|\s—\s|\s←\s|\n|:\s|\s\|\s)/);
-    if(parts.length>1){out=parts.map((p,i)=>i%2?p:(AR_RE.test(p)?(trCore(p.trim())??p):p)).join('')}else out=core}
-  let fin=out;for(const [re,rep] of UNIT)fin=fin.replace(re,rep);
-  if(AR_RE.test(fin)){I18N.miss.add(core.replace(/\d[\d,.]*/g,'{n}'));fin=out}
-  out=fin;
-  out=lead+out+tail;if(I18N.cache.size<6000)I18N.cache.set(s,out);return out}
+  const out=trDeep(s,0);let fin=out;for(const [re,rep] of UNIT)fin=fin.replace(re,rep);
+  if(AR_RE.test(fin)){I18N.miss.add(s.trim().replace(/\d[\d,.]*/g,'{n}'));fin=out}
+  if(I18N.cache.size<6000)I18N.cache.set(s,fin);return fin}
 const TATTR=['aria-label','title','placeholder','alt'];
 function trAttr(el,a){const v=el.getAttribute&&el.getAttribute(a);if(v&&AR_RE.test(v)){const t=tr(v);if(t!==v)el.setAttribute(a,t)}}
 function trText(n){const p=n.parentNode;if(!p||p.nodeName==='SCRIPT'||p.nodeName==='STYLE'||p.id==='langBtn')return;const v=tr(n.data);if(v!==n.data)n.data=v}
