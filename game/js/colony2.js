@@ -2,29 +2,33 @@
 
 /* ---------- research lab ---------- */
 const TECH={
-  mine:{n:'تعدين متقدم',i:'⛏️',d:L=>`+${10*L}% معادن`,base:[200,150,60]},
-  power:{n:'خلايا شمسية فائقة',i:'⚡',d:L=>`+${10*L}% طاقة`,base:[150,200,60]},
-  agri:{n:'زراعة مائية',i:'🌱',d:L=>`+${10*L}% غذاء`,base:[150,150,100]},
+  mine:{n:'تعدين متقدم',i:'⛏️',d:L=>`+${Math.round(BAL.techProd*100*L)}% معادن`,base:[200,150,60]},
+  power:{n:'خلايا شمسية فائقة',i:'⚡',d:L=>`+${Math.round(BAL.techProd*100*L)}% طاقة`,base:[150,200,60]},
+  agri:{n:'زراعة مائية',i:'🌱',d:L=>`+${Math.round(BAL.techProd*100*L)}% غذاء`,base:[150,150,100]},
   store:{n:'مخازن مضغوطة',i:'📦',d:L=>`+${15*L}% سعة`,base:[260,200,80]},
   build:{n:'روبوتات بناء',i:'🤖',d:L=>`-${8*L}% وقت البناء`,base:[240,240,100]},
   offline:{n:'أتمتة المباني',i:'🕒',d:L=>`+${2*L} ساعة تخزين`,base:[200,220,120]},
   dmg:{n:'ذخيرة متطورة',i:'🎯',d:L=>`+${L} ضرر للأبراج`,base:[300,220,80]},
   rate:{n:'تبريد المدافع',i:'🔥',d:L=>`+${10*L}% سرعة إطلاق`,base:[260,300,80]},
-  strike:{n:'الضربة المدارية',i:'☄️',d:L=>`+${50*L}% قوة ضربتك`,base:[220,320,60]}};
-const TMAX=5;
+  strike:{n:'الضربة المدارية',i:'☄️',d:L=>`+${50*L}% قوة ضربتك`,base:[220,320,60]},
+  // branch: navigation and bosses (needs HQ and earlier research)
+  boss:{n:'اختراق دروع الزعماء',i:'⚔️',d:L=>`+${Math.round(BAL.techBoss*100*L)}% ضرر على كل الزعماء`,base:[400,250,80],req:()=>col.b.hq<5?'القيادة 5':(col.tech.strike||0)<2?'الضربة المدارية 2':''},
+  ion:{n:'محرك الدفع الأيوني',i:'🚀',d:L=>`رحلات المجرة أقصر ${Math.round(BAL.techIon*100*L)}%`,base:[300,300,100],req:()=>col.b.hq<5?'القيادة 5':!col.done?'إصلاح المركبة':''},
+  scan:{n:'رادار المسح المجري',i:'📡',max:3,d:L=>`+${Math.round(BAL.techScan*100*L)}% مكافآت الرحلات`,base:[350,500,100],req:()=>col.b.hq<6?'القيادة 6':(col.tech.ion||0)<1?'محرك الدفع الأيوني 1':''}};
+const TMAX=5,tMax=k=>TECH[k].max||TMAX,tReq=k=>TECH[k].req?TECH[k].req():'';
 if(!col.tech)col.tech={};
 const techCost=k=>{const L=col.tech[k]||0,f=Math.pow(1.85,L),b=TECH[k].base;return {m:Math.round(b[0]*f),e:Math.round(b[1]*f),f:Math.round(b[2]*f),c:3+L*3}};
 const techTime=k=>Math.round(45*Math.pow(2.1,col.tech[k]||0)*(1-0.04*(col.b.lab||0)));
 function researchTick(){const r=col.rs;if(!r||Date.now()<r.end)return;col.rs=null;col.tech[r.k]=(col.tech[r.k]||0)+1;colSave();snd('ach');buzz([20,30,20]);toast('🔬 '+TECH[r.k].n+' '+col.tech[r.k],'ach');questCheck&&questCheck();if(!$('hub').hidden)setTimeout(()=>{renderColony();renderSheet()},0)}
-function startResearch(k){accrue();if(col.rs){toast('🔬 المختبر مشغول');return}const L=col.tech[k]||0;if(L>=TMAX){toast('✔️ الأعلى');return}
+function startResearch(k){accrue();if(col.rs){toast('🔬 المختبر مشغول');return}const L=col.tech[k]||0;if(L>=tMax(k)){toast('✔️ الأعلى');return}if(tReq(k)){toast('🔒 يحتاج '+tReq(k));return}
   if(L>=(col.b.lab||0)){toast('🔒 طوّر المختبر إلى '+(L+1));return}const c=techCost(k);if(!canPay(c)){snd('err');toast('الموارد لا تكفي');return}
   pay(c);col.rs={k,end:Date.now()+techTime(k)*1000,len:techTime(k)};colSave();snd('ok');buzz(15);dtask('research',1);renderColony()}
 function rushResearch(){if(!col.rs)return;const left=(col.rs.end-Date.now())/1000,cost=Math.max(1,Math.ceil(left/60));if(col.res.c<cost){snd('err');toast('تحتاج '+cost+' 💎');return}
   col.res.c-=cost;col.rs.end=Date.now();researchTick();renderColony()}
 function labHTML(){if(!col.b.lab)return '<p class="cd">ابنِ المختبر لتبدأ الأبحاث.</p>';
   let h=`<h3 class="lh">🔬 الأبحاث <small>${col.rs?'يجري: '+TECH[col.rs.k].n:'اختر بحثاً · مستوى البحث لا يتجاوز مستوى المختبر'}</small></h3><div class="blist">`;
-  for(const [k,T] of Object.entries(TECH)){const L=col.tech[k]||0,max=L>=TMAX,lock=!max&&L>=col.b.lab,busy=col.rs&&col.rs.k===k,c=techCost(k),ok=!max&&!lock&&!col.rs&&canPay(c);
-    h+=`<div class="brow tech${ok?' ok':''}"><span class="ti">${T.i}</span><span class="bt"><b>${T.n} <i class="tlv">${L}/${TMAX}</i></b><small>${max?T.d(L):L?T.d(L)+' ← '+T.d(L+1):'التالي: '+T.d(1)}</small><span class="bc">${max?'✔️ الأعلى':busy?'🔬 قيد البحث':lock?'🔒 المختبر '+(L+1):costHTML(c)+`<span class="cc time">⏱️ ${fmtDur(techTime(k))}</span>`}</span></span>${!max&&!lock&&!busy?`<button class="btn${ok?' main':''}" type="button" data-tech="${k}">🔬</button>`:''}</div>`}
+  for(const [k,T] of Object.entries(TECH)){const L=col.tech[k]||0,max=L>=tMax(k),rq=max?'':tReq(k),lock=!max&&(L>=col.b.lab||!!rq),busy=col.rs&&col.rs.k===k,c=techCost(k),ok=!max&&!lock&&!col.rs&&canPay(c);
+    h+=`<div class="brow tech${ok?' ok':''}"><span class="ti">${T.i}</span><span class="bt"><b>${T.n} <i class="tlv">${L}/${tMax(k)}</i></b><small>${max?T.d(L):L?T.d(L)+' ← '+T.d(L+1):'التالي: '+T.d(1)}</small><span class="bc">${max?'✔️ الأعلى':busy?'🔬 قيد البحث':lock?'🔒 '+(rq||'المختبر '+(L+1)):costHTML(c)+`<span class="cc time">⏱️ ${fmtDur(techTime(k))}</span>`}</span></span>${!max&&!lock&&!busy?`<button class="btn${ok?' main':''}" type="button" data-tech="${k}">🔬</button>`:''}</div>`}
   return h+'</div>'}
 
 /* ---------- daily colony tasks ---------- */

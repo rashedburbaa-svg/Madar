@@ -11,11 +11,12 @@ const PLANETS=[
 if(!col.gal)col.gal={done:{},art:{}};
 const galOpen=()=>!!col.done;
 const artCount=()=>Object.keys(col.gal.art||{}).length;
+const expDur=i=>Math.round(PLANETS[i].t*(1-BAL.techIon*techLv('ion')));
 const planetOpen=i=>i===0||!!col.gal.done[i-1];
 function expStart(i){if(col.exp){toast('🚀 المركبة في رحلة');return}if(!planetOpen(i)){toast('🔒 زر الكوكب السابق أولاً');return}
-  const P=PLANETS[i];col.exp={i,end:Date.now()+P.t*1000,len:P.t};colSave();snd('win');buzz([20,40,60]);toast('🚀 انطلقت المركبة نحو '+P.n,'ach');renderColony();galaxyBox()}
+  const P=PLANETS[i],T=expDur(i);col.exp={i,end:Date.now()+T*1000,len:T};colSave();snd('win');buzz([20,40,60]);toast('🚀 انطلقت المركبة نحو '+P.n,'ach');renderColony();galaxyBox()}
 function expClaim(){const x=col.exp;if(!x||Date.now()<x.end)return;const P=PLANETS[x.i],first=!col.gal.done[x.i],k=1+0.08*col.b.hq;
-  const got=Object.entries(P.r).map(([r,n])=>[r,Math.round(n*(first?1.5:1)*(r==='c'?1:k))]);got.forEach(([r,n])=>gain(r,n));
+  const sc=1+BAL.techScan*techLv('scan'),got=Object.entries(P.r).map(([r,n])=>[r,Math.round(n*(first?1.5:1)*(r==='c'?1:k)*sc)]);got.forEach(([r,n])=>gain(r,n));
   col.gal.done[x.i]=(col.gal.done[x.i]||0)+1;if(first)col.gal.art[x.i]=1;col.exp=null;addXP(first?80:30);colSave();
   const m=storyBox(`🪐 عادت المركبة من ${P.n}`,(first?P.say+' — ':'')+got.map(([r,n])=>'+'+fmtN(n)+' '+RES[r][1]).join('  ')+(first?`  · أثر جديد: ${P.art} (+5% لكل الإنتاج)`:''),'رائع');celebrate(m.querySelector('.hbox'));if(first&&x.i===PLANETS.length-1)unlock&&0;renderColony()}
 function rushExp(){const x=col.exp;if(!x)return;const left=(x.end-Date.now())/1000,cost=Math.max(1,Math.ceil(left/120));if(col.res.c<cost){snd('err');toast('تحتاج '+cost+' 💎');return}
@@ -33,7 +34,7 @@ function galaxyBox(){let m=document.getElementById('galbox');if(!m){m=document.c
     <div class="gpanel">${x?(Date.now()>=x.end?`<p>🚀 عادت المركبة من <b>${PLANETS[x.i].n}</b>!</p><button class="btn main" data-gclaim>استلام الغنائم</button>`:`<p>🚀 في الطريق إلى <b>${PLANETS[x.i].n}</b> · <b class="gt">${fmtDur(left)}</b></p><button class="btn" data-grush>⚡ 💎 ${Math.max(1,Math.ceil(left/120))}</button>`):'<p>اختر كوكباً لترسل المركبة في رحلة.</p>'}</div><div class="gsel"></div></div>`;
   m.querySelector('.csx').onclick=()=>m.remove();const gc=m.querySelector('[data-gclaim]');if(gc)gc.onclick=()=>{m.remove();expClaim()};const gr=m.querySelector('[data-grush]');if(gr)gr.onclick=rushExp;
   m.querySelectorAll('.pn').forEach(g=>g.onclick=()=>{snd('tap');const i=+g.dataset.p,P=PLANETS[i],open=planetOpen(i),sel=m.querySelector('.gsel');
-    sel.innerHTML=`<div class="gcard"><svg viewBox="-30 -30 60 60" width="54" height="54">${planetSVG(P,26)}</svg><div><b>${P.n}</b><small>${P.d}</small><small>⏱️ ${fmtDur(P.t)} · ${Object.entries(P.r).map(([r,n])=>'+'+fmtN(n)+RES[r][1]).join(' ')}${col.gal.art[i]?'':' · 🏺 '+P.art}</small></div>${open&&!x?`<button class="btn main" data-go2="${i}">🚀 انطلاق</button>`:''}</div>`;
+    sel.innerHTML=`<div class="gcard"><svg viewBox="-30 -30 60 60" width="54" height="54">${planetSVG(P,26)}</svg><div><b>${P.n}</b><small>${P.d}</small><small>⏱️ ${fmtDur(expDur(PLANETS.indexOf(P)))} · ${Object.entries(P.r).map(([r,n])=>'+'+fmtN(n)+RES[r][1]).join(' ')}${col.gal.art[i]?'':' · 🏺 '+P.art}</small></div>${open&&!x?`<button class="btn main" data-go2="${i}">🚀 انطلاق</button>`:''}</div>`;
     const b=sel.querySelector('[data-go2]');if(b)b.onclick=()=>expStart(i)})}
 
 /* ---------- space trader: lands for a few minutes with three offers ---------- */

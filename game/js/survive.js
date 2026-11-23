@@ -382,7 +382,7 @@ const SurviveGame=(()=>{
   }
   function nearest(){let b=null,bd=1e9;for(const e of en){if(e.under>0)continue;if(e.x<-5||e.x>W+5||e.y<-5||e.y>H+5)continue;const d=(e.x-p.x)**2+(e.y-p.y)**2;if(d<bd){bd=d;b=e}}return b}
   const FT=[];let shk=0,shkA=0;function shake(a,d){if(a>=shkA*shk/Math.max(.01,d)){shkA=a;shk=d}}
-  function hurt(e,d){e.hp-=d;e.flash=0.08;e.acc=(e.acc||0)+d;if(!e.accT||t-e.accT>0.28||e.hp<=0){if(e.acc>=1&&FT.length<45)FT.push({x:e.x+(Math.random()-.5)*8,y:e.y-e.r,v:Math.round(e.acc),l:0.8,big:e.acc>=40||e.boss});e.acc=0;e.accT=t}
+  function hurt(e,d){if(e.boss&&typeof techLv==='function')d*=1+BAL.techBoss*techLv('boss');e.hp-=d;e.flash=0.08;e.acc=(e.acc||0)+d;if(!e.accT||t-e.accT>0.28||e.hp<=0){if(e.acc>=1&&FT.length<45)FT.push({x:e.x+(Math.random()-.5)*8,y:e.y-e.r,v:Math.round(e.acc),l:0.8,big:e.acc>=40||e.boss});e.acc=0;e.accT=t}
     if(e.hp<=0&&!e.dead){if(e.boss)shake(9,0.7);else if(e.elite)shake(4,0.25);kill(e)}}
   function kill(e){
     e.dead=true;kills++;st.totalKills=(st.totalKills||0)+1;if(ch&&ch.type==='kill')ch.prog++;

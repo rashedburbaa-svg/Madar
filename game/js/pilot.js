@@ -70,7 +70,7 @@ const PilotGame=(function(){
     if(e.k==='mini'){shake(6,0.5);bossOn=null;for(let i=0;i<7;i++)drops.push({x:e.x+rnd(-40,40),y:e.y+rnd(-20,20),k:i<5?'gem':i<6?'pow':(Math.random()<.5?'hp':'bomb'),vy:rnd(35,70)});txt('🏆 هزمت '+e.bname)}
     else if(e.k==='boss'){shake(10,0.9);bossOn=null;for(let i=0;i<10;i++)drops.push({x:e.x+rnd(-60,60),y:e.y+rnd(-30,30),k:i<6?'gem':i<8?'pow':'hp',vy:rnd(30,70)});if(typeof unlock==='function')unlock('pilot_boss')}
     else{if(big)shake(3,0.2);const r=Math.random();if(r<0.07)drops.push({x:e.x,y:e.y,k:'pow',vy:60});else if(r<0.1)drops.push({x:e.x,y:e.y,k:'hp',vy:60});else if(r<0.13)drops.push({x:e.x,y:e.y,k:'shield',vy:60});else if(r<0.145)drops.push({x:e.x,y:e.y,k:'bomb',vy:60});else if(r<0.45)drops.push({x:e.x,y:e.y,k:'gem',vy:70})}}
-  function hit(e,d){e.hp-=d;e.fl=0.06;e.acc=(e.acc||0)+d;if(!e.accT||t-e.accT>0.25||e.hp<=0){if(FT.length<40)FT.push({x:e.x+rnd(-6,6),y:e.y-e.r*0.6,v:Math.round(e.acc),l:.7,big:e.k==='boss'||e.k==='mini'});e.acc=0;e.accT=t}if(e.hp<=0&&!e.dead)kill(e)}
+  function hit(e,d){if((e.k==='boss'||e.k==='mini')&&typeof techLv==='function')d*=1+BAL.techBoss*techLv('boss');e.hp-=d;e.fl=0.06;e.acc=(e.acc||0)+d;if(!e.accT||t-e.accT>0.25||e.hp<=0){if(FT.length<40)FT.push({x:e.x+rnd(-6,6),y:e.y-e.r*0.6,v:Math.round(e.acc),l:.7,big:e.k==='boss'||e.k==='mini'});e.acc=0;e.accT=t}if(e.hp<=0&&!e.dead)kill(e)}
   function hurtP(d){if(P.inv>0||over)return;if(P.shield>0){P.shield--;P.inv=0.6;snd('err');boom(P.x,P.y,'#9fe8ff',14);return}
     d*=DF().dmg;P.hp-=d;P.inv=0.7;shake(Math.min(7,2+d/6),0.25);snd('err');if(typeof buzz==='function')buzz(40);if(P.wl>1&&d>=20)P.wl--;if(P.hp<=0)die()}
   /* ---------- loop ---------- */

@@ -5,5 +5,9 @@ const BAL={
   raid:{perHq:15,growth:1.1,perWin:6},           // raid strength = perHq·hq·growth^(hq-1) + perWin·wins
   tower:{rate:{gun:0.45,laser:0.7,plasma:0.9},bonus:{gun:0,laser:1,plasma:2}}, // seconds per shot, extra damage by tier
   colBoss:{base:150,perHq:70,perTower:30},       // colony beast boss health
-  iceDragonHp:660
+  iceDragonHp:660,
+  techProd:0.15,          // production research: +15% per level (was +10%)
+  techBoss:0.15,          // boss research: +15% damage on bosses per level
+  techIon:0.10,           // ion drive: galaxy trips 10% shorter per level
+  techScan:0.25           // galaxy scanner: +25% trip rewards per level
 };

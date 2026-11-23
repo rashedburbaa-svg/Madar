@@ -24,7 +24,7 @@ const colSave=()=>save('arcade-colony',col);
 const cap=()=>Math.round(600*Math.pow(1.7,col.b.hq-1)*(1+0.15*((col.tech&&col.tech.store)||0)));
 const crew=()=>3+2*col.b.habitat;
 if(col.b.wall==null)col.b.wall=0;if(col.b.tower==null)col.b.tower=0;if(col.b.lab==null)col.b.lab=0;
-const techLv=k=>(col.tech&&col.tech[k])||0,TK={m:'mine',e:'power',f:'agri'},tMul=k=>1+0.1*(TK[k]?techLv(TK[k]):0);
+const techLv=k=>(col.tech&&col.tech[k])||0,TK={m:'mine',e:'power',f:'agri'},tMul=k=>1+BAL.techProd*(TK[k]?techLv(TK[k]):0);
 const mult=()=>1+(typeof festOn==='function'&&festOn()?0.25:0)+(typeof terraBonus==='function'?terraBonus():0)+(typeof moraleBonus==='function'?moraleBonus():0)+0.04*crew()+0.03*(col.b.wall||0)+(typeof artCount==='function'?0.05*artCount():0);
 function rate(k){let r=0;for(const id of BORDER){const B=BLD[id],L=col.b[id];if(B.prod&&B.prod[0]===k&&L>0)r+=B.prod[1]*L*Math.pow(1.15,L-1)}return r*mult()*tMul(k)}
 function upCost(id){const L=col.b[id],B=BLD[id],f=Math.pow(1.6,L);return {m:Math.round(B.base[0]*f),e:Math.round(B.base[1]*f),f:Math.round(B.base[2]*f*BAL.foodCostMul)}}
@@ -458,7 +458,7 @@ function spark(x,y,c){const L=$('cshots');if(!L)return;const e=svgEl('circle',{c
 function boom(x,y,c,r){const L=$('cshots');if(!L)return;const g=svgEl('g',{transform:`translate(${x.toFixed(1)} ${y.toFixed(1)})`});
   g.innerHTML=`<circle r="${r}" fill="${c}" class="bm1"/><circle r="${r*0.55}" fill="#fff" class="bm2"/>`+[0,1,2,3,4,5,6,7].map(k=>{const a=k*Math.PI/4+Math.random()*0.4,d=r*1.6;return `<circle r="1.6" fill="${c}" class="bmp" style="--dx:${(Math.cos(a)*d).toFixed(1)}px;--dy:${(Math.sin(a)*d).toFixed(1)}px"/>`}).join('');
   L.appendChild(g);BT.shots.push({el:g,t:0,T:0.7})}
-function hurt(c,d){if(c.dead)return;c.hp-=d;c.hpb.setAttribute('opacity','1');c.hpf.setAttribute('width',Math.max(0,24*c.hp/c.max).toFixed(1));c.hpf.setAttribute('fill',c.hp/c.max>0.5?'#7ddc5a':c.hp/c.max>0.25?'#ffd34d':'#ff5d73');
+function hurt(c,d){if(c.dead)return;if(c.boss||c.guard!=null)d*=1+BAL.techBoss*techLv('boss');c.hp-=d;c.hpb.setAttribute('opacity','1');c.hpf.setAttribute('width',Math.max(0,24*c.hp/c.max).toFixed(1));c.hpf.setAttribute('fill',c.hp/c.max>0.5?'#7ddc5a':c.hp/c.max>0.25?'#ffd34d':'#ff5d73');
   c.el.classList.remove('hit');void c.el.getBoundingClientRect();c.el.classList.add('hit');
   if(c.hp<=0){c.dead=1e15;dtask('kills',1);if(c.boss){c.el.classList.add('gone');boom(c.x,c.y-30,'#b47aff',34);bossDown(c);return}c.el.classList.add('gone');c.hpb.setAttribute('opacity','0');boom(c.x,c.y-10,c.t==='blob'?'#ff5d73':c.t==='beast'?'#b47aff':c.t==='ufo'?'#9fe8ff':'#7ddc5a',c.t==='beast'||c.t==='ufo'?18:12);
     col.kills=(col.kills||0)+1;if(prefs.sound&&Math.random()<0.5)snd('hit');
