@@ -53,7 +53,7 @@ function tripTick(){const w=WM(),t=w.trip,now=Date.now();
   const hrs=(now-w.mt)/3600000;if(hrs>0.01){REG.forEach((R,i)=>{const s=w.lm[i]||0;if(s)addMat(R.mat,LMRATE[s]*hrs)});w.mt=now}
   if(!t||now<t.end)return;w.trip=null;const R=REG[t.i];
   if(t.k==='scout'){w.u[t.i]=1;addMat(R.mat,10);addXP(60);colSave();snd('win');
-    const m=storyBox(`🗺️ اكتشفت ${regEm(t.i)} ${regName(t.i)}!`,`وجد الفريق ${R.mn} ${R.me} وكائنات لم نرها من قبل. انتقل إلى المنطقة لترى أرضها، وابنِ معلمها لتجمع ${R.mn} باستمرار.`,'رائع');try{celebrate(m.querySelector('.hbox'))}catch(e){}
+    if(typeof regionPanorama==='function'&&!panoSeen(t.i))regionPanorama(t.i,()=>regGo(t.i));else{const m=storyBox(`🗺️ اكتشفت ${regEm(t.i)} ${regName(t.i)}!`,`وجد الفريق ${R.mn} ${R.me} وكائنات لم نرها من قبل. انتقل إلى المنطقة لترى أرضها، وابنِ معلمها لتجمع ${R.mn} باستمرار.`,'رائع');try{celebrate(m.querySelector('.hbox'))}catch(e){}}
     const n=Object.keys(w.u).length;if(typeof unlock==='function'){if(n>=3)unlock('wm3');if(n>=6)unlock('wm6')}}
   else{const A=R.adv[t.a],sc=1+BAL.techScan*techLv('scan');let ok=true,f=1;
     if(A.risk){const ch=Math.min(0.95,0.55+0.04*(col.b.def||0)+0.05*(w.lm[t.i]||0));ok=Math.random()<ch;f=ok?1:0.4}

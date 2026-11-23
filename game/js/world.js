@@ -36,6 +36,11 @@ const WorldGame=(()=>{
   const open=i=>i===0||(typeof regOpen==='function'&&regOpen(i));
   const gateOk=i=>i===0||(((st.gk||{})[i-1]>0)&&(st.lv||1)>=WORLD.LV[i]);
   const gateTxt=i=>{const L=[];if(!((st.gk||{})[i-1]>0))L.push('👑 حارس '+PLN[i-1].n);if((st.lv||1)<WORLD.LV[i])L.push('⭐ المستوى '+WORLD.LV[i]);return L.join(' · ')};
+  function discover(reg){col.wm.u[reg]=1;colSave();snd('win');addMat(REG[reg].mat,10);toast(`🗺️ اكتشفت ${PLN[reg].em} ${PLN[reg].n}!`,'ach');const n=Object.keys(col.wm.u).length;if(n>=3)unlock('wm3');if(n>=6)unlock('wm6');R3&&R3.unlockReg(reg)}
+  // «ادخل المنطقة» on the panorama: step just inside the border nearest to the hero, and the region opens
+  function enterReg(i){if(!p)return;const o=regPos(i);p.x=clamp(p.x,o.x+70,o.x+RW-70);p.y=clamp(p.y,o.y+70,o.y+RW-70);if(!open(i))discover(i)}
+  // a gate that is ready now: the panorama the first time, a toast after that
+  function gateReady(i){if(typeof regionPanorama==='function'&&!panoSeen(i))regionPanorama(i,()=>enterReg(i));else toast('🔓 '+PLN[i].n+' مفتوحة الآن، امشِ إليها')}
   const rnd=(a,b)=>a+Math.random()*(b-a),clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
   function seeded(s){return ()=>{s=(s*16807)%2147483647;return (s-1)/2147483646}}
   /* ---------- the world: props, lava pools, material nodes, guardians, signals (same every visit) ---------- */
@@ -75,7 +80,7 @@ const WorldGame=(()=>{
     const mv=input(),sp=WORLD.player.spd;p.moving=Math.hypot(mv.x,mv.y)>0.05;
     if(p.moving){let nx=p.x+mv.x*sp*dt,ny=p.y+mv.y*sp*dt;nx=clamp(nx,10,WW-10);ny=clamp(ny,10,WH-10);const reg=regAt(nx,ny);
       if(reg>=0&&!open(reg)){ // walking into a closed region: discover it if the colony is ready, else bounce
-        if(gateOk(reg)){col.wm.u[reg]=1;colSave();snd('win');addMat(REG[reg].mat,10);toast(`🗺️ اكتشفت ${PLN[reg].em} ${PLN[reg].n}!`,'ach');const n=Object.keys(col.wm.u).length;if(n>=3)unlock('wm3');if(n>=6)unlock('wm6');R3&&R3.unlockReg(reg)}
+        if(gateOk(reg)){discover(reg);if(typeof regionPanorama==='function'&&!panoSeen(reg))regionPanorama(reg)}
         else{say('🔒 '+PLN[reg].n+': '+gateTxt(reg));nx=p.x;ny=p.y}}
       p.x=nx;p.y=ny;if(view==='2d'||mv.fw>0.3)p.aim=Math.atan2(mv.y,mv.x)}
     if(view==='3d'&&p.moving&&mv.fw>-0.2){const target=Math.atan2(mv.y,mv.x);let d=target-cam.yaw;d=Math.atan2(Math.sin(d),Math.cos(d));cam.yaw+=d*Math.min(1,dt*1.6)}
@@ -142,14 +147,14 @@ const WorldGame=(()=>{
     else{snd('err');toast('☄️ مطر نيازك! ابتعد عن الدوائر الحمراء');for(let k=0;k<V.meteorN;k++){const a=Math.random()*6.283,d=k===0?0:rnd(60,260);mets.push({x:p.x+Math.cos(a)*d,y:p.y+Math.sin(a)*d,r:V.meteorR,w:V.meteorWarnMs/1000+k*0.18,w0:V.meteorWarnMs/1000+k*0.18})}}}
   function gainXP(n){st.xp=(st.xp||0)+n;st.lv=st.lv||1;let up=false;while(st.xp>=WORLD.xpNext(st.lv)){st.xp-=WORLD.xpNext(st.lv);st.lv++;up=true}
     if(up){restat(true);snd('ach');buzz([30,40,60]);float(p.x,p.y-50,'⬆️ المستوى '+st.lv);fx.push({k:'lvl',x:p.x,y:p.y,r:90,l:0.6});if(st.lv>=10)unlock('w_lv10');if(st.lv>=25)unlock('w_lv25');
-      for(let i=1;i<6;i++)if(st.lv===WORLD.LV[i]&&(st.gk||{})[i-1]>0&&!open(i))toast('🔓 '+PLN[i].n+' مفتوحة الآن، امشِ إليها');gSave('world',st)}}
+      for(let i=1;i<6;i++)if(st.lv===WORLD.LV[i]&&(st.gk||{})[i-1]>0&&!open(i))gateReady(i);gSave('world',st)}}
   function hitP(n,quiet){if(p.dead>0)return;p.hp-=n;if(!quiet)p.hurt=0.2;if(p.hp<=0){p.hp=0;p.dead=3;snd('lose');toast('💫 سقطت! تعود إلى القاعدة…');mons=mons.filter(m=>m.guard);eshots=[]}}
   function float(x,y,txt){parts.push({x,y,vx:0,vy:-40,l:1.1,txt})}
   function kill(m){m.hp=0;st.kills=(st.kills||0)+1;for(let k=0;k<10;k++){const a=Math.random()*6.283;parts.push({x:m.x,y:m.y,vx:Math.cos(a)*120,vy:Math.sin(a)*120,l:0.4,c:m.guard?'#ffd34d':'#ff9a6a'})}
     if(m.guard){const g=m.guard;g.alive=false;st.gd=st.gd||{};st.gd[g.reg]=Date.now()+WORLD.guard.cd;st.gq=st.gq||{};st.gq[g.reg]=0;const first=!(st.gk||{})[g.reg];st.gk=st.gk||{};st.gk[g.reg]=(st.gk[g.reg]||0)+1;
       const q=first?40:15,c=first?30:10;addMat(REG[g.reg].mat,q);gain('c',c);addXP(first?120:40);snd('win');buzz([40,60,80]);
-      storyBox('🏆 هزمت حارس '+PLN[g.reg].n,'+'+q+' '+REG[g.reg].me+' '+REG[g.reg].mn+' · +'+c+' 💎'+(first?'':' · يعود بعد 5 دقائق أو بقتل '+WORLD.guard.kills+' وحشاً في منطقته'),'رائع');
-      unlock('w_guard1');if(Object.keys(st.gk).length>=6)unlock('w_guard6');const nx=g.reg+1;if(nx<6&&!open(nx))toast('🚪 '+(gateOk(nx)?PLN[nx].n+' مفتوحة الآن، امشِ إليها':'بوابة '+PLN[nx].n+': '+gateTxt(nx)))}
+      const nx=g.reg+1,ready=nx<6&&!open(nx)&&gateOk(nx);storyBox('🏆 هزمت حارس '+PLN[g.reg].n,'+'+q+' '+REG[g.reg].me+' '+REG[g.reg].mn+' · +'+c+' 💎'+(first?'':' · يعود بعد 5 دقائق أو بقتل '+WORLD.guard.kills+' وحشاً في منطقته'),'رائع',ready?()=>gateReady(nx):null);
+      unlock('w_guard1');if(Object.keys(st.gk).length>=6)unlock('w_guard6');if(nx<6&&!open(nx)&&!ready)toast('🚪 بوابة '+PLN[nx].n+': '+gateTxt(nx))}
     else{guardTick(m.reg);const k=m.big?2:1;gain('m',Math.round(12*k*(1+m.reg)));gain('e',Math.round(8*k*(1+m.reg)));if(Math.random()<0.25){addMat(REG[m.reg].mat,1);float(m.x,m.y-10,'+1 '+REG[m.reg].me)}}
     {const v=Math.round((m.guard?WORLD.xp.guard:m.big?WORLD.xp.big:WORLD.xp.small)*(1+0.12*((m.lv||1)-1)));const n=m.guard?8:m.big?2:1;for(let j=0;j<n;j++)orbs.push({x:m.x+rnd(-14,14),y:m.y+rnd(-14,14),v:Math.ceil(v/n)})}
     {const G=BAL.world.gear,tier=((col.b&&col.b.hq)||1)+m.reg,ch=m.guard?G.guard:G.base+G.perTier*tier;if(Math.random()<ch)orbs.push({x:m.x,y:m.y-6,v:0,gp:1})}
@@ -354,7 +359,7 @@ const WorldGame=(()=>{
     pm=e=>{if(joy&&joy.on&&e.pointerId===joy.id){joy.x=e.clientX;joy.y=e.clientY}},pu=e=>{if(joy&&e.pointerId===joy.id)joy.on=false},
     kd=e=>{keys[e.key]=true},ku=e=>{keys[e.key]=false};
   const POIS=['حطام قمر صناعي قديم يحمل خريطة للمناطق المجاورة.','تحت الجليد جهاز يبث نفس الإشارة الغامضة.','داخل البركان بقايا محطة تعدين لم يعد منها أحد.','الكريستال هنا يغنّي حين تلمسه… ويحفظ أصوات من مرّوا قبلك.','في قلب الغابة بذرة عملاقة تنبض بضوء أخضر.','في السديم بوابة نجمية صغيرة مطفأة… من بناها؟'];
-  if(location.hostname==='localhost')window.__wd={get mons(){return mons},get p(){return p}};   // test hook
+  if(location.hostname==='localhost')window.__wd={get mons(){return mons},get p(){return p},ready:i=>gateReady(i)};   // test hook
   return {id:'world',name:'عالم المدار',noDaily:true,desc:'عالم مفتوح: امشِ بين المناطق الست واجمع المواد وقاتل الوحوش والحرّاس',
     help:'حرّك الرائد بإصبعك في أي مكان على الشاشة (عصا تحكم). يطلق الرائد النار تلقائياً على أقرب وحش. قف فوق البلورات المضيئة لتجمع مادة المنطقة. 📡 إشارة قديمة في كل منطقة لها مكافأة مرة واحدة، و👑 حارس قوي في كل منطقة يعود بعد 5 دقائق من هزيمته، أو أسرع إذا قتلت 25 وحشاً في منطقته. داخل قبة القاعدة تُشفى بسرعة، والحمم تحرقك. زر 🎥 يبدّل بين المنظور العلوي والثلاثي الأبعاد. كل وحش تقتله يُسقط جواهر خبرة خضراء ترفع مستواك وقوتك. كل منطقة لها مستوى وحوش، وبوابتها تنفتح بهزيمة حارس المنطقة السابقة وبلوغ مستواها. داخل القبة تجد ⚒️ ورشة الأسلحة لتصنع وتطوّر خمسة أسلحة بمواد المناطق. قوتك تزيد أيضاً بدعم المستعمرة ومعدات الورشة. الوحوش تنحني وتومض بخط أحمر قبل أن تنقضّ، فابتعد عن اتجاهها. الحارس يغضب عند نصف صحته. أحياناً يهجم غزو وحوش أو يسقط مطر نيازك: اخرج من الدوائر الحمراء. 🧩 القطع النادرة تخفّض كلفة تطوير الأسلحة. 🤖 الروبوت المرافق يتبعك ويطلق على أقرب وحش.',
     icon:'<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" fill="#1e4733"/><path d="M4 24h40M24 4v40" stroke="#ffffff30"/><circle cx="17" cy="18" r="6" fill="#9fbfd6"/><circle cx="32" cy="30" r="7" fill="#ad9cc8"/><text x="24" y="31" font-size="16" text-anchor="middle">🧑‍🚀</text></svg>',
