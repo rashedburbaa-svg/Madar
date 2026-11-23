@@ -14,7 +14,7 @@
 <script>if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));</script>
 <title>مستعمرة المدار</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@500;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="style.css?v=4ddfcf90">
+<link rel="stylesheet" href="style.css?v=3584fbe6">
 </head>
 <body style="padding-top:env(safe-area-inset-top,0px)">
 
@@ -25,6 +25,7 @@
       <h1>مستعمرة <span>المدار</span></h1>
       <div class="pill" title="مجموع نجومك"><svg viewBox="0 0 100 100"><path d="M50 6c5 28 16 39 44 44-28 5-39 16-44 44-5-28-16-39-44-44 28-5 39-16 44-44z"/></svg><span id="totalStars">0</span></div>
       <button class="tog" id="sndBtn" type="button" aria-label="الأصوات">🔊</button>
+      <button class="tog" id="langBtn" type="button" aria-label="English">EN</button>
       <button class="tog" id="musBtn" type="button" aria-label="الموسيقى">🎵</button>
       <button class="tog" id="vibBtn" type="button" aria-label="الاهتزاز">📳</button>
       <button class="tog" id="saveBtn" type="button" aria-label="حفظ التقدّم ونقله">💾</button>
@@ -77,6 +78,8 @@
 </nav>
 <div class="toast" id="toast" hidden></div>
 
+<script src="js/i18n-en.js"></script>
+<script src="js/i18n.js?v=08be7846"></script>
 <script src="js/sfxdata.js?v=c5edc868"></script>
 <script src="js/artdata.js?v=c5809ad9"></script>
 <script src="js/core.js?v=15528bd3"></script>

@@ -1,5 +1,5 @@
-const C='madar-v58';
-const ASSETS=['./','./index.html','./manifest.json','./style.css','./js/sfxdata.js','./js/artdata.js','./js/core.js','./js/balance.js','./js/three.min.js','./js/astro3d.js','./js/survive.js','./js/ship3d.js','./js/pilot.js','./js/colony.js','./js/colony2.js','./js/colony3.js','./js/colony4.js','./js/anim.js','./js/terra.js','./js/survival.js','./js/meta.js','./js/explore.js','./js/interior2.js','./js/prestige.js','./js/sfx.js','./js/hub.js','./js/farmgame.js','../icon-192.png','../icon-512.png','../icon-maskable-512.png'];
+const C='madar-v59';
+const ASSETS=['./','./index.html','./manifest.json','./style.css','./js/i18n-en.js','./js/i18n.js','./js/sfxdata.js','./js/artdata.js','./js/core.js','./js/balance.js','./js/three.min.js','./js/astro3d.js','./js/survive.js','./js/ship3d.js','./js/pilot.js','./js/colony.js','./js/colony2.js','./js/colony3.js','./js/colony4.js','./js/anim.js','./js/terra.js','./js/survival.js','./js/meta.js','./js/explore.js','./js/interior2.js','./js/prestige.js','./js/sfx.js','./js/hub.js','./js/farmgame.js','../icon-192.png','../icon-512.png','../icon-maskable-512.png'];
 self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(C).then(c=>Promise.all(ASSETS.map(a=>c.add(a).catch(()=>{})))))});
 // only clear older game caches; the radar's cache on the same site stays untouched
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k.startsWith('madar-')&&k!==C).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
