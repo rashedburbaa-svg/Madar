@@ -260,13 +260,13 @@ const WorldGame=(()=>{
     if(flash){g.globalCompositeOperation='source-atop';g.fillStyle='#ffffffb0';g.fillRect(0,0,c.width,ph)}if(SC.size>400)SC.clear();SC.set(key,c);return c}
   // creatures painted in the air get real legs so everything walks on the ground
   const c2=k=>!!(ART[k+'_w1']&&ART[k+'_w2']);   // two walking frames from Gemini replace the split-leg trick
-  const LEGS={pl3_small:1,pl5_small:1,pl5_big:1};
+  const LEGS={pl0_small:1,pl3_small:1,pl5_small:1,pl5_big:1};   // ART.<key>Legs=1 (art with painted legs) switches these off
   function legs(w,h,lh,ph,mv,col){const st=mv?Math.sin(ph):0,lw=Math.max(2,h*0.075);ctx.lineCap='round';ctx.lineJoin='round';
     for(const s of [-1,1]){const sw=st*s,hx=s*w*0.13,hy=-lh,fx=hx+sw*w*0.16,fy=-Math.max(0,sw)*lh*0.35,kx=(hx+fx)/2+w*0.07,ky=(hy+fy)/2;
       ctx.strokeStyle=s<0?'#1b2030':col;ctx.lineWidth=lw;ctx.beginPath();ctx.moveTo(hx,hy);ctx.lineTo(kx,ky);ctx.lineTo(fx,fy);ctx.stroke();
       ctx.fillStyle=s<0?'#1b2030':col;ctx.beginPath();ctx.ellipse(fx+lw*0.5,fy-lw*0.2,lw*0.9,lw*0.5,0,0,6.283);ctx.fill()}}
   function drawMon(m){const k='pl'+m.reg+'_'+(m.big?'big':'small'),R=ART[k+'R']||1,h=m.guard?m.r*3.4:m.r*2.8,w=h*R,flip=(m.fx||(p.x>m.x?1:-1))>0,c=sprC(k,h,m.fl>0);
-    const ph=m.ph||0,mv=!!m.mv&&m.st!=='wind',bob=mv?Math.abs(Math.cos(ph))*h*0.05:(1+Math.sin(t*2.2+m.x))*h*0.008,tilt=mv?Math.sin(ph)*0.05:0,leg=LEGS[k]&&!c2(k)?h*0.3:0;
+    const ph=m.ph||0,mv=!!m.mv&&m.st!=='wind',bob=mv?Math.abs(Math.cos(ph))*h*0.05:(1+Math.sin(t*2.2+m.x))*h*0.008,tilt=mv?Math.sin(ph)*0.05:0,leg=LEGS[k]&&!ART[k+'Legs']&&!c2(k)?h*0.3:0;
     ctx.fillStyle='#00000066';ctx.beginPath();ctx.ellipse(m.x,m.y,w*0.3*(1-bob/h),4.5,0,0,6.283);ctx.fill();
     if(m.st==='wind'){const k=1-m.sT/(BAL.world.enemy.windupMs/1000);ctx.strokeStyle='#ff4a3a';ctx.lineWidth=2;ctx.globalAlpha=0.5+0.5*k;ctx.beginPath();ctx.moveTo(m.x,m.y);ctx.lineTo(m.x+m.lx*(m.r+BAL.world.enemy.reach)*k,m.y+m.ly*(m.r+BAL.world.enemy.reach)*k);ctx.stroke();ctx.beginPath();ctx.ellipse(m.x,m.y,w*0.38,7,0,0,6.283);ctx.stroke();ctx.globalAlpha=1}
     if(m.p2){ctx.strokeStyle='#ff3a3a';ctx.globalAlpha=0.4+0.3*Math.sin(t*8);ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(m.x,m.y,w*0.5,12,0,0,6.283);ctx.stroke();ctx.globalAlpha=1}

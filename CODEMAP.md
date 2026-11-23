@@ -7,10 +7,16 @@ bfx:2 · puff:3 · rise:4 · lights:5 · CORR:23 · corridorsSVG:24 · dur:30 ·
 
 ## js/artdata.js — 1480KB — الصور فقط (base64) — لا تقرأه؛ ابحث بـ grep عن ART.اسم
 
+## js/artdata2.js — 27KB — صور إضافية (base64) — لا تقرأه
+
+## js/artdata3.js — 12KB — صور إضافية (base64) — لا تقرأه
+
+## js/artdata4.js — 28KB — صور إضافية (base64) — لا تقرأه
+
 ## js/astro3d.js — 57 سطر، 6KB
 Astro3D:2 · mat:4 · build:5 · cap:15 · limb:30 · init:40 · pose:45 · draw:51 · dir:52
 
-## js/balance.js — 21 سطر، 1KB
+## js/balance.js — 22 سطر، 1KB
 BAL:2
 
 ## js/colony.js — 709 سطر، 110KB
@@ -73,15 +79,15 @@ TFM:4 · TFS:9 · tfInit:20 · tfTI:21 · tfStage:22 · tfOpen:23 · tfCost:24 �
 
 ## js/three.min.js — 653KB — مكتبة three.js — لا تقرأه
 
-## js/world.js — 362 سطر، 53KB
-WORLD:3 · WorldGame:27 · IMG:31 · img:31 · regAt:32 · regPos:33 · regMid:34 · open:35 · gateOk:36 · gateTxt:37 · rnd:38 · seeded:39 · buildWorld:41 · kinds:43 · weap:50 · stats:51 · restat:53 · newPlayer:54 · monStats:56 · bandLv:58 · spawnMon:59 · wakeGuard:64 · input:67 · say:72 · update:73 · shot:87 · dirty:128 · worldEvent:130 · gainXP:138 · hitP:141 · float:142 · kill:143 · guardTick:153 · hudBuild:156 · forge:168 · WTXT:175 · hudTick:176 · gw:181 · drawMini:186 · PAT:193 · pat:194 · propSpr:199 · tri:200 · MATC:214 · draw2d:215 · vis:224 · sprC:251 · c2:255 · LEGS:256 · legs:257 · drawMon:261 · drawPlayer:279 · make3D:282 · TX:286 · gmat:288 · GEO:292 · COLR:294 · spr:301 · NM:305 · part:309 · pool:313 · sync:314 · draw:316 · met3:329 · unlockReg:330 · dispose:331 · setView:333 · frame:337 · resize:338 · pd:340 · POIS:343 · worldCard:357
+## js/world.js — 374 سطر، 55KB
+WORLD:3 · WorldGame:28 · bot:31 · IMG:32 · img:32 · regAt:33 · regPos:34 · regMid:35 · open:36 · gateOk:37 · gateTxt:38 · rnd:39 · seeded:40 · buildWorld:42 · kinds:44 · weap:51 · stats:52 · restat:54 · newPlayer:55 · monStats:57 · bandLv:59 · spawnMon:60 · wakeGuard:65 · input:68 · say:73 · update:74 · shot:88 · dirty:133 · worldEvent:135 · gainXP:143 · hitP:146 · float:147 · kill:148 · guardTick:158 · hudBuild:161 · forge:173 · WTXT:180 · hudTick:181 · gw:186 · drawMini:191 · PAT:198 · pat:199 · propSpr:204 · tri:205 · MATC:219 · draw2d:220 · vis:229 · sprC:258 · c2:262 · LEGS:263 · legs:264 · drawMon:268 · drawBot:286 · drawPlayer:289 · make3D:292 · TX:296 · gmat:298 · GEO:302 · COLR:304 · spr:311 · NM:317 · part:321 · pool:325 · sync:326 · draw:328 · met3:341 · unlockReg:342 · dispose:343 · setView:345 · frame:349 · resize:350 · pd:352 · POIS:355 · worldCard:369
 
 ## js/worldmap.js — 130 سطر، 17KB
 REG:3 · LMCOST:16 · LMRATE:17 · GEAR:18 · WM:29 · matN:30 · regOpen:31 · regReq:32 · regReady:33 · wmBonus:36 · gearOn:39 · tripDur:44 · tripStart:45 · tripRush:49 · addMat:50 · tripTick:51 · hrs:53 · got:60 · lmBuild:68 · gearMake:70 · regGo:72 · MAPV:76 · closeMap:77 · mapBox:78 · tripLine:81 · shipLine:83 · left:83 · matBar:85 · mapHTML:86 · regHTML:91 · gearHTML:106 · mapRender:111 · on:114
 
 ## style.css — 831 سطر، 84KB
 
-## index.html — 110 سطر، 6KB
+## index.html — 113 سطر، 6KB
 
 ## sw.js — 12 سطر، 1KB
 ASSETS:2
