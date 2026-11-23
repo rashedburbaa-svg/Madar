@@ -13,6 +13,8 @@ bfx:2 · puff:3 · rise:4 · lights:5 · CORR:23 · corridorsSVG:24 · dur:30 ·
 
 ## js/artdata4.js — 28KB — صور إضافية (base64) — لا تقرأه
 
+## js/artdata5.js — 28KB — صور خطوات المشي (base64) — لا تقرأه
+
 ## js/astro3d.js — 57 سطر، 6KB
 Astro3D:2 · mat:4 · build:5 · cap:15 · limb:30 · init:40 · pose:45 · draw:51 · dir:52
 
@@ -87,7 +89,7 @@ REG:3 · LMCOST:16 · LMRATE:17 · GEAR:18 · WM:29 · matN:30 · regOpen:31 · 
 
 ## style.css — 831 سطر، 84KB
 
-## index.html — 113 سطر، 6KB
+## index.html — 114 سطر، 6KB
 
 ## sw.js — 12 سطر، 1KB
 ASSETS:2
