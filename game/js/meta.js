@@ -33,7 +33,7 @@ function shopBuy(id){const s=SHOP.find(x=>x.id===id);if(!s||col.res.c<s.c)return
   else if(id==='morale'){const sv=svInit();if(sv.morale>=100)return snd('err');sv.morale=Math.min(100,sv.morale+25)}
   else if(id==='adv'){const sv=svInit();if(sv.adv.cd<=Date.now())return snd('err');sv.adv.cd=0}
   col.res.c-=s.c;col.shopN=(col.shopN||0)+1;colSave();snd('win');toast(s.em+' '+s.n);unlock('shop1');renderSheet();updRes()}
-function shieldTick(){if(shopOn('shield')&&col.raid&&!col.raid.mine&&col.raid.at<col.shop.shield){col.raid.mine=1;colSave();toast('🛡️ درع الغارات سيصدّ الغارة القادمة','ach')}}
+function shieldTick(){if(shopOn('shield')&&col.raid&&!col.raid.mine&&col.raid.at<col.shop.shield){col.raid.mine=1;col.raid.shield=1;colSave();toast('🛡️ درع الغارات سيصدّ الغارة القادمة','ach')}}
 setInterval(shieldTick,15000);
 {const _rs=renderSheet;renderSheet=function(){if(sheetId==='shop'){const c=$('csheet').querySelector('.csc');c.innerHTML=shopHTML();c.querySelectorAll('[data-shop]').forEach(b=>b.onclick=()=>shopBuy(b.dataset.shop));return}_rs()}}
 {const _fc=festChip;festChip=function(){return `<button class="cshop${shopOn('boost')?' on':''}" type="button" aria-label="متجر الجواهر">🛒${shopOn('boost')?'<i>⚡</i>':shopOn('shield')?'<i>🛡️</i>':''}</button>`+_fc()}}
@@ -64,7 +64,7 @@ function metaBadges(){if(typeof col==='undefined'||!col.b)return;const b=col.b,U
   if(ids.some(k=>b[k]>=10))U('col_max1');if(ids.every(k=>(b[k]||0)>=5))U('col_all5');
   if(b.wall>=5)U('col_dome5');if(b.wall>=10)U('col_dome');if((b.tower||0)>=7)U('col_tow');
   const tl=Object.values(col.tech||{}).reduce((a,v)=>a+(v||0),0);if(tl>=10)U('col_tech10');if(typeof TECH!=='undefined'&&tl>=Object.keys(TECH).length*5)U('col_techall');
-  if(crew()>=15)U('col_crew');if(col.res.c>=500)U('col_rich');if((col.raidWins||0)>=1)U('col_raid1');if((col.raidWins||0)>=10)U('col_raid10');
+  if(crew()>=15)U('col_crew');if(col.res.c>=500)U('col_rich');{const rw=(col.raidWins||0)+(col.raidAll||0);if(rw>=1)U('col_raid1');if(rw>=10)U('col_raid10')}
   if(typeof tfStage==='function'&&col.tf){const s=tfStage();if(s>=2)U('tf_sky');if(s>=3)U('tf_rain');if(s>=7)U('tf_forest');if(s>=9)U('tf_eden')}
   if(col.sv){const n=Object.values(col.sv.adv.done||{}).reduce((a,v)=>a+v,0);if(n>=1)U('sv_adv1');if(n>=10)U('sv_adv10');if(col.sv.relics>=1)U('sv_relic');if(col.sv.morale>=100)U('sv_happy')}
   if(typeof artCount==='function'&&col.gal){const a=artCount();if(a>=1)U('gal_1');if(a>=6)U('gal_all')}

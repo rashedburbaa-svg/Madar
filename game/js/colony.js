@@ -4,7 +4,7 @@
 const RES={m:['معادن','⛏️','#c9b8a6'],e:['طاقة','⚡','#ffd34d'],f:['غذاء','🌱','#7ddc5a'],c:['كريستال','💎','#9fe8ff']};
 const BLD={
   hq:{name:'مركز القيادة',base:[200,150,100],max:10,desc:'قلب المستعمرة: يرفع سعة المخازن، وكل مبنى يمكن أن يسبقه بمستوى واحد فقط.'},
-  mine:{name:'منجم المعادن',base:[60,80,30],prod:['m',60],desc:'يستخرج المعادن من صخور الكوكب.'},
+  mine:{name:'منجم المعادن',base:[60,80,30],prod:['m',BAL.mineProd],desc:'يستخرج المعادن من صخور الكوكب.'},
   solar:{name:'محطة الطاقة',base:[80,50,30],prod:['e',60],desc:'ألواح شمسية تمدّ المستعمرة بالطاقة.'},
   farm:{name:'المزرعة المائية',base:[70,70,20],prod:['f',45],desc:'قبة زجاجية تزرع غذاء الروّاد.'},
   habitat:{name:'المساكن',base:[100,80,80],desc:'كل مستوى يستقبل رائدَين، وكل رائد يرفع الإنتاج 4%.'},
@@ -27,11 +27,13 @@ if(col.b.wall==null)col.b.wall=0;if(col.b.tower==null)col.b.tower=0;if(col.b.lab
 const techLv=k=>(col.tech&&col.tech[k])||0,TK={m:'mine',e:'power',f:'agri'},tMul=k=>1+0.1*(TK[k]?techLv(TK[k]):0);
 const mult=()=>1+(typeof festOn==='function'&&festOn()?0.25:0)+(typeof terraBonus==='function'?terraBonus():0)+(typeof moraleBonus==='function'?moraleBonus():0)+0.04*crew()+0.03*(col.b.wall||0)+(typeof artCount==='function'?0.05*artCount():0);
 function rate(k){let r=0;for(const id of BORDER){const B=BLD[id],L=col.b[id];if(B.prod&&B.prod[0]===k&&L>0)r+=B.prod[1]*L*Math.pow(1.15,L-1)}return r*mult()*tMul(k)}
-function upCost(id){const L=col.b[id],B=BLD[id],f=Math.pow(1.6,L);return {m:Math.round(B.base[0]*f),e:Math.round(B.base[1]*f),f:Math.round(B.base[2]*f)}}
+function upCost(id){const L=col.b[id],B=BLD[id],f=Math.pow(1.6,L);return {m:Math.round(B.base[0]*f),e:Math.round(B.base[1]*f),f:Math.round(B.base[2]*f*BAL.foodCostMul)}}
 const upTime=id=>Math.round(20*Math.pow(1.85,col.b[id])*(1-0.08*techLv('build')));
 const canPay=c=>Object.keys(c).every(k=>col.res[k]>=c[k]);
 function pay(c){Object.keys(c).forEach(k=>col.res[k]-=c[k])}
-function gain(k,n){if(k==='c'){col.res.c+=n;return}const C=cap();col.res[k]=Math.max(col.res[k],Math.min(C,col.res[k]+n))}
+const OVERB={m:'mine',e:'solar',f:'farm'};let overT=0;
+function gain(k,n){if(k==='c'){col.res.c+=n;return n}const C=cap(),before=col.res[k];col.res[k]=Math.max(before,Math.min(C,before+n));const added=col.res[k]-before,over=n-added;
+  if(over>=1&&OVERB[k]){col.store=col.store||{};const b=OVERB[k];col.store[b]=(col.store[b]||0)+over;if(Date.now()-overT>4000){overT=Date.now();setTimeout(()=>toast('📦 المخازن ممتلئة — حُفظ الفائض '+fmtN(over)+' '+RES[k][1]+' في '+BLD[b].name+'. طوّر القيادة لزيادة السعة'),900)}}return added}
 const fmtN=n=>{n=Math.floor(n);return n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e4?(n/1e3).toFixed(1)+'k':String(n)};
 const fmtDur=s=>{s=Math.max(0,Math.ceil(s));const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;return h?h+'س '+m+'د '+x+'ث':m?m+'د '+x+'ث':x+'ث'};
 // production accrues from the last visit, up to 24 hours away
@@ -422,7 +424,7 @@ function battleInit(){const svg=$('cscene');BT.cr=[];BT.tw=[];BT.shots=[];if(!sv
     const c={el,t,i,hp:max,max,dead:0,x:p.x,y:p.y,tx:p.x,ty:p.y,wait:Math.random()*2,face:1,sp:SPEED[t]*(0.8+Math.random()*0.4),flip:el.querySelector('.cflip'),hpb:el.querySelector('.hpb'),hpf:el.querySelector('.hpf')};pickTarget(c);BT.cr.push(c)});
   {const el=svg.querySelector('.cre.boss'),old=BT.boss;const c={el,t:'beast',i:'boss',boss:1,hp:old&&!old.dead?old.hp:1,max:old?old.max:1,dead:old&&!old.dead?0:1e15,born:old?old.born:0,x:old?old.x:-90,y:old?old.y:600,tx:old?old.tx:0,ty:old?old.ty:0,wait:0,face:1,sp:6,flip:el.querySelector('.cflip'),hpb:el.querySelector('.hpb'),hpf:el.querySelector('.hpf')};if(!c.dead)el.classList.remove('gone');BT.boss=c;BT.cr.push(c)}
   const L=col.b.tower||0,tier=tierOf(L);
-  svg.querySelectorAll('.tow:not(.wg)').forEach(el=>{const i=+el.dataset.t,[x,y]=fp(TDEG[i]*Math.PI/180);BT.tw.push({x:x+2*1.4,y:y-26*1.4,head:el.querySelector('.thead'),tier,dmg:1+Math.floor(L/3)+(tier==='plasma'?1:0)+techLv('dmg'),cd:i*0.37,rate:(tier==='gun'?0.45:tier==='laser'?1.1:1.6)*(1-0.08*techLv('rate')),range:tier==='plasma'?240:200,ox:2,oy:-26,ang:0})});
+  svg.querySelectorAll('.tow:not(.wg)').forEach(el=>{const i=+el.dataset.t,[x,y]=fp(TDEG[i]*Math.PI/180);BT.tw.push({x:x+2*1.4,y:y-26*1.4,head:el.querySelector('.thead'),tier,dmg:1+Math.floor(L/3)+BAL.tower.bonus[tier]+techLv('dmg'),cd:i*0.37,rate:BAL.tower.rate[tier]*(1-0.08*techLv('rate')),range:tier==='plasma'?240:200,ox:2,oy:-26,ang:0})});
   svg.querySelectorAll('.wgun').forEach(el=>{const d=+el.dataset.deg,[x,y]=fp(d*Math.PI/180),h=fenceStyle(col.b.wall).h+5;BT.tw.push({x,y:y-h,head:el.querySelector('.thead'),tier:'gun',dmg:1,cd:d/180,rate:0.9,range:150,ox:0,oy:-h,ang:0})});
   crewInit(svg);specApply();
   if(!BT.raf){BT.last=performance.now();BT.raf=requestAnimationFrame(battleTick)}}
@@ -603,7 +605,7 @@ function renderColony(){const host=$('colony');if(!host)return;accrue();raidChec
 if(!col.store)col.store={mine:40,solar:40,farm:30};
 const bRate=id=>{const B=BLD[id],L=col.b[id];return B.prod&&L>0?B.prod[1]*L*Math.pow(1.15,L-1)*mult()*tMul(B.prod[0]):0};
 const bCap=id=>Math.max(1,bRate(id)*(8+2*techLv('offline')));
-function fillStores(dt){for(const id of Object.keys(PRODB)){const r=bRate(id);if(r>0)col.store[id]=Math.min(bCap(id),(col.store[id]||0)+r*dt)}}
+function fillStores(dt){for(const id of Object.keys(PRODB)){const r=bRate(id),s=col.store[id]||0;if(r>0)col.store[id]=Math.max(s,Math.min(bCap(id),s+r*dt))}}
 const bubMin=id=>Math.max(id==='radio'?0.5:3,bRate(id)*0.02);
 function collect(id,quiet){const k=PRODB[id],have=col.store[id]||0;if(have<1&&!(k==='c'&&have>=0.5))return 0;
   let take=k==='c'?Math.floor(have):Math.floor(have);if(k!=='c'){const room=Math.max(0,cap()-col.res[k]);take=Math.min(take,Math.floor(room))}
@@ -650,13 +652,13 @@ function chestBox(){const y=new Date();y.setDate(y.getDate()-1);const cont=col.d
 
 /* --- raids: every few hours the creatures attack; fence and defence decide, or you defend in person --- */
 const raidsOn=()=>col.b.def>0||col.q>=10;
-const raidPower=()=>10+col.b.hq*10+5*(col.raidWins||0);
+const raidPower=()=>Math.round(BAL.raid.perHq*col.b.hq*Math.pow(BAL.raid.growth,col.b.hq-1)+BAL.raid.perWin*(col.raidWins||0));
 const defPower=()=>col.b.wall*9+col.b.def*14+(col.b.tower||0)*12+crew();
 function raidPlan(from){const first=!col.raidN;col.raid={at:(from||Date.now())+(3+Math.random()*3)*3600000,str:Math.round(raidPower()*(0.85+Math.random()*0.35)*(first?0.5:1)),mine:0,first};colSave();if(first)setTimeout(()=>toast('🤖 نجم: أول غارة ستكون ضعيفة — جهّز القبة والأبراج','ach'),1500)}
 function raidCheck(){if(!raidsOn())return;if(!col.raid)raidPlan();const now=Date.now();
   if(now>=col.raid.at){const R=col.raid,won=R.mine||defPower()>=R.str;let txt;
     col.raidN=(col.raidN||0)+1;if(won)col.raidWins=(col.raidWins||0)+1;
-    if(won){const c=5+col.b.hq+(R.mine?10:0),mm=Math.round(R.str*6);gain('c',c);gain('m',mm);txt=(R.mine?'صددت الغارة بنفسك! ':'القبة والدفاع صدّا الغارة! ')+`+${c} 💎 +${mm} ⛏️`;if(R.mine)unlock&&0}
+    if(won){const own=R.mine&&!R.shield,c=5+col.b.hq+(own?10:0),mm=Math.round(R.str*6);gain('c',c);gain('m',mm);txt=(R.shield?'🛡️ درع الغارات صدّ الهجوم! ':own?'صددت الغارة بنفسك! ':'القبة والدفاع صدّا الغارة! ')+`+${c} 💎 +${mm} ⛏️`}
     else{const lost={};for(const k of 'mef'){lost[k]=Math.floor(col.res[k]*0.12);col.res[k]-=lost[k]}txt=`اخترقت الكائنات القبة وسرقت: ${Object.entries(lost).map(([k,n])=>'-'+fmtN(n)+' '+RES[k][1]).join(' ')}. طوّر القبة والدفاع.`}
     col.raidLog={won,txt,seen:0};raidPlan(now);colSave()}}
 function raidSoon(){return raidsOn()&&col.raid&&!col.raid.mine&&col.raid.at-Date.now()<20*60000}

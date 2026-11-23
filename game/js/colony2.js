@@ -48,7 +48,7 @@ function strike(c){const now=performance.now();if(now<strikeReady||c.dead)return
   const d=Math.round((3+col.b.def+col.b.hq*0.5)*(1+0.5*(col.tech.strike||0)));const was=c.dead;hurt(c,d);fxAt(c.x,c.y-48,'-'+d,'#ffe27a');dtask('strike',1)}
 
 /* ---------- boss: a giant beast that comes every few minutes ---------- */
-const BOSS_HP=()=>140+col.b.hq*45+(col.b.tower||0)*20;
+const BOSS_HP=()=>BAL.colBoss.base+col.b.hq*BAL.colBoss.perHq+(col.b.tower||0)*BAL.colBoss.perTower;
 function bossSVG(){return `<g class="cre boss gone" data-i="boss" data-cre="beast" role="button" tabindex="0" aria-label="زعيم الوحوش"><g class="cflip"><g transform="scale(2.3)"><ellipse cx="0" cy="-23" rx="32" ry="26" fill="transparent"/>${CRE.beast}</g></g><g class="hpb" opacity="0"><rect class="hpf" width="0" height="0"/></g></g>`}
 function bossBar(c){let b=document.querySelector('#colony .bossbar');if(!c||c.dead){if(b)b.remove();return}
   if(!b){b=document.createElement('div');b.className='bossbar';b.innerHTML='<b>👹 زعيم الوحوش</b><i><u></u></i><small></small>';const t=document.querySelector('#colony .ctop');if(t)t.appendChild(b)}

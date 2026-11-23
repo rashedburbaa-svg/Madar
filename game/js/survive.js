@@ -59,7 +59,7 @@ const SurviveGame=(()=>{
   const BOSSES=[
     {kind:'golem',name:'حارس الفوهة',r:28,hp:680,spd:30,dps:30,col:'#9aa0aa'},
     {kind:'worm',name:'دودة الرمال',r:17,hp:560,spd:92,dps:26,col:'#d9773f'},
-    {kind:'ice',name:'تنين الجليد',r:24,hp:600,spd:46,dps:24,col:'#8fd8ff'},
+    {kind:'ice',name:'تنين الجليد',r:24,hp:BAL.iceDragonHp,spd:46,dps:24,col:'#8fd8ff'},
     {kind:'lava',name:'ملك الحمم',r:27,hp:640,spd:34,dps:30,col:'#ff7a2a'},
     {kind:'octo',name:'الطاغية الأخطبوطي',r:26,hp:600,spd:38,dps:28,col:'#b05cff'},
     {kind:'ship',name:'السفينة الأم',r:32,hp:720,spd:26,dps:30,col:'#c9d3dc'}

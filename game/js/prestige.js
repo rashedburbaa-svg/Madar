@@ -35,7 +35,7 @@ function doRelaunch(P,nx){{
     const N=P+1,k=N+1;col.pg=N;col.ark={};col.arkB=null;col.pgAt=Date.now();
     col.b={hq:1,mine:1,solar:1,farm:1,habitat:1,radio:0,obs:0,def:0,dock:0,wall:0,tower:0,lab:0};
     col.res={m:300*k,e:300*k,f:200*k,c:(col.res.c||0)+50*N};col.store={mine:40,solar:40,farm:30};col.build=null;col.build2=null;col.rs=null;col.tech={};delete col.tf;delete col.tspec;
-    if(col.sv){col.sv.morale=85;col.sv.storm=0}col.raid=null;col.raidN=0;col.qhide=1;col.last=Date.now();colSave();
+    if(col.sv){col.sv.morale=85;col.sv.storm=0}col.raidAll=(col.raidAll||0)+(col.raidWins||0);col.raidWins=0;col.raid=null;col.raidN=0;col.qhide=1;col.last=Date.now();colSave();
     if(typeof unlock==='function'){unlock('pg1');if(N>=3)unlock('pg3');if(N>=5)unlock('pg5')}
     snd('win');try{celebrate&&celebrate()}catch(e){}toast(`🚀 وصلت إلى ${nx.n}! ابدأ مستعمرتك الجديدة`,'ach');setTimeout(()=>location.reload(),1600)}}
 {const _rs=renderSheet;renderSheet=function(){if(sheetId==='prestige'){const c=$('csheet').querySelector('.csc');c.innerHTML=pgHTML();const b=c.querySelector('[data-pg]');if(b)b.onclick=pgGo;c.querySelectorAll('[data-ark]').forEach(x=>x.onclick=()=>arkBuild(x.dataset.ark));const r=c.querySelector('[data-arkr]');if(r)r.onclick=arkRush;return}_rs()}}
