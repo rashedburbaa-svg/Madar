@@ -1154,5 +1154,13 @@ const EN={
 "صدّ {0}":"Repelled {0}",
 "البحث أسرع بـ {0}ث":"Research {0}s faster",
 "البحث أسرع بـ {0}د {1}ث":"Research {0}m {1}s faster",
-"أرسم خريطة الكواكب… زرنا {0} من {1}.":"I'm mapping the planets… we've visited {0} of {1}."
+"أرسم خريطة الكواكب… زرنا {0} من {1}.":"I'm mapping the planets… we've visited {0} of {1}.",
+"🔬 المختبر":"🔬 Lab",
+"لا يوجد إنتاج بعد":"No production yet",
+"المعنويات كاملة {0}%":"Morale is already {0}%",
+"المغامرة متاحة الآن، لا حاجة للشراء":"Adventure is already available, no need to buy",
+"⛔ لا يوجد إنتاج بعد":"⛔ No production yet",
+"⛔ المعنويات كاملة {0}%":"⛔ Morale is already {0}%",
+"⛔ المغامرة متاحة الآن، لا حاجة للشراء":"⛔ Adventure is already available, no need to buy",
+"تحتاج {0} 💎":"Need {0} 💎"
 };

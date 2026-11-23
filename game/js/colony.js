@@ -586,6 +586,7 @@ function renderColony(){const host=$('colony');if(!host)return;accrue();raidChec
   h+='</div><div class="czoom"><button type="button" data-z="in" aria-label="تكبير">＋</button><button type="button" data-z="out" aria-label="تصغير">－</button><button type="button" data-z="fit" aria-label="عرض الكل">⤢</button></div>';host.innerHTML=h;
   // ongoing upgrades sit as compact chips beside the Buildings button instead of tall bars over the map
   {const row=host.querySelector('.cbrow'),bars=host.querySelectorAll('.cbot>.cbuild');if(row&&bars.length){const box=document.createElement('div');box.className='cchips';bars.forEach(b=>{box.appendChild(b);b.onclick=e=>{if(e.target.closest('button'))return;snd('tap');openSheet(b.classList.contains('crs')?'lab':(b.classList.contains('b2')?col.build2:col.build).id)}});row.prepend(box)}}
+  {const row=host.querySelector('.cbrow');if(row&&col.b.lab>0&&!col.rs){const lb=document.createElement('button');lb.type='button';lb.className='cbtn clab';lb.textContent='🔬 المختبر';lb.onclick=()=>{snd('tap');openSheet('lab')};row.querySelector('[data-list]').after(lb)}}
   {const qb=host.querySelector('.qt b');if(Q&&qb)qb.textContent=Q.t}
   host.querySelectorAll('[data-z]').forEach(b=>b.onclick=()=>{snd('tap');const z=b.dataset.z;if(z==='fit'){cam.z=1;cam.x=180;cam.y=null;camView()}else camZoom(z==='in'?1.3:1/1.3)});camBind();battleInit();
   bindActions(host);const rb=host.querySelector('[data-rush]');if(rb)rb.onclick=rush;const rb2=host.querySelector('[data-rush2]');if(rb2)rb2.onclick=rush2;

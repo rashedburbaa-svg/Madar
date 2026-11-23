@@ -23,10 +23,13 @@ const SHOP=[
 const shopOn=k=>col.shop&&col.shop[k]>Date.now();
 {const _mb=moraleBonus;moraleBonus=function(){return _mb()+(shopOn('boost')?0.5:0)}}
 function shopHTML(){col.shop=col.shop||{};let h=`<h3 class="lh">🛒 متجر الجواهر <small>💎 ${fmtN(col.res.c)}</small></h3><div class="blist">`;
-  for(const s of SHOP){const act=(s.id==='boost'||s.id==='shield')&&shopOn(s.id),ok=col.res.c>=s.c&&!act;
-    h+=`<div class="brow${ok?' ok':''}"><span class="bi" style="font-size:26px;display:grid;place-items:center">${s.em}</span><span class="bt"><b>${s.n}</b><small>${act?'✅ مفعّل · باقٍ '+fmtDur((col.shop[s.id]-Date.now())/1000):s.d}</small></span><button class="btn${ok?' main':''}" type="button" data-shop="${s.id}" ${ok?'':'disabled'}>💎 ${s.c}</button></div>`}
+  for(const s of SHOP){const act=(s.id==='boost'||s.id==='shield')&&shopOn(s.id),why=act?'':shopWhy(s),ok=col.res.c>=s.c&&!act&&!why;
+    h+=`<div class="brow${ok?' ok':''}"><span class="bi" style="font-size:26px;display:grid;place-items:center">${s.em}</span><span class="bt"><b>${s.n}</b><small>${act?'✅ مفعّل · باقٍ '+fmtDur((col.shop[s.id]-Date.now())/1000):why?'⛔ '+why:col.res.c<s.c?'تحتاج '+s.c+' 💎':s.d}</small></span><button class="btn${ok?' main':''}" type="button" data-shop="${s.id}" ${ok?'':'disabled'}>💎 ${s.c}</button></div>`}
   return h+'</div><p class="cd">احصل على الجواهر من الراديو، والمهام، والأوسمة (+5 💎 لكل وسام)، والزعماء، والمعارك.</p>'}
-function shopBuy(id){const s=SHOP.find(x=>x.id===id);if(!s||col.res.c<s.c)return snd('err');col.shop=col.shop||{};accrue();
+function shopWhy(s){if(s.id==='harvest'&&!Object.keys(BLD).some(b=>bRate(b)>0))return 'لا يوجد إنتاج بعد';
+  if(s.id==='morale'&&svInit().morale>=100)return 'المعنويات كاملة 100%';
+  if(s.id==='adv'&&svInit().adv.cd<=Date.now())return 'المغامرة متاحة الآن، لا حاجة للشراء';return ''}
+function shopBuy(id){{const s0=SHOP.find(x=>x.id===id),w=s0&&shopWhy(s0);if(w){snd('err');toast(w);return}}const s=SHOP.find(x=>x.id===id);if(!s||col.res.c<s.c)return snd('err');col.shop=col.shop||{};accrue();
   if(id==='boost'){if(shopOn('boost'))return;col.shop.boost=Date.now()+3600000}
   else if(id==='shield'){if(shopOn('shield'))return;col.shop.shield=Date.now()+8*3600000;shieldTick()}
   else if(id==='harvest'){const got=[];for(const b of Object.keys(BLD)){const r=bRate(b);if(r>0){const k=BLD[b].prod[0],n=Math.round(r*2);gain(k,n);got.push('+'+fmtN(n)+' '+RES[k][1])}}if(!got.length)return snd('err');setTimeout(()=>toast('📦 '+got.join('  ')),300)}
