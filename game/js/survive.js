@@ -36,9 +36,9 @@ const SurviveGame=(()=>{
   // astronauts to choose from before a run
   const CHARS={
     scout:{name:'المستكشف',em:'🧑‍🚀',d:'متوازن في كل شيء',visor:['#ffd27a','#d46a00'],hp:1,dmg:1,rate:1,spd:1},
-    sniper:{name:'القنّاص',em:'🎯',d:'ضرر أعلى 60% وإطلاق أبطأ',visor:['#ff9aa8','#c0304a'],hp:0.85,dmg:1.6,rate:0.72,spd:1},
+    sniper:{name:'القنّاص',em:'🎯',d:'ضرر أعلى 75% وإطلاق أبطأ',visor:['#ff9aa8','#c0304a'],hp:0.85,dmg:1.75,rate:0.72,spd:1},
     runner:{name:'العدّاء',em:'⚡',d:'أسرع 25% وصحة أقل',visor:['#9ff0ff','#1f8fb0'],hp:0.8,dmg:1,rate:1.1,spd:1.25},
-    tank:{name:'المدرّع',em:'🛡️',d:'صحة أكبر 50% وحركة أبطأ',visor:['#c8ff9a','#4a9a2a'],hp:1.5,dmg:1,rate:1,spd:0.85}
+    tank:{name:'المدرّع',em:'🛡️',d:'صحة أكبر 30% وحركة أبطأ',visor:['#c8ff9a','#4a9a2a'],hp:1.3,dmg:1,rate:1,spd:0.85}
   };
   const DROPS={heart:'❤️',rapid:'⚡',shield:'🛡️',bomb:'💣',chip:'⬆️',crys:'💎'};
   const DCOL={heart:'#ff5d73',rapid:'#ffd34d',shield:'#5fc8ff',bomb:'#ff8a3c',chip:'#7ddc5a',crys:'#9ff0ff'},DLBL={heart:'صحة',rapid:'إطلاق سريع',shield:'درع',bomb:'قنبلة',chip:'تطوير',crys:'كريستال'};
@@ -62,12 +62,12 @@ const SurviveGame=(()=>{
     {kind:'ice',name:'تنين الكريستال الجليدي',r:24,hp:BAL.iceDragonHp,spd:46,dps:24,col:'#8fd8ff'},
     {kind:'lava',name:'عملاق الحمم والنار',r:27,hp:640,spd:34,dps:30,col:'#ff7a2a'},
     {kind:'octo',name:'ملكة الفضاء البنفسجية',r:26,hp:600,spd:38,dps:28,col:'#b05cff'},
-    {kind:'ship',name:'السفينة الأم',r:32,hp:720,spd:26,dps:30,col:'#c9d3dc'}
+    {kind:'ship',name:'عقرب رمال المريخ',r:32,hp:720,spd:26,dps:30,col:'#c9d3dc'}
   ];
   const bossFor=w=>BOSSES[(w-1)%BOSSES.length];
   function spawnBoss(B){
-    const x=W/2+(Math.random()-0.5)*160,y=-B.r-6,hp=B.hp*hpMul(wave);
-    en.push({type:'boss',kind:B.kind,name:B.name,x,y,r:B.r,hp,max:hp,spd:B.spd,dps:B.dps*(1.2+Math.min(1.5,wave*0.05)),col:B.col,flash:0,oc:0,ph:Math.random()*9,boss:true,t1:2,t2:5,under:0,trail:[]});
+    const x=W/2+(Math.random()-0.5)*160,y=-B.r-6,hp=B.hp*hpMul(wave)*BAL.svBossHp;
+    en.push({type:'boss',kind:B.kind,name:B.name,x,y,r:B.r,hp,max:hp,spd:B.spd,dps:B.dps*(1+Math.min(1.2,wave*0.04)),col:B.col,flash:0,oc:0,ph:Math.random()*9,boss:true,t1:2,t2:5,under:0,trail:[]});
   }
   // boss behaviour: movement plus its own attacks; returns the speed to move with this frame
   function bossAI(e,dt,dx,dy,d){
@@ -270,7 +270,7 @@ const SurviveGame=(()=>{
   ['astro','cre_alien','cre_bug','cre_beast','cre_ufo','cre_blob','bg0','bg1','bg2','bg3','bg4','bg5'].forEach(k=>spr(k));
   function drawSprite(im,x,y,h,faceRight,flash,filt){const w=h*im.naturalWidth/im.naturalHeight;ctx.save();ctx.translate(x,y);if(faceRight)ctx.scale(-1,1);
     ctx.filter=(flash?'brightness(2.3) ':'')+(filt||'');if(ctx.filter==='')ctx.filter='none';ctx.drawImage(im,-w/2,-h*0.62,w,h);ctx.restore();ctx.filter='none'}
-  const BSPR={golem:['cre_beast','grayscale(.85) brightness(1.15)'],worm:['cre_bug','sepia(.6) saturate(2.2) hue-rotate(-15deg)'],ice:['cre_blob','hue-rotate(95deg) saturate(1.3) brightness(1.15)'],lava:['cre_beast','hue-rotate(105deg) saturate(2) brightness(1.05)'],octo:['cre_blob','hue-rotate(170deg) saturate(1.4)'],ship:['cre_ufo','saturate(1.2) brightness(1.1)']};
+  const BSPR={golem:['cre_beast','grayscale(.85) brightness(1.15)'],worm:['cre_bug','sepia(.6) saturate(2.2) hue-rotate(-15deg)'],ice:['cre_blob','hue-rotate(95deg) saturate(1.3) brightness(1.15)'],lava:['cre_beast','hue-rotate(105deg) saturate(2) brightness(1.05)'],octo:ART.bs_queen?['bs_queen','']:['cre_blob','hue-rotate(170deg) saturate(1.4)'],ship:ART.bs_scorp?['bs_scorp','']:['cre_ufo','saturate(1.2) brightness(1.1)']};
   function drawAlien(e){
     if(e.boss){const b=BSPR[e.kind],im=b&&spr(b[0]);if(im){const tt=t+e.ph,pulse=1+Math.sin(tt*3)*0.03;
       drawSprite(im,e.x,e.y+Math.sin(tt*2.2)*2,e.r*3.3*pulse,p.x>e.x,e.flash>0,b[1]+` drop-shadow(0 0 7px ${e.col})`);return}}
@@ -417,7 +417,7 @@ const SurviveGame=(()=>{
     const ps=p.spd*(p.slow>0?0.5:1);p.x=Math.max(p.r,Math.min(W-p.r,p.x+mx*ps*dt));p.y=Math.max(p.r,Math.min(H-p.r,p.y+my*ps*dt));
     // spawning
     spawnT-=dt;
-    if(spawnT<=0&&en.length<130){const n=Math.max(1,Math.round((1+Math.floor(wave/3))*DF().sp));for(let k=0;k<n;k++)spawn(pickType());spawnT=Math.max(0.2,0.95-0.07*wave)/DF().sp}
+    if(spawnT<=0&&en.length<130){const n=Math.max(1,Math.round((1+Math.floor(wave/3))*DF().sp));for(let k=0;k<n;k++)spawn(pickType());spawnT=Math.max(0.3,0.95-0.07*wave)/DF().sp}
     // gun
     gun.cd-=dt*(buff.rapid>0?2:1);const tg=nearest();
     if(tg)p.aim=Math.atan2(tg.y-p.y,tg.x-p.x);
