@@ -92,9 +92,9 @@ WORLD:3 · WorldGame:28 · bot:31 · IMG:32 · img:32 · regAt:33 · regPos:34 �
 ## js/worldmap.js — 130 سطر، 17KB
 REG:3 · LMCOST:16 · LMRATE:17 · GEAR:18 · WM:29 · matN:30 · regOpen:31 · regReq:32 · regReady:33 · wmBonus:36 · gearOn:39 · tripDur:44 · tripStart:45 · tripRush:49 · addMat:50 · tripTick:51 · hrs:53 · got:60 · lmBuild:68 · gearMake:70 · regGo:72 · MAPV:76 · closeMap:77 · mapBox:78 · tripLine:81 · shipLine:83 · left:83 · matBar:85 · mapHTML:86 · regHTML:91 · gearHTML:106 · mapRender:111 · on:114
 
-## style.css — 862 سطر، 87KB
+## style.css — 873 سطر، 93KB
 
-## index.html — 116 سطر، 6KB
+## index.html — 117 سطر، 6KB
 
-## sw.js — 12 سطر، 1KB
+## sw.js — 12 سطر، 2KB
 ASSETS:2
