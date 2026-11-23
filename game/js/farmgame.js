@@ -28,7 +28,7 @@ const FarmGame=(function(){
       <span class="fbar"><i style="width:${(p*100).toFixed(0)}%"></i></span><small>${s===3?'✨ جاهز':tr.bug?'آفة!':need?'يحتاج ماء':fmtDur(left)}</small></button>`}
   function render(){if(!root)return;const now=Date.now();grow(now);
     const inv=Object.entries(st.inv).filter(([,n])=>n>0),food=inv.reduce((a,[k,n])=>a+CR(k).f*n,0);
-    root.querySelector('.fhead').innerHTML=`<span>🌾 مستوى <b>${st.lv}</b></span><span class="fxp"><i style="width:${(st.xp/XPL(st.lv)*100).toFixed(0)}%"></i></span><span>💡 ×${speed().toFixed(2)}</span><span>🧺 ${st.harv}</span>`;
+    root.querySelector('.fhead').innerHTML=`<span>🌾 مستوى <b>${st.lv}</b></span><span class="fxp"><i style="width:${(st.xp/XPL(st.lv)*100).toFixed(0)}%"></i></span><span>💡 ×${speed().toFixed(2)}</span><span>🧺 ${st.harv}</span><button class="fupb" type="button" data-upfarm>⬆️ المزرعة ${col.b.farm||0}</button>`;
     root.querySelector('.fcaps').innerHTML=st.caps.map((cap,ci)=>`<div class="fcap"><div class="fcapt">كبسولة ${ci+1}</div><div class="fglass">${cap.map((tr,ti)=>trayHTML(tr,ci,ti)).join('')}</div><div class="fbase"></div></div>`).join('')+(st.caps.length<7?`<div class="fcap locked"><div class="fglass"><span>🔒</span><small>طوّر المزرعة المائية للمستوى ${Math.min(14,(st.caps.length-1)*2+1)}</small></div></div>`:'');
     root.querySelector('.finv').innerHTML=inv.length?inv.map(([k,n])=>`<span>${CR(k).em} ${n}</span>`).join('')+`<button class="btn main" type="button" data-send>📦 أرسل للمستعمرة · 🌱 ${fmtN(food*(1+0.1*fl()))}</button>`:'<small>المخزن فارغ · احصد المحاصيل الناضجة</small>';
     root.querySelector('.forders').innerHTML=st.orders.map((o,i)=>{const ok=Object.entries(o.want).every(([k,n])=>(st.inv[k]||0)>=n);return `<div class="ford${ok?' ok':''}"><b>🧑‍🚀 ${o.who}</b><span>${Object.entries(o.want).map(([k,n])=>`${CR(k).em}×${n}`).join(' ')}</span><small>🌱 ${fmtN(o.food)} · 💎 ${o.c}</small><button class="btn${ok?' main':''}" type="button" data-ord="${i}" ${ok?'':'disabled'}>سلّم</button></div>`}).join('');
@@ -55,7 +55,7 @@ const FarmGame=(function(){
     progress(){const s=gState('farm',{});return {level:s.lv||1,stars:0}},
     play(){},start(){init();stage.innerHTML='';root=document.createElement('div');root.className='farmg';
       root.innerHTML=`<div class="fhead"></div><div class="fcaps"></div><h4 class="fh">🧺 المخزن</h4><div class="finv"></div><h4 class="fh">📋 طلبات الطاقم</h4><div class="forders"></div><h4 class="fh">🛠️ تطوير المزرعة</h4><div class="fupg"></div>`;
-      stage.appendChild(root);root.onclick=e=>{const t=e.target.closest('.ftray');if(t){tap(+t.dataset.c,+t.dataset.t,t);return}if(e.target.closest('[data-send]'))return send();const o=e.target.closest('[data-ord]');if(o)return order(+o.dataset.ord);const u=e.target.closest('[data-up]');if(u)return buyUp(u.dataset.up)};
+      stage.appendChild(root);root.onclick=e=>{const t=e.target.closest('.ftray');if(t){tap(+t.dataset.c,+t.dataset.t,t);return}if(e.target.closest('[data-send]'))return send();if(e.target.closest('[data-upfarm]')){snd('tap');goHub();setTimeout(()=>{showTab('pColony');openSheet('farm')},250);return}const o=e.target.closest('[data-ord]');if(o)return order(+o.dataset.ord);const u=e.target.closest('[data-up]');if(u)return buyUp(u.dataset.up)};
       render();iv=setInterval(()=>{if(!root.querySelector('.fpick'))render()},1000)},
     stop(){clearInterval(iv);if(st){grow(Date.now());save()}root=null},
     pauseExt(){},resumeExt(){},forfeit(){return false}}})();

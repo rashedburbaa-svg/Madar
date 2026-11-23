@@ -780,3 +780,14 @@ canvas.pcv{margin:0 auto;background:#050816}
 .fvcard .pvhero svg{width:84px;height:84px}
 /* English (left-to-right) adjustments */
 .en .csx{left:auto;right:12px}
+/* ongoing upgrades as compact chips beside the Buildings button */
+.cbrow{display:flex;align-items:center;gap:8px}
+.cchips{flex:1;min-width:0;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px 0}
+.cchips::-webkit-scrollbar{display:none}
+.cchips .cbuild{flex:0 0 auto;max-width:170px;display:grid;grid-template-columns:auto auto;grid-template-rows:auto auto 3px;gap:1px 6px;align-items:center;padding:5px 8px 4px;border-radius:12px;cursor:pointer}
+.cchips .cbuild>span:first-child{grid-column:1/3;font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:none}
+.cchips .cbuild>span:first-child b{font-weight:700}
+.cchips .cbuild .ct{font-size:12px}
+.cchips .cbuild .btn{height:24px;min-height:0;padding:0 7px;font-size:11px;border-radius:8px}
+.cchips .cbuild i{grid-column:1/3;height:3px;flex-basis:auto}
+.fupb{margin-inline-start:auto;background:#ffffff14;border:1px solid #ffffff2a;color:#e8ecff;border-radius:999px;padding:4px 10px;font:inherit;font-size:12px}
