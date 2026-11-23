@@ -13,7 +13,7 @@ bfx:2 · puff:3 · rise:4 · lights:5 · CORR:23 · corridorsSVG:24 · dur:30 ·
 
 ## js/artdata4.js — 28KB — صور إضافية (base64) — لا تقرأه
 
-## js/artdata5.js — 28KB — صور خطوات المشي (base64) — لا تقرأه
+## js/artdata5.js — 76KB — صور خطوات المشي (base64) — لا تقرأه
 
 ## js/astro3d.js — 57 سطر، 6KB
 Astro3D:2 · mat:4 · build:5 · cap:15 · limb:30 · init:40 · pose:45 · draw:51 · dir:52

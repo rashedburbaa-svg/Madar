@@ -270,7 +270,7 @@ const SurviveGame=(()=>{
   /* painted sprites (player's Gemini artwork); art faces left */
   const SPR={};function spr(k){if(typeof ART==='undefined'||!ART[k])return null;let im=SPR[k];if(!im){im=SPR[k]=new Image();im.src=ART[k]}return im.complete&&im.naturalWidth?im:null}
   let sabA=0,railT=1,rails=[];
-  if(location.hostname==='localhost')window.__sv={get lv(){return lv},get evo(){return evo}};
+  if(location.hostname==='localhost')window.__sv={boss:k=>spawnBoss(BOSSES.find(b=>b.kind===k)),get lv(){return lv},get evo(){return evo}};
   function drawFx(dt){if(!ctx)return;ctx.save();ctx.globalCompositeOperation='lighter';ctx.lineCap='round';
     for(let i=rails.length-1;i>=0;i--){const r=rails[i];if(!paused)r.l-=dt;if(r.l<=0){rails.splice(i,1);continue}const k=r.l/0.35,ex=r.x+Math.cos(r.a)*900,ey=r.y+Math.sin(r.a)*900;
       ctx.strokeStyle=`rgba(0,229,255,${0.35*k})`;ctx.lineWidth=r.w*2.6*k;ctx.beginPath();ctx.moveTo(r.x,r.y);ctx.lineTo(ex,ey);ctx.stroke();ctx.strokeStyle=`rgba(255,255,255,${0.9*k})`;ctx.lineWidth=r.w*0.7*k;ctx.stroke()}
@@ -289,7 +289,7 @@ const SurviveGame=(()=>{
   ['astro','cre_alien','cre_bug','cre_beast','cre_ufo','cre_blob','bg0','bg1','bg2','bg3','bg4','bg5'].forEach(k=>spr(k));
   function drawSprite(im,x,y,h,faceRight,flash,filt){const w=h*im.naturalWidth/im.naturalHeight;ctx.save();ctx.translate(x,y);if(faceRight)ctx.scale(-1,1);
     ctx.filter=(flash?'brightness(2.3) ':'')+(filt||'');if(ctx.filter==='')ctx.filter='none';ctx.drawImage(im,-w/2,-h*0.62,w,h);ctx.restore();ctx.filter='none'}
-  const BSPR={golem:['cre_beast','grayscale(.85) brightness(1.15)'],worm:['cre_bug','sepia(.6) saturate(2.2) hue-rotate(-15deg)'],ice:['cre_blob','hue-rotate(95deg) saturate(1.3) brightness(1.15)'],lava:['cre_beast','hue-rotate(105deg) saturate(2) brightness(1.05)'],octo:ART.bs_queen?['bs_queen','']:['cre_blob','hue-rotate(170deg) saturate(1.4)'],ship:ART.bs_scorp?['bs_scorp','']:['cre_ufo','saturate(1.2) brightness(1.1)'],brood:['cre_bug','hue-rotate(250deg) saturate(1.7) brightness(1.1)'],wraith:['cre_alien','grayscale(.4) hue-rotate(190deg) brightness(1.4) opacity(.8)']};
+  const BSPR={golem:ART.bs_golem?['bs_golem','']:['cre_beast','grayscale(.85) brightness(1.15)'],worm:['cre_bug','sepia(.6) saturate(2.2) hue-rotate(-15deg)'],ice:ART.bs_dragon?['bs_dragon','']:['cre_blob','hue-rotate(95deg) saturate(1.3) brightness(1.15)'],lava:['cre_beast','hue-rotate(105deg) saturate(2) brightness(1.05)'],octo:ART.bs_queen?['bs_queen','']:['cre_blob','hue-rotate(170deg) saturate(1.4)'],ship:ART.bs_scorp?['bs_scorp','']:['cre_ufo','saturate(1.2) brightness(1.1)'],brood:['cre_bug','hue-rotate(250deg) saturate(1.7) brightness(1.1)'],wraith:['cre_alien','grayscale(.4) hue-rotate(190deg) brightness(1.4) opacity(.8)']};
   function drawAlien(e){
     if(e.boss){const b=BSPR[e.kind],im=b&&spr(b[0]);if(im){const tt=t+e.ph,pulse=1+Math.sin(tt*3)*0.03;
       drawSprite(im,e.x,e.y+Math.sin(tt*2.2)*2,e.r*3.3*pulse,p.x>e.x,e.flash>0,b[1]+` drop-shadow(0 0 7px ${e.col})`);return}}
