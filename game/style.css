@@ -810,3 +810,16 @@ canvas.pcv{margin:0 auto;background:#050816}
 .wlm{display:flex;gap:10px;align-items:center}.wlm img{width:96px;height:72px;object-fit:contain}.wlm img.ghost{filter:grayscale(1) brightness(.6);opacity:.6}.wlm>div{flex:1;display:flex;flex-direction:column;gap:6px}
 .wadv{display:flex;align-items:center;gap:8px;padding:8px;border-radius:12px;background:#ffffff0c;margin:6px 0}.wadv .ae{font-size:22px}.wadv .an{flex:1;display:flex;flex-direction:column}.wadv .an small{opacity:.8;font-size:12px}.wadv.done{opacity:.7}.wadv.story{border:1px dashed #b47aff88}
 .wnote{opacity:.85;font-size:13px}.wbox h4{margin:12px 0 4px;color:#f5c451}.wbox .ok{color:#7dffb0}
+/* open world */
+.stage.wstage{overflow:hidden;touch-action:none;border-radius:14px}
+.wstage>canvas{display:block;width:100%}.wstage>canvas[hidden]{display:none}
+.whud{position:absolute;inset:0;pointer-events:none;font-size:13px;color:#fff}
+.whp{position:absolute;top:8px;inset-inline-start:8px;width:150px;height:16px;border-radius:8px;background:#0009;border:1px solid #ffffff40;overflow:hidden}
+.whp i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#ff5a6a,#ffb347);display:block}.whp b{position:relative;display:block;text-align:center;font-size:11px;line-height:15px}
+.whreg{position:absolute;top:30px;inset-inline-start:8px;font-weight:800;text-shadow:0 1px 4px #000}
+.whmat{position:absolute;top:50px;inset-inline-start:8px;background:#0008;border-radius:8px;padding:2px 8px}
+.wgd{position:absolute;top:96px;left:50%;transform:translateX(-50%);width:60%;text-align:center}.wgd small{display:block;color:#ffd34d;font-weight:800;text-shadow:0 1px 3px #000}.wgd i{display:block;height:8px;border-radius:4px;background:#0009;overflow:hidden}.wgd u{display:block;height:100%;background:#ffd34d}
+.wview{position:absolute;bottom:10px;inset-inline-end:10px;pointer-events:auto;border:1px solid #f5c451;background:#0b1226dd;color:#fff;border-radius:12px;padding:8px 12px;font:inherit;font-weight:800}
+.wmini{position:absolute;top:8px;inset-inline-end:8px;width:120px;height:80px;border-radius:8px;background:#000a}
+.wjoy{position:absolute;width:90px;height:90px;margin:-45px 0 0 -45px;border-radius:50%;border:2px solid #ffffff50;background:#ffffff10}.wjoy i{position:absolute;left:30px;top:30px;width:30px;height:30px;border-radius:50%;background:#00e5ffaa}
+.wwalk{width:100%;margin:6px 0}
