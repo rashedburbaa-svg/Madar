@@ -25,7 +25,7 @@ function pgHTML(){const P=PG(),nx=PLN[Math.min(P+1,PLN.length-1)],q=PREQ(),ok=pg
   <p>ابنِ سفينة الانطلاق على المنصة خارج القبة، ثم حمّل الطاقم وطِر إلى كوكب جديد أصعب. تبدأ البناء من جديد، لكنك تحمل معك مكافآت دائمة.</p>
   <div class="pgcols"><div><b>✅ تحتفظ بـ</b><ul><li>💎 كل الجواهر</li><li>🏺 القطع الأثرية والآثار</li><li>🤖 روبوت البناء الثاني</li><li>🏅 الأوسمة والرتبة</li><li>🚀 المركبة والقصة والمعارك</li></ul></div>
   <div><b>🔄 يبدأ من جديد</b><ul><li>المباني والموارد</li><li>الأبحاث</li><li>الاستصلاح</li></ul></div></div>
-  <div class="pgnext"><b>${nx.em} الكوكب التالي: ${nx.n}</b><ul><li>📈 إنتاج دائم <b>+${15*(P+1)}%</b></li><li>💎 هدية انطلاق <b>+${50*(P+1)}</b></li><li>📦 موارد بداية ×${P+2}</li><li>⚠️ غارات أقوى +${30*(P+1)}% واستهلاك الطاقم +${20*(P+1)}%</li></ul></div>
+  <div class="pgnext">${(i=>typeof ART!=="undefined"&&ART["pl"+i+"_land"]?`<img class="pgimg" src="${ART["pl"+i+"_land"]}" alt="">`:"")(Math.min(P+1,PLN.length-1))}<b>${nx.em} الكوكب التالي: ${nx.n}</b><ul><li>📈 إنتاج دائم <b>+${15*(P+1)}%</b></li><li>💎 هدية انطلاق <b>+${50*(P+1)}</b></li><li>📦 موارد بداية ×${P+2}</li><li>⚠️ غارات أقوى +${30*(P+1)}% واستهلاك الطاقم +${20*(P+1)}%</li></ul></div>
   <div class="pgreq"><span class="${col.b.hq>=q.hq?'ok':''}">🏛️ القيادة ${col.b.hq}/${q.hq}</span><span class="${col.done?'ok':''}">🔧 ${col.done?'المركبة الأولى مُصلحة':'أصلح المركبة أولاً'}</span><span class="${arkN()===ARK.length?'ok':''}">🚀 السفينة ${arkN()}/${ARK.length}</span></div>${arkHTML()}
   <button type="button" class="btn${ok?' main':''}" data-pg ${ok?'':'disabled'}>${ok?'🚀 انطلق إلى '+nx.n:'🔒 لم تكتمل الشروط'}</button></div>`}
 function pgGo(){if(!pgReady())return;const P=PG(),nx=PLN[Math.min(P+1,PLN.length-1)];
@@ -60,3 +60,18 @@ function padSVG(){if(!(col.b.hq>=6||PG()>0))return '';const n=arkN(),full=n===AR
   s+=`<g transform="translate(0 22)"><rect x="-26" y="-9" width="52" height="16" rx="8" fill="#0b1226cc" stroke="${full?'#00e5ff':'#ffd34d'}"/><text y="3" text-anchor="middle" font-size="9" font-weight="800" fill="#fff">🚀 ${n}/${ARK.length}</text></g></g>`;return s}
 {const _sv3=sceneSVG;sceneSVG=function(){const s=_sv3.apply(this,arguments);const i=s.indexOf('<g class="cb');return i<0?s:s.slice(0,i)+padSVG()+s.slice(i)}}
 document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('.arkpad')&&!(typeof camDrag!=='undefined'&&camDrag)){snd('tap');openSheet('prestige')}});
+
+/* ---------- each planet's own look (player's planet art): creatures, a landmark that grows with HQ, and its sky ---------- */
+const PSET=()=>{const r=Math.min(PG(),5);return typeof ART!=='undefined'&&ART['pl'+r+'_big']?r:-1};
+(function(){const r=PSET();if(r<0)return;const fly={0:1,3:1,5:1};
+  const H={alien:44,bug:30,beast:40,blob:30,ufo:34},pick={alien:'big',beast:'big',bug:'small',blob:'small',ufo:'small'};
+  for(const t of Object.keys(H)){const k=pick[t],src=ART['pl'+r+'_'+k],R=ART['pl'+r+'_'+k+'R']||1,h=H[t],w=h*R,lift=(t==='ufo'||(k==='small'&&fly[r]))?10:0;CTOP[t]=-h-lift-2;
+    CRE[t]=`<ellipse cx="0" cy="1" rx="${(w*0.34).toFixed(1)}" ry="${(2+h*0.06).toFixed(1)}" fill="#000" opacity="${lift?.22:.4}"/><g class="cimg ${t}"><image href="${src}" x="${(-w/2).toFixed(1)}" y="${(-h-lift).toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}"/></g>`}})();
+const pStage=()=>col.b.hq>=7?3:col.b.hq>=4?2:1;
+function landmarkSVG(){const r=PSET();if(r<0)return '';const k='pl'+r+'_s'+pStage(),R=ART[k+'R']||1;
+  if(r===0){const w=110,h=w/R;return `<g class="plm sky"><image href="${ART[k]}" x="${(120-w/2).toFixed(1)}" y="${(150-h/2).toFixed(1)}" width="${w}" height="${h.toFixed(1)}"/></g>`}
+  const h=r===5&&pStage()===3?130:88,w=h*R;return `<g class="plm"><ellipse cx="${PLM.x}" cy="${PLM.y+2}" rx="${(w*0.4).toFixed(1)}" ry="6" fill="#000" opacity=".35"/><image href="${ART[k]}" x="${(PLM.x-w/2).toFixed(1)}" y="${(PLM.y-h).toFixed(1)}" width="${w.toFixed(1)}" height="${h}"/></g>`}
+const PLM={x:112,y:240};
+{const _sv=sceneSVG;sceneSVG=function(){let s=_sv.apply(this,arguments);const r=PSET();if(r<0)return s;
+  if(r>0){const i=s.indexOf('<g class="moon">'),j=i<0?-1:s.indexOf('</g>',i);if(j>0){const sky=`<defs><linearGradient id="plFadeG" x1="0" y1="0" x2="0" y2="1"><stop offset=".5" stop-color="#fff"/><stop offset="1" stop-color="#000"/></linearGradient><mask id="plFade"><rect x="-20" y="-60" width="400" height="360" fill="url(#plFadeG)"/></mask></defs><image href="${ART['pl'+r+'_land']}" x="-20" y="-60" width="400" height="360" preserveAspectRatio="xMidYMid slice" mask="url(#plFade)" opacity=".95"/>`;s=s.slice(0,j+4)+sky+s.slice(j+4)}}
+  let i=s.indexOf('<g class="corr"');if(i<0)i=s.indexOf('<g class="cb');if(i<0)return s;return s.slice(0,i)+landmarkSVG()+s.slice(i)}}
