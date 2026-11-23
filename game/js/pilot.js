@@ -18,7 +18,7 @@ const PilotGame=(function(){
   const SECT=[['حزام الكويكبات',[[60,140,180,'120,60,200'],[300,420,220,'40,120,200'],[200,620,160,'200,60,120']]],['مدار المريخ',[[80,160,200,'210,80,50'],[290,440,220,'160,50,40'],[180,620,170,'240,140,60']]],
     ['سحابة الجليد',[[70,150,200,'60,160,230'],[300,430,220,'40,200,220'],[200,610,170,'120,120,240']]],['قطاع الحرّاس',[[70,140,190,'60,200,120'],[300,420,230,'30,120,90'],[190,620,170,'170,220,80']]],['أطراف المجرة',[[60,160,200,'230,60,160'],[300,420,230,'120,40,200'],[200,620,170,'255,190,80']]]];
   let bgY=0,novaFx=0,bombs=0,combo=0,comboT=0,mult=1,lasers=[],sect=-1;
-  const EN={scout:{hp:14,r:15,sc:60,px:64},diver:{hp:10,r:14,sc:70,px:60},bomber:{hp:60,r:24,sc:180,px:96},ufo:{hp:30,r:18,sc:120},mini:{hp:300,r:30,sc:600},cruiser:{hp:90,r:26,sc:260,px:96},mine:{hp:16,r:12,sc:50},rock:{hp:24,r:16,sc:40},boss:{hp:900,r:70,sc:3000,px:300}};
+  const EN={scout:{hp:14,r:15,sc:60,px:64},diver:{hp:10,r:14,sc:70,px:60},bomber:{hp:60,r:24,sc:180,px:96},ufo:{hp:30,r:18,sc:120},mini:{hp:300,r:30,sc:600},cruiser:{hp:90,r:26,sc:260,px:96},mine:{hp:16,r:12,sc:50},kami:{hp:12,r:12,sc:90,px:60},sniper:{hp:45,r:17,sc:200,px:64},rock:{hp:24,r:16,sc:40},boss:{hp:900,r:70,sc:3000,px:300}};
   const DIFF={easy:{n:'سهل',em:'🟢',d:'للتجربة والاستمتاع',hp:0.85,dmg:0.7,fr:0.85,bs:0.9,rw:0.6,ex:0},normal:{n:'متوسط',em:'🟡',d:'أعداء أقوى ونيران كثيفة',hp:1.85,dmg:1.75,fr:1.6,bs:1.25,rw:1,ex:1},hard:{n:'صعب',em:'🔴',d:'للمحترفين · مكافأة ×2',hp:2.8,dmg:2.6,fr:2.1,bs:1.45,rw:2,ex:3}};
   const DF=()=>DIFF[(st&&st.diff)||'normal']||DIFF.normal;
   const diffHTML=()=>'<div class="diffs">'+Object.entries(DIFF).map(([k,v])=>`<button type="button" class="dfb${((st.diff||'normal')===k)?' on':''}" data-df="${k}"><b>${v.em} ${v.n}</b><small>${v.d}</small></button>`).join('')+'</div>';
@@ -32,12 +32,12 @@ const PilotGame=(function(){
   function nextWave(){wave++;const w=wave,boss=w%5===0;queue=[];let at=0.8;const ns=Math.floor((w-1)/5)%SECT.length;if(ns!==sect){sect=ns;neb=null}
     banner={txt:boss?'⚠️ السفينة الأم!':'الموجة '+w,sub:boss?'اهزمها لتنقذ المدار':SECT[Math.max(0,sect)][0],l:2.4};
     if(boss){addQ(1.6,()=>spawnBoss());return}
-    const pats=['line','v','divers','rocks'];if(w>=2)pats.push('bomber','ufo');if(w>=4)pats.push('swarm');if(w>=3)pats.push('mines');if(w>=6)pats.push('cruiser');
+    const pats=['line','v','divers','rocks'];if(w>=2)pats.push('bomber','ufo');if(w>=4)pats.push('swarm');if(w>=3)pats.push('mines');if(w>=6)pats.push('cruiser');if(w>=3)pats.push('kami');if(w>=7)pats.push('sniper');
     const n=4+Math.min(8,Math.floor(w/2))+(DF().ex||0);
     for(let i=0;i<n;i++){const p=pats[Math.floor(Math.random()*pats.length)];addQ(at,()=>formation(p,w));at+=rnd(2,3.1)-Math.min(1.5,w*0.08)}
     addQ(at+2.2,()=>spawnMini(w))}
   /* a mini-boss closes every wave; the mothership takes waves 5, 10, 15… */
-  const MINI=[{n:'الصقر الأحمر',spr:'scout',sc:3.3,hue:0,f:'spread'},{n:'ملك الصحون',img:'cre_ufo',sc:3.2,f:'ring'},{n:'الصخرة العملاقة',rock:1,sc:3.2,f:'split'},{n:'قائد الطرّادات',spr:'bomber',sc:2.6,hue:150,f:'laser'},{n:'النسر البرتقالي',spr:'diver',sc:3.4,hue:0,f:'dive'}];
+  const MINI=[{n:'الصقر الأحمر',spr:'scout',sc:3.3,hue:0,f:'spread'},{n:'ملك الصحون',img:'cre_ufo',sc:3.2,f:'ring'},{n:'الصخرة العملاقة',rock:1,sc:3.2,f:'split'},{n:'قائد الطرّادات',spr:'bomber',sc:2.6,hue:150,f:'laser'},{n:'النسر البرتقالي',spr:'diver',sc:3.4,hue:0,f:'dive'},{n:'أم الانتحاريين',spr:'cruiser',sc:2.8,hue:0,f:'brood'},{n:'المدفعي الثقيل',spr:'bomber',sc:2.4,hue:300,f:'shell'}];
   function spawnMini(w){const i=(w-1)%5===4?(w%MINI.length):((w-1)%5+Math.floor((w-1)/5))%MINI.length,M=MINI[i],hp=(200+40*w)*(1+0.08*w)*DF().hp;
     const e=mk('mini',W/2,-70,{pat:'mini',vy:70,hp,max:hp,r:30,sc:500+120*w,mi:i,bname:M.n,fire:1.6,rotA:0});bossOn=e;queue=[];banner={txt:'⚠️ '+M.n,sub:'زعيم الموجة '+w,l:1.8};shake(3,0.3);snd('alarm')}
   function miniFire(e,dt){e.fire-=dt*DF().fr;if(e.fire>0)return;const M=MINI[e.mi],hp=e.hp/e.max,a0=Math.atan2(P.y-e.y,P.x-e.x);e.fire=(hp<0.4?0.75:1.15)+Math.random()*0.3;
@@ -45,6 +45,8 @@ const PilotGame=(function(){
     else if(M.f==='ring'){const n=12;for(let k=0;k<n;k++){const a=k/n*6.283+e.t;eb.push({x:e.x,y:e.y,vx:Math.cos(a)*120,vy:Math.sin(a)*120,r:5,c:'#9dff5a'})}}
     else if(M.f==='split'){for(let k=0;k<2;k++)mk('rock',e.x+(k?20:-20),e.y+20,{pat:'rock',vy:rnd(110,150),vx:(k?1:-1)*rnd(40,80),rot:rnd(-3,3),sz:rnd(.8,1.1)});eb.push({x:e.x,y:e.y,vx:Math.cos(a0)*170,vy:Math.sin(a0)*170,r:7,c:'#ffb070',big:1})}
     else if(M.f==='laser'){lasers.push({x:clamp(P.x,20,W-20),y:e.y+30,t:1.3});for(const s of [-1,1])eb.push({x:e.x+s*30,y:e.y+10,vx:s*40,vy:170,r:5,c:'#ff5df2'})}
+    else if(M.f==='brood'){e.fire+=0.6;for(let k=0;k<3;k++)mk('kami',e.x+(k-1)*30,e.y+30,{pat:'kami',vy:120,acc:0});for(const s of [-1,1])eb.push({x:e.x+s*14,y:e.y+30,vx:s*30,vy:200,r:5,c:'#ff8a3c'})}
+    else if(M.f==='shell'){e.fire+=0.5;eb.push({x:e.x,y:e.y+20,vx:Math.cos(a0)*120,vy:Math.sin(a0)*120,r:9,c:'#ffb347',big:1,burst:0.9})}
     else if(M.f==='dive'){if(!e.dv){e.dv=1;e.dvx=e.x;e.dvy=e.y;e.tx=P.x;e.ty=P.y;e.dvT=0}for(let k=-1;k<=1;k++){const a=a0+k*0.15;eb.push({x:e.x,y:e.y,vx:Math.cos(a)*220,vy:Math.sin(a)*220,r:4,c:'#ffd34d'})}}}
   function mk(k,x,y,o){const T=EN[k],hm=(1+0.17*(wave-1))*DF().hp;const e=Object.assign({k,x,y,vx:0,vy:60,hp:T.hp*hm,max:T.hp*hm,r:T.r,t:0,sc:T.sc,fire:rnd(1,2.5),ph:Math.random()*6},o||{});en.push(e);return e}
   function formation(p,w){const sp=1+Math.min(0.8,w*0.05);
@@ -56,6 +58,8 @@ const PilotGame=(function(){
     else if(p==='ufo'){for(let i=0;i<3;i++)mk('ufo',W/2,-30-i*40,{pat:'circle',vy:60,cx:W/2,cy:rnd(150,220),rad:rnd(90,130),ang:i*2.1})}
     else if(p==='mines'){for(let i=0;i<4;i++)mk('mine',rnd(30,W-30),-20-i*60,{pat:'rock',vy:rnd(55,80),vx:rnd(-15,15),rot:2})}
     else if(p==='cruiser'){mk('cruiser',rnd(80,W-80),-50,{pat:'hover',vy:45,stop:rnd(90,140),fire:2.2,lz:0})}
+    else if(p==='kami'){for(let i=0;i<5;i++)mk('kami',rnd(30,W-30),-20-i*35,{pat:'kami',vy:90,vx:0})}
+    else if(p==='sniper'){for(let i=0;i<2;i++)mk('sniper',W*(i?0.78:0.22),-30,{pat:'sniper',vy:60,stop:rnd(70,110),fire:1.4+i})}
     else if(p==='swarm'){for(let i=0;i<10;i++)mk('scout',rnd(30,W-30),-20-i*25,{pat:'sine',vy:110*sp,amp:rnd(20,60)})}}
   function spawnBoss(){const lvl=wave/5,hp=EN.boss.hp*(1+0.6*(lvl-1))*DF().hp;bossOn=mk('boss',W/2,-120,{pat:'boss',vy:40,hp,max:hp,r:70,sc:3000*lvl,phase:0,fire:1.5});shake(4,0.5);snd('alarm')}
   /* ---------- weapons ---------- */
@@ -100,16 +104,19 @@ const PilotGame=(function(){
       else if(e.pat==='mini'){const M=MINI[e.mi];if(e.y<120&&!e.ready)e.y+=e.vy*dt;else{e.ready=1;
         if(e.dv){e.dvT+=dt;const k=e.dvT<0.5?e.dvT/0.5:e.dvT<1?1-(e.dvT-0.5)/0.5:0;e.x=e.dvx+(e.tx-e.dvx)*k*0.8;e.y=e.dvy+(e.ty-e.dvy)*k*0.75;if(e.dvT>=1)e.dv=0}
         else{e.x=W/2+Math.sin(e.t*(M.f==='spread'?1.3:0.8))*(W/2-50);e.y=120+Math.sin(e.t*1.7)*18}if(M.rock)e.rotA+=dt*0.8;miniFire(e,dt)}}
+      else if(e.pat==='kami'){const a=Math.atan2(P.y-e.y,P.x-e.x);e.acc=Math.min(1,(e.acc||0)+dt*0.5);e.vx+=(Math.cos(a)*260-e.vx)*dt*1.6*e.acc;e.vy+=(Math.sin(a)*260-e.vy)*dt*1.6*e.acc;e.x+=e.vx*dt;e.y+=e.vy*dt;if(e.t>7)e.vy=Math.abs(e.vy)+80}
+      else if(e.pat==='sniper'){if(e.y<e.stop)e.y+=e.vy*dt;else{e.x+=Math.sin(e.t*0.6+e.ph)*30*dt;e.fire-=dt*DF().fr;
+        if(e.aim==null&&e.fire<=0){e.aim=1.1;e.ax=P.x;e.ay=P.y}if(e.aim!=null){e.aim-=dt;if(e.aim<=0){const a=Math.atan2(e.ay-e.y,e.ax-e.x);for(let k=0;k<3;k++)eb.push({x:e.x+Math.cos(a)*k*14,y:e.y+Math.sin(a)*k*14,vx:Math.cos(a)*420,vy:Math.sin(a)*420,r:5,c:'#ff3df0',big:1});e.aim=null;e.fire=rnd(2.4,3)}}if(e.t>16)e.y+=60*dt}}
       else if(e.pat==='boss'){if(e.y<130)e.y+=e.vy*dt;else{e.x=W/2+Math.sin(e.t*0.6)*90;bossFire(e,dt)}}
       // enemy shots
       if(e.k==='cruiser'&&e.y>40){e.fire-=dt*DF().fr;if(e.fire<=0){e.fire=rnd(2.6,3.4);lasers.push({x:e.x,y:e.y+20,t:1.4})}}
       if(e.k==='bomber'||e.k==='ufo'||(e.k==='scout'&&wave>=3)){e.fire-=dt*DF().fr;if(e.fire<=0&&e.y>20&&e.y<H*0.7){e.fire=e.k==='bomber'?rnd(1.2,1.8):e.k==='ufo'?rnd(1.6,2.4):rnd(2.5,4);
         if(e.k==='ufo'){for(let k=-1;k<=1;k++){const a=Math.PI/2+k*0.35;eb.push({x:e.x,y:e.y,vx:Math.cos(a)*150,vy:Math.sin(a)*150,r:5,c:'#9dff5a'})}}
         else{const a=Math.atan2(P.y-e.y,P.x-e.x),s=e.k==='bomber'?190:160;eb.push({x:e.x,y:e.y+10,vx:Math.cos(a)*s,vy:Math.sin(a)*s,r:e.k==='bomber'?6:4,c:'#ff5d73'})}}}
-      if(!e.dead&&(e.x-P.x)**2+(e.y-P.y)**2<(e.r*0.8+P.r)**2){if(e.k==='boss'||e.k==='mini'){hurtP(25);P.inv=Math.max(P.inv,0.9)}else{hurtP(e.k==='bomber'||e.k==='cruiser'?30:e.k==='rock'?18:e.k==='mine'?20:15);kill(e)}}
+      if(!e.dead&&(e.x-P.x)**2+(e.y-P.y)**2<(e.r*0.8+P.r)**2){if(e.k==='boss'||e.k==='mini'){hurtP(25);P.inv=Math.max(P.inv,0.9)}else{hurtP(e.k==='bomber'||e.k==='cruiser'?30:e.k==='kami'?22:e.k==='rock'?18:e.k==='mine'?20:15);kill(e)}}
       if(e.y>H+60||e.x<-80||e.x>W+80)e.dead=1}
     en=en.filter(e=>!e.dead);
-    const bsd=dt*DF().bs;for(const b of eb){b.x+=b.vx*bsd;b.y+=b.vy*bsd;if((b.x-P.x)**2+(b.y-P.y)**2<(b.r+P.r*0.7)**2){b.gone=1;hurtP(b.big?16:9)}}eb=eb.filter(b=>!b.gone&&b.y<H+20&&b.y>-40&&b.x>-20&&b.x<W+20);
+    const bsd=dt*DF().bs;for(const b of eb){if(b.burst!=null){b.burst-=dt;if(b.burst<=0){b.gone=1;for(let k=0;k<8;k++){const a=k*0.785;eb.push({x:b.x,y:b.y,vx:Math.cos(a)*150,vy:Math.sin(a)*150,r:4,c:'#ffd34d'})}continue}}b.x+=b.vx*bsd;b.y+=b.vy*bsd;if((b.x-P.x)**2+(b.y-P.y)**2<(b.r+P.r*0.7)**2){b.gone=1;hurtP(b.big?16:9)}}eb=eb.filter(b=>!b.gone&&b.y<H+20&&b.y>-40&&b.x>-20&&b.x<W+20);
     for(const d of drops){const dx=P.x-d.x,dy=P.y-d.y,dd=Math.hypot(dx,dy);if(dd<P.mag){d.x+=dx/dd*320*dt;d.y+=dy/dd*320*dt}else d.y+=d.vy*dt;
       if(dd<P.r+12){d.gone=1;pick(d.k)}}drops=drops.filter(d=>!d.gone&&d.y<H+20);
     for(const q of parts){q.x+=q.vx*dt;q.y+=q.vy*dt;q.vx*=0.94;q.vy*=0.94;q.l-=dt}parts=parts.filter(q=>q.l>0);
@@ -181,8 +188,11 @@ const PilotGame=(function(){
     else if(e.k==='ufo'){const im=img('cre_ufo');if(im){const h=e.r*2.6,w=h*im.naturalWidth/im.naturalHeight;ctx.drawImage(im,e.x-w/2,e.y-h/2,w,h)}else{ctx.fillStyle='#9fb0c8';ctx.beginPath();ctx.ellipse(e.x,e.y,e.r,e.r*0.45,0,0,6.283);ctx.fill()}}
     else if(e.k==='scout'&&img('pl_scout')){const im=img('pl_scout'),S=e.r*4.2,w=S*im.naturalWidth/im.naturalHeight;ctx.drawImage(im,e.x-w/2,e.y-S/2,w,S)}
     else if(e.k==='boss'&&img('pl_boss')){const im=img('pl_boss'),S=270;ctx.translate(e.x,e.y);ctx.rotate(e.t*0.25);ctx.drawImage(im,-S/2,-S/2,S,S)}
+    else if(e.k==='kami'&&img('en_diver')){const im=img('en_diver'),h=e.r*3,w=h*im.naturalWidth/im.naturalHeight;ctx.translate(e.x,e.y);ctx.rotate(Math.atan2(e.vy,e.vx)-Math.PI/2);if(!fl)ctx.filter='hue-rotate(-25deg) saturate(2) brightness(1.15)';ctx.drawImage(im,-w/2,-h/2,w,h);ctx.filter='none';ctx.globalCompositeOperation='lighter';ctx.fillStyle='rgba(255,120,60,.7)';ctx.beginPath();ctx.arc(0,-h*0.45,4+Math.random()*3,0,6.283);ctx.fill()}
+    else if(e.k==='sniper'&&img('en_cruiser')){const im=img('en_cruiser'),h=e.r*3.6,w=h*im.naturalWidth/im.naturalHeight;if(e.aim!=null){ctx.save();ctx.strokeStyle=`rgba(255,61,240,${0.25+0.5*(1-e.aim/1.1)})`;ctx.lineWidth=2;ctx.setLineDash([8,6]);ctx.beginPath();ctx.moveTo(e.x,e.y);ctx.lineTo(e.x+(e.ax-e.x)*4,e.y+(e.ay-e.y)*4);ctx.stroke();ctx.restore()}
+      if(!fl)ctx.filter='hue-rotate(260deg) saturate(1.5)';ctx.drawImage(im,e.x-w/2,e.y-h/2,w,h)}
     else if((e.k==='bomber'||e.k==='diver'||e.k==='cruiser')&&img('en_'+e.k)){const im=img('en_'+e.k),h=e.k==='cruiser'?e.r*4.4:e.k==='bomber'?e.r*3.2:e.r*3,w=h*im.naturalWidth/im.naturalHeight;ctx.translate(e.x,e.y);if(e.k==='diver'&&e.wait<=0)ctx.rotate(-clamp(e.vx/600,-0.5,0.5));ctx.drawImage(im,-w/2,-h/2,w,h)}
-    else{const T=EN[e.k],sp=sprite(e.k==='cruiser'?'bomber':e.k,T.px*2,e.k==='diver'&&e.wait<=0?clamp(Math.round(e.vx/150),-2,2):0);const S=e.k==='boss'?300:e.r*4.6;
+    else{const T=EN[e.k],sp=sprite(e.k==='cruiser'||e.k==='sniper'?'bomber':e.k==='kami'?'diver':e.k,T.px*2,e.k==='diver'&&e.wait<=0?clamp(Math.round(e.vx/150),-2,2):0);const S=e.k==='boss'?300:e.r*4.6;
       if(sp){if(e.k==='cruiser'&&!fl)ctx.filter='hue-rotate(150deg) saturate(1.4)';ctx.drawImage(sp,e.x-S/2,e.y-S/2,S,S)}else{ctx.fillStyle=e.k==='bomber'?'#7a4bd6':e.k==='diver'?'#ff8a3c':'#d8344f';ctx.beginPath();ctx.moveTo(e.x,e.y+e.r);ctx.lineTo(e.x+e.r,e.y-e.r);ctx.lineTo(e.x-e.r,e.y-e.r);ctx.closePath();ctx.fill()}}
     ctx.restore();if(e.hp<e.max&&e.k!=='boss'&&e.max>20){ctx.fillStyle='#0008';ctx.fillRect(e.x-e.r,e.y-e.r-8,e.r*2,3);ctx.fillStyle='#ff4d6d';ctx.fillRect(e.x-e.r,e.y-e.r-8,e.r*2*e.hp/e.max,3)}}
   /* ---------- flow ---------- */
@@ -209,7 +219,7 @@ const PilotGame=(function(){
       bindHangar(o,show);o.querySelector('.btn.main').onclick=()=>{snd('tap');begin()}};setTimeout(show,900)}
   function pause(){if(!running||over)return;paused=true;const o=overlay('<h3>⏸️ متوقف</h3><button class="btn main" type="button">أكمل</button>');o.querySelector('.btn').onclick=()=>{clearOv();paused=false;last=performance.now()}}
   return {id:'pilot',name:'طيّار المدار',noDaily:true,desc:'قُد مركبة المستعمرة ضد أساطيل الغزاة',
-    help:'قُد مركبة المستعمرة في مدار الكوكب. حرّك إصبعك في أي مكان لتتحرك المركبة معه، والمدافع تطلق وحدها. اجمع ⚡ لترفع مستوى السلاح حتى 6 (من المستوى 5 تنطلق صواريخ موجّهة)، و🔧 للإصلاح، و🛡️ للدرع، و💎 للكريستال (تُصرف في الحظيرة لتطوير المركبة دائماً). ☢️ قنبلة نوفا تمسح الطلقات وتضرب الجميع — اضغط زرها أسفل يمين الشاشة. الإسقاط المتتالي يرفع مضاعف الكومبو حتى ×5. كل 5 موجات تظهر السفينة الأم وينتقل القطاع. حوض الإصلاح وأجزاء المركبة المصلَحة في المستعمرة تقوّي هيكلها وضررها، والنقاط تجلب موارد للمستعمرة.',
+    help:'قُد مركبة المستعمرة في مدار الكوكب. حرّك إصبعك في أي مكان لتتحرك المركبة معه، والمدافع تطلق وحدها. اجمع ⚡ لترفع مستوى السلاح حتى 6 (من المستوى 5 تنطلق صواريخ موجّهة)، و🔧 للإصلاح، و🛡️ للدرع، و💎 للكريستال (تُصرف في الحظيرة لتطوير المركبة دائماً). ☢️ قنبلة نوفا تمسح الطلقات وتضرب الجميع — اضغط زرها أسفل يمين الشاشة. الإسقاط المتتالي يرفع مضاعف الكومبو حتى ×5. كل 5 موجات تظهر السفينة الأم وينتقل القطاع. أعداء جدد: الانتحاريون يلاحقونك ويصطدمون بك، والقنّاص يرسم خطاً وردياً ثم يطلق رشقة سريعة على مكانك فتحرّك. زعماء جدد: أم الانتحاريين، والمدفعي الثقيل الذي تنفجر قذائفه إلى ثماني شظايا. حوض الإصلاح وأجزاء المركبة المصلَحة في المستعمرة تقوّي هيكلها وضررها، والنقاط تجلب موارد للمستعمرة.',
     icon:'<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="21" fill="#0a0c1c"/><circle cx="10" cy="12" r=".9" fill="#fff"/><circle cx="38" cy="9" r="1" fill="#fff"/><circle cx="40" cy="34" r=".8" fill="#fff"/><path d="M24 8l5 14 10 6-10 2-5 8-5-8-10-2 10-6z" fill="#e6ecf1" stroke="#f2bd4e" stroke-width="1.2"/><circle cx="24" cy="19" r="2.6" fill="#0b1530"/><ellipse cx="21" cy="39" rx="1.6" ry="4" fill="#00e5ff"/><ellipse cx="27" cy="39" rx="1.6" ry="4" fill="#00e5ff"/></svg>',
     progress(){const s=gState('pilot');return {level:s.bestWave||1,stars:0}},
     pauseExt(){if(running&&!over)paused=true},resumeExt(){if(running&&!over&&!stage.querySelector('.overlay')){paused=false;last=performance.now()}},
