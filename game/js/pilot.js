@@ -6,23 +6,23 @@ const PilotGame=(function(){
   const rnd=(a,b)=>a+Math.random()*(b-a),clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
   /* the colony backs the ship: dock level and repaired parts */
   function shipStats(){const L=(typeof col!=='undefined'&&col.b&&col.b.dock)||0,pr=(typeof col!=='undefined'&&col.ship)?Object.values(col.ship).filter(Boolean).length:0;
-    const pl=plane(),CB=typeof pilotBonus==='function'?pilotBonus():{hull:0,dmg:0};return {hull:Math.round((100+12*L+10*pr)*(1+0.12*hl('hull'))*pl.hull)+CB.hull,dmg:(1+0.06*L+0.04*pr)*(1+0.08*hl('dmg'))*pl.dmg*(1+CB.dmg/100),L,pr,CB}}
-  const HANG=[{id:'hull',em:'🛡️',n:'هيكل مدرّع',d:'+12% هيكل',max:5,c:12},{id:'dmg',em:'💥',n:'مدافع أقوى',d:'+8% ضرر',max:5,c:14},{id:'rate',em:'⚡',n:'تبريد المدافع',d:'+6% سرعة إطلاق',max:5,c:14},
-    {id:'mag',em:'🧲',n:'مغناطيس',d:'+25 مدى الجمع',max:3,c:8},{id:'start',em:'🔫',n:'سلاح جاهز',d:'تبدأ بمستوى سلاح أعلى',max:2,c:30},{id:'bomb',em:'☢️',n:'مخزن القنابل',d:'+1 قنبلة نوفا',max:2,c:25},{id:'shield',em:'🔰',n:'درع البداية',d:'تبدأ بدرع',max:1,c:20}];
-  const PLANES=[{id:'orbit',m:'fighter',n:'المدار-1',d:'متوازنة: هيكل وضرر وسرعة متوسطة',cost:0,hull:1,dmg:1,rate:1,spd:1},
-    {id:'ghost',m:'stealth',n:'الشبح',d:'سريعة جداً، إطلاق مضاعف، هيكل خفيف',cost:60,hull:.75,dmg:.8,rate:1.55,spd:1.35},
-    {id:'tank',m:'heavy',n:'المدرّعة',d:'هيكل ضخم ومدفعان جانبيان، لكنها أبطأ',cost:90,hull:1.45,dmg:.9,rate:.85,spd:.8,side:1},
-    {id:'nova',m:'star',n:'النجمة',d:'ترافقها طائرتان مسيّرتان تطلقان معها',cost:150,hull:1,dmg:1,rate:1,spd:1.05,drones:1}];
+    const pl=plane(),CB=typeof pilotBonus==='function'?pilotBonus():{hull:0,dmg:0};const S=BAL.pilot.stats;return {hull:Math.round((S.hull+S.hullPerLv*L+S.hullPerPart*pr)*(1+S.hullUp*hl('hull'))*pl.hull)+CB.hull,dmg:(1+S.dmgPerLv*L+S.dmgPerPart*pr)*(1+S.dmgUp*hl('dmg'))*pl.dmg*(1+CB.dmg/100),L,pr,CB}}
+  const HANG=[{id:'hull',em:'🛡️',n:'هيكل مدرّع',d:'+12% هيكل'},{id:'dmg',em:'💥',n:'مدافع أقوى',d:'+8% ضرر'},{id:'rate',em:'⚡',n:'تبريد المدافع',d:'+6% سرعة إطلاق'},
+    {id:'mag',em:'🧲',n:'مغناطيس',d:'+25 مدى الجمع'},{id:'start',em:'🔫',n:'سلاح جاهز',d:'تبدأ بمستوى سلاح أعلى'},{id:'bomb',em:'☢️',n:'مخزن القنابل',d:'+1 قنبلة نوفا'},{id:'shield',em:'🔰',n:'درع البداية',d:'تبدأ بدرع'}];HANG.forEach(h=>Object.assign(h,BAL.pilot.hang[h.id]));   // max level and base 💎 cost
+  const PLANES=[{id:'orbit',m:'fighter',n:'المدار-1',d:'متوازنة: هيكل وضرر وسرعة متوسطة'},
+    {id:'ghost',m:'stealth',n:'الشبح',d:'سريعة جداً، إطلاق مضاعف، هيكل خفيف'},
+    {id:'tank',m:'heavy',n:'المدرّعة',d:'هيكل ضخم ومدفعان جانبيان، لكنها أبطأ',side:1},
+    {id:'nova',m:'star',n:'النجمة',d:'ترافقها طائرتان مسيّرتان تطلقان معها',drones:1}];PLANES.forEach(q=>Object.assign(q,BAL.pilot.planes[q.id]));   // price and multipliers
   const plane=()=>PLANES.find(x=>x.id===((st&&st.plane)||'orbit'))||PLANES[0];
-  const hl=k=>(st&&st.up&&st.up[k])||0,hcost=h=>Math.round(h.c*Math.pow(hl(h.id)+1,1.6));
+  const hl=k=>(st&&st.up&&st.up[k])||0,hcost=h=>Math.round(h.c*Math.pow(hl(h.id)+1,BAL.pilot.hangGrowth));
   const SECT=[['حزام الكويكبات',[[60,140,180,'120,60,200'],[300,420,220,'40,120,200'],[200,620,160,'200,60,120']]],['مدار المريخ',[[80,160,200,'210,80,50'],[290,440,220,'160,50,40'],[180,620,170,'240,140,60']]],
     ['سحابة الجليد',[[70,150,200,'60,160,230'],[300,430,220,'40,200,220'],[200,610,170,'120,120,240']]],['قطاع الحرّاس',[[70,140,190,'60,200,120'],[300,420,230,'30,120,90'],[190,620,170,'170,220,80']]],['أطراف المجرة',[[60,160,200,'230,60,160'],[300,420,230,'120,40,200'],[200,620,170,'255,190,80']]]];
   let bgY=0,novaFx=0,bombs=0,combo=0,comboT=0,mult=1,lasers=[],sect=-1;
-  const EN={scout:{hp:14,r:15,sc:60,px:64},diver:{hp:10,r:14,sc:70,px:60},bomber:{hp:60,r:24,sc:180,px:96},ufo:{hp:30,r:18,sc:120},mini:{hp:300,r:30,sc:600},cruiser:{hp:90,r:26,sc:260,px:96},mine:{hp:16,r:12,sc:50},kami:{hp:12,r:12,sc:90,px:60},sniper:{hp:45,r:17,sc:200,px:64},rock:{hp:24,r:16,sc:40},boss:{hp:900,r:70,sc:3000,px:300}};
-  const DIFF={easy:{n:'سهل',em:'🟢',d:'للتجربة والاستمتاع',hp:0.85,dmg:0.7,fr:0.85,bs:0.9,rw:0.6,ex:0},normal:{n:'متوسط',em:'🟡',d:'أعداء أقوى ونيران كثيفة',hp:1.85,dmg:1.75,fr:1.6,bs:1.25,rw:1,ex:1},hard:{n:'صعب',em:'🔴',d:'للمحترفين · مكافأة ×2',hp:2.8,dmg:2.6,fr:2.1,bs:1.45,rw:2,ex:3}};
+  const EN={scout:{px:64},diver:{px:60},bomber:{px:96},ufo:{},mini:{},cruiser:{px:96},mine:{},kami:{px:60},sniper:{px:64},rock:{},boss:{px:300}};for(const k in EN)Object.assign(EN[k],BAL.pilot.en[k]);   // health, size, score
+  const DIFF={easy:{n:'سهل',em:'🟢',d:'للتجربة والاستمتاع'},normal:{n:'متوسط',em:'🟡',d:'أعداء أقوى ونيران كثيفة'},hard:{n:'صعب',em:'🔴',d:'للمحترفين · مكافأة ×2'}};for(const k in DIFF)Object.assign(DIFF[k],BAL.pilot.diff[k]);
   const DF=()=>DIFF[(st&&st.diff)||'normal']||DIFF.normal;
   const diffHTML=()=>'<div class="diffs">'+Object.entries(DIFF).map(([k,v])=>`<button type="button" class="dfb${((st.diff||'normal')===k)?' on':''}" data-df="${k}"><b>${v.em} ${v.n}</b><small>${v.d}</small></button>`).join('')+'</div>';
-  function reset(){const S=shipStats();P={x:W/2,y:H-100,r:13,hp:S.hull,max:S.hull,dm:S.dmg,wl:1+hl('start'),cd:0,mcd:0,inv:0,shield:hl('shield'),bank:0,vx:0,mag:70+25*hl('mag'),pw:0,rt:(1+0.06*hl('rate'))*plane().rate,spd:plane().spd,pl:plane(),dcd:0};bombs=2+hl('bomb');combo=0;comboT=0;mult=1;lasers=[];sect=-1;neb=null;
+  function reset(){const S=shipStats();P={x:W/2,y:H-100,r:13,hp:S.hull,max:S.hull,dm:S.dmg,wl:1+hl('start'),cd:0,mcd:0,inv:0,shield:hl('shield'),bank:0,vx:0,mag:70+25*hl('mag'),pw:0,rt:(1+0.06*hl('rate'))*plane().rate,spd:plane().spd,pl:plane(),dcd:0};bombs=BAL.pilot.stats.bombs+hl('bomb');combo=0;comboT=0;mult=1;lasers=[];sect=-1;neb=null;
     bul=[];eb=[];en=[];drops=[];parts=[];FT=[];t=0;wave=0;queue=[];gap=1.2;score=0;crys=0;kills=0;bossOn=null;banner=null;shk=0;
     stars=[];for(let i=0;i<90;i++)stars.push({x:Math.random()*W,y:Math.random()*H,z:rnd(.2,1)});planet=null}
   if(location.hostname==='localhost')window.__pv={mini:i=>{const e=spawnMini(1);if(bossOn){bossOn.mi=i;bossOn.bname=MINI[i].n}},get P(){return P}};
@@ -203,7 +203,7 @@ const PilotGame=(function(){
   function clearOv(){stage.querySelectorAll('.overlay').forEach(o=>o.remove())}
   function overlay(html){clearOv();const o=document.createElement('div');o.className='overlay pov';o.innerHTML=html;stage.appendChild(o);return o}
   function intro(){const S=shipStats();const o=overlay(`<h3>🚀 طيّار المدار</h3><p>${st.best?`رقمك القياسي ${st.best.toLocaleString('en')} · أعلى موجة ${st.bestWave||1}`:'حرّك إصبعك لتقود المركبة، والمدافع تطلق وحدها. اجمع ⚡ لتقوية السلاح.'}</p>
-      <div class="svbonus">🛠️ مركبتك: هيكل <b>${S.hull}</b> · ضرر <b>+${Math.round((S.dmg-1)*100)}%</b> · ☢️ <b>${2+hl('bomb')}</b></div><div class="svbonus">🏗️ دعم المستعمرة: هيكل <b>+${S.CB.hull}</b> · ضرر <b>+${S.CB.dmg}%</b> <small>(الدفاع والأبراج والقبة والمساكن)</small></div>${diffHTML()}${hangarHTML()}<button class="btn main" type="button">انطلق</button>`);
+      <div class="svbonus">🛠️ مركبتك: هيكل <b>${S.hull}</b> · ضرر <b>+${Math.round((S.dmg-1)*100)}%</b> · ☢️ <b>${BAL.pilot.stats.bombs+hl('bomb')}</b></div><div class="svbonus">🏗️ دعم المستعمرة: هيكل <b>+${S.CB.hull}</b> · ضرر <b>+${S.CB.dmg}%</b> <small>(الدفاع والأبراج والقبة والمساكن)</small></div>${diffHTML()}${hangarHTML()}<button class="btn main" type="button">انطلق</button>`);
     bindHangar(o,intro);o.querySelectorAll('[data-df]').forEach(b=>b.onclick=()=>{st.diff=b.dataset.df;gSave('pilot',st);snd('tap');o.querySelectorAll('[data-df]').forEach(x=>x.classList.toggle('on',x===b))});o.querySelector('.btn.main').onclick=()=>{snd('tap');begin()}}
   const CARD={orbit:'pl_orbit',ghost:'pl_ghost',tank:'pl_tank',nova:'pl_star'};function planeImg(m,id){if(typeof ART!=='undefined'&&ART[CARD[id]])return ART[CARD[id]];try{const c=sprite(m,160,0);return c?c.toDataURL():''}catch(e){return ''}}
   function planesHTML(){const own=st.planes||['orbit'];return `<div class="hh">✈️ الطائرات</div><div class="pl">${PLANES.map(q=>{const has=own.includes(q.id),sel=plane().id===q.id;

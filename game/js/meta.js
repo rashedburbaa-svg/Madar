@@ -1,7 +1,7 @@
 /* meta layer: crystal shop, background music, colony↔battle links, and the wider badge set */
 
 /* ---------- colony support for the dock ship (like survBonus for the astronaut) ---------- */
-function pilotBonus(){const b=col.b;return {dmg:Math.min(30,2*(b.def||0)+1*(b.tower||0)+1*(b.wall||0)),hull:Math.min(60,4*(b.habitat||0)+3*(b.wall||0))}}
+function pilotBonus(){const b=col.b,P=BAL.pilot.colony;return {dmg:Math.min(P.dmg.max,P.dmg.def*(b.def||0)+P.dmg.tower*(b.tower||0)+P.dmg.wall*(b.wall||0)),hull:Math.min(P.hull.max,P.hull.habitat*(b.habitat||0)+P.hull.wall*(b.wall||0))}}
 
 /* ---------- battles feed the colony: difficulty and the first battle of the day scale the haul ---------- */
 const DIFFM={easy:0.7,normal:1,hard:1.5};

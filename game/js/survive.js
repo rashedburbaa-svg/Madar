@@ -35,48 +35,52 @@ const SurviveGame=(()=>{
   ];
   // astronauts to choose from before a run
   const CHARS={
-    scout:{name:'المستكشف',em:'🧑‍🚀',d:'متوازن في كل شيء',visor:['#ffd27a','#d46a00'],hp:1,dmg:1,rate:1,spd:1},
-    sniper:{name:'القنّاص',em:'🎯',d:'ضرر أعلى 75% وإطلاق أبطأ',visor:['#ff9aa8','#c0304a'],hp:0.85,dmg:1.75,rate:0.72,spd:1},
-    runner:{name:'العدّاء',em:'⚡',d:'أسرع 25% وصحة أقل',visor:['#9ff0ff','#1f8fb0'],hp:0.8,dmg:1,rate:1.1,spd:1.25},
-    tank:{name:'المدرّع',em:'🛡️',d:'صحة أكبر 30% وحركة أبطأ',visor:['#c8ff9a','#4a9a2a'],hp:1.3,dmg:1,rate:1,spd:0.85}
+    scout:{name:'المستكشف',em:'🧑‍🚀',d:'متوازن في كل شيء',visor:['#ffd27a','#d46a00']},
+    sniper:{name:'القنّاص',em:'🎯',d:'ضرر أعلى 75% وإطلاق أبطأ',visor:['#ff9aa8','#c0304a']},
+    runner:{name:'العدّاء',em:'⚡',d:'أسرع 25% وصحة أقل',visor:['#9ff0ff','#1f8fb0']},
+    tank:{name:'المدرّع',em:'🛡️',d:'صحة أكبر 30% وحركة أبطأ',visor:['#c8ff9a','#4a9a2a']}
   };
+  for(const k in CHARS)Object.assign(CHARS[k],BAL.sv.chars[k]);   // hp, damage, fire rate and speed multipliers
   const DROPS={heart:'❤️',rapid:'⚡',shield:'🛡️',bomb:'💣',chip:'⬆️',crys:'💎'};
   const DCOL={heart:'#ff5d73',rapid:'#ffd34d',shield:'#5fc8ff',bomb:'#ff8a3c',chip:'#7ddc5a',crys:'#9ff0ff'},DLBL={heart:'صحة',rapid:'إطلاق سريع',shield:'درع',bomb:'قنبلة',chip:'تطوير',crys:'كريستال'};
   const TYPES={
-    grunt:{r:9,hp:20,spd:52,dps:12,col:'#7ddc5a'},
-    runner:{r:7,hp:11,spd:92,dps:9,col:'#ff6f9c'},
-    tank:{r:15,hp:85,spd:33,dps:20,col:'#7d8a96'},
-    spitter:{r:10,hp:28,spd:44,dps:10,col:'#b8c4cf',shoots:2.4},
+    grunt:{col:'#7ddc5a'},
+    runner:{col:'#ff6f9c'},
+    tank:{col:'#7d8a96'},
+    spitter:{col:'#b8c4cf'},
     // new monsters (23 Nov 2026): each one asks for a different answer from the player
-    blaster:{r:8,hp:14,spd:78,dps:6,col:'#ff4d3a'},          // kamikaze: lights a fuse when close, then bursts
-    splitter:{r:12,hp:40,spd:40,dps:12,col:'#9dff5a'},       // splits into two small ones when it dies
-    spawnling:{r:6,hp:9,spd:70,dps:7,col:'#c8ff9a'},
-    digger:{r:11,hp:34,spd:46,dps:14,col:'#d9a066'},         // burrows, crosses fast under the sand and pops up beside you
-    healer:{r:10,hp:30,spd:40,dps:6,col:'#5fffc0'},          // keeps away and heals the monsters around it
-    boss:{r:26,hp:520,spd:38,dps:28,col:'#b05cff',shoots:2.8,boss:true}
+    blaster:{col:'#ff4d3a'},          // kamikaze: lights a fuse when close, then bursts
+    splitter:{col:'#9dff5a'},       // splits into two small ones when it dies
+    spawnling:{col:'#c8ff9a'},
+    digger:{col:'#d9a066'},         // burrows, crosses fast under the sand and pops up beside you
+    healer:{col:'#5fffc0'},          // keeps away and heals the monsters around it
+    boss:{col:'#b05cff',boss:true}
   };
+  for(const k in TYPES)Object.assign(TYPES[k],BAL.sv.types[k]);   // size, health, speed, damage per second
   // enemy toughness grows gently; the weapon levels up with every wave so the two stay in step
-  const DIFF={easy:{n:'سهل',em:'🟢',d:'للتجربة والاستمتاع',hp:0.7,dmg:0.55,sp:0.8,rw:0.6},normal:{n:'متوسط',em:'🟡',d:'كائنات أقوى وأكثر',hp:1.45,dmg:1.4,sp:1.25,rw:1},hard:{n:'صعب',em:'🔴',d:'للمحترفين · مكافأة ×1.7',hp:2.2,dmg:2.1,sp:1.6,rw:1.7}};
+  const DIFF={easy:{n:'سهل',em:'🟢',d:'للتجربة والاستمتاع'},normal:{n:'متوسط',em:'🟡',d:'كائنات أقوى وأكثر'},hard:{n:'صعب',em:'🔴',d:'للمحترفين · مكافأة ×1.7'}};for(const k in DIFF)Object.assign(DIFF[k],BAL.sv.diff[k]);
   const DF=()=>DIFF[(st&&st.diff)||'normal']||DIFF.normal;
   const diffHTML=()=>'<div class="diffs">'+Object.entries(DIFF).map(([k,v])=>`<button type="button" class="dfb${((st.diff||'normal')===k)?' on':''}" data-df="${k}"><b>${v.em} ${v.n}</b><small>${v.d}</small></button>`).join('')+'</div>';
-  const hpMul=w=>(1.1+0.25*(w-1)+0.02*(w-1)*(w-1))*DF().hp;
-  const wpn=w=>1+0.05*(w-1);
+  const hpMul=w=>{const H=BAL.sv.waveHp;return (H.base+H.lin*(w-1)+H.quad*(w-1)*(w-1))*DF().hp};
+  const wpn=w=>1+BAL.sv.weaponPerWave*(w-1);
   // one boss per planet; the planet of a boss wave decides which one comes
   const BOSSES=[
-    {kind:'golem',name:'عملاق الصخور القمرية',r:28,hp:680,spd:30,dps:30,col:'#9aa0aa'},
-    {kind:'worm',name:'دودة الفضاء آكلة الكويكبات',r:17,hp:560,spd:92,dps:26,col:'#d9773f'},
-    {kind:'ice',name:'تنين الكريستال الجليدي',r:24,hp:BAL.iceDragonHp,spd:46,dps:24,col:'#8fd8ff'},
-    {kind:'lava',name:'عملاق الحمم والنار',r:27,hp:640,spd:34,dps:30,col:'#ff7a2a'},
-    {kind:'octo',name:'ملكة الفضاء البنفسجية',r:26,hp:600,spd:38,dps:28,col:'#b05cff'},
-    {kind:'ship',name:'عقرب رمال المريخ',r:32,hp:720,spd:26,dps:30,col:'#c9d3dc'}
+    {kind:'golem',name:'عملاق الصخور القمرية',col:'#9aa0aa'},
+    {kind:'worm',name:'دودة الفضاء آكلة الكويكبات',col:'#d9773f'},
+    {kind:'ice',name:'تنين الكريستال الجليدي',col:'#8fd8ff'},
+    {kind:'lava',name:'عملاق الحمم والنار',col:'#ff7a2a'},
+    {kind:'octo',name:'ملكة الفضاء البنفسجية',col:'#b05cff'},
+    {kind:'ship',name:'عقرب رمال المريخ',col:'#c9d3dc'}
   ];
+  BOSSES.forEach(b=>Object.assign(b,BAL.sv.bosses[b.kind]));   // size, health, speed, damage per second
   const bossFor=w=>BOSSES[(w-1)%BOSSES.length];
   const GUARDS=[
-    {kind:'brood',name:'ملك الحشرات',r:20,hp:360,spd:44,dps:24,col:'#c084ff',guard:1},
-    {kind:'wraith',name:'شبح الضباب',r:18,hp:300,spd:36,dps:20,col:'#9fd8ff',guard:1}];
+    {kind:'brood',name:'ملك الحشرات',col:'#c084ff',guard:1},
+    {kind:'wraith',name:'شبح الضباب',col:'#9fd8ff',guard:1}];
+  GUARDS.forEach(b=>Object.assign(b,BAL.sv.bosses[b.kind]));
   function spawnBoss(B){
     const x=W/2+(Math.random()-0.5)*160,y=-B.r-6,hp=B.hp*hpMul(wave)*BAL.svBossHp;
-    en.push({type:'boss',guard:!!B.guard,kind:B.kind,name:B.name,x,y,r:B.r,hp,max:hp,spd:B.spd,dps:B.dps*(1+Math.min(1.2,wave*0.04)),col:B.col,flash:0,oc:0,ph:Math.random()*9,boss:true,t1:2,t2:5,under:0,trail:[]});
+    en.push({type:'boss',guard:!!B.guard,kind:B.kind,name:B.name,x,y,r:B.r,hp,max:hp,spd:B.spd,dps:B.dps*(1+Math.min(BAL.sv.bossDpsWave.max,wave*BAL.sv.bossDpsWave.per)),col:B.col,flash:0,oc:0,ph:Math.random()*9,boss:true,t1:2,t2:5,under:0,trail:[]});
   }
   // boss behaviour: movement plus its own attacks; returns the speed to move with this frame
   function bossAI(e,dt,dx,dy,d){

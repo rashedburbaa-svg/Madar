@@ -7,21 +7,21 @@ const WORLD={
   ground:['#4a3654','#9fbfd6','#3a2420','#ad9cc8','#1e4733','#170f2c'],
   spot:['#5e4670','#c9e2f2','#5a2e22','#d6c8ee','#2f6b47','#2a1d4a'],
   fog:[0x2a2040,0xbcd6ea,0x4a1a10,0xc9bde0,0x10301f,0x0a0618],
-  mon:{small:{hp:26,dmg:8,spd:84,r:13},big:{hp:95,dmg:16,spd:56,r:20},grow:0.8,dgrow:0.5},
-  guard:{hp:1400,grow:1,dmg:22,r:44,cd:BAL.world.guard.respawnS*1000,kills:BAL.world.guard.fastKills},   // a beaten guardian returns after 5 min, or sooner after 25 kills in its region
-  player:{hp:120,dmg:12,rate:2.6,spd:150,range:270},
+  mon:BAL.hero.mon,
+  guard:{hp:BAL.hero.guard.hp,lvOver:BAL.hero.guard.lvOver,spd:BAL.hero.guard.spd,dmg:BAL.hero.guard.dmg,r:BAL.hero.guard.r,cd:BAL.world.guard.respawnS*1000,kills:BAL.world.guard.fastKills},   // a beaten guardian returns after 5 min, or sooner after 25 kills in its region
+  player:BAL.hero.player,
   moon:{x:1480,y:930,h:150},                  // the moon-zone diorama inside Orbit-1
   nodes:14,nodeCd:120000,poi:{c:15,mat:20},maxMon:BAL.world.enemy.maxActive,
   spawn:{rate:3.2,min:BAL.world.enemy.packMin,max:BAL.world.enemy.packMax,d0:520,d1:780},  // packs per second (chance), pack size, spawn ring around the hero
   // XP Hero style: the hero levels up from kills; each region has a monster level band and a gate (previous guardian + hero level)
-  LV:BAL.world.enemy.zoneLv,hpGrow:1.15,dmgGrow:1.1,heroDmg:1.1,heroHp:12,xpNext:lv=>Math.round(20*Math.pow(lv,1.5)),
-  xp:{small:4,big:10,guard:120},
-  WEAP:[{id:'rifle',n:'بندقية الطاقة',em:'🔫',kind:'shot',rate:2.6,mul:1,mat:'alloy',cost:null},
-    {id:'spread',n:'القاذف الثلاثي',em:'💥',kind:'spread',rate:2.0,mul:0.75,mat:'ice',cost:{ice:20,alloy:20}},
-    {id:'saber',n:'سيف البلازما',em:'🗡️',kind:'slash',rate:1.5,mul:2.2,range:72,mat:'magma',cost:{magma:20,alloy:20}},
-    {id:'chain',n:'مدفع البرق',em:'⚡',kind:'chain',rate:1.8,mul:1.05,mat:'quartz',cost:{quartz:25,ice:15}},
-    {id:'nova',n:'نجمة السديم',em:'🌟',kind:'nova',rate:0.9,mul:1.6,range:150,mat:'gas',cost:{gas:25,spore:25}}],
-  upCost:l=>({c:15*l,m:8*l})};   // weapon upgrade l→l+1: 💎 15·l and the weapon's material 8·l
+  LV:BAL.world.enemy.zoneLv,hpGrow:BAL.hero.hpGrow,dmgGrow:BAL.hero.dmgGrow,heroDmg:BAL.hero.heroDmg,heroHp:BAL.hero.heroHp,xpNext:lv=>Math.round(BAL.hero.xpBase*Math.pow(lv,BAL.hero.xpPow)),
+  xp:BAL.hero.xp,
+  WEAP:[{id:'rifle',n:'بندقية الطاقة',em:'🔫',kind:'shot',mat:'alloy'},
+    {id:'spread',n:'القاذف الثلاثي',em:'💥',kind:'spread',mat:'ice'},
+    {id:'saber',n:'سيف البلازما',em:'🗡️',kind:'slash',mat:'magma'},
+    {id:'chain',n:'مدفع البرق',em:'⚡',kind:'chain',mat:'quartz'},
+    {id:'nova',n:'نجمة السديم',em:'🌟',kind:'nova',mat:'gas'}].map(w=>Object.assign(w,BAL.hero.weap[w.id])),   // rate, damage multiplier, range and unlock cost come from BAL.hero.weap
+  upCost:l=>({c:BAL.hero.weapUp.gem*l,m:BAL.hero.weapUp.mat*l})};   // weapon upgrade l→l+1: 💎 15·l and the weapon's material 8·l
 
 /* full phone screen while the open world runs */
 document.head.insertAdjacentHTML('beforeend','<style>body.wfull{overflow:hidden;overscroll-behavior:none}body.wfull #play .stats,body.wfull #play .controls,body.wfull #play .help{display:none}body.wfull #play .stage.wstage{position:fixed;left:0;right:0;bottom:0;top:56px;width:auto;border-radius:0;z-index:20}body.wfull #play .stage.wstage>canvas{height:100%!important}body.wfull #play .topbar{position:relative;z-index:21}body.wfull .wview,body.wfull .wforgeb{bottom:calc(14px + env(safe-area-inset-bottom))}</style>');
@@ -68,7 +68,7 @@ const WorldGame=(()=>{
       const n=SP.min+Math.floor(Math.random()*(SP.max-SP.min+1));for(let k=0;k<n;k++){const big=k===0&&Math.random()<0.45,lv=Math.max(1,bandLv(reg,x,y)+(big?1:0)),s=monStats(reg,big,lv);
         mons.push({x:x+rnd(-40,40),y:y+rnd(-40,40),reg,big,lv,hp:s.hp,max:s.hp,dmg:s.dmg,spd:s.spd*rnd(0.85,1.15),r:s.r,wx:0,wy:0,wt:0,hit:0,fl:0})}return}}
   function wakeGuard(g){const now=Date.now(),cd=(st.gd||{})[g.reg]||0;if(g.alive||now<cd||!open(g.reg))return;
-    const lv=WORLD.LV[g.reg]+5,hp=Math.round(520*Math.pow(WORLD.hpGrow,lv-1)),dmg=WORLD.guard.dmg*Math.pow(WORLD.dmgGrow,lv-1);g.alive=true;mons.push({guard:g,lv,x:g.hx,y:g.hy,reg:g.reg,big:true,hp,max:hp,dmg,spd:46,r:WORLD.guard.r,t1:2.5,t2:6,hit:0,fl:0})}
+    const lv=WORLD.LV[g.reg]+WORLD.guard.lvOver,hp=Math.round(WORLD.guard.hp*Math.pow(WORLD.hpGrow,lv-1)),dmg=WORLD.guard.dmg*Math.pow(WORLD.dmgGrow,lv-1);g.alive=true;mons.push({guard:g,lv,x:g.hx,y:g.hy,reg:g.reg,big:true,hp,max:hp,dmg,spd:WORLD.guard.spd,r:WORLD.guard.r,t1:2.5,t2:6,hit:0,fl:0})}
   /* ---------- update ---------- */
   function input(){let mx=0,my=0;if(keys.ArrowLeft||keys.a)mx--;if(keys.ArrowRight||keys.d)mx++;if(keys.ArrowUp||keys.w)my--;if(keys.ArrowDown||keys.s)my++;
     if(joy&&joy.on){const dx=joy.x-joy.ox,dy=joy.y-joy.oy,L=Math.hypot(dx,dy);if(L>8){mx=dx/Math.max(L,40);my=dy/Math.max(L,40)}}

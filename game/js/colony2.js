@@ -2,28 +2,28 @@
 
 /* ---------- research lab ---------- */
 const TECH={
-  mine:{n:'تعدين متقدم',i:'⛏️',d:L=>`+${Math.round(BAL.techProd*100*L)}% معادن`,base:[200,150,60]},
-  power:{n:'خلايا شمسية فائقة',i:'⚡',d:L=>`+${Math.round(BAL.techProd*100*L)}% طاقة`,base:[150,200,60]},
-  agri:{n:'زراعة مائية',i:'🌱',d:L=>`+${Math.round(BAL.techProd*100*L)}% غذاء`,base:[150,150,100]},
-  store:{n:'مخازن مضغوطة',i:'📦',d:L=>`+${15*L}% سعة`,base:[260,200,80]},
-  build:{n:'روبوتات بناء',i:'🤖',d:L=>`-${8*L}% وقت البناء`,base:[240,240,100]},
-  offline:{n:'أتمتة المباني',i:'🕒',d:L=>`+${2*L} ساعة تخزين`,base:[200,220,120]},
-  dmg:{n:'ذخيرة متطورة',i:'🎯',d:L=>`+${L} ضرر للأبراج`,base:[300,220,80]},
-  rate:{n:'تبريد المدافع',i:'🔥',d:L=>`+${10*L}% سرعة إطلاق`,base:[260,300,80]},
-  strike:{n:'الضربة المدارية',i:'☄️',d:L=>`+${50*L}% قوة ضربتك`,base:[220,320,60]},
+  mine:{n:'تعدين متقدم',i:'⛏️',d:L=>`+${Math.round(BAL.techProd*100*L)}% معادن`,base:BAL.tech.base.mine},
+  power:{n:'خلايا شمسية فائقة',i:'⚡',d:L=>`+${Math.round(BAL.techProd*100*L)}% طاقة`,base:BAL.tech.base.power},
+  agri:{n:'زراعة مائية',i:'🌱',d:L=>`+${Math.round(BAL.techProd*100*L)}% غذاء`,base:BAL.tech.base.agri},
+  store:{n:'مخازن مضغوطة',i:'📦',d:L=>`+${Math.round(BAL.bld.cap.techStore*100*L)}% سعة`,base:BAL.tech.base.store},
+  build:{n:'روبوتات بناء',i:'🤖',d:L=>`-${Math.round(BAL.bld.time.techCut*100*L)}% وقت البناء`,base:BAL.tech.base.build},
+  offline:{n:'أتمتة المباني',i:'🕒',d:L=>`+${BAL.tech.effect.offline*L} ساعة تخزين`,base:BAL.tech.base.offline},
+  dmg:{n:'ذخيرة متطورة',i:'🎯',d:L=>`+${BAL.tech.effect.dmg*L} ضرر للأبراج`,base:BAL.tech.base.dmg},
+  rate:{n:'تبريد المدافع',i:'🔥',d:L=>`+${BAL.tech.effect.rateShown*L}% سرعة إطلاق`,base:BAL.tech.base.rate},
+  strike:{n:'الضربة المدارية',i:'☄️',d:L=>`+${Math.round(BAL.tech.effect.strike*100*L)}% قوة ضربتك`,base:BAL.tech.base.strike},
   // branch: navigation and bosses (needs HQ and earlier research)
-  boss:{n:'اختراق دروع الزعماء',i:'⚔️',d:L=>`+${Math.round(BAL.techBoss*100*L)}% ضرر على كل الزعماء`,base:[400,250,80],req:()=>col.b.hq<5?'القيادة 5':(col.tech.strike||0)<2?'الضربة المدارية 2':''},
-  ion:{n:'محرك الدفع الأيوني',i:'🚀',d:L=>`رحلات المجرة أقصر ${Math.round(BAL.techIon*100*L)}%`,base:[300,300,100],req:()=>col.b.hq<5?'القيادة 5':!col.done?'إصلاح المركبة':''},
-  scan:{n:'رادار المسح المجري',i:'📡',max:3,d:L=>`+${Math.round(BAL.techScan*100*L)}% مكافآت الرحلات`,base:[350,500,100],req:()=>col.b.hq<6?'القيادة 6':(col.tech.ion||0)<1?'محرك الدفع الأيوني 1':''}};
-const TMAX=5,tMax=k=>TECH[k].max||TMAX,tReq=k=>TECH[k].req?TECH[k].req():'';
+  boss:{n:'اختراق دروع الزعماء',i:'⚔️',d:L=>`+${Math.round(BAL.techBoss*100*L)}% ضرر على كل الزعماء`,base:BAL.tech.base.boss,req:()=>{const q=BAL.tech.req.boss;return col.b.hq<q.hq?'القيادة '+q.hq:(col.tech.strike||0)<q.strike?'الضربة المدارية '+q.strike:''}},
+  ion:{n:'محرك الدفع الأيوني',i:'🚀',d:L=>`رحلات المجرة أقصر ${Math.round(BAL.techIon*100*L)}%`,base:BAL.tech.base.ion,req:()=>{const q=BAL.tech.req.ion;return col.b.hq<q.hq?'القيادة '+q.hq:!col.done?'إصلاح المركبة':''}},
+  scan:{n:'رادار المسح المجري',i:'📡',max:BAL.tech.max.scan,d:L=>`+${Math.round(BAL.techScan*100*L)}% مكافآت الرحلات`,base:BAL.tech.base.scan,req:()=>{const q=BAL.tech.req.scan;return col.b.hq<q.hq?'القيادة '+q.hq:(col.tech.ion||0)<q.ion?'محرك الدفع الأيوني '+q.ion:''}}};
+const TMAX=BAL.tech.maxLv,tMax=k=>TECH[k].max||TMAX,tReq=k=>TECH[k].req?TECH[k].req():'';
 if(!col.tech)col.tech={};
-const techCost=k=>{const L=col.tech[k]||0,f=Math.pow(1.85,L),b=TECH[k].base;return {m:Math.round(b[0]*f),e:Math.round(b[1]*f),f:Math.round(b[2]*f),c:3+L*3}};
-const techTime=k=>Math.round(45*Math.pow(2.1,col.tech[k]||0)*(1-0.04*(col.b.lab||0)));
+const techCost=k=>{const L=col.tech[k]||0,f=Math.pow(BAL.tech.costGrowth,L),b=TECH[k].base;return {m:Math.round(b[0]*f),e:Math.round(b[1]*f),f:Math.round(b[2]*f),c:BAL.tech.gemBase+L*BAL.tech.gemPerLv}};
+const techTime=k=>Math.round(BAL.tech.time.base*Math.pow(BAL.tech.time.growth,col.tech[k]||0)*(1-BAL.tech.time.labCut*(col.b.lab||0)));
 function researchTick(){const r=col.rs;if(!r||Date.now()<r.end)return;col.rs=null;col.tech[r.k]=(col.tech[r.k]||0)+1;colSave();snd('ach');buzz([20,30,20]);toast('🔬 '+TECH[r.k].n+' '+col.tech[r.k],'ach');questCheck&&questCheck();if(!$('hub').hidden)setTimeout(()=>{renderColony();renderSheet()},0)}
 function startResearch(k){accrue();if(col.rs){toast('🔬 المختبر مشغول');return}const L=col.tech[k]||0;if(L>=tMax(k)){toast('✔️ الأعلى');return}if(tReq(k)){toast('🔒 يحتاج '+tReq(k));return}
   if(L>=(col.b.lab||0)){toast('🔒 طوّر المختبر إلى '+(L+1));return}const c=techCost(k);if(!canPay(c)){snd('err');toast('الموارد لا تكفي');return}
   pay(c);col.rs={k,end:Date.now()+techTime(k)*1000,len:techTime(k)};colSave();snd('ok');buzz(15);dtask('research',1);renderColony()}
-function rushResearch(){if(!col.rs)return;const left=(col.rs.end-Date.now())/1000,cost=Math.max(1,Math.ceil(left/60));if(col.res.c<cost){snd('err');toast('تحتاج '+cost+' 💎');return}
+function rushResearch(){if(!col.rs)return;const left=(col.rs.end-Date.now())/1000,cost=Math.max(1,Math.ceil(left/BAL.tech.rushSecPerGem));if(col.res.c<cost){snd('err');toast('تحتاج '+cost+' 💎');return}
   col.res.c-=cost;col.rs.end=Date.now();researchTick();renderColony()}
 function labHTML(){if(!col.b.lab)return '<p class="cd">ابنِ المختبر لتبدأ الأبحاث.</p>';
   let h=`<h3 class="lh">🔬 الأبحاث <small>${col.rs?'يجري: '+TECH[col.rs.k].n:'اختر بحثاً · مستوى البحث لا يتجاوز مستوى المختبر'}</small></h3><div class="blist">`;
@@ -49,7 +49,7 @@ let strikeReady=0;
 function strike(c){const now=performance.now();if(now<strikeReady||c.dead)return;strikeReady=now+550;const L=$('cshots');if(!L)return;
   const top=c.y-420,beam=svgEl('g',{class:'strike'});beam.innerHTML=`<path d="M${c.x-7} ${top} L${c.x-2} ${c.y-12} L${c.x+2} ${c.y-12} L${c.x+7} ${top}Z" fill="#ffe27a" opacity=".35"/><path d="M${c.x} ${top} L${c.x} ${c.y-12}" stroke="#fff" stroke-width="2.4"/><circle cx="${c.x}" cy="${c.y-12}" r="9" fill="#fff3c0"/>`;
   L.appendChild(beam);BT.shots.push({el:beam,t:0,T:0.3});boom(c.x,c.y-10,'#ffd34d',16);snd('hit');buzz(18);
-  const d=Math.round((3+col.b.def+col.b.hq*0.5)*(1+0.5*(col.tech.strike||0)));const was=c.dead;hurt(c,d);fxAt(c.x,c.y-48,'-'+d,'#ffe27a');dtask('strike',1)}
+  const d=Math.round((3+col.b.def+col.b.hq*0.5)*(1+BAL.tech.effect.strike*(col.tech.strike||0)));const was=c.dead;hurt(c,d);fxAt(c.x,c.y-48,'-'+d,'#ffe27a');dtask('strike',1)}
 
 /* ---------- boss: a giant beast that comes every few minutes ---------- */
 const BOSS_HP=()=>BAL.colBoss.base+col.b.hq*BAL.colBoss.perHq+(col.b.tower||0)*BAL.colBoss.perTower;

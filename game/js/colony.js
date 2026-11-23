@@ -3,32 +3,32 @@
    play the story games as colony tasks for resources, and repair the five parts of the ship. */
 const RES={m:['معادن','⛏️','#c9b8a6'],e:['طاقة','⚡','#ffd34d'],f:['غذاء','🌱','#7ddc5a'],c:['كريستال','💎','#9fe8ff']};
 const BLD={
-  hq:{name:'مركز القيادة',base:[200,150,100],max:10,desc:'قلب المستعمرة: يرفع سعة المخازن، وكل مبنى يمكن أن يسبقه بمستوى واحد فقط.'},
-  mine:{name:'منجم المعادن',base:[60,80,30],prod:['m',BAL.mineProd],desc:'يستخرج المعادن من صخور الكوكب.'},
-  solar:{name:'محطة الطاقة',base:[80,50,30],prod:['e',60],desc:'ألواح شمسية تمدّ المستعمرة بالطاقة.'},
-  farm:{name:'المزرعة المائية',base:[70,70,20],prod:['f',45],desc:'قبة زجاجية تزرع غذاء الروّاد.'},
-  habitat:{name:'المساكن',base:[100,80,80],desc:'كل مستوى يستقبل رائدَين، وكل رائد يرفع الإنتاج 4%.'},
-  radio:{name:'برج الاتصالات',base:[150,120,40],req:2,prod:['c',0.6],desc:'يلتقط إشارات غامضة، وينتج قليلاً من الكريستال.'},
-  obs:{name:'المرصد',base:[160,140,60],req:2,desc:'يدرس صور الكوكب بحثاً عن أرض خصبة وكنوز.'},
-  def:{name:'منظومة الدفاع',base:[220,180,60],req:3,game:'survive',task:'صد غارة الكائنات',desc:'تحمي المستعمرة، وكل مستوى يزيد غنائم الغارات 20%.'},
-  tower:{name:'أبراج الدفاع',base:[160,140,40],req:2,desc:'أبراج حول القبة تقتل الوحوش؛ كل مستوى يضيف برجاً ويقوّي السلاح.'},
-  wall:{name:'القبة الزجاجية',base:[90,70,20],desc:'قبة زجاجية تحمي المستعمرة من الكائنات، ترتفع مع كل تطوير حتى تكتمل في المستوى 10، وكل مستوى يرفع الإنتاج 3%.'},
-  lab:{name:'المختبر',base:[220,200,90],req:3,desc:'أبحاث تقوّي الإنتاج والدفاع والبناء.'},
-  dock:{name:'حوض الإصلاح',base:[250,200,80],req:2,game:'pilot',task:'دورية فضائية',desc:'هنا تُصلَح أجزاء المركبة لتنطلق من جديد.'}
+  hq:{name:'مركز القيادة',base:BAL.bld.base.hq,max:BAL.bld.maxLv,desc:'قلب المستعمرة: يرفع سعة المخازن، وكل مبنى يمكن أن يسبقه بمستوى واحد فقط.'},
+  mine:{name:'منجم المعادن',base:BAL.bld.base.mine,prod:BAL.bld.prod.mine,desc:'يستخرج المعادن من صخور الكوكب.'},
+  solar:{name:'محطة الطاقة',base:BAL.bld.base.solar,prod:BAL.bld.prod.solar,desc:'ألواح شمسية تمدّ المستعمرة بالطاقة.'},
+  farm:{name:'المزرعة المائية',base:BAL.bld.base.farm,prod:BAL.bld.prod.farm,desc:'قبة زجاجية تزرع غذاء الروّاد.'},
+  habitat:{name:'المساكن',base:BAL.bld.base.habitat,desc:'كل مستوى يستقبل رائدَين، وكل رائد يرفع الإنتاج 4%.'},
+  radio:{name:'برج الاتصالات',base:BAL.bld.base.radio,req:BAL.bld.req.radio,prod:BAL.bld.prod.radio,desc:'يلتقط إشارات غامضة، وينتج قليلاً من الكريستال.'},
+  obs:{name:'المرصد',base:BAL.bld.base.obs,req:BAL.bld.req.obs,desc:'يدرس صور الكوكب بحثاً عن أرض خصبة وكنوز.'},
+  def:{name:'منظومة الدفاع',base:BAL.bld.base.def,req:BAL.bld.req.def,game:'survive',task:'صد غارة الكائنات',desc:'تحمي المستعمرة، وكل مستوى يزيد غنائم الغارات 20%.'},
+  tower:{name:'أبراج الدفاع',base:BAL.bld.base.tower,req:BAL.bld.req.tower,desc:'أبراج حول القبة تقتل الوحوش؛ كل مستوى يضيف برجاً ويقوّي السلاح.'},
+  wall:{name:'القبة الزجاجية',base:BAL.bld.base.wall,desc:'قبة زجاجية تحمي المستعمرة من الكائنات، ترتفع مع كل تطوير حتى تكتمل في المستوى 10، وكل مستوى يرفع الإنتاج 3%.'},
+  lab:{name:'المختبر',base:BAL.bld.base.lab,req:BAL.bld.req.lab,desc:'أبحاث تقوّي الإنتاج والدفاع والبناء.'},
+  dock:{name:'حوض الإصلاح',base:BAL.bld.base.dock,req:BAL.bld.req.dock,game:'pilot',task:'دورية فضائية',desc:'هنا تُصلَح أجزاء المركبة لتنطلق من جديد.'}
 };
 const BORDER=['hq','wall','tower','mine','solar','farm','habitat','radio','obs','def','lab','dock'];
-const PARTS=[['engine','المحرك',[400,400,100,10]],['nav','نظام الملاحة',[650,700,160,20]],['shield','الدرع الحراري',[1000,850,300,30]],['antenna','هوائي الاتصال',[1400,1500,420,45]],['hull','الهيكل',[2200,2000,800,60]]];
+const PARTS=[['engine','المحرك',BAL.ship.parts.engine],['nav','نظام الملاحة',BAL.ship.parts.nav],['shield','الدرع الحراري',BAL.ship.parts.shield],['antenna','هوائي الاتصال',BAL.ship.parts.antenna],['hull','الهيكل',BAL.ship.parts.hull]];
 const GAMEOF={survive:'def',pilot:'dock'};
 const col=load('arcade-colony',{res:{m:300,e:300,f:200,c:20},b:{hq:1,mine:1,solar:1,farm:1,habitat:1,radio:0,obs:0,def:0,dock:0},build:null,last:Date.now(),q:0,ship:{},intro:0,wins:{},surv:0,done:0});
 const colSave=()=>save('arcade-colony',col);
-const cap=()=>Math.round(600*Math.pow(1.7,col.b.hq-1)*(1+0.15*((col.tech&&col.tech.store)||0)));
-const crew=()=>3+2*col.b.habitat;
+const cap=()=>Math.round(BAL.bld.cap.base*Math.pow(BAL.bld.cap.growth,col.b.hq-1)*(1+BAL.bld.cap.techStore*((col.tech&&col.tech.store)||0)));
+const crew=()=>BAL.bld.crew.base+BAL.bld.crew.perHabitat*col.b.habitat;
 if(col.b.wall==null)col.b.wall=0;if(col.b.tower==null)col.b.tower=0;if(col.b.lab==null)col.b.lab=0;
 const techLv=k=>(col.tech&&col.tech[k])||0,TK={m:'mine',e:'power',f:'agri'};let tMul=k=>1+BAL.techProd*(TK[k]?techLv(TK[k]):0);
-const mult=()=>1+(typeof festOn==='function'&&festOn()?0.25:0)+(typeof terraBonus==='function'?terraBonus():0)+(typeof moraleBonus==='function'?moraleBonus():0)+0.04*crew()+0.03*(col.b.wall||0)+(typeof artCount==='function'?0.05*artCount():0);
-function rate(k){let r=0;for(const id of BORDER){const B=BLD[id],L=col.b[id];if(B.prod&&B.prod[0]===k&&L>0)r+=B.prod[1]*L*Math.pow(1.15,L-1)}return r*mult()*tMul(k)}
-function upCost(id){const L=col.b[id],B=BLD[id],f=Math.pow(1.6,L);return {m:Math.round(B.base[0]*f),e:Math.round(B.base[1]*f),f:Math.round(B.base[2]*f*BAL.foodCostMul)}}
-const upTime=id=>Math.round(20*Math.pow(1.85,col.b[id])*(1-0.08*techLv('build')));
+const mult=()=>1+(typeof festOn==='function'&&festOn()?0.25:0)+(typeof terraBonus==='function'?terraBonus():0)+(typeof moraleBonus==='function'?moraleBonus():0)+BAL.bld.crewProd*crew()+BAL.bld.wallProd*(col.b.wall||0)+(typeof artCount==='function'?BAL.galaxy.artBonus*artCount():0);
+function rate(k){let r=0;for(const id of BORDER){const B=BLD[id],L=col.b[id];if(B.prod&&B.prod[0]===k&&L>0)r+=B.prod[1]*L*Math.pow(BAL.bld.prodGrowth,L-1)}return r*mult()*tMul(k)}
+function upCost(id){const L=col.b[id],B=BLD[id],f=Math.pow(BAL.bld.costGrowth,L);return {m:Math.round(B.base[0]*f),e:Math.round(B.base[1]*f),f:Math.round(B.base[2]*f*BAL.foodCostMul)}}
+const upTime=id=>Math.round(BAL.bld.time.base*Math.pow(BAL.bld.time.growth,col.b[id])*(1-BAL.bld.time.techCut*techLv('build')));
 const canPay=c=>Object.keys(c).every(k=>col.res[k]>=c[k]);
 function pay(c){Object.keys(c).forEach(k=>col.res[k]-=c[k])}
 const OVERB={m:'mine',e:'solar',f:'farm'};let overT=0;
@@ -48,23 +48,23 @@ function startBuild(id){accrue();const B=BLD[id],L=col.b[id];
   if(!freeSlot()){toast(col.bot2?'🏗️ الروبوتان مشغولان':'🏗️ البناء مشغول');return}
   if(B.req&&col.b.hq<B.req){toast('🔒 القيادة '+B.req);return}
   if(id!=='hq'&&L>col.b.hq){toast('🔒 طوّر القيادة أولاً');return}
-  if(L>=(B.max||10)){toast('✔️ الأعلى');return}
+  if(L>=(B.max||BAL.bld.maxLv)){toast('✔️ الأعلى');return}
   const c=upCost(id);if(!canPay(c)){snd('err');toast('الموارد لا تكفي');return}
   pay(c);col[freeSlot()]={id,end:Date.now()+upTime(id)*1000,len:upTime(id)};colSave();snd('ok');buzz(15);renderColony()}
-function rush(){accrue();if(!col.build)return;const left=(col.build.end-Date.now())/1000,cost=Math.max(1,Math.ceil(left/60));
+function rush(){accrue();if(!col.build)return;const left=(col.build.end-Date.now())/1000,cost=Math.max(1,Math.ceil(left/BAL.bld.rushSecPerGem));
   if(col.res.c<cost){snd('err');toast('تحتاج '+cost+' 💎');return}
   col.res.c-=cost;col.build.end=Date.now();accrue();colSave();renderColony()}
 function repair(i){accrue();const [pid,name,c]=PARTS[i],need={m:c[0],e:c[1],f:c[2],c:c[3]};
   if(col.ship[pid])return;if(i>0&&!col.ship[PARTS[i-1][0]]){toast('أصلح '+PARTS[i-1][1]+' أولاً');return}
-  if(col.b.dock<i+1){toast('يحتاج حوض الإصلاح مستوى '+(i+1));return}
+  const dl=BAL.ship.dockLv[i];if(col.b.dock<dl){toast('يحتاج حوض الإصلاح مستوى '+dl);return}
   if(!canPay(need)){snd('err');toast('الموارد لا تكفي');return}
   pay(need);col.ship[pid]=Date.now();colSave();snd('win');buzz([20,40,60]);toast('🔧 تم إصلاح '+name,'ach');questCheck();
   if(PARTS.every(p=>col.ship[p[0]])){unlock('col_ship');setTimeout(chapterDone,600)}renderColony()}
 /* every win in a story game feeds the colony; the task building's level raises the reward */
-function colonyReward(id,stars,info){const bid=GAMEOF[id];if(!bid)return;accrue();info=info||{};const L=Math.max(1,col.b[bid]),k=1+0.3*(L-1);let got=[];
+function colonyReward(id,stars,info){const bid=GAMEOF[id];if(!bid)return;accrue();info=info||{};const L=Math.max(1,col.b[bid]),k=1+BAL.bld.taskLvBonus*(L-1);let got=[];
   if(id==='pilot'){const sc=info.score||0;if(sc<200)return;col.pbest=Math.max(col.pbest||0,sc);col.pruns=(col.pruns||0)+1;if(typeof dtask==='function')dtask('mission',1);
     got=[['m',sc*0.12*k],['e',sc*0.1*k],['f',sc*0.06*k],['c',(info.crys||0)+Math.floor((info.wave||0)/2)]]}
-  else if(id==='survive'){const t=info.time||0;if(t>=60&&raidSoon()){col.raid.mine=1;setTimeout(()=>toast('🛡️ صددت الغارة القادمة!','ach'),1800)}if(t<10)return;const d=1+0.2*col.b.def;col.surv=Math.max(col.surv||0,t);col.skills=Math.max(col.skills||0,info.kills||0);col.sboss=(col.sboss||0)+(info.boss||0);col.sruns=(col.sruns||0)+1;if(typeof dtask==='function')dtask('mission',1);
+  else if(id==='survive'){const t=info.time||0;if(t>=60&&raidSoon()){col.raid.mine=1;setTimeout(()=>toast('🛡️ صددت الغارة القادمة!','ach'),1800)}if(t<10)return;const d=1+BAL.bld.defLoot*col.b.def;col.surv=Math.max(col.surv||0,t);col.skills=Math.max(col.skills||0,info.kills||0);col.sboss=(col.sboss||0)+(info.boss||0);col.sruns=(col.sruns||0)+1;if(typeof dtask==='function')dtask('mission',1);
     got=[['m',t*1.4*d],['e',t*1.2*d],['f',t*0.9*d],['c',Math.floor(t/30)+(info.boss||0)*5]]}
   else return;
   if(id!=='survive'){if(!col.streak)col.streak={};col.streak[id]=(col.streak[id]||0)+1}const sk=id==='survive'?0:Math.min(5,(col.streak[id]||1)-1);
@@ -424,7 +424,7 @@ function battleInit(){const svg=$('cscene');BT.cr=[];BT.tw=[];BT.shots=[];if(!sv
     const c={el,t,i,hp:max,max,dead:0,x:p.x,y:p.y,tx:p.x,ty:p.y,wait:Math.random()*2,face:1,sp:SPEED[t]*(0.8+Math.random()*0.4),flip:el.querySelector('.cflip'),hpb:el.querySelector('.hpb'),hpf:el.querySelector('.hpf')};pickTarget(c);BT.cr.push(c)});
   {const el=svg.querySelector('.cre.boss'),old=BT.boss;const c={el,t:'beast',i:'boss',boss:1,hp:old&&!old.dead?old.hp:1,max:old?old.max:1,dead:old&&!old.dead?0:1e15,born:old?old.born:0,x:old?old.x:-90,y:old?old.y:600,tx:old?old.tx:0,ty:old?old.ty:0,wait:0,face:1,sp:6,flip:el.querySelector('.cflip'),hpb:el.querySelector('.hpb'),hpf:el.querySelector('.hpf')};if(!c.dead)el.classList.remove('gone');BT.boss=c;BT.cr.push(c)}
   const L=col.b.tower||0,tier=tierOf(L);
-  svg.querySelectorAll('.tow:not(.wg)').forEach(el=>{const i=+el.dataset.t,[x,y]=fp(TDEG[i]*Math.PI/180);BT.tw.push({x:x+2*1.4,y:y-26*1.4,head:el.querySelector('.thead'),tier,dmg:1+Math.floor(L/3)+BAL.tower.bonus[tier]+techLv('dmg'),cd:i*0.37,rate:BAL.tower.rate[tier]*(1-0.08*techLv('rate')),range:tier==='plasma'?240:200,ox:2,oy:-26,ang:0})});
+  svg.querySelectorAll('.tow:not(.wg)').forEach(el=>{const i=+el.dataset.t,[x,y]=fp(TDEG[i]*Math.PI/180);BT.tw.push({x:x+2*1.4,y:y-26*1.4,head:el.querySelector('.thead'),tier,dmg:1+Math.floor(L/3)+BAL.tower.bonus[tier]+BAL.tech.effect.dmg*techLv('dmg'),cd:i*0.37,rate:BAL.tower.rate[tier]*(1-BAL.tech.effect.rate*techLv('rate')),range:tier==='plasma'?240:200,ox:2,oy:-26,ang:0})});
   svg.querySelectorAll('.wgun').forEach(el=>{const d=+el.dataset.deg,[x,y]=fp(d*Math.PI/180),h=fenceStyle(col.b.wall).h+5;BT.tw.push({x,y:y-h,head:el.querySelector('.thead'),tier:'gun',dmg:1,cd:d/180,rate:0.9,range:150,ox:0,oy:-h,ang:0})});
   crewInit(svg);specApply();
   if(!BT.raf){BT.last=performance.now();BT.raf=requestAnimationFrame(battleTick)}}
@@ -538,8 +538,8 @@ function fxRing(id){const L=$('cfx');if(!L||!SLOT[id])return;const [x,y]=SLOT[id
 /* ---------- main screen: scene + overlays; buildings open in a bottom sheet ---------- */
 function resBar(){return Object.entries(RES).map(([k,[n,em,c]])=>`<div class="cr" style="--c:${c}"><span class="ce">${em}</span><b data-r="${k}">${fmtN(col.res[k])}</b><small>${k==='c'?'+'+rate('c').toFixed(1):'+'+fmtN(rate(k))}/س</small></div>`).join('')}
 function costHTML(c){return Object.entries(c).map(([k,n])=>`<span class="cc${col.res[k]>=n?'':' no'}" data-k="${k}" data-n="${n}">${RES[k][1]} ${fmtN(n)}</span>`).join('')}
-function cardHTML(id){const B=BLD[id],L=col.b[id],locked=B.req&&col.b.hq<B.req,max=L>=(B.max||10),G=B.game&&GAMES.find(x=>x.id===B.game),c=upCost(id);
-  const info=B.prod&&L?`${RES[B.prod[0]][1]} +${B.prod[0]==='c'?(B.prod[1]*L*Math.pow(1.15,L-1)*mult()).toFixed(1):fmtN(B.prod[1]*L*Math.pow(1.15,L-1)*mult())}/س`:id==='hq'?`📦 ${fmtN(cap())}`:id==='habitat'?`🧑‍🚀 ${crew()}`:id==='wall'&&L?`إنتاج +${3*L}%`:id==='tower'&&L?`🗼 ${towerN()} · ${WNAME[tierOf(L)]}`:id==='def'&&L?`غنائم +${col.b.def*20}%`:'';
+function cardHTML(id){const B=BLD[id],L=col.b[id],locked=B.req&&col.b.hq<B.req,max=L>=(B.max||BAL.bld.maxLv),G=B.game&&GAMES.find(x=>x.id===B.game),c=upCost(id);
+  const info=B.prod&&L?`${RES[B.prod[0]][1]} +${B.prod[0]==='c'?(B.prod[1]*L*Math.pow(BAL.bld.prodGrowth,L-1)*mult()).toFixed(1):fmtN(B.prod[1]*L*Math.pow(BAL.bld.prodGrowth,L-1)*mult())}/س`:id==='hq'?`📦 ${fmtN(cap())}`:id==='habitat'?`🧑‍🚀 ${crew()}`:id==='wall'&&L?`إنتاج +${3*L}%`:id==='tower'&&L?`🗼 ${towerN()} · ${WNAME[tierOf(L)]}`:id==='def'&&L?`غنائم +${col.b.def*20}%`:'';
   let h=`<div class="cbc${locked?' locked':''}"><div class="ch"><span class="ci"><svg viewBox="-52 -64 104 76">${art(id,Math.max(1,L))}</svg></span><span class="ctt"><b>${B.name}</b><small>${locked?'<span class="golink" data-to="b:hq" role="button" tabindex="0">🔒 القيادة '+B.req+' ‹</span>':L?`مستوى ${L} <i class="tchip" style="--t:${TINT[L]||'#d6dee8'}">${TNAME[L]}</i>`+(info?' · '+info:''):'غير مبني'}</small></span></div>`;
   h+=stagesHTML(id,L);
   if(building(id))h+=`<p class="cd">🏗️ قيد البناء…</p>`;
@@ -549,7 +549,7 @@ function cardHTML(id){const B=BLD[id],L=col.b[id],locked=B.req&&col.b.hq<B.req,m
   if(G&&L){const pr=G.progress?G.progress():{};h+=`<p class="cd rec">🏆 ${B.game==='survive'?'أطول صمود '+fmtDur(col.surv||0):'انتصارات '+(col.wins[B.game]||0)+' · المستوى '+(pr.level||1)}${col.streak&&col.streak[B.game]?' · 🔥 سلسلة '+col.streak[B.game]:''}</p>`}
   if(G&&L)h+=`<button class="btn task" type="button" data-go="${B.game}" aria-label="${B.task}">🎮 مهمة</button>`;
   h+=extraCard(id,L);
-  if(id==='dock'&&L){h+='<div class="parts">'+PARTS.map(([pid,pn,pc],i)=>{const done=col.ship[pid];return `<div class="part${done?' ok':''}"><span>${done?'✅':'🔧'} ${pn}</span>${done?'':`<span class="ccost">${costHTML({m:pc[0],e:pc[1],f:pc[2],c:pc[3]})}</span><button class="btn" type="button" data-fix="${i}">${col.b.dock<i+1?'🔒 '+(i+1):'🔧'}</button>`}</div>`}).join('')+'</div>'}
+  if(id==='dock'&&L){h+='<div class="parts">'+PARTS.map(([pid,pn,pc],i)=>{const done=col.ship[pid];return `<div class="part${done?' ok':''}"><span>${done?'✅':'🔧'} ${pn}</span>${done?'':`<span class="ccost">${costHTML({m:pc[0],e:pc[1],f:pc[2],c:pc[3]})}</span><button class="btn" type="button" data-fix="${i}">${col.b.dock<BAL.ship.dockLv[i]?'🔒 '+BAL.ship.dockLv[i]:'🔧'}</button>`}</div>`}).join('')+'</div>'}
   return h+'</div>'}
 function bindActions(root){
   root.querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>startBuild(b.dataset.up));
@@ -567,7 +567,7 @@ function renderSheet(){const m=$('csheet');if(!m||!sheetId)return;const c=m.quer
   if(sheetId==='list'){c.innerHTML=listHTML();c.querySelectorAll('[data-open]').forEach(r=>r.onclick=e=>{if(e.target.closest('[data-up]'))return;snd('tap');openSheet(r.dataset.open)})}else c.innerHTML=cardHTML(sheetId);bindActions(c)}
 /* every building in one list: you choose what to build next */
 function listHTML(){let h=`<h3 class="lh">🏗️ المباني <small>${!freeSlot()?'البناء مشغول':'اختر ما تريد تطويره'}${col.bot2?' · 🤖×2':''}</small></h3><div class="blist">`;
-  for(const id of BORDER){const B=BLD[id],L=col.b[id],locked=B.req&&col.b.hq<B.req,max=L>=(B.max||10),needHq=!locked&&!max&&id!=='hq'&&L>col.b.hq,c=upCost(id),ok=!locked&&!max&&!needHq&&canPay(c)&&!!freeSlot()&&!building(id);
+  for(const id of BORDER){const B=BLD[id],L=col.b[id],locked=B.req&&col.b.hq<B.req,max=L>=(B.max||BAL.bld.maxLv),needHq=!locked&&!max&&id!=='hq'&&L>col.b.hq,c=upCost(id),ok=!locked&&!max&&!needHq&&canPay(c)&&!!freeSlot()&&!building(id);
     const st=locked?`🔒 القيادة ${B.req}`:max?'✔️ الأعلى':building(id)?'🏗️ قيد البناء':needHq?`🔒 القيادة ${L}`:costHTML(c);
     h+=`<div class="brow${ok?' ok':''}" data-open="${id}" role="button" tabindex="0"><span class="bi"><svg viewBox="-52 -64 104 76">${art(id,Math.max(1,L))}</svg></span><span class="bt"><b>${B.name}</b><small>${L?`مستوى ${L} <i class="tchip" style="--t:${TINT[L]||'#d6dee8'}">${TNAME[L]}</i>`:'غير مبني'}</small><span class="bc">${st}</span></span>${!locked&&!max&&!needHq&&!building(id)?`<button class="btn${ok?' main':''}" type="button" data-up="${id}">${L?'⬆️ '+(L+1):'🏗️'}</button>`:''}</div>`}
   return h+'</div>'}
@@ -575,11 +575,11 @@ function closeSheet(){const m=$('csheet');sheetId=null;if(!m)return;m.classList.
 function rankChip(){try{const i=rankOf(prof.xp);return `<span class="crk">${RANKS[i][2]} ${RANKS[i][1]}</span>`}catch(e){return ''}}
 function renderColony(){const host=$('colony');if(!host)return;accrue();raidCheck();questCheck();const Q=QUESTS[col.q];
   let h=`<div class="cscene-wrap">${sceneSVG()}</div><div class="ctop"><div class="cres">${resBar()}</div><div class="crow">${rankChip()}${typeof festChip==='function'?festChip():''}${galOpen()?`<button class="cgalb${col.exp&&Date.now()>=col.exp.end?' ready':''}" type="button" data-gal aria-label="خريطة المجرة">🌌</button>`:''}${typeof advBtn==='function'?advBtn():''}${typeof terraBtn==='function'?terraBtn():''}<button class="ctaskb" type="button" aria-label="مهام اليوم">📋<i ${tasksReady()?'':'hidden'}>${tasksReady()}</i></button>${col.intro&&chestReady()?'<button class="cchestb" type="button" aria-label="مكافأة اليوم">🎁</button>':''}</div></div><div class="cbot"><div class="cbrow"><button class="cbtn" type="button" data-list aria-label="كل المباني">🏗️ المباني</button><button class="ccall" type="button" hidden>⤓ جمع الكل</button></div>${raidSoon()?`<div class="craid"><span>⚠️ غارة بعد <b data-raid>${fmtDur((col.raid.at-Date.now())/1000)}</b></span><button class="btn" type="button" data-go="survive">🛡️ دافع</button></div>`:''}`;
-  if(col.rs){const left=(col.rs.end-Date.now())/1000,pc=Math.min(100,100-left/col.rs.len*100);h+=`<div class="cbuild crs"><span>🔬 <b>${TECH[col.rs.k].n}</b> ← ${(col.tech[col.rs.k]||0)+1}</span><span class="ct" data-rt>${fmtDur(left)}</span><button class="btn" type="button" data-rrush aria-label="إنهاء البحث الآن">⚡ 💎 <span data-rrc>${Math.max(1,Math.ceil(left/60))}</span></button><i><u data-rp style="width:${pc}%"></u></i></div>`}
+  if(col.rs){const left=(col.rs.end-Date.now())/1000,pc=Math.min(100,100-left/col.rs.len*100);h+=`<div class="cbuild crs"><span>🔬 <b>${TECH[col.rs.k].n}</b> ← ${(col.tech[col.rs.k]||0)+1}</span><span class="ct" data-rt>${fmtDur(left)}</span><button class="btn" type="button" data-rrush aria-label="إنهاء البحث الآن">⚡ 💎 <span data-rrc>${Math.max(1,Math.ceil(left/BAL.tech.rushSecPerGem))}</span></button><i><u data-rp style="width:${pc}%"></u></i></div>`}
   if(col.build){const B=BLD[col.build.id],left=(col.build.end-Date.now())/1000,pc=Math.min(100,100-left/col.build.len*100);
-    h+=`<div class="cbuild"><span>🏗️ <b>${B.name}</b> ← ${col.b[col.build.id]+1}</span><span class="ct" data-t>${fmtDur(left)}</span><button class="btn" type="button" data-rush aria-label="إنهاء الآن">⚡ 💎 <span data-rc>${Math.max(1,Math.ceil(left/60))}</span></button><i><u data-p style="width:${pc}%"></u></i></div>`}
+    h+=`<div class="cbuild"><span>🏗️ <b>${B.name}</b> ← ${col.b[col.build.id]+1}</span><span class="ct" data-t>${fmtDur(left)}</span><button class="btn" type="button" data-rush aria-label="إنهاء الآن">⚡ 💎 <span data-rc>${Math.max(1,Math.ceil(left/BAL.bld.rushSecPerGem))}</span></button><i><u data-p style="width:${pc}%"></u></i></div>`}
   if(col.build2){const B=BLD[col.build2.id],left=(col.build2.end-Date.now())/1000,pc=Math.min(100,100-left/col.build2.len*100);
-    h+=`<div class="cbuild b2"><span>🤖 <b>${B.name}</b> ← ${col.b[col.build2.id]+1}</span><span class="ct" data-t2>${fmtDur(left)}</span><button class="btn" type="button" data-rush2 aria-label="إنهاء الآن">⚡ 💎 <span data-rc2>${Math.max(1,Math.ceil(left/60))}</span></button><i><u data-p2 style="width:${pc}%"></u></i></div>`}
+    h+=`<div class="cbuild b2"><span>🤖 <b>${B.name}</b> ← ${col.b[col.build2.id]+1}</span><span class="ct" data-t2>${fmtDur(left)}</span><button class="btn" type="button" data-rush2 aria-label="إنهاء الآن">⚡ 💎 <span data-rc2>${Math.max(1,Math.ceil(left/BAL.bld.rushSecPerGem))}</span></button><i><u data-p2 style="width:${pc}%"></u></i></div>`}
   if(Q&&col.qhide)h+=`<button class="qmini" type="button" data-qshow aria-label="إظهار الهدف">🎯</button>`;
   else if(Q)h+=`<div class="qwrap"><button class="qhide" type="button" data-qhide aria-label="إخفاء الهدف">✕</button><button class="qt" type="button" data-to="${Q.go?'g:'+Q.go:'b:'+Q.b}"><span class="qi">🎯</span><b></b><span class="qr">${Object.entries(Q.r).map(([k,n])=>'+'+n+' '+RES[k][1]).join(' ')}</span><i class="qa" aria-hidden="true">‹</i></button></div>`;
   else h+=`<button class="qt" type="button" data-gal><span class="qi">🌌</span><b>الفصل الثاني: أرسل المركبة لاستكشاف المجرة</b><span class="qr">${artCount()}/6 🏺</span><i class="qa">‹</i></button>`;
@@ -606,8 +606,8 @@ function renderColony(){const host=$('colony');if(!host)return;accrue();raidChec
 /* ================= pro layer: collecting, guide arrow, day/night, daily chest, raids, splash, ambience ================= */
 /* --- collecting: producers fill their own store (up to 8 hours); tap the bubble to bring it home --- */
 if(!col.store)col.store={mine:40,solar:40,farm:30};
-const bRate=id=>{const B=BLD[id],L=col.b[id];return B.prod&&L>0?B.prod[1]*L*Math.pow(1.15,L-1)*mult()*tMul(B.prod[0]):0};
-const bCap=id=>Math.max(1,bRate(id)*(8+2*techLv('offline')));
+const bRate=id=>{const B=BLD[id],L=col.b[id];return B.prod&&L>0?B.prod[1]*L*Math.pow(BAL.bld.prodGrowth,L-1)*mult()*tMul(B.prod[0]):0};
+const bCap=id=>Math.max(1,bRate(id)*(BAL.tech.effect.offlineBaseH+BAL.tech.effect.offline*techLv('offline')));
 function fillStores(dt){for(const id of Object.keys(PRODB)){const r=bRate(id),s=col.store[id]||0;if(r>0)col.store[id]=Math.max(s,Math.min(bCap(id),s+r*dt))}}
 const bubMin=id=>Math.max(id==='radio'?0.5:3,bRate(id)*0.02);
 function collect(id,quiet){const k=PRODB[id],have=col.store[id]||0;if(have<1&&!(k==='c'&&have>=0.5))return 0;
@@ -696,12 +696,12 @@ let lastPhase=null,lastRaid=null;
 let saveTick=0;
 setInterval(()=>{try{ambSync()}catch(e){}const host=$('colony');if(!host||$('hub').hidden||$('pColony').hidden||document.hidden)return;
   const had=col.build&&col.build.id,had2=col.build2&&col.build2.id;accrue();if(had&&!col.build){renderColony();fxRing(had);return}if(had2&&!col.build2){renderColony();fxRing(had2);return}
-  if(col.build2){const left=(col.build2.end-Date.now())/1000,t=host.querySelector('[data-t2]'),p=host.querySelector('[data-p2]'),rc=host.querySelector('[data-rc2]');if(t)t.textContent=fmtDur(left);if(p)p.style.width=Math.min(100,100-left/col.build2.len*100)+'%';if(rc)rc.textContent=Math.max(1,Math.ceil(left/60))}
+  if(col.build2){const left=(col.build2.end-Date.now())/1000,t=host.querySelector('[data-t2]'),p=host.querySelector('[data-p2]'),rc=host.querySelector('[data-rc2]');if(t)t.textContent=fmtDur(left);if(p)p.style.width=Math.min(100,100-left/col.build2.len*100)+'%';if(rc)rc.textContent=Math.max(1,Math.ceil(left/BAL.bld.rushSecPerGem))}
   document.querySelectorAll('#colony [data-r]').forEach(e=>{e.textContent=fmtN(col.res[e.dataset.r])});
   document.querySelectorAll('#colony .cc[data-k],#csheet .cc[data-k]').forEach(e=>e.classList.toggle('no',col.res[e.dataset.k]<+e.dataset.n));
   if(col.build){const left=(col.build.end-Date.now())/1000,t=host.querySelector('.cbuild:not(.b2) [data-t]'),p=host.querySelector('.cbuild:not(.b2) [data-p]'),rc=host.querySelector('.cbuild:not(.b2) [data-rc]');
-    if(t)t.textContent=fmtDur(left);if(p)p.style.width=Math.min(100,100-left/col.build.len*100)+'%';if(rc)rc.textContent=Math.max(1,Math.ceil(left/60))}
-  if(col.rs){if(Date.now()>=col.rs.end){researchTick();renderColony();return}const left=(col.rs.end-Date.now())/1000,t=host.querySelector('[data-rt]'),p2=host.querySelector('[data-rp]'),rc=host.querySelector('[data-rrc]');if(t)t.textContent=fmtDur(left);if(p2)p2.style.width=Math.min(100,100-left/col.rs.len*100)+'%';if(rc)rc.textContent=Math.max(1,Math.ceil(left/60))}
+    if(t)t.textContent=fmtDur(left);if(p)p.style.width=Math.min(100,100-left/col.build.len*100)+'%';if(rc)rc.textContent=Math.max(1,Math.ceil(left/BAL.bld.rushSecPerGem))}
+  if(col.rs){if(Date.now()>=col.rs.end){researchTick();renderColony();return}const left=(col.rs.end-Date.now())/1000,t=host.querySelector('[data-rt]'),p2=host.querySelector('[data-rp]'),rc=host.querySelector('[data-rrc]');if(t)t.textContent=fmtDur(left);if(p2)p2.style.width=Math.min(100,100-left/col.rs.len*100)+'%';if(rc)rc.textContent=Math.max(1,Math.ceil(left/BAL.tech.rushSecPerGem))}
   if(col.exp){const gb=document.getElementById('galbox');if(gb){const gt=gb.querySelector('.gt');if(Date.now()>=col.exp.end&&gt)galaxyBox();else if(gt)gt.textContent=fmtDur((col.exp.end-Date.now())/1000)}if(Date.now()>=col.exp.end&&!col.exp.told){col.exp.told=1;toast('🚀 عادت المركبة! افتح 🌌 لاستلام الغنائم','ach');renderColony();return}}
   updBubbles();raidCheck();const rs=raidSoon();if(lastPhase&&(lastPhase!==phase()||lastRaid!==rs||(col.raidLog&&!col.raidLog.seen))){lastPhase=phase();lastRaid=rs;renderColony();return}lastPhase=phase();lastRaid=rs;
   if(rs){const e=host.querySelector('[data-raid]');if(e)e.textContent=fmtDur((col.raid.at-Date.now())/1000)}

@@ -1,15 +1,15 @@
 /* «مزرعة المدار»: grow crops in vertical space-farming capsules; harvests feed the colony and fill crew orders */
 const FarmGame=(function(){
   const CROPS=[
-    {id:'let',em:'🥬',n:'خس',t:60,f:40,xp:2,lv:1},{id:'tom',em:'🍅',n:'طماطم',t:180,f:120,xp:4,lv:1},{id:'car',em:'🥕',n:'جزر',t:300,f:180,xp:6,lv:2},
-    {id:'str',em:'🍓',n:'فراولة',t:600,f:320,xp:9,lv:3},{id:'corn',em:'🌽',n:'ذرة',t:1200,f:600,xp:14,lv:4},{id:'pep',em:'🌶️',n:'فلفل حار',t:1800,f:850,xp:18,lv:5},
-    {id:'mel',em:'🍉',n:'بطيخ',t:3600,f:1600,xp:28,lv:6},{id:'mush',em:'🍄',n:'فطر المدار',t:5400,f:1000,xp:40,lv:7,c:3}];
+    {id:'let',em:'🥬',n:'خس'},{id:'tom',em:'🍅',n:'طماطم'},{id:'car',em:'🥕',n:'جزر'},
+    {id:'str',em:'🍓',n:'فراولة'},{id:'corn',em:'🌽',n:'ذرة'},{id:'pep',em:'🌶️',n:'فلفل حار'},
+    {id:'mel',em:'🍉',n:'بطيخ'},{id:'mush',em:'🍄',n:'فطر المدار'}];CROPS.forEach(c=>Object.assign(c,BAL.farm.crops[c.id]));   // grow seconds, food, xp, level needed, crystal
   const CR=id=>CROPS.find(c=>c.id===id);
-  const TRAYS=4,XPL=l=>Math.round(40*Math.pow(1.6,l-1));
-  const UPG=[{id:'lamp',em:'💡',n:'مصابيح النمو',d:'نمو أسرع 15% لكل مستوى',max:5,cost:l=>({m:400*Math.pow(2,l)})},{id:'spr',em:'🚿',n:'رشاشات آلية',d:'تسقي النباتات تلقائياً',max:1,cost:()=>({c:40})},{id:'net',em:'🕸️',n:'شبكة الحماية',d:'الآفات أقل بالنصف',max:1,cost:()=>({c:30})}];
+  const TRAYS=BAL.farm.trays,XPL=l=>Math.round(BAL.farm.xp.base*Math.pow(BAL.farm.xp.growth,l-1));
+  const UPG=[{id:'lamp',em:'💡',n:'مصابيح النمو',d:'نمو أسرع 15% لكل مستوى',max:BAL.farm.up.lamp.max,cost:l=>({m:BAL.farm.up.lamp.m*Math.pow(BAL.farm.up.lamp.growth,l)})},{id:'spr',em:'🚿',n:'رشاشات آلية',d:'تسقي النباتات تلقائياً',max:BAL.farm.up.spr.max,cost:()=>({c:BAL.farm.up.spr.c})},{id:'net',em:'🕸️',n:'شبكة الحماية',d:'الآفات أقل بالنصف',max:BAL.farm.up.net.max,cost:()=>({c:BAL.farm.up.net.c})}];
   let st,iv=0,root=null,pick=null;
-  const fl=()=>Math.max(1,col.b.farm||1),ncap=()=>Math.min(7,2+Math.ceil((col.b.farm||0)/2));
-  const speed=()=>1+0.15*(st.up.lamp||0);
+  const fl=()=>Math.max(1,col.b.farm||1),ncap=()=>Math.min(BAL.farm.caps.max,BAL.farm.caps.base+Math.ceil((col.b.farm||0)/2));
+  const speed=()=>1+BAL.farm.up.lamp.speed*(st.up.lamp||0);
   function init(){st=gState('farm',{caps:[],inv:{},lv:1,xp:0,up:{},orders:[],harv:0,done:0});st.up=st.up||{};st.inv=st.inv||{};while(st.caps.length<ncap())st.caps.push(Array.from({length:TRAYS},()=>null));fillOrders()}
   const save=()=>gSave('farm',st);
   // growth: a crop needs water once it is half grown, and pauses while a pest sits on it

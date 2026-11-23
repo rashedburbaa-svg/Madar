@@ -1,20 +1,20 @@
 /* ---------- خريطة المدار: the six planets become regions of one map. The colony stays;
    you explore regions, gather each region's material, grow its landmark and craft gear for the battles. ---------- */
 const REG=[
-  {mat:'alloy',mn:'سبائك مدارية',me:'🔩',hq:1,story:0,scout:null,bonus:['all',0.03],bd:'كل الإنتاج',
+  {mat:'alloy',mn:'سبائك مدارية',me:'🔩',hq:BAL.regions.list[0].hq,story:0,scout:BAL.regions.list[0].scout,bonus:BAL.regions.list[0].bonus,bd:'كل الإنتاج',
    adv:[{n:'جمع الخردة المدارية',em:'🛰️',t:15,q:[5,9],r:{m:400}},{n:'إنقاذ قمر صناعي تائه',em:'📡',t:45,q:[14,22],r:{c:6},risk:1}]},
-  {mat:'ice',mn:'جليد أزرق',me:'🧊',hq:3,story:2,scout:{m:800,e:600,t:5},bonus:['e',0.06],bd:'إنتاج الطاقة',
+  {mat:'ice',mn:'جليد أزرق',me:'🧊',hq:BAL.regions.list[1].hq,story:2,scout:BAL.regions.list[1].scout,bonus:BAL.regions.list[1].bonus,bd:'إنتاج الطاقة',
    adv:[{n:'حفر الجليد الأزرق',em:'⛏️',t:20,q:[6,10],r:{e:600}},{n:'تتبّع الوحوش الجليدية',em:'🐾',t:60,q:[16,26],r:{c:8},risk:1}]},
-  {mat:'magma',mn:'صهارة',me:'🔥',hq:4,story:3,scout:{m:1500,e:1200,t:10},bonus:['m',0.06],bd:'إنتاج المعادن',
+  {mat:'magma',mn:'صهارة',me:'🔥',hq:BAL.regions.list[2].hq,story:3,scout:BAL.regions.list[2].scout,bonus:BAL.regions.list[2].bonus,bd:'إنتاج المعادن',
    adv:[{n:'جمع الصهارة',em:'🌋',t:20,q:[6,10],r:{m:800}},{n:'عبور نهر الحمم',em:'🔥',t:60,q:[16,26],r:{c:8},risk:1}]},
-  {mat:'quartz',mn:'كوارتز',me:'💠',hq:5,story:1,ship:1,scout:{m:2500,e:2500,t:15},bonus:['c',0.08],bd:'إنتاج الكريستال',
+  {mat:'quartz',mn:'كوارتز',me:'💠',hq:BAL.regions.list[3].hq,story:1,ship:1,scout:BAL.regions.list[3].scout,bonus:BAL.regions.list[3].bonus,bd:'إنتاج الكريستال',
    adv:[{n:'قطف الكوارتز',em:'💎',t:25,q:[6,10],r:{f:800}},{n:'عشّ الطيور البلورية',em:'🪽',t:75,q:[18,28],r:{c:10},risk:1}]},
-  {mat:'spore',mn:'أبواغ',me:'🍄',hq:6,story:4,ship:1,ark:1,scout:{m:4000,e:4000,f:2000,t:20},bonus:['f',0.06],bd:'إنتاج الغذاء',
+  {mat:'spore',mn:'أبواغ',me:'🍄',hq:BAL.regions.list[4].hq,story:4,ship:1,ark:1,scout:BAL.regions.list[4].scout,bonus:BAL.regions.list[4].bonus,bd:'إنتاج الغذاء',
    adv:[{n:'جمع الأبواغ المضيئة',em:'🍄',t:25,q:[6,10],r:{f:1200}},{n:'الوصول إلى قلب الغابة',em:'🌳',t:90,q:[20,30],r:{c:12},risk:1}]},
-  {mat:'gas',mn:'غاز السديم',me:'🌌',hq:8,story:5,ship:1,ark:1,scout:{m:7000,e:7000,f:4000,t:30},bonus:['all',0.03],bd:'كل الإنتاج',
+  {mat:'gas',mn:'غاز السديم',me:'🌌',hq:BAL.regions.list[5].hq,story:5,ship:1,ark:1,scout:BAL.regions.list[5].scout,bonus:BAL.regions.list[5].bonus,bd:'كل الإنتاج',
    adv:[{n:'حصاد غاز السديم',em:'🌫️',t:30,q:[6,10],r:{e:1500}},{n:'مطاردة الأشباح الفضائية',em:'👻',t:120,q:[22,34],r:{c:15},risk:1}]}];
-const LMCOST=[{x:15,m:1500,e:1500},{x:50,m:5000,e:5000},{x:120,m:14000,e:14000}];   // x = the region's own material
-const LMRATE=[0,2,4,8];                                                                 // material per hour from the landmark
+const LMCOST=BAL.regions.landmark.cost;   // x = the region's own material
+const LMRATE=BAL.regions.landmark.rate;                                                                 // material per hour from the landmark
 const GEAR=[
   {id:'g_ice',g:'s',n:'درع زيفيروس',em:'🛡️',d:'صحة +25 في «صمود المدار»',c:{ice:40,alloy:20},b:{hp:25}},
   {id:'g_magma',g:'s',n:'نواة الحمم',em:'🔥',d:'ضرر +12% في «صمود المدار»',c:{magma:40,alloy:20},b:{dmg:12}},
@@ -46,7 +46,7 @@ function tripStart(kind,i,a){const w=WM();if(w.trip){toast('🧑‍🚀 الفر
   if(kind==='scout'){const R=REG[i];if(!regReady(i)){toast('🔒 الشروط لم تكتمل');return}const c={...R.scout};delete c.t;if(!canPay(c)){snd('err');toast('الموارد لا تكفي');return}accrue();pay(c);w.trip={k:'scout',i,end:Date.now()+tripDur(R.scout.t)*1000,len:tripDur(R.scout.t)}}
   else{const A=REG[i].adv[a];w.trip={k:'adv',i,a,end:Date.now()+tripDur(A.t)*1000,len:tripDur(A.t)}}
   colSave();snd('win');buzz([20,40]);toast('🧑‍🚀 انطلق الفريق','ach');updRes();mapRender()}
-function tripRush(){const t=WM().trip;if(!t)return;const cost=Math.max(1,Math.ceil((t.end-Date.now())/120000));if(col.res.c<cost){snd('err');toast('تحتاج '+cost+' 💎');return}col.res.c-=cost;t.end=Date.now();tripTick();updRes()}
+function tripRush(){const t=WM().trip;if(!t)return;const cost=Math.max(1,Math.ceil((t.end-Date.now())/(BAL.regions.rushSecPerGem*1000)));if(col.res.c<cost){snd('err');toast('تحتاج '+cost+' 💎');return}col.res.c-=cost;t.end=Date.now();tripTick();updRes()}
 function addMat(k,n){const w=WM();w.mat[k]=(w.mat[k]||0)+n}
 function tripTick(){const w=WM(),t=w.trip,now=Date.now();
   // landmarks produce their region's material while you are away too
@@ -58,7 +58,7 @@ function tripTick(){const w=WM(),t=w.trip,now=Date.now();
   else{const A=R.adv[t.a],sc=1+BAL.techScan*techLv('scan');let ok=true,f=1;
     if(A.risk){const ch=Math.min(0.95,0.55+0.04*(col.b.def||0)+0.05*(w.lm[t.i]||0));ok=Math.random()<ch;f=ok?1:0.4}
     const q=Math.round((A.q[0]+Math.random()*(A.q[1]-A.q[0]))*f*sc);addMat(R.mat,q);const got=['+'+q+' '+R.me+' '+R.mn];
-    for(const [k,n] of Object.entries(A.r)){const v=Math.round(n*f*(k==='c'?1:1+0.08*col.b.hq));gain(k,v);got.push('+'+fmtN(v)+' '+RES[k][1])}
+    for(const [k,n] of Object.entries(A.r)){const v=Math.round(n*f*(k==='c'?1:1+BAL.regions.hqBonus*col.b.hq));gain(k,v);got.push('+'+fmtN(v)+' '+RES[k][1])}
     if(!ok&&col.sv)col.sv.morale=Math.max(0,col.sv.morale-5);addXP(ok?25:10);colSave();snd(ok?'win':'err');
     storyBox(`${A.em} ${ok?'نجحت المغامرة':'عاد الفريق مصاباً'}: ${A.n}`,(ok?'':'واجه الفريق خطراً وعاد بجزء من الغنائم (المعنويات −5) · ')+got.join(' · '),'حسناً')}
   updRes();mapRender();if(!$('pColony').hidden)renderColony()}
@@ -79,9 +79,9 @@ function mapBox(v,i){if(v)MAPV={v,i:i||0};let m=document.getElementById('galbox'
   if(!m){m=document.createElement('div');m.id='galbox';m.className='hmodal galm wmap';document.body.appendChild(m);m.onclick=e=>{if(e.target===m)m.remove()}}
   mapRender()}
 function tripLine(){const t=WM().trip;if(!t)return '';const left=Math.max(0,(t.end-Date.now())/1000),R=REG[t.i];
-  return `<div class="wtrip">🧑‍🚀 ${t.k==='scout'?'استكشاف '+regName(t.i):R.adv[t.a].n} · <b class="gt">${fmtDur(left)}</b><button type="button" class="btn" data-wrush>⚡ 💎 ${Math.max(1,Math.ceil(left/120))}</button></div>`}
+  return `<div class="wtrip">🧑‍🚀 ${t.k==='scout'?'استكشاف '+regName(t.i):R.adv[t.a].n} · <b class="gt">${fmtDur(left)}</b><button type="button" class="btn" data-wrush>⚡ 💎 ${Math.max(1,Math.ceil(left/BAL.regions.rushSecPerGem))}</button></div>`}
 function shipLine(){const x=col.exp;if(!x)return '';const left=(x.end-Date.now())/1000;
-  return `<div class="wtrip">🚀 ${PLANETS[x.i].n} · ${left<=0?'<button type="button" class="btn main" data-gclaim>استلم الغنائم</button>':`<b class="gt">${fmtDur(left)}</b><button type="button" class="btn" data-grush>⚡ 💎 ${Math.max(1,Math.ceil(left/120))}</button>`}</div>`}
+  return `<div class="wtrip">🚀 ${PLANETS[x.i].n} · ${left<=0?'<button type="button" class="btn main" data-gclaim>استلم الغنائم</button>':`<b class="gt">${fmtDur(left)}</b><button type="button" class="btn" data-grush>⚡ 💎 ${Math.max(1,Math.ceil(left/BAL.galaxy.rushSecPerGem))}</button>`}</div>`}
 function matBar(){return `<div class="wmats">${REG.map((R,i)=>`<span class="${regOpen(i)?'':'off'}">${R.me} <b>${matN(R.mat)}</b></span>`).join('')}</div>`}
 function mapHTML(){let h=`<h3>🗺️ خريطة المدار</h3><small class="gsub">مستعمرتك في ${regEm(RAT())} ${regName(RAT())} · الآثار ${artCount()}/6</small>${matBar()}${tripLine()}${shipLine()}
   <div class="wtabs"><button type="button" class="on">🗺️ المناطق</button><button type="button" data-wv="gear">🛠️ ورشة المعدات</button></div><div class="wlist">`;
