@@ -67,7 +67,7 @@ function winBox({title,text,stars,onNext,label}){
 function celebrate(host){
   if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
   try{const c=document.createElement('canvas');c.className='confetti';host.appendChild(c);const w=host.clientWidth,h=host.clientHeight,dp=Math.min(2,devicePixelRatio||1);c.width=w*dp;c.height=h*dp;const x=c.getContext('2d');x.scale(dp,dp);
-    const cols=['#ffd34d','#5ff2d6','#ff7ab6','#9fe8ff','#b47aff','#ff9a3c'],P=[];
+    const cols=['#ffd34d','#00e5ff','#ff7ab6','#9fe8ff','#b47aff','#ff9a3c'],P=[];
     for(let k=0;k<90;k++){const a=-Math.PI/2+(Math.random()-0.5)*2.4,sp=180+Math.random()*320;P.push({x:w/2,y:h*0.42,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:2+Math.random()*4,c:cols[k%cols.length],rot:Math.random()*6,vr:(Math.random()-0.5)*10,star:k%3===0})}
     let t0=performance.now(),lt=t0;const step=now=>{const dt=Math.min(0.05,(now-lt)/1000);lt=now;const T=(now-t0)/1000;x.clearRect(0,0,w,h);
       for(const q of P){q.vy+=520*dt;q.vx*=0.985;q.x+=q.vx*dt;q.y+=q.vy*dt;q.rot+=q.vr*dt;x.globalAlpha=Math.max(0,1-T/1.8);x.fillStyle=q.c;x.save();x.translate(q.x,q.y);x.rotate(q.rot);
@@ -140,16 +140,16 @@ async function shareResult(o){
   try{const c=document.createElement('canvas');c.width=1080;c.height=1080;const g=c.getContext('2d');
     const bgG=g.createLinearGradient(0,0,0,1080);bgG.addColorStop(0,'#0b1430');bgG.addColorStop(1,'#1d0f3a');g.fillStyle=bgG;g.fillRect(0,0,1080,1080);
     const R=rng(o.title.length*97+7);for(let k=0;k<260;k++){g.fillStyle=`rgba(255,255,255,${0.2+R()*0.8})`;g.beginPath();g.arc(R()*1080,R()*1080,R()*2.4+0.4,0,7);g.fill()}
-    g.strokeStyle='rgba(95,242,214,.5)';g.lineWidth=6;g.beginPath();g.ellipse(540,520,430,120,-0.35,0,7);g.stroke();
+    g.strokeStyle='rgba(0,229,255,.5)';g.lineWidth=6;g.beginPath();g.ellipse(540,520,430,120,-0.35,0,7);g.stroke();
     g.fillStyle='#f2b84b';g.beginPath();g.arc(540,520,70,0,7);g.fill();
-    g.direction='rtl';g.textAlign='center';g.fillStyle='#fff';g.font='bold 76px sans-serif';g.fillText('قاعة المدار',540,150);
-    g.font='bold 58px sans-serif';g.fillStyle='#5ff2d6';g.fillText(o.game||'',540,250);
+    g.direction='rtl';g.textAlign='center';g.fillStyle='#fff';g.font='bold 76px sans-serif';g.fillText('مستعمرة المدار',540,150);
+    g.font='bold 58px sans-serif';g.fillStyle='#00e5ff';g.fillText(o.game||'',540,250);
     g.font='bold 64px sans-serif';g.fillStyle='#fff';g.fillText(o.title,540,740);
     if(o.stars!=null){g.font='90px sans-serif';g.fillText('★'.repeat(o.stars)+'☆'.repeat(3-o.stars),540,850)}
     g.font='44px sans-serif';g.fillStyle='#c9d6e3';g.fillText(o.text||'',540,o.stars!=null?940:840);
     const ri=rankOf(prof.xp);g.font='40px sans-serif';g.fillStyle='#f2b84b';g.fillText(RANKS[ri][2]+' '+RANKS[ri][1],540,1030);
     const blob=await new Promise(r=>c.toBlob(r,'image/png'));const file=new File([blob],'madar.png',{type:'image/png'});
-    const msg=`${o.game} · ${o.title} — قاعة المدار`;
+    const msg=`${o.game} · ${o.title} — مستعمرة المدار`;
     if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],text:msg});return}
     const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='madar.png';document.body.appendChild(a);a.click();a.remove();toast('حُفظت الصورة في التنزيلات')
   }catch(e){if(e&&e.name!=='AbortError')toast('تعذّرت المشاركة')}}

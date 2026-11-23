@@ -43,8 +43,8 @@ function specApply(){const k=col.tspec;if(!k||(col.b.tower||0)<4)return;
   if(gh)s+=`<g class="ghost gtowers">${tint(gh,Math.max(1,L)).replace(/class="tow/g,'class="gtow')}</g>`;return s}}
 
 /* ---------- planet hazards and guardians ---------- */
-const HAZ=[{b:'wall',L:3,t:'عواصف رملية',need:'القبة 3'},{b:'lab',L:3,t:'ضغط الأعماق',need:'المختبر 3'},{b:'farm',L:5,t:'أبواغ سامّة',need:'المزرعة 5'},{b:'solar',L:6,t:'برد قارس',need:'الطاقة 6'},{b:'def',L:6,t:'حمم متطايرة',need:'الدفاع 6'},{b:'hq',L:8,t:'حقل الجاذبية',need:'القيادة 8'}];
-const GUARD=[{n:'عقرب زيرون',h:-30},{n:'أخطبوط الأعماق',h:170},{n:'حارس الغابة',h:90},{n:'عملاق الجليد',h:200},{n:'تنين الحمم',h:-60},{n:'ظل النواة',h:250}];
+const HAZ=[{b:'wall',L:3,t:'وابل نيازك صغيرة',need:'القبة 3'},{b:'lab',L:3,t:'عواصف رملية تعطل الأجهزة',need:'المختبر 3'},{b:'solar',L:5,t:'برد قارس',need:'الطاقة 5'},{b:'def',L:6,t:'حمم متطايرة',need:'الدفاع 6'},{b:'farm',L:6,t:'أبواغ سامّة',need:'المزرعة 6'},{b:'hq',L:8,t:'حقل الجاذبية',need:'القيادة 8'}];
+const GUARD=[{n:'عملاق الصخور القمرية',h:0},{n:'عقرب رمال المريخ',h:-30},{n:'تنين الكريستال الجليدي',h:170},{n:'عملاق الحمم والنار',h:-60},{n:'ملكة الفضاء البنفسجية',h:250},{n:'دودة الفضاء آكلة الكويكبات',h:90}];
 const hazOk=i=>(col.b[HAZ[i].b]||0)>=HAZ[i].L;
 {const _claim=expClaim;expClaim=function(){const x=col.exp;if(!x||Date.now()<x.end)return _claim();const i=x.i,first=!col.gal.done[i],ok=hazOk(i);
   if(!ok){const P=PLANETS[i],keep=P.r;P.r=Object.fromEntries(Object.entries(keep).map(([r,n])=>[r,Math.round(n*0.7)]));try{_claim()}finally{P.r=keep}toast(`⚠️ ${HAZ[i].t} قلّلت الغنائم 30% — تحتاج ${HAZ[i].need}`)}else _claim();
@@ -84,7 +84,7 @@ function crewLine(i){const tips=[
 const IMGHUE=[0,0,14,28,0,16,32,0,18,36,0];
 function imgArt(id,L){const r=ART[id+'R']||1,w=(60+Math.min(10,L)*2.4)*Math.sqrt(r)*(id==='hq'?1.18:1),h=w/r,y=-h+12,hue=IMGHUE[Math.min(10,L)]||0;
   let s=`<ellipse cx="0" cy="4" rx="${(w*0.46).toFixed(1)}" ry="${(w*0.12).toFixed(1)}" fill="#000" opacity=".35"/>`;
-  if(L>=4)s+=`<ellipse cx="0" cy="0" rx="${(w*0.5).toFixed(1)}" ry="${(w*0.16).toFixed(1)}" fill="none" stroke="${L>=10?'#ffd34d':L>=7?'#c58bff':'#5ff2d6'}" stroke-width="2" opacity=".75" class="aura"/>`;
+  if(L>=4)s+=`<ellipse cx="0" cy="0" rx="${(w*0.5).toFixed(1)}" ry="${(w*0.16).toFixed(1)}" fill="none" stroke="${L>=10?'#ffd34d':L>=7?'#c58bff':'#00e5ff'}" stroke-width="2" opacity=".75" class="aura"/>`;
   s+=`<image href="${ART[id]}" x="${(-w/2).toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" preserveAspectRatio="xMidYMax meet"${hue?` style="filter:hue-rotate(${hue}deg) saturate(1.15)"`:''}/>`;
   if(L>=10)s+=`<g class="beam"><circle cx="0" cy="${(y+2).toFixed(1)}" r="9" fill="#ffd34d" opacity=".25"/><path d="M0 ${(y-8).toFixed(1)} l2.2 7.8 7.8 2.2 -7.8 2.2 -2.2 7.8 -2.2 -7.8 -7.8 -2.2 7.8 -2.2z" fill="#fff6c8"/></g>`;
   return s}

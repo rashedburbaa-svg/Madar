@@ -3,8 +3,8 @@
  "lang": "ar",
  "display": "standalone",
  "orientation": "portrait",
- "background_color": "#0b1618",
- "theme_color": "#0b1618",
+ "background_color": "#070b16",
+ "theme_color": "#070b16",
  "scope": "./",
  "icons": [
   {
@@ -27,12 +27,13 @@
   }
  ],
  "id": "./",
- "name": "قاعة المدار",
- "short_name": "قاعة المدار",
- "description": "ألعاب تفكير بلا نهاية: سودوكو وجولف والاختلافات والذاكرة والشبكة",
+ "name": "مستعمرة المدار",
+ "short_name": "مستعمرة المدار",
+ "description": "ابنِ مستعمرتك على كوكب غريب: مبانٍ وأبحاث وقبة زجاجية، غارات وزعماء، استصلاح الكوكب، ورحلات في المجرة، مع ألعاب صمود المدار وطيّار المدار ومزرعة المدار.",
  "start_url": "./",
  "categories": [
   "games",
-  "puzzle"
+  "simulation",
+  "strategy"
  ]
 }

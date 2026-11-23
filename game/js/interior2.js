@@ -1,6 +1,6 @@
 /* richer interiors: your astronaut walks inside, each building has interactive stations with rewards, the crew talks, and rooms grow with level */
 const ICD=20*60000; // a station can be used once every 20 minutes
-const TIERC=L=>L>=10?'#ffd34d':L>=7?'#c58bff':L>=4?'#5ff2d6':'#8b96a6';
+const TIERC=L=>L>=10?'#ffd34d':L>=7?'#c58bff':L>=4?'#00e5ff':'#8b96a6';
 const TIERN=L=>L>=10?'ذهبي':L>=7?'متقدّم':L>=4?'مطوّر':'أساسي';
 function iGain(k,n){if(n>0){gain(k,n);updRes();return '+'+fmtN(n)+' '+RES[k][1]}return ''}
 // stations: x position on the floor, label, and what using it does (returns a short result text)
@@ -54,11 +54,11 @@ function ecoNow(){let pe=0,pf=0,pm=0,pc=0;for(const b of Object.keys(BLD)){const
 function iScreenSVG(id){return `<g id="iscr"><rect x="0" y="-100" width="360" height="102" fill="#0a0f1c"/><path d="M60 -100 V-92 M300 -100 V-92" stroke="#5a6478" stroke-width="2"/>
   <rect x="12" y="-93" width="336" height="88" rx="7" fill="#030a14" stroke="#5a6478" stroke-width="2.4"/><rect x="16" y="-89" width="328" height="80" rx="5" fill="url(#iscrG)"/>
   <defs><linearGradient id="iscrG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#062033"/><stop offset="1" stop-color="#03111c"/></linearGradient></defs>
-  <g direction="rtl"><text id="is1" x="336" y="-75" font-size="10.5" font-weight="900" fill="#5ff2d6"></text><text id="is5" x="336" y="-62" font-size="8.6" fill="#a9b6d6"></text><text id="is2" x="336" y="-48" font-size="9.2" fill="#e8ecff"></text>
+  <g direction="rtl"><text id="is1" x="336" y="-75" font-size="10.5" font-weight="900" fill="#00e5ff"></text><text id="is5" x="336" y="-62" font-size="8.6" fill="#a9b6d6"></text><text id="is2" x="336" y="-48" font-size="9.2" fill="#e8ecff"></text>
   <text id="is3" x="336" y="-33" font-size="9.2" fill="#ffd34d"></text><text id="is4" x="336" y="-18" font-size="9.2" fill="#9dff5a"></text></g>
   <path d="M104 -84 V-14" stroke="#ffffff22"/>
   <g transform="translate(22 -82)" direction="ltr">${[['E','⚡','#ffd34d',0],['F','🌱','#9dff5a',22],['M','⛏️','#c9a27a',44]].map(([k,em,c,y])=>`<text x="0" y="${y+8}" font-size="8">${em}</text><rect x="13" y="${y+1}" width="62" height="8" rx="4" fill="#1a2436"/><rect id="isb${k}" x="13" y="${y+1}" width="0" height="8" rx="4" fill="${c}"/><text id="isv${k}" x="44" y="${y+19}" text-anchor="middle" font-size="7" fill="#8b96a6"></text>`).join('')}</g>
-  <rect class="iscan" x="16" y="-89" width="328" height="3" fill="#5ff2d6" opacity=".12"/></g>`}
+  <rect class="iscan" x="16" y="-89" width="328" height="3" fill="#00e5ff" opacity=".12"/></g>`}
 function iScreenUpd(id,svg){const B=BLD[id],L=col.b[id],E=ecoNow(),t=(i,s)=>{const n=svg.querySelector('#is'+i);if(n)n.textContent=s},sg=v=>(v>=0?'+':'−')+fmtN(Math.abs(v));
   t(1,`🖥️ ${B.name} · المستوى ${L}`);t(5,IROLE[id]||'');
   let l2='';if(B.prod){const k=B.prod[0];l2=`📈 ${RES[k][1]} +${fmtN(bRate(id))}/س`+(PRODB[id]?` · 📦 ${fmtN(col.store[id]||0)}`:'')}

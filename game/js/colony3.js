@@ -2,12 +2,13 @@
 
 /* ---------- galaxy: six planets reached by the repaired ship ---------- */
 const PLANETS=[
-  {n:'زيرون',d:'صحراء حمراء تعصف بها الرياح',c:['#ffb070','#c8502a','#5a1a0a'],t:20*60,r:{m:900,e:700,c:8},art:'بلورة زيرون',say:'وجدنا آثار مستعمرة قديمة تحت الرمال… من بناها؟'},
-  {n:'أكوا-7',d:'محيط أزرق بلا يابسة',c:['#a8e8ff','#2a7ad0','#0a2a5a'],t:60*60,r:{e:1800,f:1400,c:14},art:'لؤلؤة الأعماق',say:'تحت الماء أبراج تبث نفس الإشارة الغامضة!'},
-  {n:'فيردا',d:'غابات عملاقة ومخلوقات مضيئة',c:['#b8ffa0','#3aa04a','#0a3a1a'],t:2*3600,r:{f:3200,m:2000,c:20},art:'بذرة الحياة',say:'المخلوقات هنا تخاف شيئاً في السماء…'},
-  {n:'كريو',d:'جليد أبدي وعواصف ثلجية',c:['#f0fbff','#8ac8e8','#2a5a7a'],t:4*3600,r:{m:4500,e:4000,c:30},art:'قلب الجليد',say:'في الجليد سفينة مجمّدة… تشبه سفينتنا تماماً!'},
-  {n:'فولكان',d:'براكين وأنهار من الحمم',c:['#ffd070','#ff4a1a','#4a0a0a'],t:8*3600,r:{m:8000,e:7000,f:5000,c:45},art:'جمرة فولكان',say:'الإحداثيات الأخيرة تشير إلى مركز المجرة… إلى «النواة».'},
-  {n:'النواة',d:'مصدر الإشارة الغامضة',c:['#ffe0ff','#b47aff','#2a0a5a'],t:12*3600,r:{c:120,m:12000,e:12000,f:9000},art:'مفتاح النواة',say:'الإشارة لم تكن نداء استغاثة… كانت دعوة. الفصل الثالث قريباً.'}];
+  {n:'القمر',d:'صخور رمادية وفوهات عميقة',c:['#f0f0f2','#9a9aa0','#3a3a40'],t:20*60,r:{m:900,e:700,c:8},art:'حجر القمر',say:'تحت فوهة القمر آثار مستعمرة قديمة… من بناها؟'},
+  {n:'المريخ',d:'صحراء حمراء تعصف بها الرياح',c:['#ffb070','#c8502a','#5a1a0a'],t:60*60,r:{e:1800,f:1400,c:14},art:'بلورة المريخ',say:'في رمال المريخ أبراج تبث نفس الإشارة الغامضة!'},
+  {n:'أوروبا',d:'جليد أبدي فوق محيط خفي',c:['#f0fbff','#8ac8e8','#2a5a7a'],t:2*3600,r:{f:3200,m:2000,c:20},art:'لؤلؤة أوروبا',say:'تحت الجليد سفينة مجمّدة… تشبه سفينتنا تماماً!'},
+  {n:'آيو',d:'براكين وأنهار من الحمم',c:['#ffd070','#ff4a1a','#4a0a0a'],t:4*3600,r:{m:4500,e:4000,c:30},art:'جمرة آيو',say:'المخلوقات هنا تخاف شيئاً في السماء…'},
+  {n:'الغابة الفضائية',d:'غابات عملاقة ومخلوقات مضيئة',c:['#d8a0ff','#6a3aa0','#1a0a3a'],t:8*3600,r:{m:8000,e:7000,f:5000,c:45},art:'بذرة الحياة',say:'الإحداثيات الأخيرة تشير إلى حزام الكويكبات… إلى مصدر الإشارة.'},
+  {n:'حزام الكويكبات',d:'مصدر الإشارة الغامضة',c:['#d8d0c8','#7a7068','#1a1614'],t:12*3600,r:{c:120,m:12000,e:12000,f:9000},art:'مفتاح الحزام',say:'الإشارة لم تكن نداء استغاثة… كانت دعوة. الفصل الثالث قريباً.'}
+];
 if(!col.gal)col.gal={done:{},art:{}};
 const galOpen=()=>!!col.done;
 const artCount=()=>Object.keys(col.gal.art||{}).length;
@@ -30,7 +31,7 @@ function galaxyBox(){let m=document.getElementById('galbox');if(!m){m=document.c
   let ship='';if(x){const [ax,ay]=[180,560],[bx,by]=pos[x.i],k=Math.min(1,1-(x.end-Date.now())/1000/x.len);ship=`<g transform="translate(${ax+(bx-ax)*k} ${ay+(by-ay)*k}) rotate(${Math.atan2(by-ay,bx-ax)*180/Math.PI})"><path d="M-9 -3 L7 -3 L12 0 L7 3 L-9 3Z" fill="#eef2f6"/><path d="M-9 -2 L-16 0 L-9 2Z" fill="#ff9a3c" class="flame"/></g>`}
   const left=x?(x.end-Date.now())/1000:0;
   m.innerHTML=`<div class="hbox galx"><button class="csx" type="button" aria-label="إغلاق">✕</button><h3>🌌 خريطة المجرة</h3><small class="gsub">الفصل الثاني · الآثار: ${artCount()}/6 (+${artCount()*5}% إنتاج)</small>
-    <svg viewBox="0 0 360 600" class="gmap"><rect width="360" height="600" fill="#05071a"/><ellipse cx="180" cy="300" rx="200" ry="120" fill="url(#gneb)"/><defs><radialGradient id="gneb"><stop offset="0" stop-color="#5a2a9a" stop-opacity=".45"/><stop offset="1" stop-color="#5a2a9a" stop-opacity="0"/></radialGradient></defs>${stars}<path d="M180 560 L70 480 ${path.slice(1).replace(/^[^L]*/,'')}" stroke="#5ff2d6" stroke-width="1.2" stroke-dasharray="4 6" fill="none" opacity=".5"/><g transform="translate(180 560)"><circle r="14" fill="#7a5266"/><text y="4" text-anchor="middle" font-size="12">🏠</text></g>${nodes}${ship}</svg>
+    <svg viewBox="0 0 360 600" class="gmap"><rect width="360" height="600" fill="#05071a"/><ellipse cx="180" cy="300" rx="200" ry="120" fill="url(#gneb)"/><defs><radialGradient id="gneb"><stop offset="0" stop-color="#5a2a9a" stop-opacity=".45"/><stop offset="1" stop-color="#5a2a9a" stop-opacity="0"/></radialGradient></defs>${stars}<path d="M180 560 L70 480 ${path.slice(1).replace(/^[^L]*/,'')}" stroke="#00e5ff" stroke-width="1.2" stroke-dasharray="4 6" fill="none" opacity=".5"/><g transform="translate(180 560)"><circle r="14" fill="#7a5266"/><text y="4" text-anchor="middle" font-size="12">🏠</text></g>${nodes}${ship}</svg>
     <div class="gpanel">${x?(Date.now()>=x.end?`<p>🚀 عادت المركبة من <b>${PLANETS[x.i].n}</b>!</p><button class="btn main" data-gclaim>استلام الغنائم</button>`:`<p>🚀 في الطريق إلى <b>${PLANETS[x.i].n}</b> · <b class="gt">${fmtDur(left)}</b></p><button class="btn" data-grush>⚡ 💎 ${Math.max(1,Math.ceil(left/120))}</button>`):'<p>اختر كوكباً لترسل المركبة في رحلة.</p>'}</div><div class="gsel"></div></div>`;
   m.querySelector('.csx').onclick=()=>m.remove();const gc=m.querySelector('[data-gclaim]');if(gc)gc.onclick=()=>{m.remove();expClaim()};const gr=m.querySelector('[data-grush]');if(gr)gr.onclick=rushExp;
   m.querySelectorAll('.pn').forEach(g=>g.onclick=()=>{snd('tap');const i=+g.dataset.p,P=PLANETS[i],open=planetOpen(i),sel=m.querySelector('.gsel');

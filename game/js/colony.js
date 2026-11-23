@@ -146,11 +146,11 @@ function artRaw(id,L){L=Math.max(0,L);if(id!=='dock'&&typeof ART!=='undefined'&&
 case 'hq':{if(typeof ART!=='undefined'&&ART.hq)return imgArt('hq',L);let s=_sh(40,9);
   if(L>=4)s+=_box(-48,0,16,10,7)+_win(-46,-7,3,5,3,2.5);
   if(L>=7)s+=_box(30,0,12,26,7)+_win(32,-23,2,5,3,3)+_win(32,-16,2,5,3,3)+_win(32,-9,2,5,3,3);
-  s+=_box(-30,0,58,13,10)+`<rect x="-28" y="-10" width="54" height="4" fill="#0b1830"/>${_win(-26,-9.5,9,6,4,3,'#5ff2d6')}<rect x="-6" y="-7" width="10" height="7" fill="#26324a"/><rect x="-5" y="-6" width="8" height="6" fill="#ffd36a" opacity=".85"/>`;
+  s+=_box(-30,0,58,13,10)+`<rect x="-28" y="-10" width="54" height="4" fill="#0b1830"/>${_win(-26,-9.5,9,6,4,3,'#00e5ff')}<rect x="-6" y="-7" width="10" height="7" fill="#26324a"/><rect x="-5" y="-6" width="8" height="6" fill="#ffd36a" opacity=".85"/>`;
   s+=`<ellipse cx="4" cy="-18" rx="27" ry="4.5" fill="#7c8aa0"/><path d="M-22 -18 A26 25 0 0 1 30 -18 Z" fill="url(#kDome)"/><path d="M4 -43 A9 25 0 0 0 -5 -18 M4 -43 A9 25 0 0 1 13 -18 M-19 -28 Q4 -33 27 -28" stroke="#6e7f98" stroke-width=".7" fill="none" opacity=".8"/><ellipse cx="-6" cy="-32" rx="6" ry="3.2" fill="#fff" opacity=".55" transform="rotate(-30 -6 -32)"/>`;
   s+=`<path d="M4 -43 V-58" stroke="#c9d3dc" stroke-width="1.6"/><path d="M4 -52 l7 -4" stroke="#c9d3dc" stroke-width="1"/><ellipse cx="12" cy="-57" rx="4" ry="2" fill="url(#kDish)" transform="rotate(-30 12 -57)"/><circle cx="4" cy="-59" r="1.8" fill="#ff5d73" class="blink"/>`;
   if(L>=7)s+=`<ellipse cx="4" cy="-18" rx="31" ry="6" fill="none" stroke="#ffd34d" stroke-width="1.2" opacity=".8"/>`;
-  if(L>=10)s+=`<g transform="translate(-44 12)"><ellipse rx="15" ry="4.4" fill="#3a4250"/><ellipse rx="11" ry="3" fill="none" stroke="#ffd34d" stroke-width="1"/><g transform="translate(1 -7)"><path d="M-9 0 L7 -2.4 L11 0 L7 2.4Z" fill="#eef2f6"/><path d="M-9 -1 L-12 -4 L-10 0 L-12 4 L-9 1Z" fill="#9aa4b2"/><circle cx="4" cy="-1" r="1.1" fill="#7fe8ff"/></g></g><path d="M20 -34 V-52 M26 -30 V-46" stroke="#c9d3dc" stroke-width="1.3"/><circle cx="20" cy="-53" r="1.8" fill="#5ff2d6" class="blink"/><circle cx="26" cy="-47" r="1.5" fill="#ffd34d" class="blink"/><path d="M4 -60 L-10 -120 L18 -120Z" fill="#5ff2d6" opacity=".08" class="glowp"/>`;
+  if(L>=10)s+=`<g transform="translate(-44 12)"><ellipse rx="15" ry="4.4" fill="#3a4250"/><ellipse rx="11" ry="3" fill="none" stroke="#ffd34d" stroke-width="1"/><g transform="translate(1 -7)"><path d="M-9 0 L7 -2.4 L11 0 L7 2.4Z" fill="#eef2f6"/><path d="M-9 -1 L-12 -4 L-10 0 L-12 4 L-9 1Z" fill="#9aa4b2"/><circle cx="4" cy="-1" r="1.1" fill="#7fe8ff"/></g></g><path d="M20 -34 V-52 M26 -30 V-46" stroke="#c9d3dc" stroke-width="1.3"/><circle cx="20" cy="-53" r="1.8" fill="#00e5ff" class="blink"/><circle cx="26" cy="-47" r="1.5" fill="#ffd34d" class="blink"/><path d="M4 -60 L-10 -120 L18 -120Z" fill="#00e5ff" opacity=".08" class="glowp"/>`;
   return s}
 case 'mine':{let s=_sh(34,8);
   s+=`<path d="M14 0 L20 -9 L27 -12 L34 -5 L36 0Z" fill="url(#kRock)"/><path d="M18 -4 l3 -5 l3 4Z M28 -6 l2 -4 l2 4Z" fill="#7fe8ff" opacity=".9"/><path d="M24 -2 l2 -4 l2 4Z" fill="#b47aff"/>`;
@@ -195,14 +195,14 @@ case 'habitat':{const n=Math.min(3,1+Math.floor(L/3)),top=L>=8;let s=_sh(14+n*12
   return s+mods}
 case 'radio':{let s=_sh(22,6);
   s+=`<path d="M0 -56 L-22 0 M0 -56 L22 0" stroke="#8a93a2" stroke-width=".4" opacity=".7"/>`;
-  s+=_box(-14,0,12,7,6)+`<rect x="-12" y="-5" width="3" height="3" fill="#5ff2d6"/>`;
+  s+=_box(-14,0,12,7,6)+`<rect x="-12" y="-5" width="3" height="3" fill="#00e5ff"/>`;
   s+=_lattice(-5,10,-1,2,-1,-56,7,'#c7cfd8');
   s+=`<g transform="translate(-3 -44) rotate(-28)"><path d="M-11 0 A11 5 0 0 0 11 0 Z" fill="url(#kDish)" stroke="#7a8494" stroke-width=".6"/><path d="M-11 0 A11 2.6 0 0 1 11 0" fill="#b8c4d2"/><path d="M0 -1 V-9" stroke="#8a93a2" stroke-width="1"/><circle cx="0" cy="-9.5" r="1.4" fill="#5a6475"/></g>`;
   s+=`<circle cx="0" cy="-57" r="2" fill="#ff5d73" class="blink"/>`;
-  if(L)s+=`<path d="M8 -58 a7 7 0 0 1 0 10 M12 -61 a12 12 0 0 1 0 16" stroke="#5ff2d6" stroke-width="1.3" fill="none" class="wave"/>`;
+  if(L)s+=`<path d="M8 -58 a7 7 0 0 1 0 10 M12 -61 a12 12 0 0 1 0 16" stroke="#00e5ff" stroke-width="1.3" fill="none" class="wave"/>`;
   if(L>=4)s+=`<g transform="translate(3 -24) rotate(32) scale(.7)"><path d="M-11 0 A11 5 0 0 0 11 0 Z" fill="url(#kDish)" stroke="#7a8494" stroke-width=".6"/><path d="M0 -1 V-8" stroke="#8a93a2"/><circle cx="0" cy="-8.5" r="1.3" fill="#5a6475"/></g>`;
-  if(L>=7)s+=`<ellipse cx="0" cy="-18" rx="6" ry="1.8" fill="none" stroke="#5ff2d6" stroke-width="1.1" class="blink"/><ellipse cx="0" cy="-34" rx="4" ry="1.3" fill="none" stroke="#5ff2d6" stroke-width="1.1" class="blink"/><ellipse cx="0" cy="-48" rx="2.6" ry="1" fill="none" stroke="#5ff2d6" stroke-width="1"/>`;
-  if(L>=10)s+=`<g transform="translate(26 0)"><path d="M-3 0 L0 -12 L3 0Z" fill="#8a93a2"/><g transform="translate(0 -14) rotate(-35)"><path d="M-15 0 A15 7 0 0 0 15 0Z" fill="url(#kDish)" stroke="#7a8494" stroke-width=".7"/><path d="M0 -1 V-12" stroke="#8a93a2"/><circle cx="0" cy="-12.5" r="1.8" fill="#5ff2d6" class="blink"/></g></g><path d="M0 -58 L-9 -150 L9 -150Z" fill="#5ff2d6" opacity=".1" class="glowp"/>`;
+  if(L>=7)s+=`<ellipse cx="0" cy="-18" rx="6" ry="1.8" fill="none" stroke="#00e5ff" stroke-width="1.1" class="blink"/><ellipse cx="0" cy="-34" rx="4" ry="1.3" fill="none" stroke="#00e5ff" stroke-width="1.1" class="blink"/><ellipse cx="0" cy="-48" rx="2.6" ry="1" fill="none" stroke="#00e5ff" stroke-width="1"/>`;
+  if(L>=10)s+=`<g transform="translate(26 0)"><path d="M-3 0 L0 -12 L3 0Z" fill="#8a93a2"/><g transform="translate(0 -14) rotate(-35)"><path d="M-15 0 A15 7 0 0 0 15 0Z" fill="url(#kDish)" stroke="#7a8494" stroke-width=".7"/><path d="M0 -1 V-12" stroke="#8a93a2"/><circle cx="0" cy="-12.5" r="1.8" fill="#00e5ff" class="blink"/></g></g><path d="M0 -58 L-9 -150 L9 -150Z" fill="#00e5ff" opacity=".1" class="glowp"/>`;
   return s}
 case 'obs':{let s=_sh(26,7);
   s+=`<rect x="-18" y="-15" width="36" height="15" fill="url(#kCylH)"/><ellipse cx="0" cy="0" rx="18" ry="3" fill="#5a6575"/><rect x="-14" y="-10" width="5" height="10" fill="#26324a"/><rect x="-13" y="-9" width="3" height="9" fill="#ffd36a" opacity=".8"/>`;
@@ -220,7 +220,7 @@ case 'def':{let s=_sh(30,8);
   s+=`<ellipse cx="2" cy="-16" rx="12" ry="3" fill="#434b5a"/><path d="M-9 -16 C-9 -27 13 -27 13 -16Z" fill="url(#kDome)"/>`;
   s+=`<path d="M8 -22 L28 -32 M9 -19 L29 -29" stroke="#5a6575" stroke-width="3" stroke-linecap="round"/><path d="M8 -22 L28 -32 M9 -19 L29 -29" stroke="#c7cfd8" stroke-width="1.2" stroke-linecap="round"/><circle cx="-2" cy="-20" r="1.8" fill="#ff5d73" class="blink"/>`;
   if(L>=4)s+=`<path d="M-24 -1 l-6 -14 h5 l5 14Z" fill="url(#kMs)"/><circle cx="-27" cy="-16" r="2" fill="#9fe8ff"/>`;
-  if(L>=7)s+=`<g transform="translate(26 -2)"><path d="M0 0 V-16" stroke="#8a93a2" stroke-width="1.4"/><g transform="translate(0 -18)"><path class="radar" d="M-8 0 A8 3.2 0 0 0 8 0Z" fill="url(#kDish)" stroke="#7a8494" stroke-width=".5"/></g><circle cx="0" cy="-20" r="1.2" fill="#5ff2d6" class="blink"/></g>`;
+  if(L>=7)s+=`<g transform="translate(26 -2)"><path d="M0 0 V-16" stroke="#8a93a2" stroke-width="1.4"/><g transform="translate(0 -18)"><path class="radar" d="M-8 0 A8 3.2 0 0 0 8 0Z" fill="url(#kDish)" stroke="#7a8494" stroke-width=".5"/></g><circle cx="0" cy="-20" r="1.2" fill="#00e5ff" class="blink"/></g>`;
   if(L>=10)s+=`<path d="M-36 -2 A36 42 0 0 1 36 -2 Z" fill="url(#kShield)" stroke="#9fe8ff" stroke-width="1.6" stroke-opacity=".9" class="shieldarc"/><path d="M-4 -21 L-22 -32 M-3 -18 L-21 -29" stroke="#5a6575" stroke-width="3" stroke-linecap="round"/><path d="M-4 -21 L-22 -32 M-3 -18 L-21 -29" stroke="#c7cfd8" stroke-width="1.2" stroke-linecap="round"/>`;
   return s}
 case 'tower':{const t=tierOf(Math.max(1,L));return _sh(16,5)+_lattice(-9,18,-6,12,0,-34,4,'#aeb8c4')+_box(-11,-32,22,7,6)+`<g transform="translate(3 -44) rotate(-20) scale(1.5)">${HEAD[t]}</g>`+(L>=4?'<circle cx="-8" cy="-36" r="1.6" fill="#ff5d73" class="blink"/>':'')}
@@ -230,7 +230,7 @@ case 'wall':{const tm=Math.min(1,L/10)*Math.PI/2,R=40,Ry=11,H=50,P=(a,th)=>`${(R
   for(let j=1;j<=Math.max(1,L);j++){const th=tm*j/Math.max(1,L);for(let i=0;i<=24;i++)rib+=(i?'L':'M')+P(Math.PI*i/24,th)}
   for(let i=0;i<=48;i++)rim+=(i?'L':'M')+P(Math.PI*2*i/48,tm);
   s+=`<path d="${poly}" fill="#bff3ff" fill-opacity=".28" stroke="none"/><path d="${rib}" fill="none" stroke="#e6fbff" stroke-width=".7" opacity=".8"/><ellipse cx="0" cy="0" rx="${R}" ry="${Ry}" fill="none" stroke="#8b96a6" stroke-width="3"/>`;
-  s+=L>=10?`<circle cx="0" cy="${-H-3}" r="2.6" fill="#ff5d73" class="blink"/>`:`<path d="${rim}" fill="none" stroke="#5ff2d6" stroke-width="1.6" class="efence"/>`;
+  s+=L>=10?`<circle cx="0" cy="${-H-3}" r="2.6" fill="#ff5d73" class="blink"/>`:`<path d="${rim}" fill="none" stroke="#00e5ff" stroke-width="1.6" class="efence"/>`;
   if(L>=3)s+=`<path d="M${P(2.5,tm*0.15)} L${P(2.5,tm*0.85)}" stroke="#fff" stroke-opacity=".5" stroke-width="3" stroke-linecap="round"/>`;
   return s}
 case 'lab':return labArt(L);
@@ -248,7 +248,7 @@ case 'dock':{const S=k=>col.ship[k],fly=col.done;let s=_sh(48,10);
   s+=`<path d="M10 -12 C15 -12 19 -10 21 -8 L10 -8Z" fill="${S('nav')?'#7fe8ff':'#1c2230'}" stroke="#2a2e3a" stroke-width=".5"/>`+(S('nav')?'<path d="M12 -11 l3 0" stroke="#fff" stroke-width=".8" opacity=".8"/>':'');
   s+=`${_win(-20,-10,4,6,3,2.4,S('hull')?'#ffd36a':'#2a2e38')}<path d="M-26 -6 H18" stroke="${S('hull')?'#8e9aa8':'#2e323b'}" stroke-width=".6"/>`;
   s+=`<path d="M-30 -12 L-36 -14 L-36 -2 L-30 -2Z" fill="${S('engine')?'url(#kCylH)':'#3e424b'}"/>`+(S('engine')?`<path d="M-36 -12 L-${fly?54:46} -8 L-36 -4Z" fill="#ff9a3c" class="flame"/><path d="M-36 -10 L-42 -8 L-36 -6Z" fill="#fff3c0"/>`:'');
-  s+=`<path d="M-4 -15 L-1 -26" stroke="${S('antenna')?'#e6ecf1':'#4c5059'}" stroke-width="1.2"/><circle cx="-1" cy="-27" r="1.8" fill="${S('antenna')?'#5ff2d6':'#4c5059'}"/>`;
+  s+=`<path d="M-4 -15 L-1 -26" stroke="${S('antenna')?'#e6ecf1':'#4c5059'}" stroke-width="1.2"/><circle cx="-1" cy="-27" r="1.8" fill="${S('antenna')?'#00e5ff':'#4c5059'}"/>`;
   if(!S('hull'))s+=`<ellipse cx="-8" cy="-8" rx="6" ry="3" fill="#111" opacity=".55"/><ellipse cx="8" cy="-3" rx="4" ry="2" fill="#111" opacity=".5"/><path d="M-14 -13 l4 4 l-3 3 l5 3" stroke="#111" stroke-width=".8" fill="none"/>`;
   if(!fly&&!S('engine'))s+=`<circle cx="-24" cy="-18" r="5" fill="#8889" class="smoke"/><circle cx="-20" cy="-28" r="7" fill="#7778" class="smoke s2"/>`;
   return s+'</g>'}
@@ -261,7 +261,7 @@ const PRODB={mine:'m',solar:'e',farm:'f',radio:'c'};
 /* ---------- the fence around the base, and the creatures roaming outside it ---------- */
 const FEN={cx:178,cy:468,rx:196,ry:180};
 const fp=a=>[FEN.cx+FEN.rx*Math.cos(a),FEN.cy+FEN.ry*Math.sin(a)];
-function fenceStyle(L){return L>=9?{h:14,fill:'url(#kWall)',post:'#c7cfd8',cap:'#9fe8ff'}:L>=6?{h:11,fill:'url(#kWall)',post:'#aeb8c4',cap:'#5ff2d6'}:L>=3?{h:9,fill:'url(#kPanel)',post:'#9aa4b2',cap:'#ffd34d'}:{h:7,fill:'none',post:'#8a93a2',cap:'#ffd34d'}}
+function fenceStyle(L){return L>=9?{h:14,fill:'url(#kWall)',post:'#c7cfd8',cap:'#9fe8ff'}:L>=6?{h:11,fill:'url(#kWall)',post:'#aeb8c4',cap:'#00e5ff'}:L>=3?{h:9,fill:'url(#kPanel)',post:'#9aa4b2',cap:'#ffd34d'}:{h:7,fill:'none',post:'#8a93a2',cap:'#ffd34d'}}
 /* the protective glass dome: every level raises the glass higher until it closes over the colony at level 10 */
 const DOME_H=95;
 const dp=(a,th)=>[FEN.cx+FEN.rx*Math.cos(th)*Math.cos(a),FEN.cy+FEN.ry*Math.cos(th)*Math.sin(a)-DOME_H*Math.sin(th)];
@@ -271,12 +271,12 @@ function domeSVG(half,L){const f=Math.min(1,L/10),tm=f*Math.PI/2*(L>=10?1:0.999)
   for(let k=0;k<16;k++){const a=a0+(a1-a0)*(k+0.5)/16;rib+='M'+P(a,0);for(let j=1;j<=8;j++)rib+='L'+P(a,tm*j/8)}
   let rim='';for(let i=0;i<=NA;i++)rim+=(i?'L':'M')+P(a0+(a1-a0)*i/NA,tm);
   let foot='';for(let i=0;i<=NA;i++)foot+=(i?'L':'M')+P(a0+(a1-a0)*i/NA,0);
-  let s=back?`<defs><linearGradient id="gDomeG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e8fbff" stop-opacity=".34"/><stop offset=".55" stop-color="#9fe8ff" stop-opacity=".16"/><stop offset="1" stop-color="#5ff2d6" stop-opacity=".22"/></linearGradient><linearGradient id="gDomeF" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity=".2"/><stop offset=".6" stop-color="#bff3ff" stop-opacity=".07"/><stop offset="1" stop-color="#9fe8ff" stop-opacity=".16"/></linearGradient></defs>`:'';
+  let s=back?`<defs><linearGradient id="gDomeG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e8fbff" stop-opacity=".34"/><stop offset=".55" stop-color="#9fe8ff" stop-opacity=".16"/><stop offset="1" stop-color="#00e5ff" stop-opacity=".22"/></linearGradient><linearGradient id="gDomeF" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity=".2"/><stop offset=".6" stop-color="#bff3ff" stop-opacity=".07"/><stop offset="1" stop-color="#9fe8ff" stop-opacity=".16"/></linearGradient></defs>`:'';
   s+=`<g class="dome" pointer-events="none"><path d="${poly}" fill="url(#${back?'gDomeG':'gDomeF'})"/><path d="${rib}" fill="none" stroke="#d9f6ff" stroke-opacity="${back?.4:.5}" stroke-width="${back?.6:.8}"/>`;
-  s+=`<path d="${foot}" fill="none" stroke="#8b96a6" stroke-width="4"/><path d="${foot}" fill="none" stroke="#5ff2d6" stroke-width="1" opacity=".7"/>`;
-  if(L<10){s+=`<path d="${rim}" fill="none" stroke="#5ff2d6" stroke-width="2.2" class="efence"/>`;
+  s+=`<path d="${foot}" fill="none" stroke="#8b96a6" stroke-width="4"/><path d="${foot}" fill="none" stroke="#00e5ff" stroke-width="1" opacity=".7"/>`;
+  if(L<10){s+=`<path d="${rim}" fill="none" stroke="#00e5ff" stroke-width="2.2" class="efence"/>`;
     if(!back)for(const a of [0.5,1.3,2.2,2.9]){const [x,y]=dp(a,tm);s+=`<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)})"><circle r="3.2" fill="#fff6c0" class="blink"/><path d="M-5 0H5M0 -5V5" stroke="#ffd34d" stroke-width="1" class="blink"/></g>`}}
-  else if(!back){const [x,y]=dp(0,Math.PI/2);s+=`<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)})"><ellipse rx="22" ry="7" fill="#aeb8c4" stroke="#5a6478"/><ellipse rx="12" ry="4" fill="#5ff2d6" opacity=".8" class="efence"/><rect x="-2" y="-16" width="4" height="12" fill="#aeb8c4"/><circle cy="-19" r="3.4" fill="#ff5d73" class="blink"/></g>`}
+  else if(!back){const [x,y]=dp(0,Math.PI/2);s+=`<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)})"><ellipse rx="22" ry="7" fill="#aeb8c4" stroke="#5a6478"/><ellipse rx="12" ry="4" fill="#00e5ff" opacity=".8" class="efence"/><rect x="-2" y="-16" width="4" height="12" fill="#aeb8c4"/><circle cy="-19" r="3.4" fill="#ff5d73" class="blink"/></g>`}
   if(!back&&L>=3){let hl='';for(let j=0;j<=10;j++)hl+=(j?'L':'M')+P(2.45,tm*0.92*j/10);s+=`<path d="${hl}" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width="5" stroke-linecap="round"/>`}
   return s+'</g>'}
 /* half = 'back' (upper arc, drawn behind the buildings) or 'front' (lower arc, drawn over them) */
@@ -291,12 +291,12 @@ function fenceRaw(half){const L=col.b.wall||0,N=44,gap=0.17,st=fenceStyle(L);let
     if(L>=6)strand+=`M${x0.toFixed(1)} ${(y0-h-1).toFixed(1)} L${x1.toFixed(1)} ${(y1-h-1).toFixed(1)}`;
     posts+=`<rect x="${(x0-1.3).toFixed(1)}" y="${(y0-h-3).toFixed(1)}" width="2.6" height="${h+3}" fill="${st.post}"/><rect x="${(x0-1.7).toFixed(1)}" y="${(y0-h-4).toFixed(1)}" width="3.4" height="1.6" fill="${st.cap}"/>`}
   if(L>=6)for(const deg of [215,325,145,35]){const a=deg*Math.PI/180,[x,y]=fp(a);if((half==='back')!==(y<FEN.cy))continue;
-    tow+=`<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)})"><ellipse cx="2" cy="1" rx="9" ry="3" fill="#000" opacity=".35"/>${_lattice(-5,10,-4,8,0,-30,4,'#aeb8c4')}${_box(-7,-30,14,8,5)}<rect x="-5" y="-36" width="10" height="6" fill="#26324a"/><rect x="-4" y="-35" width="8" height="3" fill="#5ff2d6" opacity=".8"/><circle cx="0" cy="-40" r="1.8" fill="#ff5d73" class="blink"/><path d="M0 -38 L-26 -60 L-18 -64Z" fill="#fff3c0" opacity=".1" class="sweep"/></g>`}
-  return seg+posts+(strand?`<path d="${strand}" stroke="${L>=9?'#9fe8ff':'#5ff2d6'}" stroke-width="${L>=9?2:1.4}" fill="none" class="efence"/>`:'')+tow}
+    tow+=`<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)})"><ellipse cx="2" cy="1" rx="9" ry="3" fill="#000" opacity=".35"/>${_lattice(-5,10,-4,8,0,-30,4,'#aeb8c4')}${_box(-7,-30,14,8,5)}<rect x="-5" y="-36" width="10" height="6" fill="#26324a"/><rect x="-4" y="-35" width="8" height="3" fill="#00e5ff" opacity=".8"/><circle cx="0" cy="-40" r="1.8" fill="#ff5d73" class="blink"/><path d="M0 -38 L-26 -60 L-18 -64Z" fill="#fff3c0" opacity=".1" class="sweep"/></g>`}
+  return seg+posts+(strand?`<path d="${strand}" stroke="${L>=9?'#9fe8ff':'#00e5ff'}" stroke-width="${L>=9?2:1.4}" fill="none" class="efence"/>`:'')+tow}
 function gateSVG(){return tint(gateRaw(),col.b.wall||0)}
 function gateRaw(){const L=col.b.wall||0,[x,y]=fp(Math.PI/2),st=fenceStyle(Math.max(1,L));
   return `<g class="cb${L?'':' empty'}${building('wall')?' building':''}" data-b="wall" transform="translate(${x.toFixed(1)} ${y.toFixed(1)})" role="button" tabindex="0" aria-label="${BLD.wall.name}"><ellipse cx="0" cy="-12" rx="44" ry="26" fill="transparent"/>
-    ${L?`<g class="bart">${_box(-36,0,9,st.h+12,5)}${_box(27,0,9,st.h+12,5)}<path d="M-32 ${-st.h-14} Q0 ${-st.h-30} 32 ${-st.h-14}" stroke="${st.post}" stroke-width="3" fill="none"/><circle cx="0" cy="${-st.h-22}" r="2.4" fill="${L>=6?'#5ff2d6':'#ffd34d'}" class="blink"/>${L>=6?`<path d="M-27 -4 H27 M-27 -10 H27" stroke="#5ff2d6" stroke-width=".8" opacity=".5" class="efence"/>`:''}</g>`:`<g class="plot"><circle cx="0" cy="-16" r="11" fill="#0b1226cc" stroke="#9fe8ff" stroke-width="1.2"/><path d="M-5 -16h10M0 -21v10" stroke="#9fe8ff" stroke-width="2" stroke-linecap="round"/></g>`}
+    ${L?`<g class="bart">${_box(-36,0,9,st.h+12,5)}${_box(27,0,9,st.h+12,5)}<path d="M-32 ${-st.h-14} Q0 ${-st.h-30} 32 ${-st.h-14}" stroke="${st.post}" stroke-width="3" fill="none"/><circle cx="0" cy="${-st.h-22}" r="2.4" fill="${L>=6?'#00e5ff':'#ffd34d'}" class="blink"/>${L>=6?`<path d="M-27 -4 H27 M-27 -10 H27" stroke="#00e5ff" stroke-width=".8" opacity=".5" class="efence"/>`:''}</g>`:`<g class="plot"><circle cx="0" cy="-16" r="11" fill="#0b1226cc" stroke="#9fe8ff" stroke-width="1.2"/><path d="M-5 -16h10M0 -21v10" stroke="#9fe8ff" stroke-width="2" stroke-linecap="round"/></g>`}
     ${L?lvBadge(L,30,-st.h-30):''}</g>`}
 /* creatures: little green aliens, a six-legged crawler, a horned beast, a tentacled blob and a saucer */
 const MDEFS=`<defs>
@@ -313,14 +313,14 @@ const MDEFS=`<defs>
 <radialGradient id="mBlob" cx="38%" cy="30%" r="80%"><stop offset="0" stop-color="#ff9aa8" stop-opacity=".95"/><stop offset=".5" stop-color="#e0304a" stop-opacity=".9"/><stop offset="1" stop-color="#6a0a1a" stop-opacity=".95"/></radialGradient>
 <radialGradient id="mCore" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ffd0d8"/><stop offset=".6" stop-color="#ff6a80" stop-opacity=".6"/><stop offset="1" stop-color="#ff6a80" stop-opacity="0"/></radialGradient>
 <linearGradient id="mUfo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0f4f8"/><stop offset=".5" stop-color="#9aa6b6"/><stop offset="1" stop-color="#4a5464"/></linearGradient>
-<radialGradient id="mUfoG" cx="40%" cy="30%" r="80%"><stop offset="0" stop-color="#e8fff8" stop-opacity=".95"/><stop offset=".6" stop-color="#5ff2d6" stop-opacity=".55"/><stop offset="1" stop-color="#1a6a7a" stop-opacity=".8"/></radialGradient>
+<radialGradient id="mUfoG" cx="40%" cy="30%" r="80%"><stop offset="0" stop-color="#e8fff8" stop-opacity=".95"/><stop offset=".6" stop-color="#00e5ff" stop-opacity=".55"/><stop offset="1" stop-color="#1a6a7a" stop-opacity=".8"/></radialGradient>
 <linearGradient id="mBeam" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9fffb8" stop-opacity=".5"/><stop offset="1" stop-color="#9fffb8" stop-opacity="0"/></linearGradient>
 </defs>`;
 const CRE={
   alien:`<ellipse cx="1" cy="1" rx="9" ry="2.4" fill="#000" opacity=".4"/>
     <g class="lg la"><path d="M-2 -14 L-4 -6 L-3 0" stroke="#1c2a40" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M-6 0 h5" stroke="#2a2e3a" stroke-width="2.4" stroke-linecap="round"/></g>
     <g class="lg lb"><path d="M2 -14 L3 -6 L2 0" stroke="#2a3c58" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M0 0 h5" stroke="#3a3e4a" stroke-width="2.4" stroke-linecap="round"/></g>
-    <path d="M-6 -14 C-7 -20 -5 -26 0 -26 C5 -26 7 -20 6 -14 Z" fill="url(#mAS)"/><path d="M-5.5 -15.5 H5.5" stroke="#ffd34d" stroke-width="1.4"/><circle cx="0" cy="-20" r="1.8" fill="#5ff2d6" class="chest"/><path d="M-4 -24 C-2 -25.5 2 -25.5 4 -24" stroke="#8aa8c8" stroke-width=".8" fill="none"/>
+    <path d="M-6 -14 C-7 -20 -5 -26 0 -26 C5 -26 7 -20 6 -14 Z" fill="url(#mAS)"/><path d="M-5.5 -15.5 H5.5" stroke="#ffd34d" stroke-width="1.4"/><circle cx="0" cy="-20" r="1.8" fill="#00e5ff" class="chest"/><path d="M-4 -24 C-2 -25.5 2 -25.5 4 -24" stroke="#8aa8c8" stroke-width=".8" fill="none"/>
     <g class="garm"><path d="M5 -23 C9 -21 10 -18 12 -18" stroke="#2a3c58" stroke-width="2.6" fill="none" stroke-linecap="round"/><path d="M11 -20.5 h7 v3 h-3 l-1 2 h-2 l0 -2 h-1Z" fill="#c7cfd8" stroke="#3a4250" stroke-width=".4"/><circle cx="18.5" cy="-19" r="1.3" fill="#ff5d73" class="chest"/></g>
     <path d="M-5 -23 C-8 -21 -9 -18 -8 -15" stroke="#1c2a40" stroke-width="2.6" fill="none" stroke-linecap="round"/><circle cx="-8" cy="-14.5" r="1.4" fill="#6fc05a"/>
     <rect x="-1.4" y="-29" width="2.8" height="4" fill="#5fb05a"/>
@@ -370,7 +370,7 @@ const CRE={
     <path d="M-22 3 C-22 7 22 7 22 3 C18 9 -18 9 -22 3 Z" fill="#3a4250"/>
     <ellipse cx="0" cy="2.6" rx="22" ry="5.2" fill="url(#mUfo)" stroke="#2a3040" stroke-width=".5"/>
     <path d="M-20 2 C-12 -0.5 12 -0.5 20 2" stroke="#fff" stroke-width=".9" fill="none" opacity=".7"/>
-    <g class="ufol">${[-16,-8,0,8,16].map((x,i)=>`<circle cx="${x}" cy="${4.2+Math.abs(x)*-0.04}" r="1.3" fill="${['#ffd34d','#ff5d73','#5ff2d6','#ff5d73','#ffd34d'][i]}" class="ul u${i}"/>`).join('')}</g>
+    <g class="ufol">${[-16,-8,0,8,16].map((x,i)=>`<circle cx="${x}" cy="${4.2+Math.abs(x)*-0.04}" r="1.3" fill="${['#ffd34d','#ff5d73','#00e5ff','#ff5d73','#ffd34d'][i]}" class="ul u${i}"/>`).join('')}</g>
     <path d="M-10 0 C-10 -11 10 -11 10 0 Z" fill="url(#mUfoG)" stroke="#bff8ee" stroke-width=".5"/>
     <g opacity=".85"><ellipse cx="0" cy="-3.6" rx="2.6" ry="3.2" fill="#3a8a4a"/><ellipse cx="-1" cy="-4.4" rx=".9" ry="1.2" fill="#000"/><ellipse cx="1.2" cy="-4.4" rx=".9" ry="1.2" fill="#000"/><path d="M-3 0 C-3 -2 3 -2 3 0" fill="#2a6a3a"/></g>
     <path d="M-6 -6 C-4 -8 0 -8.6 2 -8.2" stroke="#fff" stroke-width="1.2" fill="none" opacity=".75" stroke-linecap="round"/></g>`};
@@ -388,7 +388,7 @@ const tierOf=L=>L>=7?'plasma':L>=4?'laser':'gun';
 const WNAME={gun:'رشاش',laser:'ليزر',plasma:'صواريخ بلازما'};
 const HEAD={
   gun:'<rect x="-5" y="-4.5" width="10" height="9" rx="2.5" fill="#5a6475"/><rect x="3" y="-2.6" width="12" height="2" fill="#c7cfd8"/><rect x="3" y=".6" width="12" height="2" fill="#c7cfd8"/><circle cx="-1" cy="0" r="1.6" fill="#ffd34d"/>',
-  laser:'<ellipse cx="0" cy="0" rx="6.5" ry="5.5" fill="url(#kDome)"/><rect x="3" y="-1.4" width="15" height="2.8" rx="1.2" fill="#8e9aa8"/><circle cx="18.5" cy="0" r="2" fill="#5ff2d6" class="blink"/>',
+  laser:'<ellipse cx="0" cy="0" rx="6.5" ry="5.5" fill="url(#kDome)"/><rect x="3" y="-1.4" width="15" height="2.8" rx="1.2" fill="#8e9aa8"/><circle cx="18.5" cy="0" r="2" fill="#00e5ff" class="blink"/>',
   plasma:'<rect x="-6" y="-6" width="12" height="12" rx="3" fill="#4a3a6a"/><rect x="2" y="-5.5" width="11" height="4.4" rx="2" fill="#b47aff"/><rect x="2" y="1.1" width="11" height="4.4" rx="2" fill="#b47aff"/><circle cx="13" cy="-3.3" r="1.3" fill="#ffd6ff"/><circle cx="13" cy="3.3" r="1.3" fill="#ffd6ff"/>'};
 function towerSVG(i,tier,big){const [x,y]=fp(TDEG[i]*Math.PI/180),s=big?1.4:0.85;
   return `<g class="tow${big?'':' wg'}" data-b="tower" data-t="${i}" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s})" role="button" tabindex="0" aria-label="${BLD.tower.name}"><ellipse cx="2" cy="1" rx="11" ry="3.4" fill="#000" opacity=".38"/>${big&&typeof ART!=='undefined'&&ART.x_tower?towerImg(tier):(big?_lattice(-6,12,-4,8,0,-20,3,'#aeb8c4')+_box(-8,-18,16,5,5):_box(-4,0,8,14,4))+`<g class="thead" transform="translate(${big?2:0} ${big?-26:-18})">${HEAD[tier]}</g>`}</g>`}
@@ -452,7 +452,7 @@ function battleTick(now){BT.raf=requestAnimationFrame(battleTick);const dt=Math.
 function fire(w,c){const L=$('cshots');if(!L)return;const a=w.ang*Math.PI/180,mx=w.x+Math.cos(a)*14,my=w.y+Math.sin(a)*14,tx=c.x+(Math.random()-0.5)*6,ty=c.y-12+(Math.random()-0.5)*6;
   if(w.tier==='gun'){const e=svgEl('line',{x1:mx,y1:my,x2:tx,y2:ty,stroke:'#ffe27a','stroke-width':1.6,'stroke-dasharray':'6 60','stroke-linecap':'round',class:'tracer'});L.appendChild(e);BT.shots.push({el:e,t:0,T:0.14});
     const f=svgEl('circle',{cx:mx,cy:my,r:3,fill:'#fff3c0',class:'mflash'});L.appendChild(f);BT.shots.push({el:f,t:0,T:0.07});hurt(c,w.dmg);spark(tx,ty,'#ffd34d')}
-  else if(w.tier==='laser'){const e=svgEl('line',{x1:mx,y1:my,x2:tx,y2:ty,stroke:'#7ffcf0','stroke-width':2.2,class:'beam2','stroke-linecap':'round'});const e2=svgEl('line',{x1:mx,y1:my,x2:tx,y2:ty,stroke:'#fff','stroke-width':.8});L.appendChild(e);L.appendChild(e2);BT.shots.push({el:e,t:0,T:0.16},{el:e2,t:0,T:0.12});hurt(c,w.dmg);spark(tx,ty,'#5ff2d6')}
+  else if(w.tier==='laser'){const e=svgEl('line',{x1:mx,y1:my,x2:tx,y2:ty,stroke:'#7ffcf0','stroke-width':2.2,class:'beam2','stroke-linecap':'round'});const e2=svgEl('line',{x1:mx,y1:my,x2:tx,y2:ty,stroke:'#fff','stroke-width':.8});L.appendChild(e);L.appendChild(e2);BT.shots.push({el:e,t:0,T:0.16},{el:e2,t:0,T:0.12});hurt(c,w.dmg);spark(tx,ty,'#00e5ff')}
   else{const tr=svgEl('circle',{cx:mx,cy:my,r:3.6,fill:'#b47aff',opacity:.4}),e=svgEl('circle',{cx:mx,cy:my,r:2.6,fill:'#ffd6ff',class:'orb'});L.appendChild(tr);L.appendChild(e);BT.shots.push({kind:'orb',el:e,tr,t:0,T:0.55,x0:mx,y0:my,c,dmg:w.dmg})}}
 function spark(x,y,c){const L=$('cshots');if(!L)return;const e=svgEl('circle',{cx:x,cy:y,r:2.4,fill:c,class:'hitfx'});L.appendChild(e);BT.shots.push({el:e,t:0,T:0.2})}
 function boom(x,y,c,r){const L=$('cshots');if(!L)return;const g=svgEl('g',{transform:`translate(${x.toFixed(1)} ${y.toFixed(1)})`});
@@ -490,7 +490,7 @@ function sceneSVG(){const R=rng(7);let stars='',tw='';
     <linearGradient id="cHill2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2e2240"/><stop offset="1" stop-color="#3a2a48"/></linearGradient>
     <radialGradient id="cPlanet" cx="35%" cy="35%"><stop offset="0" stop-color="#ffd9a0"/><stop offset=".7" stop-color="#d97a4a"/><stop offset="1" stop-color="#7a3a2a"/></radialGradient>
     <radialGradient id="cNeb" cx="50%" cy="50%"><stop offset="0" stop-color="#b47aff" stop-opacity=".28"/><stop offset="1" stop-color="#b47aff" stop-opacity="0"/></radialGradient>
-    <radialGradient id="cNeb2" cx="50%" cy="50%"><stop offset="0" stop-color="#5ff2d6" stop-opacity=".16"/><stop offset="1" stop-color="#5ff2d6" stop-opacity="0"/></radialGradient>
+    <radialGradient id="cNeb2" cx="50%" cy="50%"><stop offset="0" stop-color="#00e5ff" stop-opacity=".16"/><stop offset="1" stop-color="#00e5ff" stop-opacity="0"/></radialGradient>
     <radialGradient id="cCrat" cx="40%" cy="35%"><stop offset="0" stop-color="#1a1222"/><stop offset=".8" stop-color="#3a2a44"/><stop offset="1" stop-color="#9a7088"/></radialGradient>
     <linearGradient id="cMeteor" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff"/></linearGradient></defs>
     <rect x="-700" y="-900" width="1760" height="1250" fill="${SKY[phase()][0]}"/><rect x="-700" y="-40" width="1760" height="330" fill="url(#cSky)"/><ellipse cx="90" cy="120" rx="140" ry="60" fill="url(#cNeb)"/><ellipse cx="280" cy="210" rx="120" ry="50" fill="url(#cNeb2)"/>${stars}${tw}
@@ -505,7 +505,7 @@ function sceneSVG(){const R=rng(7);let stars='',tw='';
     <path d="${ROADS}" stroke="#1a1424" stroke-width="9" fill="none" stroke-linecap="round" opacity=".6"/><path d="${ROADS}" stroke="#d0a8bc" stroke-width=".7" fill="none" stroke-dasharray="4 6" opacity=".5"/>
     <g class="rover"><animateMotion dur="26s" repeatCount="indefinite" rotate="auto" path="${roverPath}"/><rect x="-7" y="-5" width="14" height="6" rx="2" fill="#e6ecf1"/><rect x="-3" y="-8" width="6" height="3" rx="1" fill="#9fb0c4"/><circle cx="-5" cy="2" r="2" fill="#2a2e3a"/><circle cx="5" cy="2" r="2" fill="#2a2e3a"/><circle cx="7.5" cy="-3" r="1.3" fill="#fff3c0"/><path d="M8 -3 l14 -4 v8Z" fill="#fff3c0" opacity=".18"/></g>
     ${dust}${fenceSVG('back')}${towersSVG('back')}${g}${fenceSVG('front')}${towersSVG('front')}${gateSVG()}${traderSVG()}${creaturesSVG()}${zapSVG()}${nightLights()}${guideSVG()}${bubbleSVG()}<g id="cfx"></g>
-    <g class="drone"><animateMotion dur="18s" repeatCount="indefinite" path="M-20 300 C80 250 160 330 240 280 S380 300 400 270"/><ellipse cx="0" cy="0" rx="6" ry="2" fill="#c7cfd8"/><path d="M-8 -2h5M3 -2h5" stroke="#9aa4b2" stroke-width="1"/><circle cx="0" cy="1.5" r="1" fill="#5ff2d6" class="blink"/></g>
+    <g class="drone"><animateMotion dur="18s" repeatCount="indefinite" path="M-20 300 C80 250 160 330 240 280 S380 300 400 270"/><ellipse cx="0" cy="0" rx="6" ry="2" fill="#c7cfd8"/><path d="M-8 -2h5M3 -2h5" stroke="#9aa4b2" stroke-width="1"/><circle cx="0" cy="1.5" r="1" fill="#00e5ff" class="blink"/></g>
     </svg>`}
 /* camera: the colony opens zoomed out to fit; pinch, drag, mouse wheel or the +/- buttons move it */
 const cam={z:1,x:180,y:null};
@@ -666,7 +666,7 @@ function raidShow(){const L=col.raidLog;if(!L||L.seen)return;L.seen=1;colSave();
 
 /* --- splash on first open of the session --- */
 (function splash(){try{if(sessionStorage.getItem('madar-splash'))return;sessionStorage.setItem('madar-splash','1')}catch(e){}
-  const s=document.createElement('div');s.id='splash';s.innerHTML='<div class="spl"><svg viewBox="-60 -60 120 120" width="140" height="140"><defs><radialGradient id="spP" cx="35%" cy="35%"><stop offset="0" stop-color="#ffd9a0"/><stop offset=".7" stop-color="#d97a4a"/><stop offset="1" stop-color="#7a3a2a"/></radialGradient></defs><circle r="34" fill="url(#spP)"/><ellipse rx="56" ry="11" fill="none" stroke="#5ff2d6" stroke-width="3" transform="rotate(-18)" class="spring"/><circle cx="40" cy="-30" r="3" fill="#fff"/></svg><h1>مستعمرة <span>المدار</span></h1><i class="spbar"><u></u></i></div>';
+  const s=document.createElement('div');s.id='splash';s.innerHTML='<div class="spl"><svg viewBox="-60 -60 120 120" width="140" height="140"><defs><radialGradient id="spP" cx="35%" cy="35%"><stop offset="0" stop-color="#ffd9a0"/><stop offset=".7" stop-color="#d97a4a"/><stop offset="1" stop-color="#7a3a2a"/></radialGradient></defs><circle r="34" fill="url(#spP)"/><ellipse rx="56" ry="11" fill="none" stroke="#00e5ff" stroke-width="3" transform="rotate(-18)" class="spring"/><circle cx="40" cy="-30" r="3" fill="#fff"/></svg><h1>مستعمرة <span>المدار</span></h1><i class="spbar"><u></u></i></div>';
   const art=typeof ART!=='undefined'&&ART.splash;if(art){s.classList.add('art');s.innerHTML='<img src="'+ART.splash+'" alt=""><div class="splt"><h1>مستعمرة <span>المدار</span></h1><p>اضغط للبدء</p></div>'}
   document.body.appendChild(s);const end=()=>{s.classList.add('out');setTimeout(()=>s.remove(),500)};s.onclick=end;setTimeout(end,art?3200:1600)})();
 
