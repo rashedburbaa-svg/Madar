@@ -15,7 +15,7 @@ bfx:2 · puff:3 · rise:4 · lights:5 · CORR:23 · corridorsSVG:24 · dur:30 ·
 
 ## js/artdata5.js — 76KB — صور خطوات المشي (base64) — لا تقرأه
 
-## js/artdata6.js — 112KB — صور الزعماء والطائرات (base64) — لا تقرأه
+## js/artdata6.js — 132KB — صور الزعماء والطائرات (base64) — لا تقرأه
 
 ## js/astro3d.js — 57 سطر، 6KB
 Astro3D:2 · mat:4 · build:5 · cap:15 · limb:30 · init:40 · pose:45 · draw:51 · dir:52
@@ -83,8 +83,8 @@ TFM:4 · TFS:9 · tfInit:20 · tfTI:21 · tfStage:22 · tfOpen:23 · tfCost:24 �
 
 ## js/three.min.js — 653KB — مكتبة three.js — لا تقرأه
 
-## js/world.js — 374 سطر، 55KB
-WORLD:3 · WorldGame:28 · bot:31 · IMG:32 · img:32 · regAt:33 · regPos:34 · regMid:35 · open:36 · gateOk:37 · gateTxt:38 · rnd:39 · seeded:40 · buildWorld:42 · kinds:44 · weap:51 · stats:52 · restat:54 · newPlayer:55 · monStats:57 · bandLv:59 · spawnMon:60 · wakeGuard:65 · input:68 · say:73 · update:74 · shot:88 · dirty:133 · worldEvent:135 · gainXP:143 · hitP:146 · float:147 · kill:148 · guardTick:158 · hudBuild:161 · forge:173 · WTXT:180 · hudTick:181 · gw:186 · drawMini:191 · PAT:198 · pat:199 · propSpr:204 · tri:205 · MATC:219 · draw2d:220 · vis:229 · sprC:258 · c2:262 · LEGS:263 · legs:264 · drawMon:268 · drawBot:286 · drawPlayer:289 · make3D:292 · TX:296 · gmat:298 · GEO:302 · COLR:304 · spr:311 · NM:317 · part:321 · pool:325 · sync:326 · draw:328 · met3:341 · unlockReg:342 · dispose:343 · setView:345 · frame:349 · resize:350 · pd:352 · POIS:355 · worldCard:369
+## js/world.js — 376 سطر، 56KB
+WORLD:3 · WorldGame:28 · bot:31 · IMG:32 · img:32 · regAt:33 · regPos:34 · regMid:35 · open:36 · gateOk:37 · gateTxt:38 · rnd:39 · seeded:40 · buildWorld:42 · kinds:44 · weap:51 · stats:52 · restat:54 · newPlayer:55 · monStats:57 · bandLv:59 · spawnMon:60 · wakeGuard:65 · input:68 · say:73 · update:74 · shot:88 · dirty:133 · worldEvent:135 · gainXP:143 · hitP:146 · float:147 · kill:148 · guardTick:158 · hudBuild:161 · forge:173 · WTXT:180 · hudTick:181 · gw:186 · drawMini:191 · PAT:198 · pat:199 · propSpr:204 · tri:205 · MATC:219 · draw2d:220 · vis:229 · sprC:258 · c2:262 · LEGS:263 · legs:264 · monKey:268 · drawMon:269 · drawBot:287 · drawPlayer:290 · make3D:293 · TX:297 · gmat:299 · GEO:303 · COLR:305 · spr:312 · NM:318 · part:322 · pool:326 · sync:327 · draw:329 · met3:342 · unlockReg:343 · dispose:344 · setView:346 · frame:350 · resize:351 · pd:353 · POIS:356 · worldCard:371
 
 ## js/worldmap.js — 130 سطر، 17KB
 REG:3 · LMCOST:16 · LMRATE:17 · GEAR:18 · WM:29 · matN:30 · regOpen:31 · regReq:32 · regReady:33 · wmBonus:36 · gearOn:39 · tripDur:44 · tripStart:45 · tripRush:49 · addMat:50 · tripTick:51 · hrs:53 · got:60 · lmBuild:68 · gearMake:70 · regGo:72 · MAPV:76 · closeMap:77 · mapBox:78 · tripLine:81 · shipLine:83 · left:83 · matBar:85 · mapHTML:86 · regHTML:91 · gearHTML:106 · mapRender:111 · on:114

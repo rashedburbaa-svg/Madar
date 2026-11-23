@@ -265,7 +265,8 @@ const WorldGame=(()=>{
     for(const s of [-1,1]){const sw=st*s,hx=s*w*0.13,hy=-lh,fx=hx+sw*w*0.16,fy=-Math.max(0,sw)*lh*0.35,kx=(hx+fx)/2+w*0.07,ky=(hy+fy)/2;
       ctx.strokeStyle=s<0?'#1b2030':col;ctx.lineWidth=lw;ctx.beginPath();ctx.moveTo(hx,hy);ctx.lineTo(kx,ky);ctx.lineTo(fx,fy);ctx.stroke();
       ctx.fillStyle=s<0?'#1b2030':col;ctx.beginPath();ctx.ellipse(fx+lw*0.5,fy-lw*0.2,lw*0.9,lw*0.5,0,0,6.283);ctx.fill()}}
-  function drawMon(m){const k='pl'+m.reg+'_'+(m.big?'big':'small'),R=ART[k+'R']||1,h=m.guard?m.r*3.4:m.r*2.8,w=h*R,flip=(m.fx||(p.x>m.x?1:-1))>0,c=sprC(k,h,m.fl>0);
+  const monKey=m=>{if(m.sk===undefined)m.sk=m.reg===0&&!m.big&&!m.guard&&ART.pl0_spider&&Math.random()<0.5?'pl0_spider':'';return m.sk||'pl'+m.reg+'_'+(m.big?'big':'small')};   // space spider = second small monster of المدار-1
+  function drawMon(m){const k=monKey(m),R=ART[k+'R']||1,h=m.guard?m.r*3.4:m.r*2.8,w=h*R,flip=(m.fx||(p.x>m.x?1:-1))>0,c=sprC(k,h,m.fl>0);
     const ph=m.ph||0,mv=!!m.mv&&m.st!=='wind',bob=mv?Math.abs(Math.cos(ph))*h*0.05:(1+Math.sin(t*2.2+m.x))*h*0.008,tilt=mv?Math.sin(ph)*0.05:0,leg=LEGS[k]&&!ART[k+'Legs']&&!c2(k)?h*0.3:0;
     ctx.fillStyle='#00000066';ctx.beginPath();ctx.ellipse(m.x,m.y,w*0.3*(1-bob/h),4.5,0,0,6.283);ctx.fill();
     if(m.st==='wind'){const k=1-m.sT/(BAL.world.enemy.windupMs/1000);ctx.strokeStyle='#ff4a3a';ctx.lineWidth=2;ctx.globalAlpha=0.5+0.5*k;ctx.beginPath();ctx.moveTo(m.x,m.y);ctx.lineTo(m.x+m.lx*(m.r+BAL.world.enemy.reach)*k,m.y+m.ly*(m.r+BAL.world.enemy.reach)*k);ctx.stroke();ctx.beginPath();ctx.ellipse(m.x,m.y,w*0.38,7,0,0,6.283);ctx.stroke();ctx.globalAlpha=1}
@@ -333,7 +334,7 @@ const WorldGame=(()=>{
       const now=Date.now();for(const n of nodes){n.m3.visible=n.cd<now&&open(n.reg);if(n.m3.visible){n.m3.rotation.y=t*1.5;n.m3.position.y=14+2*Math.sin(t*3+n.x)}}
       for(const o of pois){o.m3.visible=open(o.reg)&&!(st.poi||{})[o.reg];o.m3.rotation.y=t*2}
       // monsters are billboards of the painted creatures
-      const used=new Set();for(const m of mons){let s=m.s3;if(!s){const k='pl'+m.reg+'_'+(m.big?'big':'small');s=spr(k,m.guard?m.r*3.4:m.r*2.8);if(!s){s=new THREE.Sprite(new THREE.SpriteMaterial({color:0xc060ff}));s.scale.set(20,20,1)}scene.add(s);m.s3=s}
+      const used=new Set();for(const m of mons){let s=m.s3;if(!s){const k=monKey(m);s=spr(k,m.guard?m.r*3.4:m.r*2.8);if(!s){s=new THREE.Sprite(new THREE.SpriteMaterial({color:0xc060ff}));s.scale.set(20,20,1)}scene.add(s);m.s3=s}
         s.position.set(m.x,m.mv?Math.abs(Math.cos(m.ph||0))*m.r*0.18:0,m.y);s.material.rotation=m.mv?Math.sin(m.ph||0)*0.07:0;s.material.color.setHex(m.st==='wind'?0xff7a6a:m.p2?0xffaaaa:0xdddddd);if(m.fl>0)s.material.color.setRGB(2,2,2);used.add(s)}
       scene.children.filter(o=>o.isSprite&&o.userData.mon&&!used.has(o)).forEach(o=>{scene.remove(o);o.material.dispose()});used.forEach(s=>s.userData.mon=1);
       sync(met3,mets,mg,mm,1);met3.forEach(o=>{o.rotation.x=-Math.PI/2;o.scale.set(1,0.62,1)});sync(bul,shots.concat(bshots),bg,bm,16);sync(ebul,eshots,eg,em,16);sync(orb3,orbs,og,om,8);
@@ -353,6 +354,7 @@ const WorldGame=(()=>{
     pm=e=>{if(joy&&joy.on&&e.pointerId===joy.id){joy.x=e.clientX;joy.y=e.clientY}},pu=e=>{if(joy&&e.pointerId===joy.id)joy.on=false},
     kd=e=>{keys[e.key]=true},ku=e=>{keys[e.key]=false};
   const POIS=['حطام قمر صناعي قديم يحمل خريطة للمناطق المجاورة.','تحت الجليد جهاز يبث نفس الإشارة الغامضة.','داخل البركان بقايا محطة تعدين لم يعد منها أحد.','الكريستال هنا يغنّي حين تلمسه… ويحفظ أصوات من مرّوا قبلك.','في قلب الغابة بذرة عملاقة تنبض بضوء أخضر.','في السديم بوابة نجمية صغيرة مطفأة… من بناها؟'];
+  if(location.hostname==='localhost')window.__wd={get mons(){return mons},get p(){return p}};   // test hook
   return {id:'world',name:'عالم المدار',noDaily:true,desc:'عالم مفتوح: امشِ بين المناطق الست واجمع المواد وقاتل الوحوش والحرّاس',
     help:'حرّك الرائد بإصبعك في أي مكان على الشاشة (عصا تحكم). يطلق الرائد النار تلقائياً على أقرب وحش. قف فوق البلورات المضيئة لتجمع مادة المنطقة. 📡 إشارة قديمة في كل منطقة لها مكافأة مرة واحدة، و👑 حارس قوي في كل منطقة يعود بعد 5 دقائق من هزيمته، أو أسرع إذا قتلت 25 وحشاً في منطقته. داخل قبة القاعدة تُشفى بسرعة، والحمم تحرقك. زر 🎥 يبدّل بين المنظور العلوي والثلاثي الأبعاد. كل وحش تقتله يُسقط جواهر خبرة خضراء ترفع مستواك وقوتك. كل منطقة لها مستوى وحوش، وبوابتها تنفتح بهزيمة حارس المنطقة السابقة وبلوغ مستواها. داخل القبة تجد ⚒️ ورشة الأسلحة لتصنع وتطوّر خمسة أسلحة بمواد المناطق. قوتك تزيد أيضاً بدعم المستعمرة ومعدات الورشة. الوحوش تنحني وتومض بخط أحمر قبل أن تنقضّ، فابتعد عن اتجاهها. الحارس يغضب عند نصف صحته. أحياناً يهجم غزو وحوش أو يسقط مطر نيازك: اخرج من الدوائر الحمراء. 🧩 القطع النادرة تخفّض كلفة تطوير الأسلحة. 🤖 الروبوت المرافق يتبعك ويطلق على أقرب وحش.',
     icon:'<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" fill="#1e4733"/><path d="M4 24h40M24 4v40" stroke="#ffffff30"/><circle cx="17" cy="18" r="6" fill="#9fbfd6"/><circle cx="32" cy="30" r="7" fill="#ad9cc8"/><text x="24" y="31" font-size="16" text-anchor="middle">🧑‍🚀</text></svg>',
