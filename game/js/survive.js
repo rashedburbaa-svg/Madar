@@ -1,7 +1,7 @@
 /* ================= game 10: endless survival ================= */
 const SurviveGame=(()=>{
   // fixed arena in logical units; the canvas is scaled to the stage width
-  const W=432,H=624,WAVE_LEN=30;
+  const W=432,WAVE_LEN=30;let H=624;   // H grows to fill a tall phone screen (body.gfull)
   let cv,ctx,raf=0,last=0,st,running=false,paused=true,over=false,joy=null,keys={},statT=0,hitSndT=0,buzzT=0;
   let ch=null,deathWhy='',p,gun,orb,pul,mis,drn,mines,bolts,flT,chT,mnT,beamTg,evo,misT,drnT,novaT,bhT,holes,ms,en,bl,eb,drops,parts,rings,hz,crys,bossKills,t,wave,waveT,spawnT,kills,orbA,pulseT,buff,banner,lv,bossAlive,recordShown;
   const UP=[
@@ -338,7 +338,7 @@ const SurviveGame=(()=>{
     ctx.fillStyle=vg;ctx.beginPath();ctx.ellipse(vx,vy,r*0.55,r*0.42,a,0,6.283);ctx.fill();ctx.fillStyle='rgba(255,255,255,.7)';ctx.beginPath();ctx.ellipse(vx-r*0.15,vy-r*0.15,r*0.18,r*0.08,a-0.6,0,6.283);ctx.fill();
   }
   const shadow=(x,y,r)=>{ctx.fillStyle='rgba(0,0,0,.32)';ctx.beginPath();ctx.ellipse(x+r*0.15,y+r*0.75,r*0.95,r*0.42,0,0,6.283);ctx.fill()};
-  function resize(){const w=stage.clientWidth;cv.width=Math.round(w*devicePixelRatio);cv.height=Math.round(w*H/W*devicePixelRatio);cv.style.height=(w*H/W)+'px';ctx.setTransform(w/W*devicePixelRatio,0,0,w/W*devicePixelRatio,0,0)}
+  function resize(){const w=stage.clientWidth,ah=stage.clientHeight,H0=H;H=document.body.classList.contains('gfull')&&ah>200?Math.max(600,Math.min(1100,Math.round(W*ah/w)-1)):624;if(H!==H0&&bg){bg=makeBg(biome);bgOld=null;makeAmb(biome)}cv.width=Math.round(w*devicePixelRatio);cv.height=Math.round(w*H/W*devicePixelRatio);cv.style.height=(w*H/W)+'px';ctx.setTransform(w/W*devicePixelRatio,0,0,w/W*devicePixelRatio,0,0)}
   function reset(){
     const C=CHARS[st.char]||CHARS.scout,CB=typeof survBonus==='function'?survBonus():{dmg:0,hp:0,rate:0},mx=Math.round((100+15*mlv('hp'))*C.hp)+CB.hp;
     p={x:W/2,y:H/2,r:11,hp:mx,max:mx,spd:120*(1+0.06*mlv('spd'))*C.spd,mag:40+20*mlv('mag'),aim:-Math.PI/2,hurt:0,slow:0,inv:0,bar:0,barT:0,rev:mlv('revive')};

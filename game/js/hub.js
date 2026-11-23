@@ -34,10 +34,10 @@ function openGame(G,m){
   toastQ.length=0;$('toast').hidden=true;
   if(active&&active.stop)active.stop();active=G;mode=m||null;gPaused=false;curLevel=null;
   // remember which level is on screen so «انسحاب» restarts that one
-  if(!G._wrapped){const orig=G.play;G.play=function(l){curLevel=l;return orig.apply(this,arguments)};G._wrapped=1}stage.innerHTML='';$('ctrl').innerHTML='';
+  if(!G._wrapped){const orig=G.play;G.play=function(l){curLevel=l;return orig.apply(this,arguments)};G._wrapped=1}stage.innerHTML='';$('ctrl').innerHTML='';$('stats').innerHTML='';$('stats').innerHTML='';
   $('gTitle').textContent=G.name;$('help').textContent=G.help;$('dailyTag').hidden=!mode;$('lvlBtn').hidden=!!mode;
-  document.body.classList.remove('colfull');if(typeof closeSheet==='function')closeSheet();$('hub').hidden=true;$('tabbar').hidden=true;$('play').hidden=false;scrollTo(0,0);G.start();
+  document.body.classList.remove('colfull');document.body.classList.toggle('gfull',G.id!=='world');if(typeof closeSheet==='function')closeSheet();$('hub').hidden=true;$('tabbar').hidden=true;$('play').hidden=false;scrollTo(0,0);G.start();
 }
-function goHub(){if(active&&active.stop)active.stop();active=null;toastQ.length=0;$('toast').hidden=true;mode=null;stage.innerHTML='';$('play').hidden=true;$('hub').hidden=false;$('tabbar').hidden=false;renderHub();showTab(hubTab)}
+function goHub(){if(active&&active.stop)active.stop();document.body.classList.remove('gfull');active=null;toastQ.length=0;$('toast').hidden=true;mode=null;stage.innerHTML='';$('play').hidden=true;$('hub').hidden=false;$('tabbar').hidden=false;renderHub();showTab(hubTab)}
 $('back').onclick=goHub;
 renderHub();showTab(hubTab);

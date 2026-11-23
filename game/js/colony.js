@@ -634,10 +634,10 @@ function flyRes(id,k,n){const svg=$('cscene'),chip=document.querySelector(`#colo
 /* --- day and night follow the real clock --- */
 function phase(){const h=new Date().getHours()+new Date().getMinutes()/60;return h>=19.5||h<5?'night':h<7?'dawn':h<17?'day':'dusk'}
 const SKY={night:['#04061a','#1c1640','#4a2c58','#7a4462'],dawn:['#1a1a48','#5a3a78','#d0708a','#ffb38a'],day:['#2a4a8a','#5a6ab0','#b48ac8','#e8b0b8'],dusk:['#140c30','#4a2458','#b0506a','#ff9a6a']};
-function nightLights(){if(phase()==='day')return '';let s='<rect class="nightveil" x="-700" y="-900" width="1760" height="2400" fill="#060a24" opacity="'+(phase()==='night'?.34:.18)+'"/>';
+function nightLights(){if(phase()==='day')return '';let s='<g pointer-events="none"><rect class="nightveil" x="-700" y="-900" width="1760" height="2400" fill="#060a24" opacity="'+(phase()==='night'?.34:.18)+'"/>';
   for(const id of Object.keys(SLOT)){if(id==='wall'||id==='tower'||!col.b[id])continue;const [x,y,sc]=SLOT[id];s+=`<ellipse class="glow" cx="${x+4}" cy="${y-14*sc}" rx="${34*sc}" ry="${22*sc}" fill="url(#kLamp)" opacity=".55"/>`}
   if(col.b.wall>=3)for(const deg of [215,325,145,35])if(col.b.wall>=6){const [x,y]=fp(deg*Math.PI/180);s+=`<ellipse cx="${x}" cy="${y-34}" rx="16" ry="12" fill="url(#kLamp)" opacity=".7"/>`}
-  return s}
+  return s+'</g>'}
 
 /* --- guide: a bouncing arrow over where the current objective is done --- */
 function guideSVG(){const Q=QUESTS[col.q];if(!Q||col.qhide)return '';if(Q.go==='survive')return '';const id=Q.b||GAMEOF[Q.go];if(!id||!SLOT[id])return '';const B=BLD[id];const tgt=(B&&B.req&&col.b.hq<B.req)?'hq':id;const [x,y,sc]=SLOT[tgt];

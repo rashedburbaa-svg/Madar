@@ -198,7 +198,7 @@ const PilotGame=(function(){
   /* ---------- flow ---------- */
   function step(now){raf=requestAnimationFrame(step);const dt=Math.min(0.05,(now-last)/1000);last=now;if(running&&!paused){update(dt);if(shk>0)shk-=dt}if(ctx)draw()}
   function stats(){setStat('s1',score.toLocaleString('en'));setStat('s2',wave);setStat('s3',Math.max(0,Math.round(P.hp))+'/'+P.max);setStat('s4',(st.best||0).toLocaleString('en'))}
-  function resize(){const w=stage.clientWidth,h=Math.min(w*H/W,innerHeight*0.72),sc=h/H;cv.style.width=(W*sc)+'px';cv.style.height=h+'px';cv.width=Math.round(W*sc*devicePixelRatio);cv.height=Math.round(h*devicePixelRatio);ctx.setTransform(sc*devicePixelRatio,0,0,sc*devicePixelRatio,0,0)}
+  function resize(){const w=stage.clientWidth,h=Math.min(w*H/W,document.body.classList.contains('gfull')&&stage.clientHeight>200?stage.clientHeight-2:innerHeight*0.72),sc=h/H;cv.style.width=(W*sc)+'px';cv.style.height=h+'px';cv.width=Math.round(W*sc*devicePixelRatio);cv.height=Math.round(h*devicePixelRatio);ctx.setTransform(sc*devicePixelRatio,0,0,sc*devicePixelRatio,0,0)}
   function toLocal(ev){const r=cv.getBoundingClientRect();return [(ev.clientX-r.left)*W/r.width,(ev.clientY-r.top)*H/r.height]}
   function clearOv(){stage.querySelectorAll('.overlay').forEach(o=>o.remove())}
   function overlay(html){clearOv();const o=document.createElement('div');o.className='overlay pov';o.innerHTML=html;stage.appendChild(o);return o}

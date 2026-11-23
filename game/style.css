@@ -829,3 +829,11 @@ canvas.pcv{margin:0 auto;background:#050816}
 .wforge{position:absolute;inset:10px;z-index:5;pointer-events:auto;background:#0b1226f4;border:1px solid #f5c451;border-radius:16px;padding:12px;overflow:auto}
 .wfh{display:flex;justify-content:space-between;align-items:center;font-size:16px;color:#f5c451}.wfh button{background:none;border:0;color:#fff;font-size:18px}
 .wfw{display:flex;align-items:center;gap:8px;padding:8px;border-radius:12px;background:#ffffff0c;margin:6px 0;flex-wrap:wrap}.wfw.on{border:1px solid #00e5ff}.wfw .ae{font-size:22px}.wfw .an{flex:1;display:flex;flex-direction:column;min-width:140px}.wfw .an small{opacity:.8;font-size:11px}.wfw .btn{padding:6px 10px;font-size:12px}
+
+/* every mini-game fills the phone screen (عالم المدار has its own body.wfull) */
+body.gfull{overflow:hidden;overscroll-behavior:none}
+body.gfull #play{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;gap:6px;max-width:540px;margin:0 auto;padding:calc(6px + env(safe-area-inset-top)) 8px calc(6px + env(safe-area-inset-bottom));background:#070b16}
+body.gfull #play .stats{gap:6px}body.gfull #play .stat{padding:2px 4px;border-radius:10px}body.gfull #play .stat b{font-size:16px;line-height:1.25}body.gfull #play .stat small{font-size:10.5px}
+body.gfull #play .stage{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden}
+body.gfull #play .help{display:none}
+body.gfull #play .controls{flex-wrap:nowrap}body.gfull #play .controls>*{flex:1}
