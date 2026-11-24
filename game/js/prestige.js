@@ -42,7 +42,7 @@ function doRelaunch(P,nx){{
 {const _fc=festChip;festChip=function(){const show=col.b.hq>=6||PG()>0;return (show?`<button class="cpg${pgReady()?' ready':''}" type="button" aria-label="إعادة الانطلاق">${PLANET().em}${PG()?`<i>${PG()+1}</i>`:''}</button>`:'')+_fc()}}
 document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('.cpg')){snd('tap');openSheet('prestige')}});
 // each planet tints the ground in its own colour
-{const _sv=sceneSVG;sceneSVG=function(){const s=_sv.apply(this,arguments),t=(col.wm?PLN[Math.min(5,col.wm.at||0)]:PLANET()).tint;if(!t)return s;let i=s.indexOf('<g class="corr"');if(i<0)i=s.indexOf('<g class="cb');if(i<0)return s;return s.slice(0,i)+`<rect x="-700" y="225" width="1760" height="1100" fill="${t}" opacity=".38" style="mix-blend-mode:color" pointer-events="none"/>`+s.slice(i)}}
+{const _sv=sceneSVG;sceneSVG=function(){const s=_sv.apply(this,arguments),t=(col.wm?PLN[0]:PLANET()).tint;if(!t)return s;let i=s.indexOf('<g class="corr"');if(i<0)i=s.indexOf('<g class="cb');if(i<0)return s;return s.slice(0,i)+`<rect x="-700" y="225" width="1760" height="1100" fill="${t}" opacity=".38" style="mix-blend-mode:color" pointer-events="none"/>`+s.slice(i)}}
 if(typeof ACH!=='undefined')ACH.push(['pg1','🌍','أول إعادة انطلاق'],['pg3','🌋','الوصول للكوكب الرابع'],['pg5','🌸','سديم المدار']);
 
 function flight(nx,done){const o=document.createElement('div');o.className='flight';const im=ART&&ART.x_ship;
@@ -62,14 +62,18 @@ function padSVG(){if(!(col.b.hq>=6||PG()>0))return '';const n=arkN(),full=n===AR
 document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('.arkpad')&&!(typeof camDrag!=='undefined'&&camDrag)){snd('tap');openSheet('prestige')}});
 
 /* ---------- each planet's own look (player's planet art): creatures, a landmark that grows with HQ, and its sky ---------- */
-const PSET=()=>{const r=col.wm?Math.min(5,col.wm.at||0):Math.min(PG(),5);return typeof ART!=='undefined'&&ART['pl'+r+'_big']?r:-1};
-(function(){const r=PSET();if(r<0)return;const fly={0:1,3:1,5:1};
+const PSET=()=>{const r=col.wm?0:Math.min(PG(),5);return typeof ART!=='undefined'&&ART['pl'+r+'_big']?r:-1};   // one colony: its home is المدار-1
+(function(){const r0=PSET();if(r0<0)return;const fly={0:1,3:1,5:1};
   const H={alien:44,bug:30,beast:40,blob:30,ufo:34},pick={alien:'big',beast:'big',bug:'small',blob:'small',ufo:'small'};
-  for(const t of Object.keys(H)){const k=pick[t],src=ART['pl'+r+'_'+k],R=ART['pl'+r+'_'+k+'R']||1,h=H[t],w=h*R,lift=(t==='ufo'||(k==='small'&&fly[r]))?10:0;CTOP[t]=-h-lift-2;
-    CRE[t]=`<ellipse cx="0" cy="1" rx="${(w*0.34).toFixed(1)}" ry="${(2+h*0.06).toFixed(1)}" fill="#000" opacity="${lift?.22:.4}"/><g class="cimg ${t}"><image href="${src}" x="${(-w/2).toFixed(1)}" y="${(-h-lift).toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}"/></g>`}})();
-const pStage=()=>col.wm?(col.wm.lm[PSET()]||0):(col.b.hq>=7?3:col.b.hq>=4?2:1);
-function landmarkSVG(){const r=PSET();if(r<0||!pStage())return '';const k='pl'+r+'_s'+pStage(),R=ART[k+'R']||1;
-  if(r===0){const w=110,h=w/R;return `<g class="plm sky"><image href="${ART[k]}" x="${(120-w/2).toFixed(1)}" y="${(150-h/2).toFixed(1)}" width="${w}" height="${h.toFixed(1)}"/></g>`}
+  const opened=col.wm?[0,1,2,3,4,5].filter(i=>(i===0||(col.wm.u||{})[i])&&ART['pl'+i+'_big']):[r0];
+  Object.keys(H).forEach((t,j)=>{const r=opened[(j*2+(j>2?1:0))%opened.length];const k=pick[t],src=ART['pl'+r+'_'+k],R=ART['pl'+r+'_'+k+'R']||1,h=H[t],w=h*R,lift=(t==='ufo'||(k==='small'&&fly[r]))?10:0;CTOP[t]=-h-lift-2;
+    CRE[t]=`<ellipse cx="0" cy="1" rx="${(w*0.34).toFixed(1)}" ry="${(2+h*0.06).toFixed(1)}" fill="#000" opacity="${lift?.22:.4}"/><g class="cimg ${t}"><image href="${src}" x="${(-w/2).toFixed(1)}" y="${(-h-lift).toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}"/></g>`})})();
+const pStage=()=>col.wm?(col.wm.lm[0]||0):(col.b.hq>=7?3:col.b.hq>=4?2:1);
+const PHZ=[null,[18,250],[318,248],[214,240],[-8,256],[372,256]];
+function horizonSVG(){if(!col.wm||typeof ART==='undefined')return '';let s='';for(let i=1;i<6;i++){const st=col.wm.lm[i]||0,k='pl'+i+'_s'+st;if(!st||!ART[k])continue;const R=ART[k+'R']||1,h=(i===5&&st===3?70:46)+st*6,w=h*R,[x,y]=PHZ[i];
+    s+=`<g class="plh" opacity=".92"><ellipse cx="${x}" cy="${y+1}" rx="${(w*0.38).toFixed(1)}" ry="3.5" fill="#000" opacity=".3"/><image href="${ART[k]}" x="${(x-w/2).toFixed(1)}" y="${(y-h).toFixed(1)}" width="${w.toFixed(1)}" height="${h}"/></g>`}return s}
+function landmarkSVG(){const r=PSET();if(r<0)return '';if(!pStage())return horizonSVG();const k='pl'+r+'_s'+pStage(),R=ART[k+'R']||1;
+  if(r===0){const w=110,h=w/R;return `<g class="plm sky"><image href="${ART[k]}" x="${(120-w/2).toFixed(1)}" y="${(150-h/2).toFixed(1)}" width="${w}" height="${h.toFixed(1)}"/></g>`+horizonSVG()}
   const h=r===5&&pStage()===3?130:88,w=h*R;return `<g class="plm"><ellipse cx="${PLM.x}" cy="${PLM.y+2}" rx="${(w*0.4).toFixed(1)}" ry="6" fill="#000" opacity=".35"/><image href="${ART[k]}" x="${(PLM.x-w/2).toFixed(1)}" y="${(PLM.y-h).toFixed(1)}" width="${w.toFixed(1)}" height="${h}"/></g>`}
 const PLM={x:112,y:240};
 {const _sv=sceneSVG;sceneSVG=function(){let s=_sv.apply(this,arguments);const r=PSET();if(r<0)return s;

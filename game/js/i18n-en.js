@@ -1782,5 +1782,17 @@ const EN={
 "اختر المبنى الثاني":"Pick the second building",
 "لا يمكن وضعه هنا":"It can't go here",
 "وُصلت المباني بأقصر الممرات":"Buildings linked with the shortest corridors",
-"إعادة المباني والممرات إلى الترتيب الافتراضي؟":"Put the buildings and corridors back to the default layout?"
+"إعادة المباني والممرات إلى الترتيب الافتراضي؟":"Put the buildings and corridors back to the default layout?",
+"وجد الفريق جليد أزرق 🧊 وكائنات لم نرها من قبل. صارت للمستعمرة محطة هنا: ابنِ معلمها ليظهر في أفق المستعمرة ويجمع جليد أزرق باستمرار.":"The team found blue ice 🧊 and creatures we had never seen. The colony now has an outpost here: build its landmark to see it on the colony's horizon and collect blue ice all the time.",
+"وجد الفريق صهارة 🔥 وكائنات لم نرها من قبل. صارت للمستعمرة محطة هنا: ابنِ معلمها ليظهر في أفق المستعمرة ويجمع صهارة باستمرار.":"The team found magma 🔥 and creatures we had never seen. The colony now has an outpost here: build its landmark to see it on the colony's horizon and collect magma all the time.",
+"وجد الفريق كوارتز 💠 وكائنات لم نرها من قبل. صارت للمستعمرة محطة هنا: ابنِ معلمها ليظهر في أفق المستعمرة ويجمع كوارتز باستمرار.":"The team found quartz 💠 and creatures we had never seen. The colony now has an outpost here: build its landmark to see it on the colony's horizon and collect quartz all the time.",
+"وجد الفريق أبواغ 🍄 وكائنات لم نرها من قبل. صارت للمستعمرة محطة هنا: ابنِ معلمها ليظهر في أفق المستعمرة ويجمع أبواغ باستمرار.":"The team found spores 🍄 and creatures we had never seen. The colony now has an outpost here: build its landmark to see it on the colony's horizon and collect spores all the time.",
+"وجد الفريق غاز السديم 🌌 وكائنات لم نرها من قبل. صارت للمستعمرة محطة هنا: ابنِ معلمها ليظهر في أفق المستعمرة ويجمع غاز السديم باستمرار.":"The team found nebula gas 🌌 and creatures we had never seen. The colony now has an outpost here: build its landmark to see it on the colony's horizon and collect nebula gas all the time.",
+"🏠 المستعمرة · ":"🏠 Colony · ",
+"🛰️ محطة · ":"🛰️ Outpost · ",
+"🏠 مستعمرتك هنا":"🏠 Your colony is here",
+"🛰️ محطة المستعمرة":"🛰️ Colony outpost",
+"🏠 مستعمرة واحدة في":"🏠 One colony in",
+"محطاتها في المناطق {0}/{1}":"Outposts in regions {0}/{1}",
+"الآثار {0}/{1}":"Relics {0}/{1}"
 };

@@ -26,7 +26,7 @@ const GEAR=[
 /* save: col.wm = {u: unlocked regions, at: region you are standing in, mat, lm: landmark stage, trip, gear, mt} */
 (function(){if(!col.wm){const P=col.pg||0,u={};for(let i=0;i<=Math.min(P,5);i++)u[i]=1;col.wm={u,at:Math.min(P,5),mat:{},lm:{},trip:null,gear:{},mt:Date.now()}}
   const w=col.wm;w.u=w.u||{0:1};w.u[0]=1;w.mat=w.mat||{};w.lm=w.lm||{};w.gear=w.gear||{};w.mt=w.mt||Date.now()})();
-const WM=()=>col.wm,RAT=()=>Math.min(5,WM().at||0),regName=i=>PLN[i].n,regEm=i=>PLN[i].em;
+const WM=()=>col.wm,RAT=()=>0,regName=i=>PLN[i].n,regEm=i=>PLN[i].em;
 const matN=k=>Math.floor(WM().mat[k]||0),matIcon=k=>(REG.find(r=>r.mat===k)||{}).me||'',matName=k=>(REG.find(r=>r.mat===k)||{}).mn||k;
 const regOpen=i=>!!WM().u[i];
 function regReq(i){const R=REG[i],out=[];out.push([`🏛️ القيادة ${R.hq}`,col.b.hq>=R.hq]);if(R.ship)out.push(['🔧 المركبة الأولى مُصلحة',!!col.done]);if(R.ark)out.push([`🚀 سفينة الاستكشاف ${arkN()}/${ARK.length}`,arkN()===ARK.length]);if(i>0)out.push(['🗺️ المنطقة السابقة مكتشفة',regOpen(i-1)]);return out}
@@ -53,7 +53,7 @@ function tripTick(){const w=WM(),t=w.trip,now=Date.now();
   const hrs=(now-w.mt)/3600000;if(hrs>0.01){REG.forEach((R,i)=>{const s=w.lm[i]||0;if(s)addMat(R.mat,LMRATE[s]*hrs)});w.mt=now}
   if(!t||now<t.end)return;w.trip=null;const R=REG[t.i];
   if(t.k==='scout'){w.u[t.i]=1;addMat(R.mat,10);addXP(60);colSave();snd('win');
-    if(typeof regionPanorama==='function'&&!panoSeen(t.i))regionPanorama(t.i,()=>regGo(t.i));else{const m=storyBox(`🗺️ اكتشفت ${regEm(t.i)} ${regName(t.i)}!`,`وجد الفريق ${R.mn} ${R.me} وكائنات لم نرها من قبل. انتقل إلى المنطقة لترى أرضها، وابنِ معلمها لتجمع ${R.mn} باستمرار.`,'رائع');try{celebrate(m.querySelector('.hbox'))}catch(e){}}
+    if(typeof regionPanorama==='function'&&!panoSeen(t.i))regionPanorama(t.i,()=>regGo(t.i));else{const m=storyBox(`🗺️ اكتشفت ${regEm(t.i)} ${regName(t.i)}!`,`وجد الفريق ${R.mn} ${R.me} وكائنات لم نرها من قبل. صارت للمستعمرة محطة هنا: ابنِ معلمها ليظهر في أفق المستعمرة ويجمع ${R.mn} باستمرار.`,'رائع');try{celebrate(m.querySelector('.hbox'))}catch(e){}}
     const n=Object.keys(w.u).length;if(typeof unlock==='function'){if(n>=3)unlock('wm3');if(n>=6)unlock('wm6')}}
   else{const A=R.adv[t.a],sc=1+BAL.techScan*techLv('scan');let ok=true,f=1;
     if(A.risk){const ch=Math.min(0.95,0.55+0.04*(col.b.def||0)+0.05*(w.lm[t.i]||0));ok=Math.random()<ch;f=ok?1:0.4}
@@ -69,8 +69,8 @@ function lmBuild(i){const w=WM(),s=w.lm[i]||0;if(s>=3)return;const c=LMCOST[s],R
   accrue();pay({m:c.m,e:c.e});w.mat[R.mat]-=c.x;w.lm[i]=s+1;colSave();snd('build');toast(`🏗️ معلم ${regName(i)} · المرحلة ${s+1}`,'ach');updRes();mapRender();if(RAT()===i&&!$('pColony').hidden)renderColony()}
 function gearMake(id){const g=GEAR.find(x=>x.id===id),w=WM();if(!g||w.gear[id])return;for(const [k,n] of Object.entries(g.c))if(matN(k)<n){snd('err');toast(`تحتاج ${n} ${matIcon(k)} ${matName(k)}`);return}
   for(const [k,n] of Object.entries(g.c))w.mat[k]-=n;w.gear[id]=1;colSave();snd('win');toast(`🛠️ صنعت ${g.n}`,'ach');const n=Object.keys(w.gear).length;if(n>=3&&typeof unlock==='function')unlock('gear3');mapRender()}
-function regGo(i){if(!regOpen(i)||RAT()===i)return;closeMap();
-  confirmBox(`📍 الانتقال إلى ${regName(i)}؟ ستبقى مستعمرتك كما هي، وتتغيّر السماء والكائنات حولها.`,()=>{WM().at=i;colSave();flight({n:regName(i),em:regEm(i),tint:PLN[i].tint},()=>location.reload())})}
+// one colony: it stays in المدار-1; «ادخل المنطقة» opens the region page (its outpost, landmark and adventures) instead of moving the colony
+function regGo(i){if(!regOpen(i))return;mapBox('reg',i)}
 
 /* ---------- the map window ---------- */
 let MAPV={v:'map',i:0};
@@ -83,17 +83,17 @@ function tripLine(){const t=WM().trip;if(!t)return '';const left=Math.max(0,(t.e
 function shipLine(){const x=col.exp;if(!x)return '';const left=(x.end-Date.now())/1000;
   return `<div class="wtrip">🚀 ${PLANETS[x.i].n} · ${left<=0?'<button type="button" class="btn main" data-gclaim>استلم الغنائم</button>':`<b class="gt">${fmtDur(left)}</b><button type="button" class="btn" data-grush>⚡ 💎 ${Math.max(1,Math.ceil(left/BAL.galaxy.rushSecPerGem))}</button>`}</div>`}
 function matBar(){return `<div class="wmats">${REG.map((R,i)=>`<span class="${regOpen(i)?'':'off'}">${R.me} <b>${matN(R.mat)}</b></span>`).join('')}</div>`}
-function mapHTML(){let h=`<h3>🗺️ خريطة المدار</h3><small class="gsub">مستعمرتك في ${regEm(RAT())} ${regName(RAT())} · الآثار ${artCount()}/6</small>${matBar()}${tripLine()}${shipLine()}
+function mapHTML(){let h=`<h3>🗺️ خريطة المدار</h3><small class="gsub"><span>🏠 مستعمرة واحدة في</span> <span>${regEm(0)} ${regName(0)}</span> · <span>محطاتها في المناطق ${Object.keys(WM().u||{}).filter(k=>+k>0).length}/5</span> · <span>الآثار ${artCount()}/6</span></small>${matBar()}${tripLine()}${shipLine()}
   <div class="wtabs"><button type="button" class="on">🗺️ المناطق</button><button type="button" data-wv="gear">🛠️ ورشة المعدات</button></div><div class="wlist">`;
   REG.forEach((R,i)=>{const open=regOpen(i),here=RAT()===i,img=typeof ART!=='undefined'&&ART['pl'+i+'_land'],s=WM().lm[i]||0;
-    h+=`<button type="button" class="wreg${open?'':' lock'}${here?' here':''}" data-wr="${i}">${img?`<img src="${img}" alt="">`:''}<span class="wrt"><b>${regEm(i)} ${regName(i)}</b><small>${open?`${R.me} ${R.mn} · المعلم ${s}/3`:'🔒 '+(regReady(i)?'جاهزة للاستكشاف':'مغلقة')}${here?' · 📍 أنت هنا':''}</small></span></button>`});
+    h+=`<button type="button" class="wreg${open?'':' lock'}${here?' here':''}" data-wr="${i}">${img?`<img src="${img}" alt="">`:''}<span class="wrt"><b>${regEm(i)} ${regName(i)}</b><small>${open?`${here?'🏠 المستعمرة · ':'🛰️ محطة · '}${R.me} ${R.mn} · المعلم ${s}/3`:'🔒 '+(regReady(i)?'جاهزة للاستكشاف':'مغلقة')}</small></span></button>`});
   return h+'</div>'}
 function regHTML(i){const R=REG[i],open=regOpen(i),s=WM().lm[i]||0,img=typeof ART!=='undefined'&&ART['pl'+i+'_land'],busy=!!WM().trip;
   let h=`<button type="button" class="wback" data-wv="map">→ الخريطة</button><div class="wban">${img?`<img src="${img}" alt="">`:''}<b>${regEm(i)} ${regName(i)}</b></div>`;
   if(!open){h+=`<p class="wnote">منطقة لم يكتشفها أحد. أرسل الفريق ليستكشفها ويفتحها.</p><div class="pgreq">${regReq(i).map(([t,ok])=>`<span class="${ok?'ok':''}">${t}</span>`).join('')}</div>`;
     if(R.ark&&arkN()<ARK.length)h+=arkHTML();
     const c=R.scout;h+=`<button type="button" class="btn${regReady(i)&&!busy?' main':''}" data-wscout="${i}" ${regReady(i)&&!busy?'':'disabled'}>🔭 استكشف · ⛏️ ${fmtN(c.m)} ⚡ ${fmtN(c.e)}${c.f?' 🌱 '+fmtN(c.f):''} · ${c.t}د</button>`;return h}
-  h+=`<div class="wrow"><span>${R.me} ${R.mn}: <b>${matN(R.mat)}</b></span>${RAT()===i?'<span class="ok">📍 أنت هنا</span>':`<button type="button" class="btn" data-wgo="${i}">📍 انتقل إلى هنا</button>`}</div>`;
+  h+=`<div class="wrow"><span>${R.me} ${R.mn}: <b>${matN(R.mat)}</b></span>${i===0?'<span class="ok">🏠 مستعمرتك هنا</span>':'<span class="ok">🛰️ محطة المستعمرة</span>'}</div>`;
   // landmark
   const lk='pl'+i+'_s'+Math.max(1,s);h+=`<h4>🏗️ معلم المنطقة · المرحلة ${s}/3</h4><div class="wlm">${typeof ART!=='undefined'&&ART[lk]?`<img src="${ART[lk]}" alt="" class="${s?'':'ghost'}">`:''}<div><small>كل مرحلة: ${R.bd} +${Math.round(R.bonus[1]*100)}% · ينتج ${R.me} ${LMRATE[Math.min(3,s+ (s<3?1:0))]} في الساعة${s?` (الآن ${LMRATE[s]})`:''}</small>`;
   if(s<3){const c=LMCOST[s],ok=matN(R.mat)>=c.x&&canPay({m:c.m,e:c.e});h+=`<button type="button" class="btn${ok?' main':''}" data-wlm="${i}">🔧 المرحلة ${s+1} · ${R.me} ${c.x} ⛏️ ${fmtN(c.m)} ⚡ ${fmtN(c.e)}</button>`}else h+='<b class="ok">✅ اكتمل المعلم</b>';
