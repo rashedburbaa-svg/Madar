@@ -66,7 +66,7 @@ const WorldGame=(()=>{
       for(let k=0;k<Math.round(70*sz);k++){const {x,y}=rp(20);if(far(x,y)&&Math.hypot(x-WORLD.moon.x,y-WORLD.moon.y)>140)props.push({x,y,k:kinds[k%2],s:0.7+R()*0.8,reg:i})}
       if(i===2)for(let k=0;k<9;k++){const {x,y}=rp(110);pools.push({x,y,r:40+R()*36})}
       for(let k=0;k<Math.round(WORLD.nodes*Math.max(0.7,sz));k++){const {x,y}=rp(60);if(far(x,y))nodes.push({x,y,reg:i,cd:0,prog:0})}
-      let g=rp(160);for(let k=0;k<30&&(Math.hypot(g.x-WORLD.base.x,g.y-WORLD.base.y)<(i?0:600)||(i===0&&g.y<WORLD.base.y));k++)g=rp(160);   // the home guardian lives far south of the dome
+      let g=rp(160);if(i===0)for(let k=0;k<40;k++){const q=rp(160);if(Math.hypot(q.x-WORLD.base.x,q.y-WORLD.base.y)>Math.hypot(g.x-WORLD.base.x,g.y-WORLD.base.y))g=q}   // the home guardian lives as far from the dome (and the building zone) as possible
       guards.push({reg:i,x:g.x,y:g.y,hx:g.x,hy:g.y});const q=rp(150);pois.push({reg:i,x:q.x,y:q.y})}}
   /* ---------- player stats come from the colony and the gear workshop ---------- */
   const weap=()=>WORLD.WEAP.find(w=>w.id===(st.wp||'rifle'))||WORLD.WEAP[0],wLv=id=>(st.wu||{})[id]||1;
@@ -99,7 +99,7 @@ const WorldGame=(()=>{
       if(reg>=0&&!open(reg)){ // walking into a closed region: discover it if the colony is ready, else bounce
         if(gateOk(reg)){discover(reg);if(typeof regionPanorama==='function'&&!panoSeen(reg))regionPanorama(reg)}
         else{say('🔒 '+PLN[reg].n+': '+gateTxt(reg));nx=p.x;ny=p.y}}
-      if(typeof WB!=='undefined'){const q={x:nx,y:ny};WB.push(q,p.r*0.8);nx=q.x;ny=q.y}   // base walls block the hero
+      if(typeof WB!=='undefined'){const q={x:nx,y:ny};WB.push(q,p.r*0.8,0,true);nx=q.x;ny=q.y}   // base walls block the hero
       p.x=nx;p.y=ny;p.face=Math.atan2(mv.y,mv.x);if(view==='2d'||mv.fw>0.3)p.aim=p.face}
     if(view==='3d'&&p.moving&&mv.fw>-0.2){const target=Math.atan2(mv.y,mv.x);let d=target-cam.yaw;d=Math.atan2(Math.sin(d),Math.cos(d));cam.yaw+=d*Math.min(1,dt*1.6)}
     // dome: rest and heal; lava: burns
@@ -132,7 +132,7 @@ const WorldGame=(()=>{
       else{m.wt-=dt;if(m.wt<=0){m.wt=rnd(1.5,3.5);const a=Math.random()*6.283;m.wx=Math.cos(a)*m.spd*0.35;m.wy=Math.sin(a)*m.spd*0.35}vx=m.wx;vy=m.wy}
       let nx=m.x+vx*dt,ny=m.y+vy*dt;if(regAt(nx,ny)!==m.reg&&!m.guard){m.wt=0;nx=m.x;ny=m.y}
       const bd2=Math.hypot(nx-WORLD.base.x,ny-WORLD.base.y);if(bd2<WORLD.base.r+m.r){nx=m.x;ny=m.y}
-      if(typeof WB!=='undefined'&&!m.guard){const q={x:nx,y:ny};WB.push(q,m.r*0.7);nx=q.x;ny=q.y}
+      if(typeof WB!=='undefined'&&!m.guard){const q={x:nx,y:ny};WB.push(q,m.r*0.7,m.dmg*BAL.build.monDmg*dt);nx=q.x;ny=q.y}   // monsters stopped by a base piece claw at it
       const mvd=Math.hypot(nx-m.x,ny-m.y);m.mv=mvd>dt*4;m.ph=(m.ph||0)+mvd/(m.r*0.55);if(Math.abs(nx-m.x)>0.3)m.fx=nx<m.x?-1:1;
       m.x=nx;m.y=ny;if(m.guard&&d<m.r+p.r)hitP(m.dmg*dt,false)}
     mons=mons.filter(m=>m.hp>0&&(m.guard||Math.hypot(m.x-p.x,m.y-p.y)<1300));
@@ -157,7 +157,7 @@ const WorldGame=(()=>{
   const dirty=()=>{st._d=1};
   /* random world events: a monster invasion or a meteor shower; meteors mark the ground first so the hero walks out of them */
   function worldEvent(dt){const V=BAL.world.events,inB=Math.hypot(p.x-WORLD.base.x,p.y-WORLD.base.y)<WORLD.base.r+60;
-    for(const q of mets){q.w-=dt;if(q.w<=0&&!q.hit){q.hit=1;fx.push({k:'boom',x:q.x,y:q.y,r:q.r,l:0.35});snd('hit');buzz(30);if(Math.hypot(p.x-q.x,p.y-q.y)<q.r)hitP(p.max*V.meteorDmg,false);
+    for(const q of mets){q.w-=dt;if(q.w<=0&&!q.hit){q.hit=1;fx.push({k:'boom',x:q.x,y:q.y,r:q.r,l:0.35});snd('hit');buzz(30);if(Math.hypot(p.x-q.x,p.y-q.y)<q.r)hitP(p.max*V.meteorDmg,false);if(typeof WB!=='undefined')WB.blast(q.x,q.y,q.r,BAL.build.meteorDmg);
       for(const m of mons)if(!m.guard&&m.hp>0&&Math.hypot(m.x-q.x,m.y-q.y)<q.r){m.hp-=p.dmg*2;m.fl=0.08;if(m.hp<=0)kill(m)}}}
     mets=mets.filter(q=>!q.hit);
     evT+=dt;if(evT<V.everyS||inB)return;evT=0;const reg=regAt(p.x,p.y);if(reg<0||!open(reg))return;const kind=V.types[evN++%V.types.length];
@@ -264,7 +264,7 @@ const WorldGame=(()=>{
     if(typeof WB!=='undefined')WB.items2d(L,vis,ctx,t);
     for(const m of mons)if(vis(m.x,m.y))L.push([m.y,()=>drawMon(m)]);
     L.push([bot.y+40,drawBot]);
-    L.push([p.y,drawPlayer]);L.sort((a,b)=>a[0]-b[0]);for(const x of L)x[1]();
+    L.push([p.y,drawPlayer]);L.sort((a,b)=>a[0]-b[0]);for(const x of L)x[1]();if(typeof WB!=='undefined')WB.roof2d(ctx,vis,t);
     for(const q of mets){const k=1-q.w/q.w0;ctx.strokeStyle='#ff4a3a';ctx.lineWidth=2;ctx.fillStyle='#ff4a3a33';ctx.beginPath();ctx.ellipse(q.x,q.y,q.r,q.r*0.62,0,0,6.283);ctx.fill();ctx.stroke();ctx.fillStyle='#ff4a3a66';ctx.beginPath();ctx.ellipse(q.x,q.y,q.r*k,q.r*0.62*k,0,0,6.283);ctx.fill();
       if(q.w<0.45){const hy=q.w*700;ctx.fillStyle='#ffb04a';ctx.beginPath();ctx.arc(q.x+hy*0.3,q.y-hy,7,0,6.283);ctx.fill()}}
     for(const o of orbs){if(o.gp){ctx.font='18px sans-serif';ctx.textAlign='center';ctx.fillText('🧩',o.x,o.y+6+2*Math.sin(t*5));continue}ctx.fillStyle='#7dff9a';ctx.shadowColor='#7dff9a';ctx.shadowBlur=8;ctx.beginPath();ctx.moveTo(o.x,o.y-6);ctx.lineTo(o.x+4,o.y);ctx.lineTo(o.x,o.y+6);ctx.lineTo(o.x-4,o.y);ctx.fill();ctx.shadowBlur=0}

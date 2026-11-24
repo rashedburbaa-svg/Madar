@@ -101,9 +101,18 @@ const BAL={
   /* ---------- free modular building in عالم المدار (build.js, phase 1): pieces snap to a 48-unit grid in المدار-1 ---------- */
   build:{
     cell:48,reach:58,refund:0.5,wireMaxCells:6,
-    floor:{m:20},wall:{m:15,e:5},wire:{m:5},
+    floor:{m:20},wall:{m:15,e:5,hp:120},wire:{m:5},
     gen:{m:120,e:40,power:10},     // power generator: +10 power for its network
-    lamp:{m:20,use:2}              // a base light: uses 2 power, glows only when its network has enough
+    lamp:{m:20,use:2},             // a base light: uses 2 power, glows only when its network has enough
+    // phase 2: openings on cell edges, covers over cells, corridors; every structural piece has health
+    door:{m:25,e:10,hp:90},        // the astronaut walks through, monsters do not
+    window:{m:20,e:15,hp:60},      // glass in a wall: blocks everyone, lets the light through
+    roof:{m:15,hp:80},             // flat roof panel over a floor cell (hides while you are inside)
+    dome:{m:20,e:25,hp:70},        // glass dome over a floor cell
+    cor:{m:30,e:10,hp:80},         // covered glass corridor tile: a floor with its own canopy
+    monDmg:0.5,                    // a monster stopped by a piece hits it for 50% of its damage per second
+    meteorDmg:45,                  // a meteor hitting the base takes this much from every piece under it
+    repairPerHp:0.25               // repair cost: ⛏️ 0.25 per health point restored
   },
 
   /* ---------- «عالم المدار»: dodging is by movement only (joystick), so every danger is telegraphed first ---------- */

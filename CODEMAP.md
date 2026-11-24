@@ -20,11 +20,11 @@ bfx:2 · puff:3 · rise:4 · lights:5 · CORR:23 · corridorsSVG:24 · dur:30 ·
 ## js/astro3d.js — 57 سطر، 6KB
 Astro3D:2 · mat:4 · build:5 · cap:15 · limb:30 · init:40 · pose:45 · draw:51 · dir:52
 
-## js/balance.js — 119 سطر، 9KB
+## js/balance.js — 128 سطر، 10KB
 BAL:3
 
-## js/build.js — 124 سطر، 16KB
-WB:6 · TOOLS:9 · cost:10 · costTxt:11 · ctr:12 · dev:13 · devAt:14 · zoneOk:16 · target:18 · why:21 · pay2:28 · refund:29 · changed:30 · place:31 · near:40 · wire:41 · solve:49 · sum:50 · push:54 · clampN:58 · floor2d:60 · items2d:76 · make3d:91 · build3d:92 · draw3d:106 · paint:108 · open2:111 · start:112 · update:120 · stop:123
+## js/build.js — 198 سطر، 27KB
+WB:10 · doorOpen:12 · TOOLS:14 · NAME:16 · EDGE:17 · cost:18 · costTxt:19 · ctr:20 · dev:21 · devAt:22 · eType:23 · maxHp:24 · hpOf:25 · covered:26 · zoneOk:27 · target:29 · pieceAt:33 · why:35 · pay2:44 · refund:45 · changed:46 · place:47 · near:61 · wire:62 · solve:70 · sum:71 · rooms:75 · solid:76 · damage:79 · blast:83 · push:87 · clampN:92 · hpBar:94 · showHp:95 · floor2d:96 · edge2d:113 · items2d:127 · roof2d:139 · cells:139 · make3d:150 · build3d:151 · hurt:155 · box:156 · draw3d:176 · paint:180 · open2:183 · start:184 · update:193 · stop:197
 
 ## js/colony.js — 710 سطر، 111KB
 RES:4 · BLD:5 · BORDER:19 · PARTS:20 · GAMEOF:21 · colSave:23 · cap:24 · crew:25 · techLv:27 · tMul:27 · mult:28 · rate:29 · upCost:30 · upTime:31 · canPay:32 · pay:33 · OVERB:34 · gain:35 · fmtN:37 · fmtDur:38 · accrue:40 · finishBuild:44 · startBuild:46 · rush:54 · left:54 · repair:57 · colonyReward:64 · got:64 · QUESTS:75 · questCheck:96 · storyBox:99 · chapterDone:102 · TINT:106 · TNAME:107 · _mix:108 · GSET:109 · tintDefs:112 · tint:116 · lvBadge:117 · _sh:136 · _box:138 · _win:140 · _lattice:141 · art:144 · artRaw:145 · mod:187 · SLOT:258 · PRODB:260 · FEN:262 · fp:263 · fenceStyle:264 · dp:267 · domeSVG:268 · fenceSVG:283 · fenceRaw:284 · gateSVG:296 · gateRaw:297 · CRE:319 · CTOP:377 · ROAM:378 · TDEG:385 · towerN:386 · tierOf:387 · WNAME:388 · HEAD:389 · towerSVG:393 · towersSVG:395 · towersRaw:396 · CHP:401 · CTYPES:403 · crType:404 · popN:405 · creaturesSVG:406 · BT:409 · SPEED:411 · fenceR:412 · okSpot:413 · spawnPt:414 · pickTarget:415 · stepCreature:417 · battleInit:422 · svgEl:431 · spawnPack:433 · battleTick:437 · fire:452 · spark:457 · boom:458 · hurt:461 · fxAt:467 · zapSVG:468 · sceneSVG:470 · cam:511 · camView:512 · camZoom:518 · camBind:522 · up:528 · fxFloat:534 · fxRing:536 · resBar:540 · costHTML:541 · cardHTML:542 · bindActions:555 · go:559 · openSheet:561 · renderSheet:564 · listHTML:570 · closeSheet:575 · rankChip:576 · renderColony:577 · left:579 · go:594 · bRate:610 · bCap:611 · fillStores:612 · bubMin:613 · collect:614 · collectAll:619 · bubbleSVG:620 · updBubbles:622 · updRes:624 · flyRes:626 · phase:636 · SKY:637 · nightLights:638 · guideSVG:644 · tgt:644 · DAILY:648 · dayKey:649 · chestReady:650 · chestBox:651 · raidsOn:658 · raidPower:659 · defPower:660 · raidPlan:661 · raidCheck:662 · lost:666 · raidSoon:668 · raidShow:669 · end:675 · ambStart:679 · os:681 · ambStop:686 · ambSync:687 · focusB:691 · goTo:692 · left:700
@@ -50,7 +50,7 @@ FarmGame:2 · CROPS:3 · CR:7 · UPG:9 · fl:11 · speed:12 · init:13 · save:1
 ## js/hub.js — 43 سطر، 4KB
 GAMES:3 · pilotCard:4 · renderHub:8 · drawBadges:25 · showTab:29 · openGame:33 · goHub:41
 
-## js/i18n-en.js — 151KB — جدول الترجمة الإنجليزية — ابحث فيه بـ grep فقط
+## js/i18n-en.js — 152KB — جدول الترجمة الإنجليزية — ابحث فيه بـ grep فقط
 
 ## js/i18n.js — 53 سطر، 4KB
 LANG:3 · I18N:4 · UNIT:7 · trCore:8 · nums:11 · SPLITS:21 · trDeep:22 · tr:27 · TATTR:33 · trAttr:34 · trText:35 · trNode:36 · setLang:42 · run:48
