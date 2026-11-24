@@ -9,7 +9,7 @@ const TECH={
   build:{n:'روبوتات بناء',i:'🤖',d:L=>`-${Math.round(BAL.bld.time.techCut*100*L)}% وقت البناء`,base:BAL.tech.base.build},
   offline:{n:'أتمتة المباني',i:'🕒',d:L=>`+${BAL.tech.effect.offline*L} ساعة تخزين`,base:BAL.tech.base.offline},
   dmg:{n:'ذخيرة متطورة',i:'🎯',d:L=>`+${BAL.tech.effect.dmg*L} ضرر للأبراج`,base:BAL.tech.base.dmg},
-  rate:{n:'تبريد المدافع',i:'🔥',d:L=>`+${BAL.tech.effect.rateShown*L}% سرعة إطلاق`,base:BAL.tech.base.rate},
+  rate:{n:'تبريد المدافع',i:'🔥',d:L=>`+${Math.round(BAL.tech.effect.rate*100*L)}% سرعة إطلاق`,base:BAL.tech.base.rate},
   strike:{n:'الضربة المدارية',i:'☄️',d:L=>`+${Math.round(BAL.tech.effect.strike*100*L)}% قوة ضربتك`,base:BAL.tech.base.strike},
   // branch: navigation and bosses (needs HQ and earlier research)
   boss:{n:'اختراق دروع الزعماء',i:'⚔️',d:L=>`+${Math.round(BAL.techBoss*100*L)}% ضرر على كل الزعماء`,base:BAL.tech.base.boss,req:()=>{const q=BAL.tech.req.boss;return col.b.hq<q.hq?'القيادة '+q.hq:(col.tech.strike||0)<q.strike?'الضربة المدارية '+q.strike:''}},

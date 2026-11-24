@@ -38,7 +38,7 @@ const WorldGame=(()=>{
   const gateTxt=i=>{const L=[];if(!((st.gk||{})[i-1]>0))L.push('👑 حارس '+PLN[i-1].n);if((st.lv||1)<WORLD.LV[i])L.push('⭐ المستوى '+WORLD.LV[i]);return L.join(' · ')};
   function discover(reg){col.wm.u[reg]=1;colSave();snd('win');addMat(REG[reg].mat,10);toast(`🗺️ اكتشفت ${PLN[reg].em} ${PLN[reg].n}!`,'ach');const n=Object.keys(col.wm.u).length;if(n>=3)unlock('wm3');if(n>=6)unlock('wm6');R3&&R3.unlockReg(reg)}
   // «ادخل المنطقة» on the panorama: step just inside the border nearest to the hero, and the region opens
-  function enterReg(i){if(!p)return;const o=regPos(i);p.x=clamp(p.x,o.x+70,o.x+RW-70);p.y=clamp(p.y,o.y+70,o.y+RW-70);if(!open(i))discover(i)}
+  function enterReg(i){if(!p)return;const o=regPos(i);p.x=clamp(p.x,o.x+70,o.x+RW-70);p.y=clamp(p.y,o.y+70,o.y+RW-70);p.safe=2;if(!open(i))discover(i)}   // 2 s of safety after stepping in
   // a gate that is ready now: the panorama the first time, a toast after that
   function gateReady(i){if(typeof regionPanorama==='function'&&!panoSeen(i))regionPanorama(i,()=>enterReg(i));else toast('🔓 '+PLN[i].n+' مفتوحة الآن، امشِ إليها')}
   const rnd=(a,b)=>a+Math.random()*(b-a),clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -133,7 +133,7 @@ const WorldGame=(()=>{
       if(bot.cd<=0&&p.dead<=0){let tg=null,bd=B.range;for(const m of mons){const d=Math.hypot(m.x-bot.x,m.y-bot.y)-m.r;if(d<bd){bd=d;tg=m}}
         if(tg){bot.cd=1/B.rate;const a=Math.atan2(tg.y-bot.y,tg.x-bot.x);bshots.push({x:bot.x,y:bot.y,vx:Math.cos(a)*520,vy:Math.sin(a)*520,l:0.6})}}
       for(const s of bshots){s.x+=s.vx*dt;s.y+=s.vy*dt;s.l-=dt;for(const m of mons){if(m.hp<=0)continue;if((m.x-s.x)**2+(m.y-s.y)**2<(m.r+4)**2){m.hp-=p.dmg*B.dmgMul;m.fl=0.08;s.l=0;if(m.hp<=0)kill(m);break}}}bshots=bshots.filter(s=>s.l>0)}
-    p.hurt=Math.max(0,p.hurt-dt);saveT-=dt;if(saveT<=0){saveT=4;st.x=Math.round(p.x);st.y=Math.round(p.y);gSave('world',st);if(st._d){st._d=0;colSave()}}
+    p.safe=Math.max(0,(p.safe||0)-dt);p.hurt=Math.max(0,p.hurt-dt);saveT-=dt;if(saveT<=0){saveT=4;st.x=Math.round(p.x);st.y=Math.round(p.y);gSave('world',st);if(st._d){st._d=0;colSave()}}
     hudTick()}
   const dirty=()=>{st._d=1};
   /* random world events: a monster invasion or a meteor shower; meteors mark the ground first so the hero walks out of them */
@@ -148,7 +148,7 @@ const WorldGame=(()=>{
   function gainXP(n){st.xp=(st.xp||0)+n;st.lv=st.lv||1;let up=false;while(st.xp>=WORLD.xpNext(st.lv)){st.xp-=WORLD.xpNext(st.lv);st.lv++;up=true}
     if(up){restat(true);snd('ach');buzz([30,40,60]);float(p.x,p.y-50,'⬆️ المستوى '+st.lv);fx.push({k:'lvl',x:p.x,y:p.y,r:90,l:0.6});if(st.lv>=10)unlock('w_lv10');if(st.lv>=25)unlock('w_lv25');
       for(let i=1;i<6;i++)if(st.lv===WORLD.LV[i]&&(st.gk||{})[i-1]>0&&!open(i))gateReady(i);gSave('world',st)}}
-  function hitP(n,quiet){if(p.dead>0)return;p.hp-=n;if(!quiet)p.hurt=0.2;if(p.hp<=0){p.hp=0;p.dead=3;snd('lose');toast('💫 سقطت! تعود إلى القاعدة…');mons=mons.filter(m=>m.guard);eshots=[]}}
+  function hitP(n,quiet){if(p.dead>0||p.safe>0)return;p.hp-=n;if(!quiet)p.hurt=0.2;if(p.hp<=0){p.hp=0;p.dead=3;snd('lose');toast('💫 سقطت! تعود إلى القاعدة…');mons=mons.filter(m=>m.guard);eshots=[]}}
   function float(x,y,txt){parts.push({x,y,vx:0,vy:-40,l:1.1,txt})}
   function kill(m){m.hp=0;st.kills=(st.kills||0)+1;for(let k=0;k<10;k++){const a=Math.random()*6.283;parts.push({x:m.x,y:m.y,vx:Math.cos(a)*120,vy:Math.sin(a)*120,l:0.4,c:m.guard?'#ffd34d':'#ff9a6a'})}
     if(m.guard){const g=m.guard;g.alive=false;st.gd=st.gd||{};st.gd[g.reg]=Date.now()+WORLD.guard.cd;st.gq=st.gq||{};st.gq[g.reg]=0;const first=!(st.gk||{})[g.reg];st.gk=st.gk||{};st.gk[g.reg]=(st.gk[g.reg]||0)+1;

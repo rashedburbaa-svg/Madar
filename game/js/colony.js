@@ -522,6 +522,7 @@ let camDrag=false;
 function camBind(){const svg=$('cscene');if(!svg)return;const pts=new Map();let start=null,pinch=0;camDrag=false;
   svg.addEventListener('pointerdown',e=>{pts.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pts.size===1){start={x:e.clientX,y:e.clientY,cx:cam.x,cy:cam.y};camDrag=false}if(pts.size===2){const [a,b]=[...pts.values()];pinch=Math.hypot(a.x-b.x,a.y-b.y)}});
   svg.addEventListener('pointermove',e=>{if(!pts.has(e.pointerId))return;pts.set(e.pointerId,{x:e.clientX,y:e.clientY});const r=svg.getBoundingClientRect(),u=(500/cam.z)/r.width;
+    if(typeof LAY!=='undefined'&&LAY.drag){if(pts.size<2)return;layCancel()}
     if(pts.size===2){const [a,b]=[...pts.values()],d=Math.hypot(a.x-b.x,a.y-b.y);if(pinch){camZoom(d/pinch,(a.x+b.x)/2,(a.y+b.y)/2)}pinch=d;camDrag=true;return}
     if(start){const dx=e.clientX-start.x,dy=e.clientY-start.y;if(!camDrag&&Math.hypot(dx,dy)>8){camDrag=true;try{svg.setPointerCapture(e.pointerId)}catch(_){}}if(camDrag){cam.x=start.cx-dx*u;cam.y=start.cy-dy*u;camView()}}});
   const up=e=>{pts.delete(e.pointerId);if(pts.size<2)pinch=0;if(!pts.size){start=null;setTimeout(()=>{camDrag=false},0)}};

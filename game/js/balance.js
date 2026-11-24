@@ -44,7 +44,7 @@ const BAL={
     costGrowth:1.85,gemBase:3,gemPerLv:3,       // cost = base · 1.85^level, 💎 3 + 3·level
     time:{base:45,growth:2.1,labCut:0.04},      // seconds = 45 · 2.1^level · (1 − 0.04·lab level)
     rushSecPerGem:60,
-    effect:{offline:2,offlineBaseH:8,dmg:1,rate:0.08,rateShown:10,strike:0.5}  // NOTE rate: the card says +10% but the towers get 8%; both kept as they were
+    effect:{offline:2,offlineBaseH:8,dmg:1,rate:0.10,strike:0.5}  // rate: towers fire 10% faster per level (the card always said +10%; the code gave 8% until 24 Nov 2026)
   },
   galaxy:{
     planets:[{t:1200,r:{m:900,e:700,c:8}},{t:3600,r:{e:1800,f:1400,c:14}},{t:7200,r:{f:3200,m:2000,c:20}},
