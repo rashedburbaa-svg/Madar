@@ -162,7 +162,7 @@ const WorldGame=(()=>{
   function raidTick(dt){const Rb=BAL.build.raid,c=typeof WB!=='undefined'&&WB.center();if(!c){RD.ph='idle';return}const b=col.base,lv=b.rl||0;
     if(RD.ph==='idle'){RD.t-=dt;if(RD.t>0)return;
       for(let k=0;k<24;k++){const a=Math.random()*6.283,x=c.x+Math.cos(a)*Rb.dist,y=c.y+Math.sin(a)*Rb.dist;if(regAt(x,y)===0&&Math.hypot(x-WORLD.base.x,y-WORLD.base.y)>WORLD.base.r+80){RD.x=x;RD.y=y;break}if(k===23){RD.t=20;return}}
-      RD.radar=WB.radarOn();RD.ph='warn';RD.t=(RD.radar?Rb.warnRadar:Rb.warnBase)*(1+(typeof shipFx==='function'?shipFx('radar'):0));snd('err');buzz([40,60,40]);toast('⚠️ غارة تقترب من القاعدة!'+(RD.radar?' الرادار يحدد اتجاهها':''));return}
+      RD.radar=WB.radarOn();RD.ph='warn';RD.t=(RD.radar?Rb.warnRadar:Rb.warnBase)*(1+(typeof shipFx==='function'?shipFx('radar'):0));bfx('alarm');buzz([40,60,40]);toast('⚠️ غارة تقترب من القاعدة!'+(RD.radar?' الرادار يحدد اتجاهها':''));return}
     if(RD.ph==='warn'){RD.t-=dt;if(RD.t>0)return;const n=Math.min(Rb.maxN,Rb.n0+lv*Rb.perLv),L0=WORLD.LV[0]+1+Math.floor(lv/2);
       for(let k=0;k<n;k++){const a=Math.random()*6.283,x=RD.x+Math.cos(a)*rnd(10,70),y=RD.y+Math.sin(a)*rnd(10,70),big=k%4===3,s=monStats(0,big,L0+(big?1:0));
         mons.push({x,y,reg:0,big,lv:L0+(big?1:0),hp:s.hp,max:s.hp,dmg:s.dmg,spd:s.spd*0.9,r:s.r,wx:0,wy:0,wt:0,hit:0,fl:0,raid:1,tx:c.x+rnd(-30,30),ty:c.y+rnd(-30,30)})}
@@ -205,8 +205,10 @@ const WorldGame=(()=>{
     if(st.gq[reg]>=WORLD.guard.kills){st.gd[reg]=0;st.gq[reg]=0;snd('err');toast('👑 حارس '+PLN[reg].n+' استيقظ!')}}
   /* ---------- HUD (shared by both views) ---------- */
   function hudBuild(){hud=document.createElement('div');hud.className='whud';hud.innerHTML=`<div class="whp"><i></i><b></b></div><div class="whlv"><b></b><i><u></u></i></div><div class="whreg"></div><div class="whmat"></div><div class="wgd" hidden><small></small><i><u></u></i></div>
-    <button type="button" class="wview" aria-label="تبديل المنظور">🎥 3D</button><button type="button" class="wforgeb" hidden>⚒️ ورشة الأسلحة</button><div class="wforge" hidden></div><canvas class="wmini" width="120" height="80"></canvas><div class="wjoy" hidden><i></i></div><div class="wraid" hidden><i aria-hidden="true">➤</i><span></span></div>`;stage.appendChild(hud);mini=hud.querySelector('.wmini');
+    <button type="button" class="wview" aria-label="تبديل المنظور">🎥 3D</button><button type="button" class="wforgeb" hidden>⚒️ ورشة الأسلحة</button><div class="wforge" hidden></div><canvas class="wmini" width="120" height="80"></canvas><div class="wjoy" hidden><i></i></div><button type="button" class="wmute" aria-label="الصوت"></button><div class="wraid" hidden><i aria-hidden="true">➤</i><span></span></div>`;stage.appendChild(hud);mini=hud.querySelector('.wmini');
     hud.querySelector('.wview').onclick=e=>{e.stopPropagation();setView(view==='2d'?'3d':'2d')};
+    // quick sound switch: the same choice as the main 🔊 button, saved in arcade-prefs
+    {const mb=hud.querySelector('.wmute'),paint=()=>{mb.textContent=prefs.sound?'🔊':'🔇';mb.classList.toggle('off',!prefs.sound)};paint();mb.onclick=e=>{e.stopPropagation();prefs.sound=!prefs.sound;save('arcade-prefs',prefs);if(typeof drawPrefs==='function')drawPrefs();if(typeof musSync==='function')try{musSync()}catch(_){}paint();if(prefs.sound)snd('tap')}}
     hud.querySelector('.wforgeb').onclick=e=>{e.stopPropagation();snd('tap');forge(true)};
     hud.querySelector('.wforge').addEventListener('pointerdown',e=>e.stopPropagation());
     hud.querySelector('.wforge').onclick=e=>{e.stopPropagation();const b=e.target.closest('button');if(!b)return;const id=b.dataset.id,w=WORLD.WEAP.find(x=>x.id===id);

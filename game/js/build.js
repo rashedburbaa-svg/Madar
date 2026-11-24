@@ -45,7 +45,7 @@ const WB=(()=>{
     if(!fv)return 'ضع أرضية أولاً';if(devAt(T.gx,T.gy))return 'المكان مشغول';return ''}
   function pay2(c,txt){if(!canPay(c)){snd('err');toast('الموارد لا تكفي: '+txt);return false}pay(c);return true}
   function refund(k){const c=cost(k),f=BAL.build.refund;if(c.m)gain('m',Math.round(c.m*f));if(c.e)gain('e',Math.round(c.e*f))}
-  let cache=null,SH=null;   // drawing lists, rebuilt only when the base changes (no string splitting every frame)
+  let cache=null,SH=null,netA=0.6,netT=0;   // netA: how visible wires and pipes are right now   // drawing lists, rebuilt only when the base changes (no string splitting every frame)
   function cacheB(){if(cache)return cache;const b=B(),F=[],E=[],V=[];for(const k in b.f){const [gx,gy]=k.split(',').map(Number);F.push({k,x:gx*C,y:gy*C,cor:b.f[k]==='cor'})}
     for(const k in b.w){const [gx,gy,o]=k.split(',');E.push({k,x:+gx*C,y:+gy*C,o,t:eType(b.w[k])})}
     for(const k in b.r){const [gx,gy]=k.split(',').map(Number);V.push({k,gx,gy,t:b.r[k]})}for(const f of F)if(f.cor)V.push({k:f.k,gx:f.x/C,gy:f.y/C,t:'cor'});V.sort((a,c)=>a.gy-c.gy);return cache={F,E,V}}
@@ -62,7 +62,7 @@ const WB=(()=>{
       delete b.hp[P.key];snd('build');toast('🔧 أُصلح '+NAME[P.t]);return changed()}
     if(!pay2(cost(k),costTxt(k)))return;
     if(k==='floor')b.f[T.fk]=1;else if(k==='cor')b.f[T.fk]='cor';else if(k==='wall')b.w[T.ek]=1;else if(EDGE[k])b.w[T.ek]=k;else if(COVER[k])b.r[T.fk]=k;else b.d.push({id:b.n++,t:k,gx:T.gx,gy:T.gy,r:rot});
-    snd('build');buzz(12);changed()}
+    bfx('place');buzz(12);changed()}
   // wires: stand by a device and tap ✔, then by a second device and tap ✔ again
   function near(){const p=api.player();let best=null,bd=80;for(const d of B().d){const c=ctr(d.gx,d.gy),e=Math.hypot(c.x-p.x,c.y-p.y);if(e<bd){bd=e;best=d}}return best}
   // links: wires carry power, pipes carry goods (a planter's food into a tank); same two taps for both
@@ -72,7 +72,7 @@ const WB=(()=>{
     const a=dev(sel),ca=ctr(a.gx,a.gy),cb=ctr(d.gx,d.gy);if(Math.hypot(ca.x-cb.x,ca.y-cb.y)>mx*C){snd('err');api.say(em+' لا يصل: الحد '+mx+' خانات');return}
     const i=b[L].findIndex(([x,y])=>(x===sel&&y===d.id)||(x===d.id&&y===sel));
     if(i>=0){b[L].splice(i,1);refund(k);toast(k==='wire'?'✂️ قُطع السلك':'✂️ فُك الأنبوب')}else{if(!pay2(cost(k),costTxt(k)))return;b[L].push([sel,d.id]);toast(k==='wire'?'🔌 وُصل السلك':'🧪 وُصل الأنبوب')}
-    sel=null;snd('ok');changed();paint()}
+    sel=null;bfx(i>=0?'cut':k);changed();paint()}
   // power: devices joined by wires share one network; generators supply, lamps use
   function solve(){if(!dirty)return;dirty=false;net={};const b=B(),par={};const f=x=>par[x]===x?x:(par[x]=f(par[x]));b.d.forEach(d=>par[d.id]=d.id);
     b.wi.forEach(([a,c])=>{if(par[a]!=null&&par[c]!=null)par[f(a)]=f(c)});const sum={};
@@ -108,11 +108,14 @@ const WB=(()=>{
         if(F.cor){ctx.fillStyle='#8f99a8';ctx.fillRect(x,y,C,C);ctx.fillStyle='#b9c2ce';ctx.fillRect(x+3,y+3,C-6,C-6);ctx.fillStyle='#00e5ff88';ctx.fillRect(x+C/2-2,y+4,4,C-8);ctx.fillRect(x+4,y+C/2-2,C-8,4);continue}
         ctx.fillStyle='#c9d1dc';ctx.fillRect(x,y,C,C);ctx.fillStyle='#e8edf3';ctx.fillRect(x+2,y+2,C-4,C-4);ctx.strokeStyle='#f5c45188';ctx.lineWidth=1;ctx.strokeRect(x+3.5,y+3.5,C-7,C-7);
         ctx.fillStyle='#00e5ff99';ctx.fillRect(x+C/2-1.5,y+C/2-1.5,3,3)}
+      const NA=netA;ctx.globalAlpha=NA;
       for(const [a,c] of b.pi||[]){const A=dev(a),Z=dev(c);if(!A||!Z)continue;const p1=ctr(A.gx,A.gy),p2=ctr(Z.gx,Z.gy),flow=[A,Z].some(x=>x.t==='planter'&&net[x.id]&&net[x.id].ok&&net[x.id].sup>0);
+        if(NA>0.85){ctx.strokeStyle='#7dff9a2e';ctx.lineWidth=14;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.stroke()}
         ctx.strokeStyle='#8f99a8';ctx.lineWidth=8;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();ctx.strokeStyle='#eef2f6';ctx.lineWidth=5;ctx.stroke();ctx.strokeStyle=flow?'#7dff9a':'#9ff0ff66';ctx.lineWidth=2;ctx.setLineDash([5,7]);ctx.lineDashOffset=flow?-pulse*48:0;ctx.stroke();ctx.setLineDash([]);ctx.lineCap='butt'}
       for(const [a,c] of b.wi||[]){const A=dev(a),Z=dev(c);if(!A||!Z)continue;const p1=ctr(A.gx,A.gy),p2=ctr(Z.gx,Z.gy),mx=(p1.x+p2.x)/2,my=(p1.y+p2.y)/2+14,ok=net[a]&&net[a].ok&&net[a].sup>0;
+        if(NA>0.85){ctx.strokeStyle='#00e5ff33';ctx.lineWidth=9;ctx.beginPath();ctx.moveTo(p1.x,p1.y+4);ctx.quadraticCurveTo(mx,my,p2.x,p2.y+4);ctx.stroke()}
         ctx.strokeStyle='#1a2033';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(p1.x,p1.y+4);ctx.quadraticCurveTo(mx,my,p2.x,p2.y+4);ctx.stroke();ctx.strokeStyle=ok?'#f5c451':'#5a6070';ctx.lineWidth=1.4;ctx.stroke();
-        if(ok){const u=(pulse%1),q=1-u;ctx.fillStyle='#00e5ff';ctx.beginPath();ctx.arc(q*q*p1.x+2*q*u*mx+u*u*p2.x,q*q*(p1.y+4)+2*q*u*my+u*u*(p2.y+4),2.6,0,6.283);ctx.fill()}}}
+        if(ok){const u=(pulse%1),q=1-u;ctx.fillStyle='#00e5ff';ctx.beginPath();ctx.arc(q*q*p1.x+2*q*u*mx+u*u*p2.x,q*q*(p1.y+4)+2*q*u*my+u*u*(p2.y+4),2.6,0,6.283);ctx.fill()}}ctx.globalAlpha=1}
     if(on&&api){const T=target(),k=tool,bad=!!why(k,T),col2=bad?'#ff4d5e':'#00e5ff',p=api.player();
       ctx.strokeStyle='#9fe8ff22';ctx.lineWidth=1;const g0x=Math.floor(p.x/C)-4,g0y=Math.floor(p.y/C)-4;ctx.beginPath();for(let i=0;i<=9;i++){ctx.moveTo((g0x+i)*C,g0y*C);ctx.lineTo((g0x+i)*C,(g0y+9)*C);ctx.moveTo(g0x*C,(g0y+i)*C);ctx.lineTo((g0x+9)*C,(g0y+i)*C)}ctx.stroke();
       ctx.strokeStyle=col2;ctx.fillStyle=col2+'33';ctx.lineWidth=2;
@@ -142,11 +145,11 @@ const WB=(()=>{
   // roofs, domes and corridor canopies are drawn above everything; the room you stand in fades away
   function roof2d(ctx,vis,t){const b=col.base;if(!b||!api)return;WBD.fx2d(ctx);
     for(const V of cacheB().V){const k=V.k,ty=V.t,gx=V.gx,gy=V.gy,x=gx*C,y=gy*C;if(!vis(x+C/2,y+C/2))continue;const inn=inside.has(k),key=(ty==='cor'?'c':'r')+k,f=hpOf(key,ty)/maxHp(ty);
-      if(ty==='roof'){ctx.globalAlpha=inn?0.12:1;ctx.fillStyle='#c3ccd8';ctx.fillRect(x,y+C-36,C,5);ctx.fillStyle='#e3e8ef';ctx.fillRect(x,y-36,C,C);ctx.strokeStyle='#cfd6e0';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x+C/2,y-36);ctx.lineTo(x+C/2,y+C-36);ctx.moveTo(x,y-36+C/2);ctx.lineTo(x+C,y-36+C/2);ctx.stroke();
+      if(ty==='roof'){ctx.globalAlpha=inn?0.12:on?0.3:1;ctx.fillStyle='#c3ccd8';ctx.fillRect(x,y+C-36,C,5);ctx.fillStyle='#e3e8ef';ctx.fillRect(x,y-36,C,C);ctx.strokeStyle='#cfd6e0';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x+C/2,y-36);ctx.lineTo(x+C/2,y+C-36);ctx.moveTo(x,y-36+C/2);ctx.lineTo(x+C,y-36+C/2);ctx.stroke();
         ctx.strokeStyle='#f5c451';ctx.lineWidth=1.5;ctx.strokeRect(x+1,y-35,C-2,C-2);ctx.fillStyle='#00e5ff';ctx.fillRect(x+C/2-2,y-36+C/2-2,4,4)}
-      if(ty==='dome'){const cx=x+C/2,by=y+C-2;ctx.globalAlpha=inn?0.08:1;ctx.fillStyle='#9ff0ff33';ctx.beginPath();ctx.ellipse(cx,by,C/2,C*1.05,0,Math.PI,0);ctx.fill();ctx.strokeStyle='#bff8ffcc';ctx.lineWidth=1.4;ctx.stroke();
+      if(ty==='dome'){const cx=x+C/2,by=y+C-2;ctx.globalAlpha=inn?0.08:on?0.3:1;ctx.fillStyle='#9ff0ff33';ctx.beginPath();ctx.ellipse(cx,by,C/2,C*1.05,0,Math.PI,0);ctx.fill();ctx.strokeStyle='#bff8ffcc';ctx.lineWidth=1.4;ctx.stroke();
         ctx.strokeStyle='#ffffffaa';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(cx,by,C/2-7,C*0.95,0,Math.PI*1.15,Math.PI*1.45);ctx.stroke();ctx.fillStyle='#f5c451';ctx.fillRect(x,by-2,C,3)}
-      if(ty==='cor'){const hz=!!(b.f[(gx-1)+','+gy]||b.f[(gx+1)+','+gy]),vt=!!(b.f[gx+','+(gy-1)]||b.f[gx+','+(gy+1)]);ctx.globalAlpha=inn?0.1:1;ctx.fillStyle='#bff8ff2e';ctx.fillRect(x,y-26,C,C);ctx.strokeStyle='#e8fdffaa';ctx.lineWidth=1.3;ctx.beginPath();
+      if(ty==='cor'){const hz=!!(b.f[(gx-1)+','+gy]||b.f[(gx+1)+','+gy]),vt=!!(b.f[gx+','+(gy-1)]||b.f[gx+','+(gy+1)]);ctx.globalAlpha=inn?0.1:on?0.3:1;ctx.fillStyle='#bff8ff2e';ctx.fillRect(x,y-26,C,C);ctx.strokeStyle='#e8fdffaa';ctx.lineWidth=1.3;ctx.beginPath();
         if(hz||!vt){for(let i=0;i<=3;i++){const xx=x+i*C/3;ctx.moveTo(xx,y-26);ctx.lineTo(xx,y-26+C)}}else{for(let i=0;i<=3;i++){const yy=y-26+i*C/3;ctx.moveTo(x,yy);ctx.lineTo(x+C,yy)}}ctx.stroke();ctx.fillStyle='#f5c45199';ctx.fillRect(x,y-27,C,2)}
       ctx.globalAlpha=1;if(f<1){if(!inn){ctx.fillStyle=`rgba(255,77,94,${(1-f)*0.35})`;ctx.fillRect(x,y-36,C,C)}if(showHp(x+C/2,y))hpBar(ctx,x+C/2,y-44,f)}}}
   /* ---------- 3D ---------- */
@@ -157,7 +160,7 @@ const WB=(()=>{
     if(!SH){const S2=(c,r,m,o)=>Object.assign(new THREE.MeshStandardMaterial({color:c,roughness:r,metalness:m}),o||{});
       SH={white:S2(0xf0f3f7,0.5,0.05),gold:S2(0xf5c451,0.32,0.65),dark:S2(0x2a3448,0.6,0.2),cyan:new THREE.MeshBasicMaterial({color:0x00e5ff}),
         glass:S2(0x9ff0ff,0.08,0.2,{transparent:true,opacity:0.35,emissive:new THREE.Color(0x0a4a5a),emissiveIntensity:0.4,depthWrite:false}),floor:S2(0xdfe5ec,0.6,0.05),hurt:S2(0xffb0b8,0.5,0.05),
-        roofOk:S2(0xe3e8ef,0.55,0.05),roofHurt:S2(0xffc0c6,0.55,0.05),soil:S2(0x4a3020,0.95,0),leaf:S2(0x3fae6a,0.7,0,{flatShading:true}),G:{}}}
+        roofOk:S2(0xe3e8ef,0.55,0.05),wireM:S2(0xf5c451,0.32,0.65,{transparent:true}),pipeM:S2(0xeef2f6,0.4,0.1,{transparent:true}),roofHurt:S2(0xffc0c6,0.55,0.05),soil:S2(0x4a3020,0.95,0),leaf:S2(0x3fae6a,0.7,0,{flatShading:true}),G:{}}}
     const white=SH.white,gold=SH.gold,dark=SH.dark,cyan=SH.cyan,glass=SH.glass;
     const BG=(w,h,d)=>{const k=w+'|'+h+'|'+d;if(!SH.G[k]){SH.G[k]=new THREE.BoxGeometry(w,h,d);SH.G[k].userData.keep=1}return SH.G[k]};
     const hurt=(key,t)=>hpOf(key,t)/maxHp(t)>=0.5?white:SH.hurt;
@@ -182,13 +185,13 @@ const WB=(()=>{
       bulb:(x,y,z)=>{const o=new THREE.Mesh(new THREE.SphereGeometry(5,12,10),own(new THREE.MeshLambertMaterial({color:0x6a7486,emissive:0x00e5ff,emissiveIntensity:0})));o.position.set(x,y,z);G3.add(o);return o},
       screenM:()=>own(new THREE.MeshLambertMaterial({color:0x2a3448,emissive:0x00e5ff,emissiveIntensity:0}))};
     for(const d of b.d){if(!WBD.T[d.t])continue;d.r=d.r||0;const fn=WBD.T[d.t].d3(M,ctr(d.gx,d.gy),d);if(fn)anim3.push([fn,d])}
-    for(const [a,z] of b.pi){const A=dev(a),Z=dev(z);if(!A||!Z)continue;const p1=ctr(A.gx,A.gy),p2=ctr(Z.gx,Z.gy),cv=new THREE.LineCurve3(new THREE.Vector3(p1.x,4,p1.y),new THREE.Vector3(p2.x,4,p2.y));G3.add(new THREE.Mesh(new THREE.TubeGeometry(cv,2,3,8,false),white))}
+    for(const [a,z] of b.pi){const A=dev(a),Z=dev(z);if(!A||!Z)continue;const p1=ctr(A.gx,A.gy),p2=ctr(Z.gx,Z.gy),cv=new THREE.LineCurve3(new THREE.Vector3(p1.x,4,p1.y),new THREE.Vector3(p2.x,4,p2.y));G3.add(new THREE.Mesh(new THREE.TubeGeometry(cv,2,3,8,false),SH.pipeM))}
     for(const [a,z] of b.wi){const A=dev(a),Z=dev(z);if(!A||!Z)continue;const p1=ctr(A.gx,A.gy),p2=ctr(Z.gx,Z.gy),cv=new THREE.QuadraticBezierCurve3(new THREE.Vector3(p1.x,3,p1.y),new THREE.Vector3((p1.x+p2.x)/2,0.6,(p1.y+p2.y)/2),new THREE.Vector3(p2.x,3,p2.y));
-      G3.add(new THREE.Mesh(new THREE.TubeGeometry(cv,12,1.2,5,false),gold))}
+      G3.add(new THREE.Mesh(new THREE.TubeGeometry(cv,12,1.2,5,false),SH.wireM))}
     scene3.add(G3)}
-  function draw3d(t){solve();rooms();const p=api&&api.player();for(const [fn,d] of anim3)fn(t,net[d.id]||{sup:0,use:0},d);
+  function draw3d(t){solve();rooms();if(SH){SH.wireM.opacity=netA;SH.pipeM.opacity=Math.max(0.35,netA);SH.wireM.emissive.setHex(netA>0.85?0x3a2a00:0);SH.pipeM.emissive.setHex(netA>0.85?0x0a3a44:0)}const p=api&&api.player();for(const [fn,d] of anim3)fn(t,net[d.id]||{sup:0,use:0},d);
     for(const [m,ek] of doors3){const [i,j,o]=ek.split(','),mx=+i*C+(o==='h'?C/2:0),my=+j*C+(o==='v'?C/2:0),op=clampN((doorOpen[ek]||0)+(p&&Math.hypot(p.x-mx,p.y-my)<56?0.12:-0.08),0,1);doorOpen[ek]=op;m.position.y=16+op*28;m.scale.y=1-op*0.8}
-    for(const [m,k,base] of covers3)m.opacity=inside.has(k)?Math.min(base,0.08):base}
+    for(const [m,k,base] of covers3)m.opacity=inside.has(k)?Math.min(base,0.08):on?Math.min(base,0.3):base}   // roofs see-through while building, so the wiring shows
   /* ---------- HUD: 🔨 button and the build bar ---------- */
   function paint(){if(!bar)return;bar.querySelectorAll('[data-t]').forEach(x=>x.classList.toggle('on',x.dataset.t===tool));
     const T=TOOLS.find(x=>x[0]===tool),hint=tool==='pipe'?(sel?'اقترب من الجهاز الثاني واضغط ✔':'الأنابيب تنقل إنتاج الأحواض إلى الخزانات · اقترب من جهاز واضغط ✔'):ISDEV(tool)?'معاينة شبحية أمامك · ↻ للتدوير · يُوضع فوق أرضية':tool==='wire'?(sel?'اقترب من الجهاز الثاني واضغط ✔ (اضغط على وصلة موجودة لقطعها)':'اقترب من مولد أو جهاز واضغط ✔'):tool==='del'?'وجّه الرائد نحو القطعة واضغط ✔':tool==='fix'?'وجّه الرائد نحو قطعة متضررة واضغط ✔':EDGE[tool]?'يلتصق بحافة الخانة أمامك · ↻ لتغيير الحافة':COVER[tool]?'يُوضع فوق أرضية · يختفي حين تكون تحته':'تلتصق القطعة بالخانة أمام الرائد';
@@ -237,7 +240,10 @@ const WB=(()=>{
     const cv=panel.querySelector('canvas');if(cv&&api.mini()){const g=cv.getContext('2d');g.fillStyle='#070b16';g.fillRect(0,0,200,134);g.drawImage(api.mini(),0,0,200,134);g.strokeStyle='#00e5ff88';g.strokeRect(0.5,0.5,199,133)}
     if(typeof trNode==='function'&&typeof I18N!=='undefined'&&I18N.on)trNode(panel)}
   function onKill(m){const b=col.base;if(!b)return;b.sc=(b.sc||0)+(m.guard?BAL.build.scrapGuard:BAL.build.scrapPerKill)}
-  function update(dt,t){pulse=(pulse+dt*0.7)%1;if(api&&col.base){solve();WBD.tick(dt,B(),net,pipes,api);tutTick(dt)}hpSaveT-=dt;if(hpDirty&&hpSaveT<=0){hpDirty=false;hpSaveT=3;colSave()}chipT-=dt;if(chipT>0||!chip||!api)return;chipT=0.3;solve();const d=near();
+  // wires and pipes: bright in build mode or by a device, faint when monsters are close or a raid is on
+  function netTick(dt){netT-=dt;if(netT<=0&&api){netT=0.3;const p=api.player(),R=window.WRAID,fight=(R&&R.ph!=='idle')||api.mons().some(m=>m.hp>0&&(m.x-p.x)**2+(m.y-p.y)**2<260*260);netTk=on||(panel&&!panel.hidden)?1:fight?0.22:0.6}netA+=(netTk-netA)*Math.min(1,dt*5)}
+  let netTk=0.6;
+  function update(dt,t){pulse=(pulse+dt*0.7)%1;netTick(dt);if(api&&col.base){solve();WBD.tick(dt,B(),net,pipes,api);tutTick(dt)}hpSaveT-=dt;if(hpDirty&&hpSaveT<=0){hpDirty=false;hpSaveT=3;colSave()}chipT-=dt;if(chipT>0||!chip||!api)return;chipT=0.3;solve();const d=near();
     showPanel(on?null:d);if(d&&!on){chip.hidden=true;return}
     if(d){const n=net[d.id]||{sup:0,use:0};chip.hidden=false;chip.textContent=WBD.T[d.t].em+' '+WBD.T[d.t].n+' · ⚡ '+n.use+'/'+n.sup;return}
     const P=pieceAt(target());if(P&&P.key){const h=hpOf(P.key,P.t),M=maxHp(P.t);if(on||h<M){chip.hidden=false;chip.textContent=NAME[P.t]+' · ❤️ '+Math.ceil(h)+'/'+M+(h<M?' · 🔧':'');return}}

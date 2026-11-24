@@ -925,3 +925,4 @@ body.wfull .wbbar:not([hidden])~.wforgeb,.whud:has(.wbbar:not([hidden])) .wview{
 .wraid i{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#ff4d5e;color:#fff;font-style:normal;font-size:14px;transition:transform .15s linear}
 @keyframes wrp{50%{box-shadow:0 0 0 4px #ff4d5e33}}
 .wdpanel{max-height:48vh;overflow-y:auto}
+.wmute{position:absolute;bottom:110px;inset-inline-end:10px;pointer-events:auto;width:48px;height:40px;border-radius:12px;border:1px solid #f5c451;background:#0b1226dd;color:#fff;font-size:18px}.wmute.off{border-color:#ffffff44;opacity:.75}

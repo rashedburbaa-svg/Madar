@@ -61,7 +61,7 @@ const WBD=(()=>{
         // look for a target 4 times a second only (cheap on phones), keep aiming at it in between
         if(d.sc2<=0||!d.tg||d.tg.hp<=0){d.sc2=0.25;d.tg=null;let bd=R2*R2;for(const m of mons){if(m.hp<=0)continue;const e=(m.x-c.x)**2+(m.y-c.y)**2;if(e<bd){bd=e;d.tg=m}}}
         const best=d.tg&&d.tg.hp>0&&(d.tg.x-c.x)**2+(d.tg.y-c.y)**2<R2*R2?d.tg:null;
-        if(best){d.aim=Math.atan2(best.y-c.y,best.x-c.x);if(d.cd<=0){d.cd=1/K('turret').rate;if(fxs.length<24)fxs.push({x:c.x,y:c.y-22,x2:best.x,y2:best.y-10,l:0.12});api.hit(best,api.heroDmg()*K('turret').dmgMul)}}}}
+        if(best){d.aim=Math.atan2(best.y-c.y,best.x-c.x);if(d.cd<=0){d.cd=1/K('turret').rate;if(fxs.length<24)fxs.push({x:c.x,y:c.y-22,x2:best.x,y2:best.y-10,l:0.12});if(typeof bfx==='function')bfx('turret');api.hit(best,api.heroDmg()*K('turret').dmgMul)}}}}
     // a planter's own store empties into a tank as soon as a pipe joins them
   }
   function fx2d(ctx){for(const f of fxs){ctx.globalAlpha=Math.min(1,f.l*10);ctx.strokeStyle='#7ffcff';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(f.x,f.y);ctx.lineTo(f.x2,f.y2);ctx.stroke();ctx.strokeStyle='#fff';ctx.lineWidth=1;ctx.stroke()}ctx.globalAlpha=1}
@@ -104,3 +104,21 @@ function shipFx(k){const S=typeof col!=='undefined'&&col.base&&col.base.sp;if(!S
 {const _rc=renderColony;renderColony=function(){_rc.apply(this,arguments);const host=$('colony'),row=host&&host.querySelector('.crow');if(!row||row.querySelector('.cbase'))return;const b=col.base;if(!b||!Array.isArray(b.d)||!b.d.length)return;
   const E=baseEco(),bt=document.createElement('button');bt.type='button';bt.className='cbase';bt.setAttribute('aria-label','القاعدة المبنية');bt.textContent='🏗️';
   bt.onclick=()=>{snd('tap');storyBox('🏗️ القاعدة المبنية في عالم المدار',`🌱 +${E.f} غذاء/ساعة من أحواض الزراعة · ⚡ +${E.e} طاقة/ساعة من فائض المولدات · 📦 +${E.cap} سعة من الخزانات · 🛡️ +${E.def} دفاع من الأبراج · 🔬 أبحاث أسرع ${Math.round(E.res*100)}%`,'رائع')};row.appendChild(bt)}}
+
+/* ---------- base sounds, synthesized with Web Audio (no sound files): place, wire, pipe, raid alarm, turret shot ----------
+   They follow the same sound switch as the rest of the game (prefs.sound in arcade-prefs). */
+const BFX=(()=>{let noise=null,master=null,lastT={};
+  function ctx(){if(!prefs.sound||typeof sfxHold!=='undefined'&&sfxHold)return null;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();
+    if(!master){master=AC.createGain();master.gain.value=0.55;master.connect(AC.destination);const n=AC.createBuffer(1,AC.sampleRate*0.4,AC.sampleRate),d=n.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;noise=n}return AC}catch(e){return null}}
+  const tone=(A,type,f0,f1,t0,d,v)=>{const o=A.createOscillator(),g=A.createGain();o.type=type;o.frequency.setValueAtTime(f0,t0);o.frequency.exponentialRampToValueAtTime(Math.max(30,f1),t0+d);g.gain.setValueAtTime(0.0001,t0);g.gain.exponentialRampToValueAtTime(v,t0+0.01);g.gain.exponentialRampToValueAtTime(0.0001,t0+d);o.connect(g);g.connect(master);o.start(t0);o.stop(t0+d+0.02)};
+  const hiss=(A,t0,d,v,fq,q)=>{const s=A.createBufferSource(),f=A.createBiquadFilter(),g=A.createGain();s.buffer=noise;f.type='bandpass';f.frequency.value=fq;f.Q.value=q||1;g.gain.setValueAtTime(v,t0);g.gain.exponentialRampToValueAtTime(0.0001,t0+d);s.connect(f);f.connect(g);g.connect(master);s.start(t0);s.stop(t0+d+0.02)};
+  // a short gap per kind keeps rapid events (turrets) from piling up
+  function play(k){const A=ctx();if(!A)return;const t0=A.currentTime,gap={turret:0.12,place:0.05}[k]||0.08;if(lastT[k]&&t0-lastT[k]<gap)return;lastT[k]=t0;
+    if(k==='place'){tone(A,'sine',220,90,t0,0.14,0.22);hiss(A,t0,0.08,0.18,1800,0.8);tone(A,'triangle',1320,1180,t0+0.05,0.07,0.05)}
+    else if(k==='wire'){tone(A,'square',700,1500,t0,0.09,0.05);hiss(A,t0+0.02,0.07,0.12,4200,2);tone(A,'sine',1500,1500,t0+0.09,0.12,0.06)}
+    else if(k==='pipe'){tone(A,'sine',320,620,t0,0.12,0.14);tone(A,'sine',480,820,t0+0.1,0.1,0.1);hiss(A,t0,0.12,0.06,900,3)}
+    else if(k==='alarm'){for(let i=0;i<3;i++){tone(A,'triangle',660,660,t0+i*0.32,0.15,0.12);tone(A,'triangle',880,880,t0+i*0.32+0.16,0.15,0.12)}}
+    else if(k==='turret'){tone(A,'sawtooth',1400,260,t0,0.07,0.035);hiss(A,t0,0.04,0.04,3000,1)}
+    else if(k==='cut'){tone(A,'square',900,300,t0,0.1,0.04)}}
+  return {play}})();
+function bfx(k){try{BFX.play(k)}catch(e){}}
