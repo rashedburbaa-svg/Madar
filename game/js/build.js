@@ -76,7 +76,7 @@ const WB=(()=>{
   // power: devices joined by wires share one network; generators supply, lamps use
   function solve(){if(!dirty)return;dirty=false;net={};const b=B(),par={};const f=x=>par[x]===x?x:(par[x]=f(par[x]));b.d.forEach(d=>par[d.id]=d.id);
     b.wi.forEach(([a,c])=>{if(par[a]!=null&&par[c]!=null)par[f(a)]=f(c)});const sum={};
-    b.d.forEach(d=>{const r=f(d.id),s=sum[r]=sum[r]||{sup:0,use:0};if(d.t==='gen')s.sup+=BAL.build.gen.power;s.use+=(BAL.build[d.t]&&BAL.build[d.t].use)||0});
+    b.d.forEach(d=>{const r=f(d.id),s=sum[r]=sum[r]||{sup:0,use:0};if(d.t==='gen')s.sup+=BAL.build.gen.power;if(d.t==='bay')s.sup+=shipFx('core');s.use+=(BAL.build[d.t]&&BAL.build[d.t].use)||0});
     b.d.forEach(d=>{const s=sum[f(d.id)];net[d.id]={sup:s.sup,use:s.use,ok:s.sup>0&&s.sup>=s.use}});
     // pipe groups: for each device, the other devices on its pipes
     const pp={};const g=x=>pp[x]===x?x:(pp[x]=g(pp[x]));b.d.forEach(d=>pp[d.id]=d.id);b.pi.forEach(([a,c])=>{if(pp[a]!=null&&pp[c]!=null)pp[g(a)]=g(c)});
@@ -86,7 +86,7 @@ const WB=(()=>{
     const b=col.base;if(!b||!covered(k))return;const solid=ek=>{const v=b.w&&b.w[ek];return v&&eType(v)!=='door'};const Q=[[gx,gy]];inside.add(k);
     while(Q.length&&inside.size<400){const [x,y]=Q.pop();for(const [dx,dy,ek] of [[1,0,(x+1)+','+y+',v'],[-1,0,x+','+y+',v'],[0,1,x+','+(y+1)+',h'],[0,-1,x+','+y+',h']]){const n=(x+dx)+','+(y+dy);if(inside.has(n)||!covered(n)||solid(ek))continue;inside.add(n);Q.push([x+dx,y+dy])}}}
   /* ---------- health: monsters stopped by a piece claw at it, meteors crush what they hit ---------- */
-  function damage(key,t,n){const b=B(),h=hpOf(key,t)-n;
+  function damage(key,t,n){n*=1-shipFx('armor');const b=B(),h=hpOf(key,t)-n;   // the ship's protection hull softens every hit
     if(h>0){const was=hpOf(key,t);b.hp[key]=h;hpDirty=true;if(G3&&was>=maxHp(t)/2&&h<maxHp(t)/2)build3d();return}
     delete b.hp[key];const id=key.slice(1);if(key[0]==='e')delete b.w[id];else if(key[0]==='r')delete b.r[id];else if(key[0]==='c')delete b.f[id];
     cache=null;snd('hit');buzz(40);toast('💥 تحطّم '+NAME[t]+'!');changed()}
@@ -246,4 +246,5 @@ const WB=(()=>{
   // for raids: the middle of the built base (null if nothing is built in المدار-1), and whether a radar there has power
   function center(){const b=col.base;if(!b||!b.f)return null;const F=cacheB().F;if(!F.length)return null;let x=0,y=0;for(const f of F){x+=f.x+C/2;y+=f.y+C/2}return {x:x/F.length,y:y/F.length,n:F.length}}
   function radarOn(){solve();return B().d.some(d=>d.t==='radar'&&net[d.id]&&net[d.id].ok&&net[d.id].sup>0)}
-  return {start,stop,update,push,blast,floor2d,items2d,roof2d,make3d,draw3d,onKill,center,radarOn}})();
+  function refresh(){dirty=true;inCell='';panelId=null}
+  return {start,stop,update,push,blast,floor2d,items2d,roof2d,make3d,draw3d,onKill,center,radarOn,refresh}})();

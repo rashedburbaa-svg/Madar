@@ -120,6 +120,14 @@ const BAL={
     pipe:{m:8},pipeMaxCells:6,
     // raids on the built base (world.js): a wave walks from the wild to the base; a powered radar warns earlier and points at it
     raid:{firstS:75,everyS:180,warnRadar:20,warnBase:8,n0:4,perLv:1,maxN:14,dist:640,timeoutS:120,steal:{m:30,f:15},win:{c:3,sc:15}},
+    // ship assembly bay (devices.js): the five ship modules, each from the materials of the regions, each with an instant ability
+    bay:{m:200,e:100,use:2},
+    ship:[
+      {id:'armor',cost:{mat:{alloy:30,spore:20},sc:25,m:300},fx:0.15},   // 1 hull of protection: −15% damage to the astronaut and the base
+      {id:'core',cost:{mat:{magma:30},cells:3,e:300},fx:15},             // 2 power core: +15 power on the bay's network
+      {id:'drive',cost:{mat:{ice:30},sc:30,m:200},fx:0.20},              // 3 drive: +20% astronaut speed
+      {id:'radar',cost:{mat:{quartz:35},e:250},fx:0.35},                 // 4 radar array: +35% radar reach (earlier raid warning, longer turret range)
+      {id:'nav',cost:{mat:{gas:40},gear:1,c:20},fx:0.10}],               // 5 final navigation: completes the ship (chapter 2) and +10% colony production
     scrapPerKill:1,scrapGuard:10,tutGems:10,     // the base tutorial gives 💎 10 at the end                // scrap the monsters leave for the recycling table
     monDmg:0.5,                    // a monster stopped by a piece hits it for 50% of its damage per second
     meteorDmg:45,                  // a meteor hitting the base takes this much from every piece under it

@@ -25,7 +25,7 @@ const cap=()=>Math.round(BAL.bld.cap.base*Math.pow(BAL.bld.cap.growth,col.b.hq-1
 const crew=()=>BAL.bld.crew.base+BAL.bld.crew.perHabitat*col.b.habitat;
 if(col.b.wall==null)col.b.wall=0;if(col.b.tower==null)col.b.tower=0;if(col.b.lab==null)col.b.lab=0;
 const techLv=k=>(col.tech&&col.tech[k])||0,TK={m:'mine',e:'power',f:'agri'};let tMul=k=>1+BAL.techProd*(TK[k]?techLv(TK[k]):0);
-const mult=()=>1+(typeof festOn==='function'&&festOn()?0.25:0)+(typeof terraBonus==='function'?terraBonus():0)+(typeof moraleBonus==='function'?moraleBonus():0)+BAL.bld.crewProd*crew()+BAL.bld.wallProd*(col.b.wall||0)+(typeof artCount==='function'?BAL.galaxy.artBonus*artCount():0);
+const mult=()=>1+(typeof shipFx==='function'?shipFx('nav'):0)+(typeof festOn==='function'&&festOn()?0.25:0)+(typeof terraBonus==='function'?terraBonus():0)+(typeof moraleBonus==='function'?moraleBonus():0)+BAL.bld.crewProd*crew()+BAL.bld.wallProd*(col.b.wall||0)+(typeof artCount==='function'?BAL.galaxy.artBonus*artCount():0);
 function rate(k){let r=0;for(const id of BORDER){const B=BLD[id],L=col.b[id];if(B.prod&&B.prod[0]===k&&L>0)r+=B.prod[1]*L*Math.pow(BAL.bld.prodGrowth,L-1)}const E=typeof baseEco==='function'?baseEco():null;return r*mult()*tMul(k)+(E&&(k==='f'||k==='e')?E[k]:0)}   // + grow beds and spare generator power of the base
 function upCost(id){const L=col.b[id],B=BLD[id],f=Math.pow(BAL.bld.costGrowth,L);return {m:Math.round(B.base[0]*f),e:Math.round(B.base[1]*f),f:Math.round(B.base[2]*f*BAL.foodCostMul)}}
 const upTime=id=>Math.round(BAL.bld.time.base*Math.pow(BAL.bld.time.growth,col.b[id])*(1-BAL.bld.time.techCut*techLv('build')));

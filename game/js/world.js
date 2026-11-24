@@ -94,7 +94,7 @@ const WorldGame=(()=>{
     return {x:mx,y:my,fw:0}}
   function say(s){if(t<msgT)return;msgT=t+2.5;toast(s)}
   function update(dt){t+=dt;if(p.dead>0){p.dead-=dt;if(p.dead<=0){const b=WORLD.base;p.x=b.x;p.y=b.y+b.r+30;p.hp=p.max;p.hurt=0}return}
-    const mv=input(),sp=WORLD.player.spd;p.moving=Math.hypot(mv.x,mv.y)>0.05;
+    const mv=input(),sp=WORLD.player.spd*(1+(typeof shipFx==='function'?shipFx('drive'):0));p.moving=Math.hypot(mv.x,mv.y)>0.05;
     if(p.moving){let nx=p.x+mv.x*sp*dt,ny=p.y+mv.y*sp*dt;nx=clamp(nx,10,WW-10);ny=clamp(ny,10,WH-10);const reg=regAt(nx,ny);
       if(reg>=0&&!open(reg)){ // walking into a closed region: discover it if the colony is ready, else bounce
         if(gateOk(reg)){discover(reg);if(typeof regionPanorama==='function'&&!panoSeen(reg))regionPanorama(reg)}
@@ -162,7 +162,7 @@ const WorldGame=(()=>{
   function raidTick(dt){const Rb=BAL.build.raid,c=typeof WB!=='undefined'&&WB.center();if(!c){RD.ph='idle';return}const b=col.base,lv=b.rl||0;
     if(RD.ph==='idle'){RD.t-=dt;if(RD.t>0)return;
       for(let k=0;k<24;k++){const a=Math.random()*6.283,x=c.x+Math.cos(a)*Rb.dist,y=c.y+Math.sin(a)*Rb.dist;if(regAt(x,y)===0&&Math.hypot(x-WORLD.base.x,y-WORLD.base.y)>WORLD.base.r+80){RD.x=x;RD.y=y;break}if(k===23){RD.t=20;return}}
-      RD.radar=WB.radarOn();RD.ph='warn';RD.t=RD.radar?Rb.warnRadar:Rb.warnBase;snd('err');buzz([40,60,40]);toast('⚠️ غارة تقترب من القاعدة!'+(RD.radar?' الرادار يحدد اتجاهها':''));return}
+      RD.radar=WB.radarOn();RD.ph='warn';RD.t=(RD.radar?Rb.warnRadar:Rb.warnBase)*(1+(typeof shipFx==='function'?shipFx('radar'):0));snd('err');buzz([40,60,40]);toast('⚠️ غارة تقترب من القاعدة!'+(RD.radar?' الرادار يحدد اتجاهها':''));return}
     if(RD.ph==='warn'){RD.t-=dt;if(RD.t>0)return;const n=Math.min(Rb.maxN,Rb.n0+lv*Rb.perLv),L0=WORLD.LV[0]+1+Math.floor(lv/2);
       for(let k=0;k<n;k++){const a=Math.random()*6.283,x=RD.x+Math.cos(a)*rnd(10,70),y=RD.y+Math.sin(a)*rnd(10,70),big=k%4===3,s=monStats(0,big,L0+(big?1:0));
         mons.push({x,y,reg:0,big,lv:L0+(big?1:0),hp:s.hp,max:s.hp,dmg:s.dmg,spd:s.spd*0.9,r:s.r,wx:0,wy:0,wt:0,hit:0,fl:0,raid:1,tx:c.x+rnd(-30,30),ty:c.y+rnd(-30,30)})}
@@ -189,7 +189,7 @@ const WorldGame=(()=>{
   function gainXP(n){st.xp=(st.xp||0)+n;st.lv=st.lv||1;let up=false;while(st.xp>=WORLD.xpNext(st.lv)){st.xp-=WORLD.xpNext(st.lv);st.lv++;up=true}
     if(up){restat(true);snd('ach');buzz([30,40,60]);float(p.x,p.y-50,'⬆️ المستوى '+st.lv);fx.push({k:'lvl',x:p.x,y:p.y,r:90,l:0.6});if(st.lv>=10)unlock('w_lv10');if(st.lv>=25)unlock('w_lv25');
       for(let i=1;i<6;i++)if(st.lv===WORLD.LV[i]&&(st.gk||{})[i-1]>0&&!open(i))gateReady(i);gSave('world',st)}}
-  function hitP(n,quiet){if(p.dead>0||p.safe>0)return;p.hp-=n;if(!quiet)p.hurt=0.2;if(p.hp<=0){p.hp=0;p.dead=3;snd('lose');toast('💫 سقطت! تعود إلى القاعدة…');mons=mons.filter(m=>m.guard);eshots=[]}}
+  function hitP(n,quiet){if(p.dead>0||p.safe>0)return;if(typeof shipFx==='function')n*=1-shipFx('armor');p.hp-=n;if(!quiet)p.hurt=0.2;if(p.hp<=0){p.hp=0;p.dead=3;snd('lose');toast('💫 سقطت! تعود إلى القاعدة…');mons=mons.filter(m=>m.guard);eshots=[]}}
   function float(x,y,txt){parts.push({x,y,vx:0,vy:-40,l:1.1,txt})}
   function kill(m){m.hp=0;st.kills=(st.kills||0)+1;if(typeof WB!=='undefined')WB.onKill(m);for(let k=0;k<10&&parts.length<240;k++){const a=Math.random()*6.283;parts.push({x:m.x,y:m.y,vx:Math.cos(a)*120,vy:Math.sin(a)*120,l:0.4,c:m.guard?'#ffd34d':'#ff9a6a'})}
     if(m.guard){const g=m.guard;g.alive=false;st.gd=st.gd||{};st.gd[g.reg]=Date.now()+WORLD.guard.cd;st.gq=st.gq||{};st.gq[g.reg]=0;const first=!(st.gk||{})[g.reg];st.gk=st.gk||{};st.gk[g.reg]=(st.gk[g.reg]||0)+1;

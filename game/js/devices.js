@@ -28,7 +28,7 @@ const WBD=(()=>{
       info(d,n,b){return '♻️ خردة '+(b.sc||0)+(n.sup?'':' · يحتاج طاقة')},
       acts(d,n,b){const R=K('craft').recipes,ok=n.ok&&n.sup>0;return [['recycle','♻️ فكّك '+R.recycle.sc+' خردة ← ⛏️'+R.recycle.out.m,ok],['cell','🔋 خلية طاقة: '+R.cell.sc+' خردة + ⛏️'+R.cell.m+' ← ⚡'+R.cell.out.e,ok],['part','🧩 قطعة سلاح نادرة: '+R.part.sc+' خردة + 💎'+R.part.c,ok]]},
       act(k,d,n,b,api){const R=K('craft').recipes[k];if(!(n.ok&&n.sup>0)){api.say('⚡ الطاولة تحتاج طاقة');return}if((b.sc||0)<R.sc){snd('err');toast('تحتاج '+R.sc+' خردة ♻️');return}
-        const c={m:R.m||0,e:0,c:R.c||0};if(!canPay(c)){snd('err');toast('الموارد لا تكفي');return}pay(c);b.sc-=R.sc;if(R.out.m)gain('m',R.out.m);if(R.out.e)gain('e',R.out.e);if(R.out.gear)api.addGear(R.out.gear);snd('build');toast('🛠️ '+(k==='recycle'?'فُككت الخردة':k==='cell'?'صُنعت خلية طاقة':'صُنعت قطعة سلاح نادرة 🧩'),'ach');colSave()}},
+        const c={m:R.m||0,e:0,c:R.c||0};if(!canPay(c)){snd('err');toast('الموارد لا تكفي');return}pay(c);b.sc-=R.sc;if(R.out.m)gain('m',R.out.m);if(R.out.e){gain('e',R.out.e);b.cells=(b.cells||0)+1}if(R.out.gear)api.addGear(R.out.gear);snd('build');toast('🛠️ '+(k==='recycle'?'فُككت الخردة':k==='cell'?'صُنعت خلية طاقة':'صُنعت قطعة سلاح نادرة 🧩'),'ach');colSave()}},
     planter:{em:'🌱',n:'حوض زراعة',d2(ctx,c,n,t,d){const on=n.ok&&n.sup>0,g=Math.min(1,(d.gr||0));shadow(ctx,c,20);box(ctx,c.x-18,c.y-12,36,14,'#f5c451','#c9d1dc');ctx.fillStyle='#4a3020';ctx.fillRect(c.x-15,c.y-12,30,6);
         for(let k=0;k<4;k++){const x=c.x-11+k*7.3,hgt=6+g*12,sw=on?Math.sin(t*2+k)*2:0;ctx.strokeStyle='#3fae6a';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x,c.y-12);ctx.quadraticCurveTo(x+sw,c.y-12-hgt/2,x+sw*1.5,c.y-12-hgt);ctx.stroke();ctx.fillStyle='#7dff9a';ctx.beginPath();ctx.arc(x+sw*1.5,c.y-12-hgt,2.4,0,6.283);ctx.fill()}
         if(on){ctx.fillStyle='#bff8ff55';ctx.fillRect(c.x-18,c.y-34,36,3)}},
@@ -57,7 +57,7 @@ const WBD=(()=>{
   function tick(dt,b,net,pipes,api){const mons=api.mons();fxs=fxs.filter(f=>(f.l-=dt)>0);
     for(const d of b.d){const n=net[d.id]||{},on=n.ok&&n.sup>0;
       if(d.t==='planter'&&on)d.gr=((d.gr||0)+dt/30)%1.2;   // the food itself goes to the colony through baseEco() (also while you are away)
-      if(d.t==='turret'&&on){d.cd=(d.cd||0)-dt;d.sc2=(d.sc2||0)-dt;const c={x:d.gx*C+C/2,y:d.gy*C+C/2},R2=K('turret').range;
+      if(d.t==='turret'&&on){d.cd=(d.cd||0)-dt;d.sc2=(d.sc2||0)-dt;const c={x:d.gx*C+C/2,y:d.gy*C+C/2},R2=K('turret').range*(1+shipFx('radar'));
         // look for a target 4 times a second only (cheap on phones), keep aiming at it in between
         if(d.sc2<=0||!d.tg||d.tg.hp<=0){d.sc2=0.25;d.tg=null;let bd=R2*R2;for(const m of mons){if(m.hp<=0)continue;const e=(m.x-c.x)**2+(m.y-c.y)**2;if(e<bd){bd=e;d.tg=m}}}
         const best=d.tg&&d.tg.hp>0&&(d.tg.x-c.x)**2+(d.tg.y-c.y)**2<R2*R2?d.tg:null;
@@ -65,13 +65,31 @@ const WBD=(()=>{
     // a planter's own store empties into a tank as soon as a pipe joins them
   }
   function fx2d(ctx){for(const f of fxs){ctx.globalAlpha=Math.min(1,f.l*10);ctx.strokeStyle='#7ffcff';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(f.x,f.y);ctx.lineTo(f.x2,f.y2);ctx.stroke();ctx.strokeStyle='#fff';ctx.lineWidth=1;ctx.stroke()}ctx.globalAlpha=1}
+  /* ---------- ship assembly bay: the five ship modules ---------- */
+  const SHN={armor:'🛡️ هيكل الحماية',core:'🔋 نواة الطاقة',drive:'🚀 منظومة الدفع',radar:'📡 مصفوفة الرادار',nav:'🧭 وحدة الملاحة النهائية'};
+  const SHF={armor:'−15% ضرر على الرائد والقاعدة',core:'+15 طاقة لشبكة المنصة',drive:'+20% سرعة الرائد',radar:'+35% مدى الرادار والأبراج',nav:'تكتمل المركبة · +10% إنتاج المستعمرة'};
+  const shipCost=S=>{const c=S.cost,L=[];for(const k in c.mat||{})L.push([matIcon(k),c.mat[k],()=>matN(k)]);if(c.sc)L.push(['♻️',c.sc,()=>col.base.sc||0]);if(c.cells)L.push(['🔋',c.cells,()=>col.base.cells||0]);
+    if(c.m)L.push(['⛏️',c.m,()=>Math.floor(col.res.m)]);if(c.e)L.push(['⚡',c.e,()=>Math.floor(col.res.e)]);if(c.c)L.push(['💎',c.c,()=>Math.floor(col.res.c)]);if(c.gear)L.push(['🧩',c.gear,()=>(gState('world',{}).gp||0)]);return L};
+  T.bay={em:'🛸',n:'منصة تجميع المركبة',
+    d2(ctx,c,n,t){const S=(typeof col!=='undefined'&&col.base&&col.base.sp)||{},on=n.ok&&n.sup>0;shadow(ctx,c,24);ctx.fillStyle='#c9d1dc';ctx.beginPath();ctx.ellipse(c.x,c.y,22,9,0,0,6.283);ctx.fill();ctx.strokeStyle='#f5c451';ctx.lineWidth=2;ctx.stroke();
+      const seg=[[-12,-14],[12,-14],[0,-24],[-6,-34],[6,-34]];BAL.build.ship.forEach((P,i)=>{const done=S[P.id];ctx.fillStyle=done?(i===4?'#00e5ff':'#eef2f6'):'#ffffff22';ctx.strokeStyle=done?'#f5c451':'#9fe8ff55';ctx.lineWidth=1.2;ctx.beginPath();ctx.ellipse(c.x+seg[i][0],c.y+seg[i][1],i>2?4:7,i>2?6:5,0,0,6.283);ctx.fill();ctx.stroke()});
+      if(on){ctx.strokeStyle='#00e5ff88';ctx.lineWidth=1;ctx.beginPath();ctx.ellipse(c.x,c.y,22+4*Math.sin(t*3),9+1.6*Math.sin(t*3),0,0,6.283);ctx.stroke()}},
+    d3(M,c){M.cyl(22,3,M.white,c.x,1.5,c.y);M.cyl(23,1,M.gold,c.x,3.2,c.y);const g=M.group(c.x,4,c.y),parts=[M.boxIn(g,10,6,14,M.white,-9,4,0),M.boxIn(g,10,6,14,M.white,9,4,0),M.boxIn(g,10,10,18,M.white,0,10,0),M.coneIn(g,5,10,M.gold,0,20,4),M.coneIn(g,4,8,M.cyan,0,20,-4)];
+      return (t,n)=>{const S=(col.base&&col.base.sp)||{};BAL.build.ship.forEach((P,i)=>{parts[i].visible=!!S[P.id]});g.rotation.y=n.ok&&n.sup>0?t*0.4:0}},
+    info(d,n,b){const S=b.sp||{},k=BAL.build.ship.filter(P=>S[P.id]).length;return '🛸 المركبة '+k+'/5'+(k?' · '+BAL.build.ship.filter(P=>S[P.id]).map(P=>SHN[P.id].split(' ')[0]).join(' '):'')+(n.ok&&n.sup>0?'':' · تحتاج طاقة للتركيب')},
+    acts(d,n,b){const S=b.sp||{},on=n.ok&&n.sup>0;return BAL.build.ship.map((P,i)=>{if(S[P.id])return ['x'+i,'✅ '+SHN[P.id]+' — '+SHF[P.id],false];const L=shipCost(P),miss=L.filter(([e,q,f])=>f()<q),lock=i===4&&BAL.build.ship.slice(0,4).some(Q=>!S[Q.id]);
+      return [P.id,'🔧 '+SHN[P.id]+' · '+L.map(([e,q,f])=>e+q+(f()<q?'✗':'')).join(' ')+(lock?' · يحتاج الأجزاء 1–4':'')+' → '+SHF[P.id],on&&!miss.length&&!lock]})},
+    act(k,d,n,b,api){const P=BAL.build.ship.find(x=>x.id===k);if(!P||(b.sp||{})[k])return;if(!(n.ok&&n.sup>0)){api.say('⚡ المنصة تحتاج طاقة');return}const L=shipCost(P);if(L.some(([e,q,f])=>f()<q)){snd('err');toast('موارد الجزء لا تكفي');return}
+      const c=P.cost;for(const m in c.mat||{})col.wm.mat[m]-=c.mat[m];if(c.sc)b.sc-=c.sc;if(c.cells)b.cells-=c.cells;pay({m:c.m||0,e:c.e||0,c:c.c||0});if(c.gear)api.addGear(-c.gear);
+      b.sp=b.sp||{};b.sp[k]=1;b.n++;if(typeof WB!=='undefined')WB.refresh();snd('win');buzz([30,50,30]);toast('🛸 رُكّب '+SHN[k]+'! '+SHF[k],'ach');colSave();
+      if(k==='nav'&&!col.done){if(typeof PARTS!=='undefined')PARTS.forEach(p2=>{col.ship[p2[0]]=1});if(typeof chapterDone==='function')setTimeout(chapterDone,600)}}};
   const list=Object.keys(T);
   /* ---------- phase 4: the colony economy runs from the built base (also offline, through colony.js accrue) ---------- */
   let ecoSig='',ecoVal=null;
   function eco(){const b=typeof col!=='undefined'&&col.base;const Z={f:0,e:0,cap:0,def:0,res:0};if(!b||!Array.isArray(b.d)||!b.d.length)return Z;
     const sig=b.n+'|'+b.d.length+'|'+(b.wi||[]).length+'|'+(b.pi||[]).length;if(sig===ecoSig&&ecoVal)return ecoVal;ecoSig=sig;
     const par={},f=x=>par[x]===x?x:(par[x]=f(par[x]));b.d.forEach(d=>par[d.id]=d.id);(b.wi||[]).forEach(([a,c])=>{if(par[a]!=null&&par[c]!=null)par[f(a)]=f(c)});
-    const S={};b.d.forEach(d=>{const s=S[f(d.id)]=S[f(d.id)]||{sup:0,use:0};if(d.t==='gen')s.sup+=K('gen').power;s.use+=K(d.t).use||0});
+    const S={};b.d.forEach(d=>{const s=S[f(d.id)]=S[f(d.id)]||{sup:0,use:0};if(d.t==='gen')s.sup+=K('gen').power;if(d.t==='bay')s.sup+=shipFx('core');s.use+=K(d.t).use||0});
     const pp={},g=x=>pp[x]===x?x:(pp[x]=g(pp[x]));b.d.forEach(d=>pp[d.id]=d.id);(b.pi||[]).forEach(([a,c])=>{if(pp[a]!=null&&pp[c]!=null)pp[g(a)]=g(c)});
     const tankIn={};b.d.forEach(d=>{if(d.t==='tank')tankIn[g(d.id)]=1});let rs=0;
     for(const d of b.d){const s=S[f(d.id)],on=s.sup>0&&s.sup>=s.use;Z.cap+=d.t==='tank'?K('tank').capAdd:0;if(!on)continue;
@@ -80,6 +98,8 @@ const WBD=(()=>{
     return ecoVal=Z}
   return {T,tick,fx2d,list,eco}})();
 function baseEco(){return WBD.eco()}
+// the ability of a finished ship module (0 if not built yet): armor, core, drive, radar, nav
+function shipFx(k){const S=typeof col!=='undefined'&&col.base&&col.base.sp;if(!S||!S[k])return 0;const P=BAL.build.ship.find(x=>x.id===k);return P?P.fx:0}
 /* the colony screen shows what the built base adds (tap for the details) */
 {const _rc=renderColony;renderColony=function(){_rc.apply(this,arguments);const host=$('colony'),row=host&&host.querySelector('.crow');if(!row||row.querySelector('.cbase'))return;const b=col.base;if(!b||!Array.isArray(b.d)||!b.d.length)return;
   const E=baseEco(),bt=document.createElement('button');bt.type='button';bt.className='cbase';bt.setAttribute('aria-label','القاعدة المبنية');bt.textContent='🏗️';

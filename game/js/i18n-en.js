@@ -1894,5 +1894,21 @@ const EN={
 "👾 غارة: {0} متبقية":"👾 Raid: {0} left",
 "⚠️ غارة قادمة بعد {0}ث · السهم الأحمر يشير إليها":"⚠️ Raid in {0}s · the red arrow points to it",
 "👾 غارة: {0} وحوش · النقاط الحمراء على الخريطة":"👾 Raid: {0} monsters · red dots on the map",
-"📡 الرادار يعمل: المناطق والحرّاس · ينذر بالغارات مبكراً":"📡 Radar on: regions and guardians · early raid warning"
+"📡 الرادار يعمل: المناطق والحرّاس · ينذر بالغارات مبكراً":"📡 Radar on: regions and guardians · early raid warning",
+"منصة تجميع المركبة":"Ship assembly bay",
+"🛡️ هيكل الحماية":"🛡️ Protection hull",
+"🔋 نواة الطاقة":"🔋 Power core",
+"🚀 منظومة الدفع":"🚀 Drive system",
+"📡 مصفوفة الرادار":"📡 Radar array",
+"🧭 وحدة الملاحة النهائية":"🧭 Final navigation unit",
+"−{0}% ضرر على الرائد والقاعدة":"−{0}% damage to the astronaut and the base",
+"+{0} طاقة لشبكة المنصة":"+{0} power on the bay's network",
+"+{0}% سرعة الرائد":"+{0}% astronaut speed",
+"+{0}% مدى الرادار والأبراج":"+{0}% radar and turret reach",
+"تكتمل المركبة · +{0}% إنتاج المستعمرة":"The ship is complete · +{0}% colony production",
+"تحتاج طاقة للتركيب":"needs power to assemble",
+"يحتاج الأجزاء {0}–{1}":"needs parts {0}–{1}",
+"المنصة تحتاج طاقة":"The bay needs power",
+"موارد الجزء لا تكفي":"Not enough for this part",
+"المركبة {0}/{1}":"Ship {0}/{1}"
 };
