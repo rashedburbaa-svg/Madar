@@ -98,6 +98,14 @@ const BAL={
     up:{lamp:{max:5,m:400,growth:2,speed:0.15},spr:{max:1,c:40},net:{max:1,c:30}}
   },
 
+  /* ---------- free modular building in عالم المدار (build.js, phase 1): pieces snap to a 48-unit grid in المدار-1 ---------- */
+  build:{
+    cell:48,reach:58,refund:0.5,wireMaxCells:6,
+    floor:{m:20},wall:{m:15,e:5},wire:{m:5},
+    gen:{m:120,e:40,power:10},     // power generator: +10 power for its network
+    lamp:{m:20,use:2}              // a base light: uses 2 power, glows only when its network has enough
+  },
+
   /* ---------- «عالم المدار»: dodging is by movement only (joystick), so every danger is telegraphed first ---------- */
   world:{
     enemy:{windupMs:420,lungeMul:1.65,lungeMs:300,reach:46,hitMul:1.2,recoverMs:1100,packMin:3,packMax:6,maxActive:55,zoneLv:[1,5,10,15,20,25]},

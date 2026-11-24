@@ -889,3 +889,18 @@ body.layedit #colony .cbot,body.layedit #colony .qwrap,body.layedit #colony .qmi
 .laybtns button.on{border-color:#00e5ff;background:#00e5ff22;color:#fff}
 .laybtns button.main{background:linear-gradient(180deg,#ffd97a,#f5c451);color:#1a1405;border-color:#f5c451;font-weight:600}
 body.layedit #colony .czoom .cexp{display:none}
+
+/* free building in عالم المدار (build.js) */
+.wbuildb{position:absolute;bottom:58px;inset-inline-end:10px;pointer-events:auto;width:48px;height:48px;border-radius:14px;border:1px solid #f5c451;background:#0b1226dd;color:#fff;font-size:22px}
+.wbuildb.on{background:#f5c451;color:#1a1405;box-shadow:0 0 0 3px #00e5ff55}
+.wbbar{position:absolute;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom));pointer-events:auto;background:rgba(7,11,22,.92);border:1px solid rgba(245,196,81,.45);border-radius:18px;padding:8px;display:flex;flex-direction:column;gap:6px;backdrop-filter:blur(8px);z-index:3}
+.wbbar .bhint{margin:0;font-size:12px;color:#cfe9ff;text-align:center;line-height:1.45}
+.wbbar .btools{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
+.wbbar .btools button{min-height:58px;border-radius:12px;border:1px solid #ffffff22;background:#ffffff0d;color:#fff;font:inherit;font-size:10.5px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:3px 1px}
+.wbbar .btools button b{font-size:19px;line-height:1}.wbbar .btools small{font-size:9px;color:#ffd34d}
+.wbbar .btools button.on{border-color:#00e5ff;background:#00e5ff22}
+.wbbar .bacts{display:grid;grid-template-columns:1fr 1.6fr 1fr;gap:6px}
+.wbbar .bacts button{min-height:46px;border-radius:12px;border:1px solid #ffffff22;background:#ffffff0d;color:#fff;font:inherit;font-size:14px}
+.wbbar .bacts button.main{background:linear-gradient(180deg,#ffd97a,#f5c451);color:#1a1405;border-color:#f5c451;font-weight:700}
+.wbchip{position:absolute;top:96px;left:50%;transform:translateX(-50%);pointer-events:none;background:#070b16e6;border:1px solid #00e5ff88;color:#e8fdff;border-radius:99px;padding:5px 12px;font-size:12px;white-space:nowrap}
+body.wfull .wbbar:not([hidden])~.wforgeb,.whud:has(.wbbar:not([hidden])) .wview{display:none}

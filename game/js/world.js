@@ -1,8 +1,11 @@
 /* ================= «عالم المدار»: open world. Walk the six regions with the joystick, gather materials, fight monsters
    and each region's guardian. One simulation, two views: top-down 2D (painted art) and third-person 3D (three.js). ================= */
 const WORLD={
-  RW:1200,                                    // one region is 1200×1200 world units
-  GRID:[[1,0,2],[4,3,5]],                     // region index at [row][col]: ice · orbit · lava / green · crystal · nebula
+  RW:1200,                                    // size unit for spawn bands (a region is about 1200 units across)
+  size:{w:3600,h:2400},                       // the planet surface
+  // organic map: each region grows from a seed; w = its size weight. Borders are warped so they look natural, not square.
+  //   orbit (home, the biggest: building zone) · ice NW · lava NE · crystal S · green forest SW · nebula SE
+  seeds:[{x:1800,y:820,w:1.35},{x:560,y:600,w:1.0},{x:3050,y:620,w:1.0},{x:1820,y:1960,w:0.92},{x:620,y:1880,w:1.12},{x:3060,y:1900,w:0.88}],
   base:{x:1800,y:560,r:150},                  // the colony dome, centre of Orbit-1
   ground:['#4a3654','#9fbfd6','#3a2420','#ad9cc8','#1e4733','#170f2c'],
   spot:['#5e4670','#c9e2f2','#5a2e22','#d6c8ee','#2f6b47','#2a1d4a'],
@@ -26,38 +29,52 @@ const WORLD={
 /* full phone screen while the open world runs */
 document.head.insertAdjacentHTML('beforeend','<style>body.wfull{overflow:hidden;overscroll-behavior:none}body.wfull #play .stats,body.wfull #play .controls,body.wfull #play .help{display:none}body.wfull #play .stage.wstage{position:fixed;left:0;right:0;bottom:0;top:56px;width:auto;border-radius:0;z-index:20}body.wfull #play .stage.wstage>canvas{height:100%!important}body.wfull #play .topbar{position:relative;z-index:21}body.wfull .wview,body.wfull .wforgeb{bottom:calc(14px + env(safe-area-inset-bottom))}</style>');
 const WorldGame=(()=>{
-  const W=432,{RW,GRID}=WORLD,WW=RW*3,WH=RW*2;
+  const W=432,{RW}=WORLD,WW=WORLD.size.w,WH=WORLD.size.h;
   let H=624,cv,ctx,c3,raf=0,last=0,st,running=false,joy=null,keys={},hud,mini,t=0,saveT=0,msgT=0,view='2d',R3=null,iv=0;
   let bot={x:0,y:0,cd:0},bshots=[],evT=0,evN=0,mets=[],p,mons=[],shots=[],eshots=[],nodes=[],props=[],pools=[],parts=[],guards=[],pois=[],orbs=[],fx=[],cam={x:0,y:0,yaw:-Math.PI/2};
   const IMG={};const img=k=>{if(typeof ART==='undefined'||!ART[k])return null;if(!IMG[k]){const i=new Image();i.src=ART[k];IMG[k]=i}return IMG[k].complete&&IMG[k].naturalWidth?IMG[k]:null};
-  const regAt=(x,y)=>{const c=Math.floor(x/RW),r=Math.floor(y/RW);return c<0||r<0||c>2||r>1?-1:GRID[r][c]};
-  const regPos=i=>{for(let r=0;r<2;r++)for(let c=0;c<3;c++)if(GRID[r][c]===i)return {x:c*RW,y:r*RW};return {x:0,y:0}};
-  const regMid=i=>{const o=regPos(i);return {x:o.x+RW/2,y:o.y+RW/2}};
+  /* ---------- organic region map: weighted seeds + a smooth warp, so regions touch with natural borders and different sizes ---------- */
+  const SD=WORLD.seeds;
+  const regAt=(x,y)=>{if(x<0||y<0||x>WW||y>WH)return -1;const wx=x+90*Math.sin(y/240+0.7)+45*Math.sin((x+y)/130),wy=y+90*Math.cos(x/260+1.1)+45*Math.cos((x-y)/150);
+    let b=0,bd=1e9;for(let i=0;i<6;i++){const d=Math.hypot(wx-SD[i].x,wy-SD[i].y)/SD[i].w;if(d<bd){bd=d;b=i}}return b};
+  // region outlines (traced once by walking out from each seed), their bounding boxes and areas
+  let POLY=null,P2D=null,BOX=null,AREA=null;
+  function regTrace(){POLY=[];P2D=[];BOX=[];AREA=[];const N=160;
+    for(let i=0;i<6;i++){const o=SD[i],pts=[];for(let k=0;k<N;k++){const a=k/N*6.2832,ca=Math.cos(a),sa=Math.sin(a);let r=10;
+        while(r<2600){const x=o.x+ca*r,y=o.y+sa*r;if(x<0||y<0||x>WW||y>WH||regAt(x,y)!==i)break;r+=10}r-=5;pts.push([Math.max(0,Math.min(WW,o.x+ca*r)),Math.max(0,Math.min(WH,o.y+sa*r))])}
+      POLY[i]=pts;const P=new Path2D();pts.forEach(([x,y],k)=>k?P.lineTo(x,y):P.moveTo(x,y));P.closePath();P2D[i]=P;
+      let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9,A=0;pts.forEach(([x,y],k)=>{x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y);const q=pts[(k+1)%N];A+=x*q[1]-q[0]*y});BOX[i]={x0,y0,x1,y1};AREA[i]=Math.abs(A)/2}}
+  const regPos=i=>{if(!BOX)regTrace();return {x:BOX[i].x0,y:BOX[i].y0}};
+  const regMid=i=>({x:SD[i].x,y:SD[i].y});
+  // a random point well inside region i (margin m from its border)
+  function regRand(i,R,m){if(!BOX)regTrace();const B=BOX[i];for(let k=0;k<200;k++){const x=B.x0+R()*(B.x1-B.x0),y=B.y0+R()*(B.y1-B.y0);
+      if(regAt(x,y)===i&&regAt(x+m,y)===i&&regAt(x-m,y)===i&&regAt(x,y+m)===i&&regAt(x,y-m)===i)return {x,y}}return {x:SD[i].x,y:SD[i].y}}
   const open=i=>i===0||(typeof regOpen==='function'&&regOpen(i));
   const gateOk=i=>i===0||(((st.gk||{})[i-1]>0)&&(st.lv||1)>=WORLD.LV[i]);
   const gateTxt=i=>{const L=[];if(!((st.gk||{})[i-1]>0))L.push('👑 حارس '+PLN[i-1].n);if((st.lv||1)<WORLD.LV[i])L.push('⭐ المستوى '+WORLD.LV[i]);return L.join(' · ')};
   function discover(reg){col.wm.u[reg]=1;colSave();snd('win');addMat(REG[reg].mat,10);toast(`🗺️ اكتشفت ${PLN[reg].em} ${PLN[reg].n}!`,'ach');const n=Object.keys(col.wm.u).length;if(n>=3)unlock('wm3');if(n>=6)unlock('wm6');R3&&R3.unlockReg(reg)}
   // «ادخل المنطقة» on the panorama: step just inside the border nearest to the hero, and the region opens
-  function enterReg(i){if(!p)return;const o=regPos(i);p.x=clamp(p.x,o.x+70,o.x+RW-70);p.y=clamp(p.y,o.y+70,o.y+RW-70);p.safe=2;if(!open(i))discover(i)}   // 2 s of safety after stepping in
+  function enterReg(i){if(!p)return;const S=SD[i];for(let k=0;k<60&&regAt(p.x,p.y)!==i;k++){const d=Math.hypot(S.x-p.x,S.y-p.y)||1,st2=Math.min(d,40);p.x+=(S.x-p.x)/d*st2;p.y+=(S.y-p.y)/d*st2}{const d=Math.hypot(S.x-p.x,S.y-p.y)||1;p.x+=(S.x-p.x)/d*Math.min(d,70);p.y+=(S.y-p.y)/d*Math.min(d,70)}p.safe=2;if(!open(i))discover(i)}   // 2 s of safety after stepping in
   // a gate that is ready now: the panorama the first time, a toast after that
   function gateReady(i){if(typeof regionPanorama==='function'&&!panoSeen(i))regionPanorama(i,()=>enterReg(i));else toast('🔓 '+PLN[i].n+' مفتوحة الآن، امشِ إليها')}
   const rnd=(a,b)=>a+Math.random()*(b-a),clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
   function seeded(s){return ()=>{s=(s*16807)%2147483647;return (s-1)/2147483646}}
   /* ---------- the world: props, lava pools, material nodes, guardians, signals (same every visit) ---------- */
   function buildWorld(){props=[];pools=[];nodes=[];guards=[];pois=[];
-    for(let i=0;i<6;i++){const o=regPos(i),R=seeded(97+i*131),far=(x,y)=>Math.hypot(x-WORLD.base.x,y-WORLD.base.y)>WORLD.base.r+60;
+    regTrace();for(let i=0;i<6;i++){const R=seeded(97+i*131),far=(x,y)=>Math.hypot(x-WORLD.base.x,y-WORLD.base.y)>WORLD.base.r+60,sz=AREA[i]/(RW*RW),rp=m=>regRand(i,R,m);
       const kinds=[['debris','crater'],['spike','frost'],['rock','vent'],['crystal','shard'],['shroom','fern'],['float','star']][i];
-      for(let k=0;k<70;k++){const x=o.x+20+R()*(RW-40),y=o.y+20+R()*(RW-40);if(far(x,y)&&Math.hypot(x-WORLD.moon.x,y-WORLD.moon.y)>140)props.push({x,y,k:kinds[k%2],s:0.7+R()*0.8,reg:i})}
-      if(i===2)for(let k=0;k<9;k++){const x=o.x+120+R()*(RW-240),y=o.y+120+R()*(RW-240);pools.push({x,y,r:40+R()*36})}
-      for(let k=0;k<WORLD.nodes;k++){const x=o.x+60+R()*(RW-120),y=o.y+60+R()*(RW-120);if(far(x,y))nodes.push({x,y,reg:i,cd:0,prog:0})}
-      const m=regMid(i),gx=i===0?o.x+RW*0.84:m.x+(R()-0.5)*300,gy=i===0?o.y+RW*0.9:m.y+(R()-0.5)*300;guards.push({reg:i,x:gx,y:gy,hx:gx,hy:gy});
-      pois.push({reg:i,x:o.x+150+R()*(RW-300),y:o.y+150+R()*(RW-300)})}}
+      for(let k=0;k<Math.round(70*sz);k++){const {x,y}=rp(20);if(far(x,y)&&Math.hypot(x-WORLD.moon.x,y-WORLD.moon.y)>140)props.push({x,y,k:kinds[k%2],s:0.7+R()*0.8,reg:i})}
+      if(i===2)for(let k=0;k<9;k++){const {x,y}=rp(110);pools.push({x,y,r:40+R()*36})}
+      for(let k=0;k<Math.round(WORLD.nodes*Math.max(0.7,sz));k++){const {x,y}=rp(60);if(far(x,y))nodes.push({x,y,reg:i,cd:0,prog:0})}
+      let g=rp(160);for(let k=0;k<30&&(Math.hypot(g.x-WORLD.base.x,g.y-WORLD.base.y)<(i?0:600)||(i===0&&g.y<WORLD.base.y));k++)g=rp(160);   // the home guardian lives far south of the dome
+      guards.push({reg:i,x:g.x,y:g.y,hx:g.x,hy:g.y});const q=rp(150);pois.push({reg:i,x:q.x,y:q.y})}}
   /* ---------- player stats come from the colony and the gear workshop ---------- */
   const weap=()=>WORLD.WEAP.find(w=>w.id===(st.wp||'rifle'))||WORLD.WEAP[0],wLv=id=>(st.wu||{})[id]||1;
   function stats(){const B=typeof survBonus==='function'?survBonus():{dmg:0,hp:0,rate:0},P=WORLD.player,lv=st.lv||1,w=weap();
     return {max:Math.round(P.hp+WORLD.heroHp*(lv-1)+B.hp),dmg:P.dmg*Math.pow(WORLD.heroDmg,lv-1)*(1+B.dmg/100)*w.mul*(1+0.25*(wLv(w.id)-1)),rate:w.rate*(1+B.rate/100)}}
   function restat(full){const s=stats(),r=p.hp/p.max;p.max=s.max;p.dmg=s.dmg;p.rate=s.rate;p.hp=full?s.max:Math.max(1,Math.round(s.max*r))}
-  function newPlayer(){const s=stats(),b=WORLD.base;return {x:st.x||b.x,y:st.y||b.y+b.r+30,hp:s.max,max:s.max,dmg:s.dmg,rate:s.rate,cd:0,aim:-Math.PI/2,moving:false,hurt:0,dead:0,r:14}}
+  function newPlayer(){const s=stats(),b=WORLD.base;let x=st.x||b.x,y=st.y||b.y+b.r+30;const r0=regAt(x,y);if(r0<0||!open(r0)){x=b.x;y=b.y+b.r+30}   // the map changed shape (Nov 2026): a saved spot in a closed region goes home
+    return {x,y,hp:s.max,max:s.max,dmg:s.dmg,rate:s.rate,cd:0,aim:-Math.PI/2,moving:false,hurt:0,dead:0,r:14}}
   /* ---------- monsters ---------- */
   function monStats(reg,big,lv){const M=big?WORLD.mon.big:WORLD.mon.small;lv=lv||WORLD.LV[reg];return {lv,hp:Math.round(M.hp*Math.pow(WORLD.hpGrow,lv-1)),dmg:M.dmg*Math.pow(WORLD.dmgGrow,lv-1),spd:M.spd,r:M.r}}
   // monsters get stronger the farther they are from the dome inside their band
@@ -82,7 +99,8 @@ const WorldGame=(()=>{
       if(reg>=0&&!open(reg)){ // walking into a closed region: discover it if the colony is ready, else bounce
         if(gateOk(reg)){discover(reg);if(typeof regionPanorama==='function'&&!panoSeen(reg))regionPanorama(reg)}
         else{say('🔒 '+PLN[reg].n+': '+gateTxt(reg));nx=p.x;ny=p.y}}
-      p.x=nx;p.y=ny;if(view==='2d'||mv.fw>0.3)p.aim=Math.atan2(mv.y,mv.x)}
+      if(typeof WB!=='undefined'){const q={x:nx,y:ny};WB.push(q,p.r*0.8);nx=q.x;ny=q.y}   // base walls block the hero
+      p.x=nx;p.y=ny;p.face=Math.atan2(mv.y,mv.x);if(view==='2d'||mv.fw>0.3)p.aim=p.face}
     if(view==='3d'&&p.moving&&mv.fw>-0.2){const target=Math.atan2(mv.y,mv.x);let d=target-cam.yaw;d=Math.atan2(Math.sin(d),Math.cos(d));cam.yaw+=d*Math.min(1,dt*1.6)}
     // dome: rest and heal; lava: burns
     const inBase=Math.hypot(p.x-WORLD.base.x,p.y-WORLD.base.y)<WORLD.base.r;if(inBase)p.hp=Math.min(p.max,p.hp+30*dt);
@@ -114,6 +132,7 @@ const WorldGame=(()=>{
       else{m.wt-=dt;if(m.wt<=0){m.wt=rnd(1.5,3.5);const a=Math.random()*6.283;m.wx=Math.cos(a)*m.spd*0.35;m.wy=Math.sin(a)*m.spd*0.35}vx=m.wx;vy=m.wy}
       let nx=m.x+vx*dt,ny=m.y+vy*dt;if(regAt(nx,ny)!==m.reg&&!m.guard){m.wt=0;nx=m.x;ny=m.y}
       const bd2=Math.hypot(nx-WORLD.base.x,ny-WORLD.base.y);if(bd2<WORLD.base.r+m.r){nx=m.x;ny=m.y}
+      if(typeof WB!=='undefined'&&!m.guard){const q={x:nx,y:ny};WB.push(q,m.r*0.7);nx=q.x;ny=q.y}
       const mvd=Math.hypot(nx-m.x,ny-m.y);m.mv=mvd>dt*4;m.ph=(m.ph||0)+mvd/(m.r*0.55);if(Math.abs(nx-m.x)>0.3)m.fx=nx<m.x?-1:1;
       m.x=nx;m.y=ny;if(m.guard&&d<m.r+p.r)hitP(m.dmg*dt,false)}
     mons=mons.filter(m=>m.hp>0&&(m.guard||Math.hypot(m.x-p.x,m.y-p.y)<1300));
@@ -194,7 +213,7 @@ const WorldGame=(()=>{
     const j=hud.querySelector('.wjoy');if(joy&&joy.on){j.hidden=false;const rc=stage.getBoundingClientRect();j.style.left=(joy.ox-rc.left)+'px';j.style.top=(joy.oy-rc.top)+'px';const dx=joy.x-joy.ox,dy=joy.y-joy.oy,L=Math.min(36,Math.hypot(dx,dy)),a=Math.atan2(dy,dx);j.firstChild.style.transform=`translate(${Math.cos(a)*L}px,${Math.sin(a)*L}px)`}else j.hidden=true;
     if((t*4|0)%2===0)drawMini()}
   function drawMini(){const m=mini.getContext('2d'),k=120/WW;m.clearRect(0,0,120,80);
-    for(let r=0;r<2;r++)for(let c=0;c<3;c++){const i=GRID[r][c];m.fillStyle=open(i)?WORLD.ground[i]:'#111';m.fillRect(c*40,r*40,40,40)}
+    if(!POLY)regTrace();m.save();m.scale(k,k);for(let i=0;i<6;i++){m.fillStyle=open(i)?WORLD.ground[i]:'#111';m.fill(P2D[i])}m.restore();
     m.strokeStyle='#ffffff40';m.strokeRect(0.5,0.5,119,79);m.fillStyle='#00e5ff';m.beginPath();m.arc(WORLD.base.x*k,WORLD.base.y*k,3,0,6.283);m.fill();
     for(const g of guards)if(open(g.reg)&&!((st.gd||{})[g.reg]>Date.now())){m.fillStyle='#ffd34d';m.fillRect(g.hx*k-2,g.hy*k-2,4,4)}
     for(const o of pois)if(open(o.reg)&&!(st.poi||{})[o.reg]){m.fillStyle='#ff7ad9';m.fillRect(o.x*k-1.5,o.y*k-1.5,3,3)}
@@ -224,8 +243,11 @@ const WorldGame=(()=>{
   const MATC={alloy:'#c8d0dc',ice:'#8fe0ff',magma:'#ff7a2a',quartz:'#d8b8ff',spore:'#7dffb0',gas:'#ff8ad8'};
   function draw2d(){const S=cv.width/W;ctx.setTransform(S,0,0,S,0,0);cam.x=p.x-W/2;cam.y=p.y-H*0.55;ctx.fillStyle='#05060f';ctx.fillRect(0,0,W,H);
     ctx.save();ctx.translate(-cam.x,-cam.y);
-    for(let r=0;r<2;r++)for(let c=0;c<3;c++){const i=GRID[r][c],x0=c*RW,y0=r*RW;if(x0>cam.x+W||x0+RW<cam.x||y0>cam.y+H||y0+RW<cam.y)continue;
-      ctx.fillStyle=pat(i);ctx.fillRect(Math.max(x0,cam.x),Math.max(y0,cam.y),Math.min(x0+RW,cam.x+W)-Math.max(x0,cam.x),Math.min(y0+RW,cam.y+H)-Math.max(y0,cam.y))}
+    // organic ground: the region under the hero fills the screen, then every visible region is painted inside its own outline
+    if(!POLY)regTrace();{const here=Math.max(0,regAt(p.x,p.y));ctx.fillStyle=pat(here);ctx.fillRect(Math.max(0,cam.x),Math.max(0,cam.y),Math.min(WW,cam.x+W)-Math.max(0,cam.x),Math.min(WH,cam.y+H)-Math.max(0,cam.y));
+      for(let i=0;i<6;i++){const B=BOX[i];if(B.x0>cam.x+W||B.x1<cam.x||B.y0>cam.y+H||B.y1<cam.y)continue;ctx.fillStyle=pat(i);ctx.fill(P2D[i])}
+      ctx.lineWidth=14;ctx.globalAlpha=0.28;for(let i=0;i<6;i++){const B=BOX[i];if(B.x0>cam.x+W||B.x1<cam.x||B.y0>cam.y+H||B.y1<cam.y)continue;ctx.strokeStyle=WORLD.spot[i];ctx.stroke(P2D[i])}ctx.globalAlpha=1}
+    if(typeof WB!=='undefined')WB.floor2d(ctx,cam,W,H);
     for(const q of pools){if(Math.abs(q.x-p.x)>W||Math.abs(q.y-p.y)>H)continue;ctx.fillStyle='#ff5a1f';ctx.globalAlpha=0.85+0.1*Math.sin(t*3+q.x);ctx.beginPath();ctx.ellipse(q.x,q.y,q.r,q.r*0.62,0,0,6.283);ctx.fill();ctx.fillStyle='#ffd34d';ctx.globalAlpha=0.5;ctx.beginPath();ctx.ellipse(q.x,q.y,q.r*0.5,q.r*0.3,0,0,6.283);ctx.fill();ctx.globalAlpha=1}
     // base dome
     const b=WORLD.base,hq=img('hq');ctx.fillStyle='#00e5ff14';ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,6.283);ctx.fill();ctx.strokeStyle='#00e5ff88';ctx.lineWidth=2;ctx.stroke();
@@ -239,6 +261,7 @@ const WorldGame=(()=>{
       if(n.prog>0){ctx.strokeStyle='#fff';ctx.lineWidth=3;ctx.beginPath();ctx.arc(n.x,n.y-12,18,-1.57,-1.57+6.283*n.prog/0.9);ctx.stroke()}}]);
     for(const o of pois)if(open(o.reg)&&!(st.poi||{})[o.reg]&&vis(o.x,o.y))L.push([o.y,()=>{ctx.font='26px sans-serif';ctx.textAlign='center';ctx.fillText('📡',o.x,o.y);ctx.strokeStyle='#ff7ad9';ctx.globalAlpha=0.5+0.5*Math.sin(t*4);ctx.beginPath();ctx.arc(o.x,o.y-8,22+6*Math.sin(t*4),0,6.283);ctx.stroke();ctx.globalAlpha=1}]);
     {const M=WORLD.moon,im=img('zone_moon');if(im&&vis(M.x,M.y)){const w=M.h*(ART.zone_moonR||1.5);L.push([M.y,()=>ctx.drawImage(sprC('zone_moon',M.h)||im,M.x-w/2,M.y-M.h*0.8,w,M.h)])}}
+    if(typeof WB!=='undefined')WB.items2d(L,vis,ctx,t);
     for(const m of mons)if(vis(m.x,m.y))L.push([m.y,()=>drawMon(m)]);
     L.push([bot.y+40,drawBot]);
     L.push([p.y,drawPlayer]);L.sort((a,b)=>a[0]-b[0]);for(const x of L)x[1]();
@@ -253,8 +276,8 @@ const WorldGame=(()=>{
     ctx.fillStyle='#ff5a8a';for(const s of eshots){ctx.beginPath();ctx.arc(s.x,s.y,5,0,6.283);ctx.fill()}
     for(const q of parts){if(q.txt){ctx.globalAlpha=Math.min(1,q.l*2);ctx.fillStyle='#fff';ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.fillText(q.txt,q.x,q.y)}else{ctx.globalAlpha=q.l*2;ctx.fillStyle=q.c;ctx.fillRect(q.x-2,q.y-2,4,4)}ctx.globalAlpha=1}
     // closed regions sit under a dark fog
-    let lab=null,labD=260;for(let r=0;r<2;r++)for(let c=0;c<3;c++){const i=GRID[r][c];if(open(i))continue;const x0=c*RW,y0=r*RW,cx=clamp(p.x,x0+60,x0+RW-60),cy=clamp(p.y,y0+40,y0+RW-40),d=Math.hypot(cx-p.x,cy-p.y);if(d<labD){labD=d;lab=[i,cx,cy]}}
-    for(let r=0;r<2;r++)for(let c=0;c<3;c++){const i=GRID[r][c];if(open(i))continue;const x0=c*RW,y0=r*RW;ctx.fillStyle='#000000b0';ctx.fillRect(x0,y0,RW,RW);
+    let lab=null,labD=260;for(let i=0;i<6;i++){if(open(i))continue;for(const [x,y] of POLY[i]){const d=Math.hypot(x-p.x,y-p.y);if(d<labD){labD=d;const S=SD[i],e=Math.hypot(S.x-x,S.y-y)||1;lab=[i,x+(S.x-x)/e*60,y+(S.y-y)/e*60]}}}
+    for(let i=0;i<6;i++){if(open(i))continue;ctx.fillStyle='#000000b0';ctx.fill(P2D[i]);
       const cx=lab&&lab[1],cy=lab&&lab[2];if(lab&&lab[0]===i){ctx.fillStyle='#fff';ctx.font='bold 14px sans-serif';ctx.textAlign='center';ctx.fillText('🔒 '+PLN[i].n,cx,cy);ctx.font='12px sans-serif';ctx.fillStyle='#ffd34d';ctx.fillText(gateOk(i)?'🚪 مفتوحة، ادخل':gateTxt(i),cx,cy+18)}}
     ctx.restore();if(p.dead>0){ctx.fillStyle='#000a';ctx.fillRect(0,0,W,H)}}
   /* pinned sprite canvases: every painting is drawn once at its on-screen pixel size (4px buckets) and reused every frame.
@@ -301,9 +324,11 @@ const WorldGame=(()=>{
     scene.add(new THREE.HemisphereLight(0xe8f0ff,0x302838,1.0));const sun=new THREE.DirectionalLight(0xffffff,1.4);sun.position.set(300,600,200);scene.add(sun);
     const TX={},tex=k=>{if(TX[k])return TX[k];const im=img(k);if(!im)return null;const T=new THREE.Texture(im);T.needsUpdate=true;T.colorSpace&&(T.colorSpace=THREE.SRGBColorSpace);return TX[k]=T};
     // ground: one plane per region with its painted pattern
-    const gmat=[];for(let r=0;r<2;r++)for(let c=0;c<3;c++){const i=GRID[r][c];const cnv=document.createElement('canvas');cnv.width=cnv.height=256;const g=cnv.getContext('2d');g.fillStyle=pat(i);g.fillRect(0,0,256,256);
-      const T=new THREE.CanvasTexture(cnv);T.wrapS=T.wrapT=THREE.RepeatWrapping;T.repeat.set(10,10);const M=new THREE.MeshLambertMaterial({map:T,color:open(i)?0xffffff:0x222222});gmat[i]=M;
-      const pl=new THREE.Mesh(new THREE.PlaneGeometry(RW,RW),M);pl.rotation.x=-Math.PI/2;pl.position.set(c*RW+RW/2,0,r*RW+RW/2);scene.add(pl)}
+    // organic ground: one flat shape per region outline (a plain plane under all of them fills any seam)
+    if(!POLY)regTrace();{const u=new THREE.Mesh(new THREE.PlaneGeometry(WW,WH),new THREE.MeshLambertMaterial({color:WORLD.ground[0]}));u.rotation.x=-Math.PI/2;u.position.set(WW/2,-0.6,WH/2);scene.add(u)}
+    const gmat=[];for(let i=0;i<6;i++){const cnv=document.createElement('canvas');cnv.width=cnv.height=256;const g=cnv.getContext('2d');g.fillStyle=pat(i);g.fillRect(0,0,256,256);
+      const T=new THREE.CanvasTexture(cnv);T.wrapS=T.wrapT=THREE.RepeatWrapping;T.repeat.set(1/120,1/120);const M=new THREE.MeshLambertMaterial({map:T,color:open(i)?0xffffff:0x222222});gmat[i]=M;
+      const sh=new THREE.Shape();POLY[i].forEach(([x,y],k)=>k?sh.lineTo(x,-y):sh.moveTo(x,-y));const pl=new THREE.Mesh(new THREE.ShapeGeometry(sh),M);pl.rotation.x=-Math.PI/2;scene.add(pl)}
     // props as low-poly meshes, instanced per kind
     const GEO={spike:new THREE.ConeGeometry(9,40,5),crystal:new THREE.ConeGeometry(9,38,4),shard:new THREE.ConeGeometry(5,18,4),rock:new THREE.DodecahedronGeometry(14,0),debris:new THREE.BoxGeometry(24,12,16),
       frost:new THREE.ConeGeometry(14,36,6),shroom:new THREE.CylinderGeometry(20,4,30,8),fern:new THREE.ConeGeometry(12,26,5),float:new THREE.DodecahedronGeometry(13,0),vent:new THREE.CylinderGeometry(12,14,4,10),crater:new THREE.TorusGeometry(16,3,4,12),star:new THREE.SphereGeometry(3,6,4)};
@@ -319,6 +344,7 @@ const WorldGame=(()=>{
     for(let i=0;i<6;i++){const s=(col.wm&&col.wm.lm[i])||0;if(!s)continue;const m=i===0?{x:b.x+260,y:b.y-40}:regMid(i),L=spr('pl'+i+'_s'+s,i===5&&s===3?170:120);if(L){L.position.set(m.x,0,m.y);scene.add(L)}}
     {const L=spr('zone_moon',WORLD.moon.h);if(L){L.position.set(WORLD.moon.x,0,WORLD.moon.y);scene.add(L)}}
     const B3=spr('bot',20);if(B3)scene.add(B3);
+    if(typeof WB!=='undefined')WB.make3d(scene);
     // nodes, signals
     const NM={};for(const n of nodes){const c=new THREE.Color(MATC[REG[n.reg].mat]);const m=new THREE.Mesh(new THREE.OctahedronGeometry(9,0),new THREE.MeshLambertMaterial({color:c,emissive:c,emissiveIntensity:0.6}));m.position.set(n.x,14,n.y);m.scale.y=1.6;scene.add(m);n.m3=m}
     for(const o of pois){const m=new THREE.Mesh(new THREE.TorusGeometry(16,2.5,6,20),new THREE.MeshBasicMaterial({color:0xff7ad9}));m.position.set(o.x,20,o.y);scene.add(m);o.m3=m}
@@ -343,7 +369,7 @@ const WorldGame=(()=>{
         s.position.set(m.x,m.mv?Math.abs(Math.cos(m.ph||0))*m.r*0.18:0,m.y);s.material.rotation=m.mv?Math.sin(m.ph||0)*0.07:0;s.material.color.setHex(m.st==='wind'?0xff7a6a:m.p2?0xffaaaa:0xdddddd);if(m.fl>0)s.material.color.setRGB(2,2,2);used.add(s)}
       scene.children.filter(o=>o.isSprite&&o.userData.mon&&!used.has(o)).forEach(o=>{scene.remove(o);o.material.dispose()});used.forEach(s=>s.userData.mon=1);
       sync(met3,mets,mg,mm,1);met3.forEach(o=>{o.rotation.x=-Math.PI/2;o.scale.set(1,0.62,1)});sync(bul,shots.concat(bshots),bg,bm,16);sync(ebul,eshots,eg,em,16);sync(orb3,orbs,og,om,8);
-      sync(fx3,fx.filter(f=>f.k!=='bolt'),rg,rm,6);fx3.forEach((m,j)=>{const f=fx.filter(q=>q.k!=='bolt')[j];if(f){m.rotation.x=-Math.PI/2;const k=f.k==='slash'?f.r*0.85:f.r*(1-f.l*2);m.scale.set(k/20,k/20,1)}});R.render(scene,camera)}
+      sync(fx3,fx.filter(f=>f.k!=='bolt'),rg,rm,6);fx3.forEach((m,j)=>{const f=fx.filter(q=>q.k!=='bolt')[j];if(f){m.rotation.x=-Math.PI/2;const k=f.k==='slash'?f.r*0.85:f.r*(1-f.l*2);m.scale.set(k/20,k/20,1)}});if(typeof WB!=='undefined')WB.draw3d(t);R.render(scene,camera)}
     const met3=[],mg=new THREE.RingGeometry(BAL.world.events.meteorR-4,BAL.world.events.meteorR,28),mm=new THREE.MeshBasicMaterial({color:0xff4a3a,side:THREE.DoubleSide}),orb3=[],fx3=[],og=new THREE.OctahedronGeometry(4,0),om=new THREE.MeshBasicMaterial({color:0x7dff9a}),rg=new THREE.TorusGeometry(20,1.2,4,32),rm=new THREE.MeshBasicMaterial({color:0xffe27a,transparent:true,opacity:0.8});
     function unlockReg(i){if(gmat[i])gmat[i].color.setHex(0xffffff)}
     function dispose(){try{R.dispose();R.forceContextLoss&&R.forceContextLoss()}catch(e){}}
@@ -352,7 +378,7 @@ const WorldGame=(()=>{
     if(v==='3d'){if(!R3)R3=make3D();if(!R3){view='2d';toast('⚠️ جهازك لا يدعم المنظور الثلاثي');}}
     cv.hidden=view!=='2d';c3.hidden=view!=='3d';if(b)b.textContent=view==='2d'?'🎥 3D':'🗺️ 2D';if(view==='2d')cam.yaw=-Math.PI/2}
   /* ---------- loop, input, lifecycle ---------- */
-  function frame(now){raf=requestAnimationFrame(frame);const dt=Math.min(0.05,(now-last)/1000);last=now;if(!running)return;if(!forgeOn&&!document.querySelector('.hmodal'))update(dt);if(view==='3d'&&R3)R3.draw();else draw2d()}
+  function frame(now){raf=requestAnimationFrame(frame);const dt=Math.min(0.05,(now-last)/1000);last=now;if(!running)return;if(!forgeOn&&!document.querySelector('.hmodal')){update(dt);if(typeof WB!=='undefined')WB.update(dt,t)}if(view==='3d'&&R3)R3.draw();else draw2d()}
   function resize(){const tb=document.querySelector('#play .topbar'),top=tb?Math.round(tb.getBoundingClientRect().bottom)+4:0;stage.style.top=top+'px';
     const w=stage.clientWidth||innerWidth,h=Math.max(300,innerHeight-top);H=Math.round(W*h/w);SC.clear();cv.width=Math.round(w*devicePixelRatio);cv.height=Math.round(h*devicePixelRatio);cv.style.height=h+'px';c3.style.height=h+'px';stage.style.height=h+'px'}
   const pd=e=>{if(e.target.closest&&e.target.closest('button'))return;joy={on:true,id:e.pointerId,ox:e.clientX,oy:e.clientY,x:e.clientX,y:e.clientY};e.preventDefault()},
@@ -365,10 +391,10 @@ const WorldGame=(()=>{
     icon:'<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" fill="#1e4733"/><path d="M4 24h40M24 4v40" stroke="#ffffff30"/><circle cx="17" cy="18" r="6" fill="#9fbfd6"/><circle cx="32" cy="30" r="7" fill="#ad9cc8"/><text x="24" y="31" font-size="16" text-anchor="middle">🧑‍🚀</text></svg>',
     progress(){const s=gState('world',{});return {level:Object.keys(s.gk||{}).length+1,stars:0}},play(){},
     start(){st=gState('world',{kills:0});buildWorld();p=newPlayer();mons=[];mets=[];evT=0;bshots=[];bot={x:p.x-26,y:p.y-34,cd:0};shots=[];eshots=[];parts=[];t=0;stage.innerHTML='';stage.classList.add('wstage');document.body.classList.add('wfull');
-      cv=document.createElement('canvas');c3=document.createElement('canvas');c3.className='w3';stage.appendChild(cv);stage.appendChild(c3);ctx=cv.getContext('2d');hudBuild();resize();
+      cv=document.createElement('canvas');c3=document.createElement('canvas');c3.className='w3';stage.appendChild(cv);stage.appendChild(c3);ctx=cv.getContext('2d');hudBuild();if(typeof WB!=='undefined')WB.start({hud,stage,regAt,base:WORLD.base,moon:WORLD.moon,player:()=>p,say,open});resize();
       setView(st.view==='3d'?'3d':'2d');stage.addEventListener('pointerdown',pd);addEventListener('pointermove',pm);addEventListener('pointerup',pu);addEventListener('pointercancel',pu);addEventListener('keydown',kd);addEventListener('keyup',ku);addEventListener('resize',resize);
       running=true;last=performance.now();raf=requestAnimationFrame(frame);snd('win')},
-    stop(){running=false;cancelAnimationFrame(raf);if(st&&p){st.x=Math.round(p.x);st.y=Math.round(p.y);delete st._d;gSave('world',st);colSave()}stage.removeEventListener('pointerdown',pd);removeEventListener('pointermove',pm);removeEventListener('pointerup',pu);removeEventListener('pointercancel',pu);removeEventListener('keydown',kd);removeEventListener('keyup',ku);removeEventListener('resize',resize);
+    stop(){running=false;cancelAnimationFrame(raf);if(typeof WB!=='undefined')WB.stop();if(st&&p){st.x=Math.round(p.x);st.y=Math.round(p.y);delete st._d;gSave('world',st);colSave()}stage.removeEventListener('pointerdown',pd);removeEventListener('pointermove',pm);removeEventListener('pointerup',pu);removeEventListener('pointercancel',pu);removeEventListener('keydown',kd);removeEventListener('keyup',ku);removeEventListener('resize',resize);
       if(R3){R3.dispose();R3=null}stage.classList.remove('wstage');document.body.classList.remove('wfull');stage.style.height='';stage.style.top='';hud=null},
     pauseExt(){running=false},resumeExt(){running=true;last=performance.now()},forfeit(){return false}}})();
 if(typeof ACH!=='undefined')ACH.push(['w_lv10','⭐','عالم المدار: المستوى 10'],['w_lv25','🌟','عالم المدار: المستوى 25'],['w_weap5','⚒️','اصنع كل الأسلحة الخمسة'],['w_kill100','⚔️','عالم المدار: 100 وحش'],['w_guard1','👑','هزمت أول حارس منطقة'],['w_guard6','🌟','هزمت حرّاس المناطق الست']);
