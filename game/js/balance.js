@@ -102,7 +102,7 @@ const BAL={
   build:{
     cell:48,reach:58,refund:0.5,wireMaxCells:6,
     floor:{m:20},wall:{m:15,e:5,hp:120},wire:{m:5},
-    gen:{m:120,e:40,power:10},     // power generator: +10 power for its network
+    gen:{m:120,e:40,power:10,surplusE:6},     // power generator: +10 power for its network; unused power feeds the colony +6 ⚡/hour per unit
     lamp:{m:20,use:2},             // a base light: uses 2 power, glows only when its network has enough
     // phase 2: openings on cell edges, covers over cells, corridors; every structural piece has health
     door:{m:25,e:10,hp:90},        // the astronaut walks through, monsters do not
@@ -112,13 +112,13 @@ const BAL={
     cor:{m:30,e:10,hp:80},         // covered glass corridor tile: a floor with its own canopy
     // phase 3: devices (devices.js). use = power taken from the wire network; pipes join devices to tanks
     craft:{m:150,e:60,use:3,recipes:{recycle:{sc:10,out:{m:60}},cell:{sc:5,m:40,out:{e:50}},part:{sc:20,c:5,out:{gear:1}}}},   // crafting & scrap recycling table
-    planter:{m:60,e:20,use:1,perMin:6,buf:20},   // grow bed: 6 food a minute while powered, into the tanks on its pipes (or 20 in itself)
-    tank:{m:80,cap:300},                         // storage tank for what the base produces
-    research:{m:100,e:60,use:2},                 // research screen: follows the lab from inside the base
+    planter:{m:60,e:20,use:1,perHour:40},        // grow bed: +40 🌱/hour to the colony while powered and piped to a tank (phase 4)
+    tank:{m:80,cap:300,capAdd:150},              // storage tank: every tank adds 150 to the colony's stores
+    research:{m:100,e:60,use:2,cut:0.05,maxN:2}, // research screen: each powered one makes research 5% faster (up to 2)
     radar:{m:90,e:50,use:2},                     // radar screen: the six regions, guardians and signals
-    turret:{m:180,e:80,use:4,range:260,rate:1.2,dmgMul:0.6},   // powered defence turret: 60% of the hero's damage
+    turret:{m:180,e:80,use:4,range:260,rate:1.2,dmgMul:0.6,def:10},   // powered defence turret: 60% of the hero's damage; +10 colony defence
     pipe:{m:8},pipeMaxCells:6,
-    scrapPerKill:1,scrapGuard:10,                // scrap the monsters leave for the recycling table
+    scrapPerKill:1,scrapGuard:10,tutGems:10,     // the base tutorial gives 💎 10 at the end                // scrap the monsters leave for the recycling table
     monDmg:0.5,                    // a monster stopped by a piece hits it for 50% of its damage per second
     meteorDmg:45,                  // a meteor hitting the base takes this much from every piece under it
     repairPerHp:0.25               // repair cost: ⛏️ 0.25 per health point restored

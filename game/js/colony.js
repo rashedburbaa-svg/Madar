@@ -21,12 +21,12 @@ const PARTS=[['engine','المحرك',BAL.ship.parts.engine],['nav','نظام ا
 const GAMEOF={survive:'def',pilot:'dock'};
 const col=load('arcade-colony',{res:{m:300,e:300,f:200,c:20},b:{hq:1,mine:1,solar:1,farm:1,habitat:1,radio:0,obs:0,def:0,dock:0},build:null,last:Date.now(),q:0,ship:{},intro:0,wins:{},surv:0,done:0});
 const colSave=()=>save('arcade-colony',col);
-const cap=()=>Math.round(BAL.bld.cap.base*Math.pow(BAL.bld.cap.growth,col.b.hq-1)*(1+BAL.bld.cap.techStore*((col.tech&&col.tech.store)||0)));
+const cap=()=>Math.round(BAL.bld.cap.base*Math.pow(BAL.bld.cap.growth,col.b.hq-1)*(1+BAL.bld.cap.techStore*((col.tech&&col.tech.store)||0)))+(typeof baseEco==='function'?baseEco().cap:0);   // + the base's tanks
 const crew=()=>BAL.bld.crew.base+BAL.bld.crew.perHabitat*col.b.habitat;
 if(col.b.wall==null)col.b.wall=0;if(col.b.tower==null)col.b.tower=0;if(col.b.lab==null)col.b.lab=0;
 const techLv=k=>(col.tech&&col.tech[k])||0,TK={m:'mine',e:'power',f:'agri'};let tMul=k=>1+BAL.techProd*(TK[k]?techLv(TK[k]):0);
 const mult=()=>1+(typeof festOn==='function'&&festOn()?0.25:0)+(typeof terraBonus==='function'?terraBonus():0)+(typeof moraleBonus==='function'?moraleBonus():0)+BAL.bld.crewProd*crew()+BAL.bld.wallProd*(col.b.wall||0)+(typeof artCount==='function'?BAL.galaxy.artBonus*artCount():0);
-function rate(k){let r=0;for(const id of BORDER){const B=BLD[id],L=col.b[id];if(B.prod&&B.prod[0]===k&&L>0)r+=B.prod[1]*L*Math.pow(BAL.bld.prodGrowth,L-1)}return r*mult()*tMul(k)}
+function rate(k){let r=0;for(const id of BORDER){const B=BLD[id],L=col.b[id];if(B.prod&&B.prod[0]===k&&L>0)r+=B.prod[1]*L*Math.pow(BAL.bld.prodGrowth,L-1)}const E=typeof baseEco==='function'?baseEco():null;return r*mult()*tMul(k)+(E&&(k==='f'||k==='e')?E[k]:0)}   // + grow beds and spare generator power of the base
 function upCost(id){const L=col.b[id],B=BLD[id],f=Math.pow(BAL.bld.costGrowth,L);return {m:Math.round(B.base[0]*f),e:Math.round(B.base[1]*f),f:Math.round(B.base[2]*f*BAL.foodCostMul)}}
 const upTime=id=>Math.round(BAL.bld.time.base*Math.pow(BAL.bld.time.growth,col.b[id])*(1-BAL.bld.time.techCut*techLv('build')));
 const canPay=c=>Object.keys(c).every(k=>col.res[k]>=c[k]);
@@ -657,7 +657,7 @@ function chestBox(){const y=new Date();y.setDate(y.getDate()-1);const cont=col.d
 /* --- raids: every few hours the creatures attack; fence and defence decide, or you defend in person --- */
 const raidsOn=()=>col.b.def>0||col.q>=10;
 const raidPower=()=>Math.round(BAL.raid.perHq*col.b.hq*Math.pow(BAL.raid.growth,col.b.hq-1)+BAL.raid.perWin*(col.raidWins||0));
-const defPower=()=>col.b.wall*9+col.b.def*14+(col.b.tower||0)*12+crew();
+const defPower=()=>col.b.wall*9+col.b.def*14+(col.b.tower||0)*12+crew()+(typeof baseEco==='function'?baseEco().def:0);   // + powered base turrets
 function raidPlan(from){const first=!col.raidN;col.raid={at:(from||Date.now())+(3+Math.random()*3)*3600000,str:Math.round(raidPower()*(0.85+Math.random()*0.35)*(first?0.5:1)),mine:0,first};colSave();if(first)setTimeout(()=>toast('🤖 نجم: أول غارة ستكون ضعيفة — جهّز القبة والأبراج','ach'),1500)}
 function raidCheck(){if(!raidsOn())return;if(!col.raid)raidPlan();const now=Date.now();
   if(now>=col.raid.at){const R=col.raid,won=R.mine||defPower()>=R.str;let txt;

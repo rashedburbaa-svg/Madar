@@ -169,7 +169,7 @@ const WorldGame=(()=>{
       for(let i=1;i<6;i++)if(st.lv===WORLD.LV[i]&&(st.gk||{})[i-1]>0&&!open(i))gateReady(i);gSave('world',st)}}
   function hitP(n,quiet){if(p.dead>0||p.safe>0)return;p.hp-=n;if(!quiet)p.hurt=0.2;if(p.hp<=0){p.hp=0;p.dead=3;snd('lose');toast('💫 سقطت! تعود إلى القاعدة…');mons=mons.filter(m=>m.guard);eshots=[]}}
   function float(x,y,txt){parts.push({x,y,vx:0,vy:-40,l:1.1,txt})}
-  function kill(m){m.hp=0;st.kills=(st.kills||0)+1;if(typeof WB!=='undefined')WB.onKill(m);for(let k=0;k<10;k++){const a=Math.random()*6.283;parts.push({x:m.x,y:m.y,vx:Math.cos(a)*120,vy:Math.sin(a)*120,l:0.4,c:m.guard?'#ffd34d':'#ff9a6a'})}
+  function kill(m){m.hp=0;st.kills=(st.kills||0)+1;if(typeof WB!=='undefined')WB.onKill(m);for(let k=0;k<10&&parts.length<240;k++){const a=Math.random()*6.283;parts.push({x:m.x,y:m.y,vx:Math.cos(a)*120,vy:Math.sin(a)*120,l:0.4,c:m.guard?'#ffd34d':'#ff9a6a'})}
     if(m.guard){const g=m.guard;g.alive=false;st.gd=st.gd||{};st.gd[g.reg]=Date.now()+WORLD.guard.cd;st.gq=st.gq||{};st.gq[g.reg]=0;const first=!(st.gk||{})[g.reg];st.gk=st.gk||{};st.gk[g.reg]=(st.gk[g.reg]||0)+1;
       const q=first?40:15,c=first?30:10;addMat(REG[g.reg].mat,q);gain('c',c);addXP(first?120:40);snd('win');buzz([40,60,80]);
       const nx=g.reg+1,ready=nx<6&&!open(nx)&&gateOk(nx);storyBox('🏆 هزمت حارس '+PLN[g.reg].n,'+'+q+' '+REG[g.reg].me+' '+REG[g.reg].mn+' · +'+c+' 💎'+(first?'':' · يعود بعد 5 دقائق أو بقتل '+WORLD.guard.kills+' وحشاً في منطقته'),'رائع',ready?()=>gateReady(nx):null);

@@ -18,7 +18,7 @@ const TECH={
 const TMAX=BAL.tech.maxLv,tMax=k=>TECH[k].max||TMAX,tReq=k=>TECH[k].req?TECH[k].req():'';
 if(!col.tech)col.tech={};
 const techCost=k=>{const L=col.tech[k]||0,f=Math.pow(BAL.tech.costGrowth,L),b=TECH[k].base;return {m:Math.round(b[0]*f),e:Math.round(b[1]*f),f:Math.round(b[2]*f),c:BAL.tech.gemBase+L*BAL.tech.gemPerLv}};
-const techTime=k=>Math.round(BAL.tech.time.base*Math.pow(BAL.tech.time.growth,col.tech[k]||0)*(1-BAL.tech.time.labCut*(col.b.lab||0)));
+const techTime=k=>Math.round(BAL.tech.time.base*Math.pow(BAL.tech.time.growth,col.tech[k]||0)*(1-BAL.tech.time.labCut*(col.b.lab||0))*(1-(typeof baseEco==='function'?baseEco().res:0)));   // − powered research screens
 function researchTick(){const r=col.rs;if(!r||Date.now()<r.end)return;col.rs=null;col.tech[r.k]=(col.tech[r.k]||0)+1;colSave();snd('ach');buzz([20,30,20]);toast('🔬 '+TECH[r.k].n+' '+col.tech[r.k],'ach');questCheck&&questCheck();if(!$('hub').hidden)setTimeout(()=>{renderColony();renderSheet()},0)}
 function startResearch(k){accrue();if(col.rs){toast('🔬 المختبر مشغول');return}const L=col.tech[k]||0;if(L>=tMax(k)){toast('✔️ الأعلى');return}if(tReq(k)){toast('🔒 يحتاج '+tReq(k));return}
   if(L>=(col.b.lab||0)){toast('🔒 طوّر المختبر إلى '+(L+1));return}const c=techCost(k);if(!canPay(c)){snd('err');toast('الموارد لا تكفي');return}

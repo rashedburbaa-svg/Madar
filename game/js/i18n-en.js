@@ -1868,5 +1868,20 @@ const EN={
 "خردة {0}":"Scrap {0}",
 "يحمي القاعدة · مدى {0}":"Guards the base · range {0}",
 "موصول بأنبوب":"piped",
-"بلا أنابيب":"no pipes"
+"بلا أنابيب":"no pipes",
+"افتح وضع البناء بزر 🔨":"Open build mode with the 🔨 button",
+"اختر «أرضية» ووجّه الرائد ثم اضغط ✔":"Pick «Floor», face the spot and press ✔",
+"اختر «سلك»: اضغط ✔ قرب مولد ثم قرب جهاز":"Pick «Wire»: press ✔ by a generator, then by a device",
+"اختر «أنبوب»: صِل حوض زراعة بخزان ليصل غذاؤه للمستعمرة":"Pick «Pipe»: join a grow bed to a tank so its food reaches the colony",
+"أغلق البناء واقترب من أي جهاز لتفتح لوحته":"Close build mode and walk up to any device to open its panel",
+"ضع «برج دفاع» على أرضية ووصّله بمولد ليحمي القاعدة":"Place a «Defence turret» on a floor and wire it to a generator to guard the base",
+"تخطَّ":"Skip",
+"أتقنت البناء! +{0} 💎":"You mastered building! +{0} 💎",
+"جهّزنا لك قاعدة أولى جنوب القبة حسب مبانيك. وسّعها بزر 🔨":"We set up a first base south of the dome to match your buildings. Grow it with 🔨",
+"ينمو، لكن وصّله بأنبوب إلى خزان ليصل غذاؤه للمستعمرة":"Growing, but pipe it to a tank so its food reaches the colony",
+"+{0} 🌱/ساعة للمستعمرة":"+{0} 🌱/hour to the colony",
+"+{0} سعة لمخازن المستعمرة":"+{0} storage for the colony",
+"فيه 🌱 {0}":"holds 🌱 {0}",
+"القاعدة المبنية":"The built base",
+"🏗️ القاعدة المبنية في عالم المدار":"🏗️ The base built in the open world"
 };

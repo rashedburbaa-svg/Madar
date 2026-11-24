@@ -915,3 +915,8 @@ body.wfull .wbbar:not([hidden])~.wforgeb,.whud:has(.wbbar:not([hidden])) .wview{
 .wdpanel .dpa{display:flex;flex-direction:column;gap:5px}
 .wdpanel .dpa button{min-height:40px;border-radius:11px;border:1px solid #00e5ff66;background:#00e5ff14;color:#fff;font:inherit;font-size:12.5px;text-align:start;padding:6px 10px}
 .wdpanel .dpa button:disabled{opacity:.45}
+/* phase 4: base tutorial card and the colony's base chip */
+.wtut{position:absolute;top:126px;left:50%;transform:translateX(-50%);width:min(330px,calc(100% - 24px));pointer-events:auto;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:4px 8px;background:rgba(7,11,22,.92);border:1px solid #00e5ff88;border-radius:14px;padding:8px 10px;box-shadow:0 6px 20px rgba(0,0,0,.4)}
+.wtut .tn{grid-column:1/-1;font-size:10.5px;color:#9fe8ff}.wtut b{font-size:22px}.wtut p{margin:0;font-size:12.5px;color:#fff;line-height:1.45}
+.wtut .tsk{border:1px solid #ffffff33;background:none;color:#cfe9ff;border-radius:9px;padding:6px 8px;font:inherit;font-size:11px}
+.crow .cbase{width:34px;height:34px;border-radius:50%;border:1px solid #f5c451;background:#0b1226dd;font-size:17px}

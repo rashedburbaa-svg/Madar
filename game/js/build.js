@@ -45,7 +45,11 @@ const WB=(()=>{
     if(!fv)return 'ضع أرضية أولاً';if(devAt(T.gx,T.gy))return 'المكان مشغول';return ''}
   function pay2(c,txt){if(!canPay(c)){snd('err');toast('الموارد لا تكفي: '+txt);return false}pay(c);return true}
   function refund(k){const c=cost(k),f=BAL.build.refund;if(c.m)gain('m',Math.round(c.m*f));if(c.e)gain('e',Math.round(c.e*f))}
-  function changed(){dirty=true;inCell='';colSave();if(typeof updRes==='function')try{updRes()}catch(e){}if(G3)build3d()}
+  let cache=null;   // drawing lists, rebuilt only when the base changes (no string splitting every frame)
+  function cacheB(){if(cache)return cache;const b=B(),F=[],E=[],V=[];for(const k in b.f){const [gx,gy]=k.split(',').map(Number);F.push({k,x:gx*C,y:gy*C,cor:b.f[k]==='cor'})}
+    for(const k in b.w){const [gx,gy,o]=k.split(',');E.push({k,x:+gx*C,y:+gy*C,o,t:eType(b.w[k])})}
+    for(const k in b.r){const [gx,gy]=k.split(',').map(Number);V.push({k,gx,gy,t:b.r[k]})}for(const f of F)if(f.cor)V.push({k:f.k,gx:f.x/C,gy:f.y/C,t:'cor'});V.sort((a,c)=>a.gy-c.gy);return cache={F,E,V}}
+  function changed(){dirty=true;inCell='';cache=null;colSave();if(typeof updRes==='function')try{updRes()}catch(e){}if(G3)build3d()}
   function place(){const T=target(),b=B(),k=tool,w=why(k,T);
     if(k==='wire'||k==='pipe')return link(k);
     if(w){snd('err');api.say('🚫 '+w);return}
@@ -85,7 +89,7 @@ const WB=(()=>{
   function damage(key,t,n){const b=B(),h=hpOf(key,t)-n;
     if(h>0){const was=hpOf(key,t);b.hp[key]=h;hpDirty=true;if(G3&&was>=maxHp(t)/2&&h<maxHp(t)/2)build3d();return}
     delete b.hp[key];const id=key.slice(1);if(key[0]==='e')delete b.w[id];else if(key[0]==='r')delete b.r[id];else if(key[0]==='c')delete b.f[id];
-    snd('hit');buzz(40);toast('💥 تحطّم '+NAME[t]+'!');changed()}
+    cache=null;snd('hit');buzz(40);toast('💥 تحطّم '+NAME[t]+'!');changed()}
   function blast(x,y,r,n){const b=col.base;if(!b)return;for(const k of Object.keys(b.w||{})){const [i,j,o]=k.split(','),mx=+i*C+(o==='h'?C/2:0),my=+j*C+(o==='v'?C/2:0);if(Math.hypot(mx-x,my-y)<r)damage('e'+k,eType(b.w[k]),n)}
     for(const k of Object.keys(b.r||{})){const c=ctr(...k.split(',').map(Number));if(Math.hypot(c.x-x,c.y-y)<r)damage('r'+k,b.r[k],n)}
     for(const k of Object.keys(b.f||{})){if(b.f[k]!=='cor')continue;const c=ctr(...k.split(',').map(Number));if(Math.hypot(c.x-x,c.y-y)<r)damage('c'+k,'cor',n)}}
@@ -100,8 +104,8 @@ const WB=(()=>{
   function hpBar(ctx,x,y,f){ctx.fillStyle='#070b16cc';ctx.fillRect(x-17,y-3,34,6);ctx.fillStyle=f>0.5?'#7dff9a':f>0.25?'#ffd34d':'#ff4d5e';ctx.fillRect(x-16,y-2,32*f,4)}
   function showHp(x,y){return on||(api&&Math.hypot(api.player().x-x,api.player().y-y)<200)}
   function floor2d(ctx,cam,W,H){const b=col.base;solve();rooms();
-    if(b&&b.f){for(const k in b.f){const [gx,gy]=k.split(',').map(Number),x=gx*C,y=gy*C;if(x>cam.x+W||x+C<cam.x||y>cam.y+H||y+C<cam.y)continue;
-        if(b.f[k]==='cor'){ctx.fillStyle='#8f99a8';ctx.fillRect(x,y,C,C);ctx.fillStyle='#b9c2ce';ctx.fillRect(x+3,y+3,C-6,C-6);ctx.fillStyle='#00e5ff88';ctx.fillRect(x+C/2-2,y+4,4,C-8);ctx.fillRect(x+4,y+C/2-2,C-8,4);continue}
+    if(b&&b.f){for(const F of cacheB().F){const x=F.x,y=F.y;if(x>cam.x+W||x+C<cam.x||y>cam.y+H||y+C<cam.y)continue;
+        if(F.cor){ctx.fillStyle='#8f99a8';ctx.fillRect(x,y,C,C);ctx.fillStyle='#b9c2ce';ctx.fillRect(x+3,y+3,C-6,C-6);ctx.fillStyle='#00e5ff88';ctx.fillRect(x+C/2-2,y+4,4,C-8);ctx.fillRect(x+4,y+C/2-2,C-8,4);continue}
         ctx.fillStyle='#c9d1dc';ctx.fillRect(x,y,C,C);ctx.fillStyle='#e8edf3';ctx.fillRect(x+2,y+2,C-4,C-4);ctx.strokeStyle='#f5c45188';ctx.lineWidth=1;ctx.strokeRect(x+3.5,y+3.5,C-7,C-7);
         ctx.fillStyle='#00e5ff99';ctx.fillRect(x+C/2-1.5,y+C/2-1.5,3,3)}
       for(const [a,c] of b.pi||[]){const A=dev(a),Z=dev(c);if(!A||!Z)continue;const p1=ctr(A.gx,A.gy),p2=ctr(Z.gx,Z.gy),flow=[A,Z].some(x=>x.t==='planter'&&net[x.id]&&net[x.id].ok&&net[x.id].sup>0);
@@ -133,12 +137,11 @@ const WB=(()=>{
       if(f<1){ctx.fillStyle=`rgba(255,77,94,${(1-f)*0.45})`;ctx.fillRect(x0-4,y0-34,8,C+34)}}
     if(f<1&&showHp(x0+C/2,y0))hpBar(ctx,o==='h'?x0+C/2:x0,o==='h'?y0-42:y0+C/2-42,f)}
   function items2d(L,vis,ctx,t){const b=col.base;if(!b||!api)return;
-    for(const k in b.w||{}){const [gx,gy,o]=k.split(','),x0=+gx*C,y0=+gy*C;if(!vis(x0+C/2,y0+C/2))continue;const ty=eType(b.w[k]);L.push([o==='h'?y0:y0+C,()=>edge2d(ctx,k,ty)])}
+    for(const e of cacheB().E){if(!vis(e.x+C/2,e.y+C/2))continue;L.push([e.o==='h'?e.y:e.y+C,()=>edge2d(ctx,e.k,e.t)])}
     for(const d of b.d||[]){const c=ctr(d.gx,d.gy);if(!vis(c.x,c.y)||!WBD.T[d.t])continue;const n=net[d.id]||{sup:0,use:0};d.r=d.r||0;L.push([c.y+6,()=>WBD.T[d.t].d2(ctx,c,n,t,d)])}}
   // roofs, domes and corridor canopies are drawn above everything; the room you stand in fades away
-  function roof2d(ctx,vis,t){const b=col.base;if(!b||!api)return;WBD.fx2d(ctx);const cells=[];for(const k in b.r||{})cells.push([k,b.r[k]]);for(const k in b.f||{})if(b.f[k]==='cor')cells.push([k,'cor']);
-    cells.sort((a,c)=>+a[0].split(',')[1]-+c[0].split(',')[1]);
-    for(const [k,ty] of cells){const [gx,gy]=k.split(',').map(Number),x=gx*C,y=gy*C;if(!vis(x+C/2,y+C/2))continue;const inn=inside.has(k),key=(ty==='cor'?'c':'r')+k,f=hpOf(key,ty)/maxHp(ty);
+  function roof2d(ctx,vis,t){const b=col.base;if(!b||!api)return;WBD.fx2d(ctx);
+    for(const V of cacheB().V){const k=V.k,ty=V.t,gx=V.gx,gy=V.gy,x=gx*C,y=gy*C;if(!vis(x+C/2,y+C/2))continue;const inn=inside.has(k),key=(ty==='cor'?'c':'r')+k,f=hpOf(key,ty)/maxHp(ty);
       if(ty==='roof'){ctx.globalAlpha=inn?0.12:1;ctx.fillStyle='#c3ccd8';ctx.fillRect(x,y+C-36,C,5);ctx.fillStyle='#e3e8ef';ctx.fillRect(x,y-36,C,C);ctx.strokeStyle='#cfd6e0';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x+C/2,y-36);ctx.lineTo(x+C/2,y+C-36);ctx.moveTo(x,y-36+C/2);ctx.lineTo(x+C,y-36+C/2);ctx.stroke();
         ctx.strokeStyle='#f5c451';ctx.lineWidth=1.5;ctx.strokeRect(x+1,y-35,C-2,C-2);ctx.fillStyle='#00e5ff';ctx.fillRect(x+C/2-2,y-36+C/2-2,4,4)}
       if(ty==='dome'){const cx=x+C/2,by=y+C-2;ctx.globalAlpha=inn?0.08:1;ctx.fillStyle='#9ff0ff33';ctx.beginPath();ctx.ellipse(cx,by,C/2,C*1.05,0,Math.PI,0);ctx.fill();ctx.strokeStyle='#bff8ffcc';ctx.lineWidth=1.4;ctx.stroke();
@@ -186,28 +189,53 @@ const WB=(()=>{
     const T=TOOLS.find(x=>x[0]===tool),hint=tool==='pipe'?(sel?'اقترب من الجهاز الثاني واضغط ✔':'الأنابيب تنقل إنتاج الأحواض إلى الخزانات · اقترب من جهاز واضغط ✔'):ISDEV(tool)?'معاينة شبحية أمامك · ↻ للتدوير · يُوضع فوق أرضية':tool==='wire'?(sel?'اقترب من الجهاز الثاني واضغط ✔ (اضغط على وصلة موجودة لقطعها)':'اقترب من مولد أو جهاز واضغط ✔'):tool==='del'?'وجّه الرائد نحو القطعة واضغط ✔':tool==='fix'?'وجّه الرائد نحو قطعة متضررة واضغط ✔':EDGE[tool]?'يلتصق بحافة الخانة أمامك · ↻ لتغيير الحافة':COVER[tool]?'يُوضع فوق أرضية · يختفي حين تكون تحته':'تلتصق القطعة بالخانة أمام الرائد';
     bar.querySelector('.bhint').textContent=T[2]+(cost(tool).m?' · '+costTxt(tool):'')+' — '+hint;if(typeof trNode==='function'&&typeof I18N!=='undefined'&&I18N.on)trNode(bar)}
   function open2(v){on=v;sel=null;if(bar)bar.hidden=!on;const b=api&&api.hud.querySelector('.wbuildb');if(b)b.classList.toggle('on',on);if(on)paint();snd('tap')}
-  function start(a){api=a;on=false;sel=null;dirty=true;inCell='';G3=null;scene3=null;const hud=a.hud;B();
+  /* ---------- phase 4: a first base for players who have none (old saves too), sized from the colony's buildings ---------- */
+  function starter(){const b=B();if(b.mig||Object.keys(b.f).length||b.d.length)return false;b.mig=1;const L=col.b,x0=35,y0=16,W2=5,H2=4,ok=(gx,gy)=>zoneOk(gx,gy);
+    for(let i=0;i<W2;i++)for(let j=0;j<H2;j++)if(ok(x0+i,y0+j)){b.f[(x0+i)+','+(y0+j)]=1;b.r[(x0+i)+','+(y0+j)]='roof'}
+    const has=(gx,gy)=>!!b.f[gx+','+gy];
+    for(let i=0;i<W2;i++){if(has(x0+i,y0))b.w[(x0+i)+','+y0+',h']=1;if(has(x0+i,y0+H2-1))b.w[(x0+i)+','+(y0+H2)+',h']=i===2?'door':1}
+    for(let j=0;j<H2;j++){if(has(x0,y0+j))b.w[x0+','+(y0+j)+',v']=j===1?'window':1;if(has(x0+W2-1,y0+j))b.w[(x0+W2)+','+(y0+j)+',v']=j===1?'window':1}
+    const put=(t,gx,gy)=>{if(!has(gx,gy)||b.d.some(d=>d.gx===gx&&d.gy===gy))return null;const d={id:b.n++,t,gx,gy,r:0};b.d.push(d);return d};
+    const g1=put('gen',x0,y0),g2=(L.solar||0)>=4?put('gen',x0+1,y0):null,pl=put('planter',x0+2,y0),tk=put('tank',x0+3,y0),lp=put('lamp',x0+4,y0),
+      cr=put('craft',x0,y0+3),rs=(L.lab||0)>0?put('research',x0+1,y0+3):null,rd=(L.obs||0)>0?put('radar',x0+3,y0+3):null;
+    let tu=null;if((L.tower||0)>0){const gx=x0+W2,gy=y0+H2;if(ok(gx,gy)){b.f[gx+','+gy]=1;tu=put('turret',gx,gy)}}
+    const wire=(a,c)=>{if(a&&c)b.wi.push([a.id,c.id])};wire(g1,pl);wire(pl,lp);wire(g1,cr);wire(cr,rs);wire(g2||g1,rd);wire(rd||lp,tu);if(g2)wire(g1,g2);if(pl&&tk)b.pi.push([pl.id,tk.id]);
+    b.tut=0;return true}
+  /* ---------- phase 4: a short hands-on tutorial (build, wire, pipe, devices, defence) ---------- */
+  const TUT=[['🔨','افتح وضع البناء بزر 🔨',()=>on],['⬜','اختر «أرضية» ووجّه الرائد ثم اضغط ✔',b=>Object.keys(b.f).length>tb.f],
+    ['🔌','اختر «سلك»: اضغط ✔ قرب مولد ثم قرب جهاز',b=>b.wi.length>tb.wi],['🧪','اختر «أنبوب»: صِل حوض زراعة بخزان ليصل غذاؤه للمستعمرة',b=>b.pi.length>tb.pi],
+    ['📋','أغلق البناء واقترب من أي جهاز لتفتح لوحته',()=>panel&&!panel.hidden],['🗼','ضع «برج دفاع» على أرضية ووصّله بمولد ليحمي القاعدة',b=>b.d.some(d=>d.t==='turret'&&net[d.id]&&net[d.id].ok)]];
+  let tb={f:0,wi:0,pi:0},tutEl=null,tutT=0;
+  function tutBase(){const b=B();tb={f:Object.keys(b.f).length,wi:b.wi.length,pi:b.pi.length}}
+  function tutDraw(){if(!tutEl)return;const b=B(),i=b.tut;if(i==null||i>=TUT.length){tutEl.hidden=true;return}const T=TUT[i];tutEl.hidden=false;
+    tutEl.innerHTML=`<span class="tn">${i+1}/${TUT.length}</span><b>${T[0]}</b><p>${T[1]}</p><button type="button" class="tsk">تخطَّ</button>`;tutEl.querySelector('.tsk').onclick=e=>{e.stopPropagation();b.tut=99;colSave();tutDraw()};
+    if(typeof trNode==='function'&&typeof I18N!=='undefined'&&I18N.on)trNode(tutEl)}
+  function tutTick(dt){if(!tutEl)return;tutT-=dt;if(tutT>0)return;tutT=0.4;const b=B();if(b.tut==null||b.tut>=TUT.length)return;solve();
+    if(TUT[b.tut][2](b)){b.tut++;tutBase();snd('ok');if(b.tut>=TUT.length){gain('c',BAL.build.tutGems);toast('🎓 أتقنت البناء! +'+BAL.build.tutGems+' 💎','ach')}colSave();tutDraw()}}
+  function start(a){api=a;on=false;sel=null;dirty=true;inCell='';cache=null;G3=null;scene3=null;const hud=a.hud;B();
+    if(starter()){colSave();setTimeout(()=>toast('🏗️ جهّزنا لك قاعدة أولى جنوب القبة حسب مبانيك. وسّعها بزر 🔨','ach'),900)}
     const btn=document.createElement('button');btn.type='button';btn.className='wbuildb';btn.setAttribute('aria-label','وضع البناء');btn.textContent='🔨';btn.onclick=e=>{e.stopPropagation();open2(!on)};hud.appendChild(btn);
     bar=document.createElement('div');bar.className='wbbar';bar.hidden=true;bar.innerHTML=`<p class="bhint"></p><div class="btools">${TOOLS.map(([k,e,n])=>`<button type="button" data-t="${k}"><b>${e}</b><span>${n}</span>${cost(k).m?`<small>${costTxt(k)}</small>`:''}</button>`).join('')}</div><div class="bacts"><button type="button" data-a="rot">↻ <span>تدوير</span></button><button type="button" data-a="ok" class="main">✔ <span>ضع</span></button><button type="button" data-a="x">✖ <span>إغلاق</span></button></div>`;
     hud.appendChild(bar);bar.addEventListener('pointerdown',e=>e.stopPropagation());
     bar.onclick=e=>{e.stopPropagation();const t2=e.target.closest('[data-t]'),ac=e.target.closest('[data-a]');if(t2){tool=t2.dataset.t;sel=null;snd('tap');paint()}
       if(ac){const k=ac.dataset.a;if(k==='x')open2(false);if(k==='rot'){rot=(rot+1)%4;snd('tap')}if(k==='ok')place()}};
     chip=document.createElement('div');chip.className='wbchip';chip.hidden=true;hud.appendChild(chip);
-    panel=document.createElement('div');panel.className='wdpanel';panel.hidden=true;hud.appendChild(panel);panel.addEventListener('pointerdown',e=>e.stopPropagation());panelId=null}
+    panel=document.createElement('div');panel.className='wdpanel';panel.hidden=true;hud.appendChild(panel);panel.addEventListener('pointerdown',e=>e.stopPropagation());panelId=null;
+    tutEl=document.createElement('div');tutEl.className='wtut';tutEl.hidden=true;hud.appendChild(tutEl);tutEl.addEventListener('pointerdown',e=>e.stopPropagation());tutBase();tutDraw()}
   // the chip shows the device you stand by, or the health of the piece in front of you
   let chipT=0;
   // the device panel: opens by itself when the astronaut walks up to a device (title, state, actions, radar picture)
   function showPanel(d){if(!panel)return;if(!d){if(!panel.hidden){panel.hidden=true;panelId=null;WBD.T._sel=null}return}const b=B(),n=net[d.id]||{sup:0,use:0},D=WBD.T[d.t];WBD.T._sel=d;
-    const acts=D.acts?D.acts(d,n,b):[],sig=d.id+'|'+acts.map(a=>a[2]).join()+'|'+(D.info?D.info(d,n,b):'')+'|'+n.use+'/'+n.sup;if(panelId===sig&&!panel.hidden)return;panelId=sig;
-    panel.innerHTML=`<div class="dph"><b>${D.em} ${D.n}</b><small>${(BAL.build[d.t]&&BAL.build[d.t].use)||d.t==='gen'?'⚡ '+n.use+'/'+n.sup+(n.sup?'':' · غير موصول بمولد'):'🧪 '+((pipes[d.id]||[]).length?'موصول بأنبوب':'بلا أنابيب')}</small></div><p>${D.info?D.info(d,n,b):''}</p>${D.radar&&n.ok&&n.sup>0?'<canvas width="200" height="134"></canvas>':''}${acts.length?`<div class="dpa">${acts.map(([k,t2,ok])=>`<button type="button" data-k="${k}" ${ok?'':'disabled'}>${t2}</button>`).join('')}</div>`:''}`;
+    const acts=D.acts?D.acts(d,n,b):[],sig=d.id+'|'+acts.map(a=>a[2]).join()+'|'+(D.info?D.info(d,n,b,pipes[d.id]):'')+'|'+n.use+'/'+n.sup;if(panelId===sig&&!panel.hidden)return;panelId=sig;
+    panel.innerHTML=`<div class="dph"><b>${D.em} ${D.n}</b><small>${(BAL.build[d.t]&&BAL.build[d.t].use)||d.t==='gen'?'⚡ '+n.use+'/'+n.sup+(n.sup?'':' · غير موصول بمولد'):'🧪 '+((pipes[d.id]||[]).length?'موصول بأنبوب':'بلا أنابيب')}</small></div><p>${D.info?D.info(d,n,b,pipes[d.id]):''}</p>${D.radar&&n.ok&&n.sup>0?'<canvas width="200" height="134"></canvas>':''}${acts.length?`<div class="dpa">${acts.map(([k,t2,ok])=>`<button type="button" data-k="${k}" ${ok?'':'disabled'}>${t2}</button>`).join('')}</div>`:''}`;
     panel.hidden=false;panel.querySelectorAll('[data-k]').forEach(x=>x.onclick=e=>{e.stopPropagation();D.act(x.dataset.k,d,n,b,api);panelId=null});
     const cv=panel.querySelector('canvas');if(cv&&api.mini()){const g=cv.getContext('2d');g.fillStyle='#070b16';g.fillRect(0,0,200,134);g.drawImage(api.mini(),0,0,200,134);g.strokeStyle='#00e5ff88';g.strokeRect(0.5,0.5,199,133)}
     if(typeof trNode==='function'&&typeof I18N!=='undefined'&&I18N.on)trNode(panel)}
   function onKill(m){const b=col.base;if(!b)return;b.sc=(b.sc||0)+(m.guard?BAL.build.scrapGuard:BAL.build.scrapPerKill)}
-  function update(dt,t){pulse=(pulse+dt*0.7)%1;if(api&&col.base){solve();WBD.tick(dt,B(),net,pipes,api)}hpSaveT-=dt;if(hpDirty&&hpSaveT<=0){hpDirty=false;hpSaveT=3;colSave()}chipT-=dt;if(chipT>0||!chip||!api)return;chipT=0.3;solve();const d=near();
+  function update(dt,t){pulse=(pulse+dt*0.7)%1;if(api&&col.base){solve();WBD.tick(dt,B(),net,pipes,api);tutTick(dt)}hpSaveT-=dt;if(hpDirty&&hpSaveT<=0){hpDirty=false;hpSaveT=3;colSave()}chipT-=dt;if(chipT>0||!chip||!api)return;chipT=0.3;solve();const d=near();
     showPanel(on?null:d);if(d&&!on){chip.hidden=true;return}
     if(d){const n=net[d.id]||{sup:0,use:0};chip.hidden=false;chip.textContent=WBD.T[d.t].em+' '+WBD.T[d.t].n+' · ⚡ '+n.use+'/'+n.sup;return}
     const P=pieceAt(target());if(P&&P.key){const h=hpOf(P.key,P.t),M=maxHp(P.t);if(on||h<M){chip.hidden=false;chip.textContent=NAME[P.t]+' · ❤️ '+Math.ceil(h)+'/'+M+(h<M?' · 🔧':'');return}}
     chip.hidden=true}
-  function stop(){colSave();on=false;bar=null;chip=null;panel=null;G3=null;scene3=null;api=null}
+  function stop(){colSave();on=false;bar=null;chip=null;panel=null;tutEl=null;G3=null;scene3=null;api=null;cache=null}
   return {start,stop,update,push,blast,floor2d,items2d,roof2d,make3d,draw3d,onKill}})();
