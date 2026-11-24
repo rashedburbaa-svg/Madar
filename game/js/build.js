@@ -45,7 +45,7 @@ const WB=(()=>{
     if(!fv)return 'ضع أرضية أولاً';if(devAt(T.gx,T.gy))return 'المكان مشغول';return ''}
   function pay2(c,txt){if(!canPay(c)){snd('err');toast('الموارد لا تكفي: '+txt);return false}pay(c);return true}
   function refund(k){const c=cost(k),f=BAL.build.refund;if(c.m)gain('m',Math.round(c.m*f));if(c.e)gain('e',Math.round(c.e*f))}
-  let cache=null;   // drawing lists, rebuilt only when the base changes (no string splitting every frame)
+  let cache=null,SH=null;   // drawing lists, rebuilt only when the base changes (no string splitting every frame)
   function cacheB(){if(cache)return cache;const b=B(),F=[],E=[],V=[];for(const k in b.f){const [gx,gy]=k.split(',').map(Number);F.push({k,x:gx*C,y:gy*C,cor:b.f[k]==='cor'})}
     for(const k in b.w){const [gx,gy,o]=k.split(',');E.push({k,x:+gx*C,y:+gy*C,o,t:eType(b.w[k])})}
     for(const k in b.r){const [gx,gy]=k.split(',').map(Number);V.push({k,gx,gy,t:b.r[k]})}for(const f of F)if(f.cor)V.push({k:f.k,gx:f.x/C,gy:f.y/C,t:'cor'});V.sort((a,c)=>a.gy-c.gy);return cache={F,E,V}}
@@ -151,13 +151,18 @@ const WB=(()=>{
       ctx.globalAlpha=1;if(f<1){if(!inn){ctx.fillStyle=`rgba(255,77,94,${(1-f)*0.35})`;ctx.fillRect(x,y-36,C,C)}if(showHp(x+C/2,y))hpBar(ctx,x+C/2,y-44,f)}}}
   /* ---------- 3D ---------- */
   function make3d(scene){scene3=scene;build3d()}
-  function build3d(){if(!scene3||typeof THREE==='undefined')return;if(G3){scene3.remove(G3);G3.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material&&o.material.userData.own)o.material.dispose()})}
+  function build3d(){if(!scene3||typeof THREE==='undefined')return;if(G3){scene3.remove(G3);G3.traverse(o=>{if(o.geometry&&!o.geometry.userData.keep)o.geometry.dispose();if(o.material&&o.material.userData.own)o.material.dispose()})}
     G3=new THREE.Group();blades=[];lamps3=[];doors3=[];covers3=[];anim3=[];const b=B();
-    const white=new THREE.MeshLambertMaterial({color:0xeef2f6}),gold=new THREE.MeshLambertMaterial({color:0xf5c451}),dark=new THREE.MeshLambertMaterial({color:0x2a3448}),cyan=new THREE.MeshBasicMaterial({color:0x00e5ff}),
-      glass=new THREE.MeshLambertMaterial({color:0x9ff0ff,transparent:true,opacity:0.35,emissive:0x0a4a5a,emissiveIntensity:0.4});
-    const hurt=(key,t)=>{const f=hpOf(key,t)/maxHp(t);if(f>=0.5)return white;const m=new THREE.MeshLambertMaterial({color:0xffb0b8});m.userData.own=1;return m};
-    const box=(w,h,d,m,x,y,z)=>{const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);G3.add(o);return o};
-    const fk=Object.keys(b.f).filter(k=>b.f[k]===1);if(fk.length){const I=new THREE.InstancedMesh(new THREE.BoxGeometry(C-2,2,C-2),new THREE.MeshLambertMaterial({color:0xdfe5ec}),fk.length),o=new THREE.Object3D();fk.forEach((k,n)=>{const [gx,gy]=k.split(',').map(Number);o.position.set(gx*C+C/2,1,gy*C+C/2);o.updateMatrix();I.setMatrixAt(n,o.matrix)});G3.add(I)}
+    // shared materials and geometries: made once for the whole session, reused by every rebuild (only per-piece ones are disposed)
+    if(!SH){const S2=(c,r,m,o)=>Object.assign(new THREE.MeshStandardMaterial({color:c,roughness:r,metalness:m}),o||{});
+      SH={white:S2(0xf0f3f7,0.5,0.05),gold:S2(0xf5c451,0.32,0.65),dark:S2(0x2a3448,0.6,0.2),cyan:new THREE.MeshBasicMaterial({color:0x00e5ff}),
+        glass:S2(0x9ff0ff,0.08,0.2,{transparent:true,opacity:0.35,emissive:new THREE.Color(0x0a4a5a),emissiveIntensity:0.4,depthWrite:false}),floor:S2(0xdfe5ec,0.6,0.05),hurt:S2(0xffb0b8,0.5,0.05),
+        roofOk:S2(0xe3e8ef,0.55,0.05),roofHurt:S2(0xffc0c6,0.55,0.05),soil:S2(0x4a3020,0.95,0),leaf:S2(0x3fae6a,0.7,0,{flatShading:true}),G:{}}}
+    const white=SH.white,gold=SH.gold,dark=SH.dark,cyan=SH.cyan,glass=SH.glass;
+    const BG=(w,h,d)=>{const k=w+'|'+h+'|'+d;if(!SH.G[k]){SH.G[k]=new THREE.BoxGeometry(w,h,d);SH.G[k].userData.keep=1}return SH.G[k]};
+    const hurt=(key,t)=>hpOf(key,t)/maxHp(t)>=0.5?white:SH.hurt;
+    const box=(w,h,d,m,x,y,z)=>{const o=new THREE.Mesh(BG(w,h,d),m);o.position.set(x,y,z);G3.add(o);return o};
+    const fk=Object.keys(b.f).filter(k=>b.f[k]===1);if(fk.length){const I=new THREE.InstancedMesh(new THREE.BoxGeometry(C-2,2,C-2),SH.floor,fk.length),o=new THREE.Object3D();fk.forEach((k,n)=>{const [gx,gy]=k.split(',').map(Number);o.position.set(gx*C+C/2,1,gy*C+C/2);o.updateMatrix();I.setMatrixAt(n,o.matrix)});G3.add(I)}
     for(const k in b.w){const [gx,gy,o]=k.split(','),x=+gx*C,y=+gy*C,h=o==='h',t=eType(b.w[k]),cx=h?x+C/2:x,cz=h?y:y+C/2,L=(w,d)=>h?[w,d]:[d,w],m=hurt('e'+k,t);
       if(t==='wall'){const [a,c]=L(C,6);box(a,32,c,m,cx,17,cz)}
       if(t==='window'){const [a,c]=L(C,6);box(a,10,c,m,cx,6,cz);const [g1,g2]=L(C-4,3);box(g1,20,g2,glass,cx,21,cz)}
@@ -166,9 +171,9 @@ const WB=(()=>{
     for(const k in b.f){if(b.f[k]!=='cor')continue;const [gx,gy]=k.split(',').map(Number),cx=gx*C+C/2,cz=gy*C+C/2,hz=!!(b.f[(gx-1)+','+gy]||b.f[(gx+1)+','+gy]);box(C-2,2,C-2,dark,cx,1,cz);
       const mat=glass.clone();mat.userData.own=1;const tube=new THREE.Mesh(new THREE.CylinderGeometry(C/2-2,C/2-2,C,12,1,true,0,Math.PI),mat);tube.rotation.z=Math.PI/2;if(!hz)tube.rotation.y=Math.PI/2;tube.position.set(cx,2,cz);G3.add(tube);covers3.push([mat,k,0.35])}
     for(const k in b.r){const [gx,gy]=k.split(',').map(Number),cx=gx*C+C/2,cz=gy*C+C/2,t=b.r[k];
-      if(t==='roof'){const mat=new THREE.MeshLambertMaterial({color:hpOf('r'+k,t)/maxHp(t)<0.5?0xffc0c6:0xe3e8ef,transparent:true,opacity:1});mat.userData.own=1;const o=new THREE.Mesh(new THREE.BoxGeometry(C,3,C),mat);o.position.set(cx,36,cz);G3.add(o);covers3.push([mat,k,1])}
+      if(t==='roof'){const mat=(hpOf('r'+k,t)/maxHp(t)<0.5?SH.roofHurt:SH.roofOk).clone();mat.transparent=true;mat.userData.own=1;const o=new THREE.Mesh(new THREE.BoxGeometry(C,3,C),mat);o.position.set(cx,36,cz);G3.add(o);covers3.push([mat,k,1])}
       if(t==='dome'){const mat=glass.clone();mat.userData.own=1;mat.opacity=0.3;const o=new THREE.Mesh(new THREE.SphereGeometry(C*0.62,16,10,0,Math.PI*2,0,Math.PI/2),mat);o.scale.y=1.15;o.position.set(cx,1,cz);G3.add(o);covers3.push([mat,k,0.3])}}
-    const own=m=>{m.userData.own=1;return m},M={white,gold,dark,cyan,glassT:glass,soil:new THREE.MeshLambertMaterial({color:0x4a3020}),leaf:new THREE.MeshLambertMaterial({color:0x3fae6a}),leafE:own(new THREE.MeshLambertMaterial({color:0x7dff9a,emissive:0x2a7a3a,emissiveIntensity:0.5})),
+    const own=m=>{m.userData.own=1;return m},M={white,gold,dark,cyan,glassT:glass,soil:SH.soil,leaf:SH.leaf,leafE:own(new THREE.MeshLambertMaterial({color:0x7dff9a,emissive:0x2a7a3a,emissiveIntensity:0.5})),
       box:(w,h,d,m,x,y,z)=>box(w,h,d,m,x,y,z),cyl:(r,h,m,x,y,z)=>{const o=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,12),m);o.position.set(x,y,z);G3.add(o);return o},cylM:(r,h,m,x,y,z)=>M.cyl(r,h,m,x,y,z),
       group:(x,y,z)=>{const g=new THREE.Group();g.position.set(x,y,z);G3.add(g);return g},sub:g=>{const s2=new THREE.Group();g.add(s2);return s2},
       boxIn:(g,w,h,d,m,x,y,z)=>{const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);g.add(o);return o},ball:(g,r,m)=>{const o=new THREE.Mesh(new THREE.SphereGeometry(r,12,10),m);g.add(o);return o},

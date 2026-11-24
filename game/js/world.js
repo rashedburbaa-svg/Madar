@@ -319,26 +319,52 @@ const WorldGame=(()=>{
     ctx.fillStyle='#f3f4f7';ctx.beginPath();ctx.arc(p.x,p.y-14,12,0,6.283);ctx.fill();ctx.fillStyle='#0b1530';ctx.beginPath();ctx.arc(p.x+Math.cos(p.aim)*4,p.y-15,6,0,6.283);ctx.fill()}
   /* ---------- 3D view (three.js): same world, camera behind the astronaut ---------- */
   function make3D(){if(typeof THREE==='undefined')return null;let R;try{R=new THREE.WebGLRenderer({canvas:c3,antialias:false,powerPreference:'low-power'})}catch(e){return null}
-    R.setPixelRatio(Math.min(devicePixelRatio,1.5));const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(60,1,1,2400);
-    scene.fog=new THREE.Fog(WORLD.fog[0],380,1100);scene.background=new THREE.Color(WORLD.fog[0]);
-    scene.add(new THREE.HemisphereLight(0xe8f0ff,0x302838,1.0));const sun=new THREE.DirectionalLight(0xffffff,1.4);sun.position.set(300,600,200);scene.add(sun);
+    R.setPixelRatio(Math.min(devicePixelRatio,1.5));R.outputColorSpace=THREE.SRGBColorSpace;R.toneMapping=THREE.ACESFilmicToneMapping;R.toneMappingExposure=1.2;
+    const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(56,1,1,3000);
+    // depth without washing out: the fog starts far and keeps the region's colour, deepened toward the navy UI tone
+    const deep=c=>new THREE.Color(c).lerp(new THREE.Color(0x070b16),0.35);scene.fog=new THREE.Fog(deep(WORLD.fog[0]),620,1750);scene.background=deep(WORLD.fog[0]);
+    // Pixar-like light: soft sky/ground fill, a warm key light and a cyan rim from behind
+    const hemi=new THREE.HemisphereLight(0xd8ecff,0x3a2a4a,0.85);scene.add(hemi);
+    const sun=new THREE.DirectionalLight(0xfff0d8,1.9);scene.add(sun);scene.add(sun.target);
+    const rim=new THREE.DirectionalLight(0x6fe9ff,0.7);scene.add(rim);scene.add(rim.target);
     const TX={},tex=k=>{if(TX[k])return TX[k];const im=img(k);if(!im)return null;const T=new THREE.Texture(im);T.needsUpdate=true;T.colorSpace&&(T.colorSpace=THREE.SRGBColorSpace);return TX[k]=T};
-    // ground: one plane per region with its painted pattern
-    // organic ground: one flat shape per region outline (a plain plane under all of them fills any seam)
+    // sky dome with a gradient and stars (not fogged), it follows the camera
+    const sky=(()=>{const c=document.createElement('canvas');c.width=4;c.height=256;const g=c.getContext('2d'),G=g.createLinearGradient(0,0,0,256);G.addColorStop(0,'#04060f');G.addColorStop(0.45,'#0d1530');G.addColorStop(0.62,'#2a2250');G.addColorStop(0.72,'#6a5a9a');G.addColorStop(1,'#1a1428');g.fillStyle=G;g.fillRect(0,0,4,256);
+      const T=new THREE.CanvasTexture(c);T.colorSpace=THREE.SRGBColorSpace;const m=new THREE.Mesh(new THREE.SphereGeometry(2400,24,16),new THREE.MeshBasicMaterial({map:T,side:THREE.BackSide,fog:false,depthWrite:false}));m.renderOrder=-2;scene.add(m);
+      const P=[],R2=seeded(77);for(let k=0;k<500;k++){const a=R2()*6.283,e=0.15+R2()*1.3;P.push(Math.cos(a)*Math.cos(e)*2300,Math.sin(e)*2300,Math.sin(a)*Math.cos(e)*2300)}
+      const sg=new THREE.BufferGeometry();sg.setAttribute('position',new THREE.Float32BufferAttribute(P,3));const st2=new THREE.Points(sg,new THREE.PointsMaterial({color:0xffffff,size:3,sizeAttenuation:false,fog:false,transparent:true,opacity:0.85,depthWrite:false}));m.add(st2);return m})();
+    // soft round shadow used under the astronaut, the drone and the monsters (no real shadow maps: cheap on phones)
+    const blobT=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d'),G=g.createRadialGradient(32,32,2,32,32,31);G.addColorStop(0,'rgba(0,0,0,.55)');G.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=G;g.fillRect(0,0,64,64);return new THREE.CanvasTexture(c)})();
+    const blobM=new THREE.MeshBasicMaterial({map:blobT,transparent:true,depthWrite:false}),blobG=new THREE.PlaneGeometry(1,1);
+    const blob=(w)=>{const m=new THREE.Mesh(blobG,blobM);m.rotation.x=-Math.PI/2;m.scale.set(w,w*0.7,1);m.position.y=0.35;m.renderOrder=-1;scene.add(m);return m};
+    // organic ground: one shape per region outline, with a richer painted texture (blotches, speckles, small craters)
     if(!POLY)regTrace();{const u=new THREE.Mesh(new THREE.PlaneGeometry(WW,WH),new THREE.MeshLambertMaterial({color:WORLD.ground[0]}));u.rotation.x=-Math.PI/2;u.position.set(WW/2,-0.6,WH/2);scene.add(u)}
-    const gmat=[];for(let i=0;i<6;i++){const cnv=document.createElement('canvas');cnv.width=cnv.height=256;const g=cnv.getContext('2d');g.fillStyle=pat(i);g.fillRect(0,0,256,256);
-      const T=new THREE.CanvasTexture(cnv);T.wrapS=T.wrapT=THREE.RepeatWrapping;T.repeat.set(1/120,1/120);const M=new THREE.MeshLambertMaterial({map:T,color:open(i)?0xffffff:0x222222});gmat[i]=M;
+    const gmat=[];for(let i=0;i<6;i++){const cnv=document.createElement('canvas');cnv.width=cnv.height=512;const g=cnv.getContext('2d'),R2=seeded(301+i*17);g.fillStyle=pat(i);g.fillRect(0,0,512,512);
+      for(let k=0;k<26;k++){const x=R2()*512,y=R2()*512,r=30+R2()*90,G=g.createRadialGradient(x,y,1,x,y,r),dark=R2()<0.5;G.addColorStop(0,dark?'rgba(0,0,0,.22)':WORLD.spot[i]+'88');G.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=G;
+        for(const [ox,oy] of [[0,0],[512,0],[-512,0],[0,512],[0,-512]]){g.save();g.translate(ox,oy);g.fillRect(x-r,y-r,r*2,r*2);g.restore()}}
+      for(let k=0;k<900;k++){g.fillStyle=R2()<0.5?'rgba(255,255,255,.07)':'rgba(0,0,0,.12)';const s2=1+R2()*2.5;g.fillRect(R2()*512,R2()*512,s2,s2)}
+      for(let k=0;k<7;k++){const x=40+R2()*432,y=40+R2()*432,r=6+R2()*14;g.strokeStyle='rgba(0,0,0,.28)';g.lineWidth=2.5;g.beginPath();g.ellipse(x,y,r,r*0.7,0,0,6.283);g.stroke();g.strokeStyle='rgba(255,255,255,.12)';g.lineWidth=1.2;g.beginPath();g.ellipse(x,y+1.5,r,r*0.7,0,0.2,2.9);g.stroke()}
+      const T=new THREE.CanvasTexture(cnv);T.colorSpace=THREE.SRGBColorSpace;T.wrapS=T.wrapT=THREE.RepeatWrapping;T.repeat.set(1/240,1/240);T.anisotropy=Math.min(4,R.capabilities.getMaxAnisotropy());
+      const M=new THREE.MeshStandardMaterial({map:T,roughness:0.95,metalness:0,color:open(i)?0xffffff:0x222222});gmat[i]=M;
       const sh=new THREE.Shape();POLY[i].forEach(([x,y],k)=>k?sh.lineTo(x,-y):sh.moveTo(x,-y));const pl=new THREE.Mesh(new THREE.ShapeGeometry(sh),M);pl.rotation.x=-Math.PI/2;scene.add(pl)}
-    // props as low-poly meshes, instanced per kind
-    const GEO={spike:new THREE.ConeGeometry(9,40,5),crystal:new THREE.ConeGeometry(9,38,4),shard:new THREE.ConeGeometry(5,18,4),rock:new THREE.DodecahedronGeometry(14,0),debris:new THREE.BoxGeometry(24,12,16),
-      frost:new THREE.ConeGeometry(14,36,6),shroom:new THREE.CylinderGeometry(20,4,30,8),fern:new THREE.ConeGeometry(12,26,5),float:new THREE.DodecahedronGeometry(13,0),vent:new THREE.CylinderGeometry(12,14,4,10),crater:new THREE.TorusGeometry(16,3,4,12),star:new THREE.SphereGeometry(3,6,4)};
-    const COLR={spike:0xe8f6ff,crystal:0xd6c4ff,shard:0xf2eaff,rock:0x2e201c,debris:0x8d8aa0,frost:0xcfeaff,shroom:0x3fae6a,fern:0x2f8a52,float:0x4a3c6a,vent:0xff6a1f,crater:0x5a4466,star:0xff9ad8};
-    const dummy=new THREE.Object3D();for(const k of Object.keys(GEO)){const L=props.filter(q=>q.k===k);if(!L.length)continue;const em=k==='vent'||k==='star'||k==='crystal'||k==='shard';
-      const M=new THREE.MeshLambertMaterial({color:COLR[k],emissive:em?COLR[k]:0x000000,emissiveIntensity:em?0.35:0});const I=new THREE.InstancedMesh(GEO[k],M,L.length);
-      L.forEach((q,j)=>{const hgt=k==='float'?26:k==='crater'?1:k==='vent'?2:(GEO[k].parameters.height||24)/2*q.s;dummy.position.set(q.x,hgt,q.y);dummy.rotation.set(k==='crater'?Math.PI/2:0,q.x%6,0);dummy.scale.setScalar(q.s);dummy.updateMatrix();I.setMatrixAt(j,dummy.matrix)});scene.add(I)}
+    // props: faceted low-poly meshes (flat shading), each instance with its own size, tilt and shade; crystals grow in clusters and glow
+    const rockG=(()=>{const g=new THREE.IcosahedronGeometry(14,0),P2=g.attributes.position,R2=seeded(5);for(let k=0;k<P2.count;k++)P2.setXYZ(k,P2.getX(k)*(0.8+R2()*0.4),P2.getY(k)*(0.6+R2()*0.35),P2.getZ(k)*(0.8+R2()*0.4));g.computeVertexNormals();return g})();
+    const GEO={spike:new THREE.ConeGeometry(8,40,5),crystal:new THREE.OctahedronGeometry(10,0),shard:new THREE.ConeGeometry(5,20,4),rock:rockG,debris:new THREE.BoxGeometry(24,10,16),
+      frost:new THREE.ConeGeometry(12,34,6),shroom:new THREE.CylinderGeometry(20,5,22,9),fern:new THREE.ConeGeometry(11,28,6),float:new THREE.DodecahedronGeometry(13,0),vent:new THREE.CylinderGeometry(12,15,5,10),crater:new THREE.TorusGeometry(16,3,5,14),star:new THREE.OctahedronGeometry(4,0)};
+    GEO.crystal.scale(0.8,2.2,0.8);
+    const COLR={spike:0xe8f6ff,crystal:0xc9b4ff,shard:0xf2eaff,rock:0x4a3a3e,debris:0xa8b0c0,frost:0xd6f0ff,shroom:0x45c47a,fern:0x2f9a58,float:0x5a4c80,vent:0xff6a1f,crater:0x5a4466,star:0xff9ad8};
+    const GLOWK={vent:1,star:1,crystal:1,shard:1,spike:0.25,frost:0.2},CLUST={crystal:3,shard:3,spike:2,frost:2,fern:2};
+    const dummy=new THREE.Object3D(),tint=new THREE.Color();for(const k of Object.keys(GEO)){const L=props.filter(q=>q.k===k);if(!L.length)continue;const em=GLOWK[k]||0,n=CLUST[k]||1,R2=seeded(k.length*97);
+      const M=new THREE.MeshStandardMaterial({color:0xffffff,flatShading:true,roughness:em?0.25:0.85,metalness:em?0.15:0.05,emissive:em?COLR[k]:0x000000,emissiveIntensity:em?0.45*em:0});const I=new THREE.InstancedMesh(GEO[k],M,L.length*n);let j=0;
+      for(const q of L)for(let c2=0;c2<n;c2++){const s2=q.s*(c2?0.45+R2()*0.35:1),ox=c2?(R2()-0.5)*26*q.s:0,oz=c2?(R2()-0.5)*20*q.s:0,hgt=k==='float'?26:k==='crater'?1:k==='vent'?2.5:k==='rock'?6*s2:(GEO[k].parameters.height||24)/2*s2*(k==='crystal'?2.2:1);
+        dummy.position.set(q.x+ox,hgt,q.y+oz);dummy.rotation.set(k==='crater'?Math.PI/2:(R2()-0.5)*(c2?0.7:0.25),R2()*6.283,(R2()-0.5)*(c2?0.6:0.2));dummy.scale.setScalar(s2);dummy.updateMatrix();I.setMatrixAt(j,dummy.matrix);
+        tint.setHex(COLR[k]).offsetHSL((R2()-0.5)*0.04,(R2()-0.5)*0.1,(R2()-0.5)*0.12);I.setColorAt(j,tint);j++}
+      scene.add(I)}
     for(const q of pools){const m=new THREE.Mesh(new THREE.CircleGeometry(q.r,20),new THREE.MeshBasicMaterial({color:0xff5a1f}));m.rotation.x=-Math.PI/2;m.scale.y=0.62;m.position.set(q.x,0.6,q.y);scene.add(m)}
     // the dome and the HQ
-    const b=WORLD.base,dome=new THREE.Mesh(new THREE.SphereGeometry(b.r,24,12,0,Math.PI*2,0,Math.PI/2),new THREE.MeshBasicMaterial({color:0x00e5ff,wireframe:true,transparent:true,opacity:0.35}));dome.position.set(b.x,0,b.y);scene.add(dome);
+    const b=WORLD.base;{const dg=new THREE.SphereGeometry(b.r,32,14,0,Math.PI*2,0,Math.PI/2);const glass=new THREE.Mesh(dg,new THREE.MeshStandardMaterial({color:0x9ff0ff,transparent:true,opacity:0.12,roughness:0.1,metalness:0.2,depthWrite:false}));glass.position.set(b.x,0,b.y);scene.add(glass);
+      const wire=new THREE.Mesh(dg,new THREE.MeshBasicMaterial({color:0x00e5ff,wireframe:true,transparent:true,opacity:0.22}));wire.position.copy(glass.position);scene.add(wire);
+      const ring=new THREE.Mesh(new THREE.TorusGeometry(b.r,3,8,48),new THREE.MeshStandardMaterial({color:0xf5c451,metalness:0.6,roughness:0.35}));ring.rotation.x=Math.PI/2;ring.position.set(b.x,1.5,b.y);scene.add(ring)}
     const spr=(k,h)=>{const T=tex(k);if(!T)return null;const s=new THREE.Sprite(new THREE.SpriteMaterial({map:T,transparent:true,alphaTest:0.1}));const w=h*(ART[k+'R']||1);s.scale.set(w,h,1);s.center.set(0.5,0);return s};
     const hq=spr('hq',90);if(hq){hq.position.set(b.x,0,b.y);scene.add(hq)}
     for(let i=0;i<6;i++){const s=(col.wm&&col.wm.lm[i])||0;if(!s)continue;const m=i===0?{x:b.x+260,y:b.y-40}:regMid(i),L=spr('pl'+i+'_s'+s,i===5&&s===3?170:120);if(L){L.position.set(m.x,0,m.y);scene.add(L)}}
@@ -348,28 +374,54 @@ const WorldGame=(()=>{
     // nodes, signals
     const NM={};for(const n of nodes){const c=new THREE.Color(MATC[REG[n.reg].mat]);const m=new THREE.Mesh(new THREE.OctahedronGeometry(9,0),new THREE.MeshLambertMaterial({color:c,emissive:c,emissiveIntensity:0.6}));m.position.set(n.x,14,n.y);m.scale.y=1.6;scene.add(m);n.m3=m}
     for(const o of pois){const m=new THREE.Mesh(new THREE.TorusGeometry(16,2.5,6,20),new THREE.MeshBasicMaterial({color:0xff7ad9}));m.position.set(o.x,20,o.y);scene.add(m);o.m3=m}
-    // the astronaut
-    const A=new THREE.Group(),wm=new THREE.MeshLambertMaterial({color:0xf3f4f7}),gm=new THREE.MeshLambertMaterial({color:0xf2bd4e}),vm=new THREE.MeshLambertMaterial({color:0x0b1530,emissive:0x0a4a5a,emissiveIntensity:0.8});
-    const part=(geo,m,x,y,z)=>{const o=new THREE.Mesh(geo,m);o.position.set(x,y,z);A.add(o);return o};
-    part(new THREE.CapsuleGeometry(7,9,4,10),wm,0,19,0);const head=part(new THREE.SphereGeometry(7.5,14,10),wm,0,33,0);part(new THREE.SphereGeometry(5,12,8),vm,0,33.5,4.2).scale.set(1,0.8,0.6);
-    part(new THREE.BoxGeometry(10,11,5),gm,0,21,-7);const legL=part(new THREE.CapsuleGeometry(2.8,7,4,8),wm,-3.5,7,0),legR=part(new THREE.CapsuleGeometry(2.8,7,4,8),wm,3.5,7,0);
-    const armL=part(new THREE.CapsuleGeometry(2.4,7,4,8),wm,-9,20,0),armR=part(new THREE.CapsuleGeometry(2.4,7,4,8),wm,9,20,0);scene.add(A);
+    // the astronaut: rounded suit with gold trims, a glossy visor with a cyan glow, jointed limbs on pivots and a detailed backpack
+    const A=new THREE.Group(),SM=(c,r,m,e,ei)=>new THREE.MeshStandardMaterial({color:c,roughness:r,metalness:m,emissive:e||0,emissiveIntensity:ei||0});
+    const wm=SM(0xf4f6fa,0.45,0.05),gm=SM(0xf5c451,0.32,0.65),vm=SM(0x0b1530,0.08,0.4,0x00e5ff,0.22),cm=SM(0x00e5ff,0.3,0,0x00e5ff,1.4),dk=SM(0x2a3448,0.6,0.2);
+    const part=(geo,m,x,y,z,par)=>{const o=new THREE.Mesh(geo,m);o.position.set(x,y,z);(par||A).add(o);return o},piv=(x,y,z)=>{const g=new THREE.Group();g.position.set(x,y,z);A.add(g);return g};
+    const torso=part(new THREE.CapsuleGeometry(7.4,7,6,16),wm,0,19.5,0);part(new THREE.TorusGeometry(7.5,1,8,24),gm,0,14.5,0).rotation.x=Math.PI/2;
+    part(new THREE.CylinderGeometry(2.2,2.2,0.8,14),cm,0,21,7.1).rotation.x=Math.PI/2;part(new THREE.TorusGeometry(2.8,0.5,6,16),gm,0,21,7.2);
+    const head=new THREE.Group();head.position.set(0,33,0);A.add(head);part(new THREE.SphereGeometry(8.6,20,16),wm,0,0,0,head);
+    part(new THREE.SphereGeometry(6.6,18,12),vm,0,0.4,3.6,head).scale.set(1,0.8,0.68);part(new THREE.TorusGeometry(6.6,0.7,6,22),gm,0,-6.5,0,head).rotation.x=Math.PI/2;
+    part(new THREE.CylinderGeometry(0.5,0.5,6,6),dk,5.5,7,-1,head);part(new THREE.SphereGeometry(1.2,10,8),cm,5.5,10.2,-1,head);
+    part(new THREE.SphereGeometry(1.8,10,8),gm,-8.4,0.5,0,head);part(new THREE.SphereGeometry(1.8,10,8),gm,8.4,0.5,0,head);
+    // backpack: rounded pack, twin gold tanks, cyan lights
+    const pack=new THREE.Group();pack.position.set(0,21,-8);A.add(pack);part(new THREE.CapsuleGeometry(4.2,5,6,12),wm,0,0,0,pack).scale.set(1.55,1,0.8);
+    part(new THREE.CylinderGeometry(1.7,1.7,10,12),gm,-3.6,0.5,-2,pack);part(new THREE.CylinderGeometry(1.7,1.7,10,12),gm,3.6,0.5,-2,pack);
+    part(new THREE.BoxGeometry(5,1,0.6),cm,0,3,-3.2,pack);part(new THREE.BoxGeometry(5,1,0.6),cm,0,0.6,-3.2,pack);
+    // limbs hang from shoulder / hip pivots so they swing from the joint
+    const limb=(px,py,arm)=>{const P2=piv(px,py,0),r=arm?2.5:3,L1=arm?4.5:4,up=part(new THREE.CapsuleGeometry(r,L1,4,10),wm,0,-L1/2-r*0.6,0,P2);part(new THREE.SphereGeometry(r*1.05,10,8),gm,0,0,0,P2);
+      const J=new THREE.Group();J.position.set(0,-L1-r*1.5,0);P2.add(J);part(new THREE.SphereGeometry(r*0.95,10,8),wm,0,0,0,J);part(new THREE.CapsuleGeometry(r*0.92,L1,4,10),wm,0,-L1/2-r*0.5,0,J);
+      if(arm){part(new THREE.SphereGeometry(r*1.15,10,8),wm,0,-L1-r*1.3,0,J);part(new THREE.TorusGeometry(r*1.05,0.55,6,14),gm,0,-L1-r*0.4,0,J).rotation.x=Math.PI/2}
+      else{const boot=part(new THREE.CapsuleGeometry(r*1.05,3,4,10),wm,0,-L1-r*1.3,1.2,J);boot.rotation.x=Math.PI/2;part(new THREE.BoxGeometry(r*2.1,0.9,7),gm,0,-L1-r*2.25,1.2,J)}return [P2,J]};
+    const [armL,elL]=limb(-9.6,25,1),[armR,elR]=limb(9.6,25,1),[legL,knL]=limb(-3.7,12.5,0),[legR,knR]=limb(3.7,12.5,0);scene.add(A);
+    const shP=blob(30),shB=blob(18);
     const pool={},bul=[],ebul=[];const bm=new THREE.MeshBasicMaterial({color:0x7ffcff}),em=new THREE.MeshBasicMaterial({color:0xff5a8a}),bg=new THREE.SphereGeometry(3,6,4),eg=new THREE.SphereGeometry(5,6,4);
     function sync(arr,list,geo,mat,h){while(arr.length<list.length){const m=new THREE.Mesh(geo,mat);scene.add(m);arr.push(m)}arr.forEach((m,j)=>{const s=list[j];m.visible=!!s;if(s)m.position.set(s.x,h,s.y)})}
-    let fogReg=0;
-    function draw(){const w=c3.clientWidth,h=c3.clientHeight;if(c3.width!==Math.round(w*R.getPixelRatio())||c3.height!==Math.round(h*R.getPixelRatio())){R.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
-      const reg=Math.max(0,regAt(p.x,p.y));if(reg!==fogReg){fogReg=reg}const fc=new THREE.Color(WORLD.fog[reg]);scene.fog.color.lerp(fc,0.05);scene.background.lerp(fc,0.05);
-      A.position.set(p.x,0,p.y);A.rotation.y=Math.atan2(Math.cos(p.aim),Math.sin(p.aim));A.visible=p.dead<=0;const sw=p.moving?Math.sin(t*11):0;legL.rotation.x=sw*0.7;legR.rotation.x=-sw*0.7;armL.rotation.x=-sw*0.5;armR.rotation.x=sw*0.5;
-      wm.emissive.setHex(p.hurt>0?0x661020:0x000000);if(B3){B3.position.set(bot.x,22+3*Math.sin(t*3),bot.y);B3.visible=p.dead<=0}
-      const f={x:Math.cos(cam.yaw),y:Math.sin(cam.yaw)};camera.position.set(p.x-f.x*120,78,p.y-f.y*120);camera.lookAt(p.x+f.x*70,14,p.y+f.y*70);
+    let fogReg=0;const FOGC=WORLD.fog.map(deep),SPOOL={},live=new Set();   // cached fog colours; monster sprite pool
+    // phones: if frames stay slow (>24 ms) for 2 s, lower the render resolution a step (down to 1×)
+    let lastF=0,slowT=0,pr=Math.min(devicePixelRatio,1.5);
+    function draw(){const nowF=performance.now(),dF=lastF?nowF-lastF:16;lastF=nowF;if(dF>24&&dF<200)slowT+=dF/1000;else slowT=Math.max(0,slowT-0.004);if(slowT>2&&pr>1){pr=Math.max(1,pr-0.25);R.setPixelRatio(pr);slowT=0}
+      const w=c3.clientWidth,h=c3.clientHeight;if(c3.width!==Math.round(w*R.getPixelRatio())||c3.height!==Math.round(h*R.getPixelRatio())){R.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
+      const reg=Math.max(0,regAt(p.x,p.y));if(reg!==fogReg){fogReg=reg}const fc=FOGC[reg];scene.fog.color.lerp(fc,0.05);scene.background.lerp(fc,0.05);hemi.groundColor.lerp(fc,0.02);
+      A.position.set(p.x,0,p.y);A.rotation.y=Math.atan2(Math.cos(p.aim),Math.sin(p.aim));A.visible=p.dead<=0;shP.visible=A.visible;shP.position.set(p.x,0.35,p.y);
+      const sw=p.moving?Math.sin(t*11):0,bob=p.moving?Math.abs(Math.cos(t*11))*1.2:Math.sin(t*2)*0.25;A.position.y=bob;
+      legL.rotation.x=sw*0.7;legR.rotation.x=-sw*0.7;knL.rotation.x=Math.max(0,-sw)*0.9;knR.rotation.x=Math.max(0,sw)*0.9;armL.rotation.x=-sw*0.55;armR.rotation.x=sw*0.55;elL.rotation.x=-0.35-Math.max(0,sw)*0.3;elR.rotation.x=-0.35-Math.max(0,-sw)*0.3;
+      head.rotation.z=p.moving?Math.sin(t*5.5)*0.04:0;torso.scale.y=1+Math.sin(t*2)*0.015;
+      wm.emissive.setHex(p.hurt>0?0x661020:0x000000);if(B3){B3.position.set(bot.x,22+3*Math.sin(t*3),bot.y);B3.visible=p.dead<=0;shB.position.set(bot.x,0.4,bot.y);shB.visible=B3.visible;const k2=1-0.08*Math.sin(t*3);shB.scale.set(18*k2,12.6*k2,1)}
+      const f={x:Math.cos(cam.yaw),y:Math.sin(cam.yaw)};camera.position.set(p.x-f.x*125,72,p.y-f.y*125);camera.lookAt(p.x+f.x*70,18,p.y+f.y*70);
+      sky.position.set(p.x,0,p.y);sun.position.set(p.x+380,640,p.y+260);sun.target.position.set(p.x,0,p.y);rim.position.set(p.x-f.x*-300,220,p.y-f.y*-300);rim.target.position.set(p.x,10,p.y);
       const now=Date.now();for(const n of nodes){n.m3.visible=n.cd<now&&open(n.reg);if(n.m3.visible){n.m3.rotation.y=t*1.5;n.m3.position.y=14+2*Math.sin(t*3+n.x)}}
       for(const o of pois){o.m3.visible=open(o.reg)&&!(st.poi||{})[o.reg];o.m3.rotation.y=t*2}
       // monsters are billboards of the painted creatures
-      const used=new Set();for(const m of mons){let s=m.s3;if(!s){const k=monKey(m);s=spr(k,m.guard?m.r*3.4:m.r*2.8);if(!s){s=new THREE.Sprite(new THREE.SpriteMaterial({color:0xc060ff}));s.scale.set(20,20,1)}scene.add(s);m.s3=s}
-        s.position.set(m.x,m.mv?Math.abs(Math.cos(m.ph||0))*m.r*0.18:0,m.y);s.material.rotation=m.mv?Math.sin(m.ph||0)*0.07:0;s.material.color.setHex(m.st==='wind'?0xff7a6a:m.p2?0xffaaaa:0xdddddd);if(m.fl>0)s.material.color.setRGB(2,2,2);used.add(s)}
-      scene.children.filter(o=>o.isSprite&&o.userData.mon&&!used.has(o)).forEach(o=>{scene.remove(o);o.material.dispose()});used.forEach(s=>s.userData.mon=1);
+      // monster billboards come from a pool per painting (no new materials while playing); each has a soft shadow
+      for(const o of live)o.userData.seen=0;
+      for(const m of mons){let s=m.s3;if(!s||!s.parent){const k=monKey(m),h2=m.guard?m.r*3.4:m.r*2.8,pk=k+'|'+Math.round(h2),P3=SPOOL[pk]||(SPOOL[pk]=[]);s=P3.pop()||spr(k,h2);if(!s){s=new THREE.Sprite(new THREE.SpriteMaterial({color:0xc060ff}));s.scale.set(20,20,1)}
+          s.userData.pk=pk;s.userData.sh=s.userData.sh||blob(m.r*2.6);s.userData.sh.scale.set(m.r*2.6,m.r*1.8,1);s.userData.sh.visible=true;scene.add(s);m.s3=s;live.add(s)}
+        s.userData.seen=1;s.position.set(m.x,m.mv?Math.abs(Math.cos(m.ph||0))*m.r*0.18:0,m.y);s.material.rotation=m.mv?Math.sin(m.ph||0)*0.07:0;s.material.color.setHex(m.st==='wind'?0xff8a7a:m.p2?0xffb0b0:0xffffff);if(m.fl>0)s.material.color.setRGB(2,2,2);
+        s.userData.sh.position.set(m.x,0.3,m.y)}
+      for(const o of live)if(!o.userData.seen){scene.remove(o);o.userData.sh.visible=false;live.delete(o);(SPOOL[o.userData.pk]||(SPOOL[o.userData.pk]=[])).push(o)}
       sync(met3,mets,mg,mm,1);met3.forEach(o=>{o.rotation.x=-Math.PI/2;o.scale.set(1,0.62,1)});sync(bul,shots.concat(bshots),bg,bm,16);sync(ebul,eshots,eg,em,16);sync(orb3,orbs,og,om,8);
-      sync(fx3,fx.filter(f=>f.k!=='bolt'),rg,rm,6);fx3.forEach((m,j)=>{const f=fx.filter(q=>q.k!=='bolt')[j];if(f){m.rotation.x=-Math.PI/2;const k=f.k==='slash'?f.r*0.85:f.r*(1-f.l*2);m.scale.set(k/20,k/20,1)}});if(typeof WB!=='undefined')WB.draw3d(t);R.render(scene,camera)}
+      const FX=fx.filter(f=>f.k!=='bolt');sync(fx3,FX,rg,rm,6);fx3.forEach((m,j)=>{const f=FX[j];if(f){m.rotation.x=-Math.PI/2;const k=f.k==='slash'?f.r*0.85:f.r*(1-f.l*2);m.scale.set(k/20,k/20,1)}});if(typeof WB!=='undefined')WB.draw3d(t);R.render(scene,camera)}
     const met3=[],mg=new THREE.RingGeometry(BAL.world.events.meteorR-4,BAL.world.events.meteorR,28),mm=new THREE.MeshBasicMaterial({color:0xff4a3a,side:THREE.DoubleSide}),orb3=[],fx3=[],og=new THREE.OctahedronGeometry(4,0),om=new THREE.MeshBasicMaterial({color:0x7dff9a}),rg=new THREE.TorusGeometry(20,1.2,4,32),rm=new THREE.MeshBasicMaterial({color:0xffe27a,transparent:true,opacity:0.8});
     function unlockReg(i){if(gmat[i])gmat[i].color.setHex(0xffffff)}
     function dispose(){try{R.dispose();R.forceContextLoss&&R.forceContextLoss()}catch(e){}}
