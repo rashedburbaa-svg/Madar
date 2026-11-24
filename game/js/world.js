@@ -1,6 +1,7 @@
 /* ================= «عالم المدار»: open world. Walk the six regions with the joystick, gather materials, fight monsters
    and each region's guardian. One simulation, two views: top-down 2D (painted art) and third-person 3D (three.js). ================= */
 const WORLD={
+  cam3d:{back:300,up:210,ahead:40},          // 3D camera: farther and higher so the astronaut and the base fit the phone screen
   RW:1200,                                    // size unit for spawn bands (a region is about 1200 units across)
   size:{w:3600,h:2400},                       // the planet surface
   // organic map: each region grows from a seed; w = its size weight. Borders are warped so they look natural, not square.
@@ -433,7 +434,7 @@ const WorldGame=(()=>{
       legL.rotation.x=sw*0.7;legR.rotation.x=-sw*0.7;knL.rotation.x=Math.max(0,-sw)*0.9;knR.rotation.x=Math.max(0,sw)*0.9;armL.rotation.x=-sw*0.55;armR.rotation.x=sw*0.55;elL.rotation.x=-0.35-Math.max(0,sw)*0.3;elR.rotation.x=-0.35-Math.max(0,-sw)*0.3;
       head.rotation.z=p.moving?Math.sin(t*5.5)*0.04:0;torso.scale.y=1+Math.sin(t*2)*0.015;
       wm.emissive.setHex(p.hurt>0?0x661020:0x000000);if(B3){B3.position.set(bot.x,22+3*Math.sin(t*3),bot.y);B3.visible=p.dead<=0;shB.position.set(bot.x,0.4,bot.y);shB.visible=B3.visible;const k2=1-0.08*Math.sin(t*3);shB.scale.set(18*k2,12.6*k2,1)}
-      const f={x:Math.cos(cam.yaw),y:Math.sin(cam.yaw)};camera.position.set(p.x-f.x*125,72,p.y-f.y*125);camera.lookAt(p.x+f.x*70,18,p.y+f.y*70);
+      const f={x:Math.cos(cam.yaw),y:Math.sin(cam.yaw)};camera.position.set(p.x-f.x*WORLD.cam3d.back,WORLD.cam3d.up,p.y-f.y*WORLD.cam3d.back);camera.lookAt(p.x+f.x*WORLD.cam3d.ahead,12,p.y+f.y*WORLD.cam3d.ahead);
       sky.position.set(p.x,0,p.y);sun.position.set(p.x+380,640,p.y+260);sun.target.position.set(p.x,0,p.y);rim.position.set(p.x-f.x*-300,220,p.y-f.y*-300);rim.target.position.set(p.x,10,p.y);
       const now=Date.now();for(const n of nodes){n.m3.visible=n.cd<now&&open(n.reg);if(n.m3.visible){n.m3.rotation.y=t*1.5;n.m3.position.y=14+2*Math.sin(t*3+n.x)}}
       for(const o of pois){o.m3.visible=open(o.reg)&&!(st.poi||{})[o.reg];o.m3.rotation.y=t*2}
