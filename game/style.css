@@ -920,3 +920,7 @@ body.wfull .wbbar:not([hidden])~.wforgeb,.whud:has(.wbbar:not([hidden])) .wview{
 .wtut .tn{grid-column:1/-1;font-size:10.5px;color:#9fe8ff}.wtut b{font-size:22px}.wtut p{margin:0;font-size:12.5px;color:#fff;line-height:1.45}
 .wtut .tsk{border:1px solid #ffffff33;background:none;color:#cfe9ff;border-radius:9px;padding:6px 8px;font:inherit;font-size:11px}
 .crow .cbase{width:34px;height:34px;border-radius:50%;border:1px solid #f5c451;background:#0b1226dd;font-size:17px}
+/* raids on the base (world.js) */
+.wraid{position:absolute;top:92px;inset-inline-start:10px;pointer-events:none;display:flex;align-items:center;gap:8px;background:#2a0a14e6;border:1px solid #ff4d5e;color:#fff;border-radius:99px;padding:5px 12px 5px 6px;font-size:12.5px;font-weight:700;animation:wrp 1.2s ease-in-out infinite}
+.wraid i{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#ff4d5e;color:#fff;font-style:normal;font-size:14px;transition:transform .15s linear}
+@keyframes wrp{50%{box-shadow:0 0 0 4px #ff4d5e33}}

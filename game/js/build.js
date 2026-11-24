@@ -201,10 +201,10 @@ const WB=(()=>{
     for(let i=0;i<W2;i++){if(has(x0+i,y0))b.w[(x0+i)+','+y0+',h']=1;if(has(x0+i,y0+H2-1))b.w[(x0+i)+','+(y0+H2)+',h']=i===2?'door':1}
     for(let j=0;j<H2;j++){if(has(x0,y0+j))b.w[x0+','+(y0+j)+',v']=j===1?'window':1;if(has(x0+W2-1,y0+j))b.w[(x0+W2)+','+(y0+j)+',v']=j===1?'window':1}
     const put=(t,gx,gy)=>{if(!has(gx,gy)||b.d.some(d=>d.gx===gx&&d.gy===gy))return null;const d={id:b.n++,t,gx,gy,r:0};b.d.push(d);return d};
-    const g1=put('gen',x0,y0),g2=(L.solar||0)>=4?put('gen',x0+1,y0):null,pl=put('planter',x0+2,y0),tk=put('tank',x0+3,y0),lp=put('lamp',x0+4,y0),
+    const g1=put('gen',x0,y0),g2=((L.solar||0)>=4||(L.lab||0)>0||(L.obs||0)>0||(L.tower||0)>0)?put('gen',x0+1,y0):null,pl=put('planter',x0+2,y0),tk=put('tank',x0+3,y0),lp=put('lamp',x0+4,y0),
       cr=put('craft',x0,y0+3),rs=(L.lab||0)>0?put('research',x0+1,y0+3):null,rd=(L.obs||0)>0?put('radar',x0+3,y0+3):null;
     let tu=null;if((L.tower||0)>0){const gx=x0+W2,gy=y0+H2;if(ok(gx,gy)){b.f[gx+','+gy]=1;tu=put('turret',gx,gy)}}
-    const wire=(a,c)=>{if(a&&c)b.wi.push([a.id,c.id])};wire(g1,pl);wire(pl,lp);wire(g1,cr);wire(cr,rs);wire(g2||g1,rd);wire(rd||lp,tu);if(g2)wire(g1,g2);if(pl&&tk)b.pi.push([pl.id,tk.id]);
+    const wire=(a,c)=>{if(a&&c)b.wi.push([a.id,c.id])};wire(g1,pl);wire(pl,lp);wire(g1,cr);const G2=g2||g1;wire(G2,rs);wire(G2,rd);wire(rd||rs||G2,tu);   // two networks so nothing runs short of powerif(pl&&tk)b.pi.push([pl.id,tk.id]);
     b.tut=0;return true}
   /* ---------- phase 4: a short hands-on tutorial (build, wire, pipe, devices, defence) ---------- */
   const TUT=[['🔨','افتح وضع البناء بزر 🔨',()=>on],['⬜','اختر «أرضية» ووجّه الرائد ثم اضغط ✔',b=>Object.keys(b.f).length>tb.f],
@@ -243,4 +243,7 @@ const WB=(()=>{
     const P=pieceAt(target());if(P&&P.key){const h=hpOf(P.key,P.t),M=maxHp(P.t);if(on||h<M){chip.hidden=false;chip.textContent=NAME[P.t]+' · ❤️ '+Math.ceil(h)+'/'+M+(h<M?' · 🔧':'');return}}
     chip.hidden=true}
   function stop(){colSave();on=false;bar=null;chip=null;panel=null;tutEl=null;G3=null;scene3=null;api=null;cache=null}
-  return {start,stop,update,push,blast,floor2d,items2d,roof2d,make3d,draw3d,onKill}})();
+  // for raids: the middle of the built base (null if nothing is built in المدار-1), and whether a radar there has power
+  function center(){const b=col.base;if(!b||!b.f)return null;const F=cacheB().F;if(!F.length)return null;let x=0,y=0;for(const f of F){x+=f.x+C/2;y+=f.y+C/2}return {x:x/F.length,y:y/F.length,n:F.length}}
+  function radarOn(){solve();return B().d.some(d=>d.t==='radar'&&net[d.id]&&net[d.id].ok&&net[d.id].sup>0)}
+  return {start,stop,update,push,blast,floor2d,items2d,roof2d,make3d,draw3d,onKill,center,radarOn}})();

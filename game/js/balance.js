@@ -118,6 +118,8 @@ const BAL={
     radar:{m:90,e:50,use:2},                     // radar screen: the six regions, guardians and signals
     turret:{m:180,e:80,use:4,range:260,rate:1.2,dmgMul:0.6,def:10},   // powered defence turret: 60% of the hero's damage; +10 colony defence
     pipe:{m:8},pipeMaxCells:6,
+    // raids on the built base (world.js): a wave walks from the wild to the base; a powered radar warns earlier and points at it
+    raid:{firstS:75,everyS:180,warnRadar:20,warnBase:8,n0:4,perLv:1,maxN:14,dist:640,timeoutS:120,steal:{m:30,f:15},win:{c:3,sc:15}},
     scrapPerKill:1,scrapGuard:10,tutGems:10,     // the base tutorial gives 💎 10 at the end                // scrap the monsters leave for the recycling table
     monDmg:0.5,                    // a monster stopped by a piece hits it for 50% of its damage per second
     meteorDmg:45,                  // a meteor hitting the base takes this much from every piece under it

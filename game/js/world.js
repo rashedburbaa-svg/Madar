@@ -128,6 +128,7 @@ const WorldGame=(()=>{
       else if(m.st==='lunge'){m.sT-=dt;vx=m.lx*m.spd*E.lungeMul;vy=m.ly*m.spd*E.lungeMul;if(!m.hitDone&&d<m.r+p.r+4){m.hitDone=1;hitP(m.dmg*E.hitMul,false)}if(m.sT<=0){m.st='rec';m.sT=E.recoverMs/1000}}
       else if(m.st==='rec'){m.sT-=dt;vx=dx/d*m.spd*0.35;vy=dy/d*m.spd*0.35;if(m.sT<=0)m.st=''}
       else if(d<m.r+p.r+E.reach){m.st='wind';m.sT=E.windupMs/1000;m.lx=dx/d;m.ly=dy/d}   // crouch and flash, then lunge where the hero WAS
+      else if(m.raid&&d>220){const tx=m.tx-m.x,ty=m.ty-m.y,td=Math.hypot(tx,ty)||1;vx=tx/td*m.spd;vy=ty/td*m.spd;if(td<34)raidSteal(m)}   // raiders march on the base unless the hero is close
       else if(d<340){vx=dx/d*m.spd;vy=dy/d*m.spd}
       else{m.wt-=dt;if(m.wt<=0){m.wt=rnd(1.5,3.5);const a=Math.random()*6.283;m.wx=Math.cos(a)*m.spd*0.35;m.wy=Math.sin(a)*m.spd*0.35}vx=m.wx;vy=m.wy}
       let nx=m.x+vx*dt,ny=m.y+vy*dt;if(regAt(nx,ny)!==m.reg&&!m.guard){m.wt=0;nx=m.x;ny=m.y}
@@ -135,7 +136,7 @@ const WorldGame=(()=>{
       if(typeof WB!=='undefined'&&!m.guard){const q={x:nx,y:ny};WB.push(q,m.r*0.7,m.dmg*BAL.build.monDmg*dt);nx=q.x;ny=q.y}   // monsters stopped by a base piece claw at it
       const mvd=Math.hypot(nx-m.x,ny-m.y);m.mv=mvd>dt*4;m.ph=(m.ph||0)+mvd/(m.r*0.55);if(Math.abs(nx-m.x)>0.3)m.fx=nx<m.x?-1:1;
       m.x=nx;m.y=ny;if(m.guard&&d<m.r+p.r)hitP(m.dmg*dt,false)}
-    mons=mons.filter(m=>m.hp>0&&(m.guard||Math.hypot(m.x-p.x,m.y-p.y)<1300));
+    mons=mons.filter(m=>m.hp>0&&(m.guard||m.raid||Math.hypot(m.x-p.x,m.y-p.y)<1300));
     for(const s of eshots){s.x+=s.vx*dt;s.y+=s.vy*dt;s.l-=dt;if((s.x-p.x)**2+(s.y-p.y)**2<(p.r+5)**2){s.l=0;hitP(s.dmg,false)}}eshots=eshots.filter(s=>s.l>0);
     for(const q of parts){q.x+=q.vx*dt;q.y+=q.vy*dt;q.l-=dt}parts=parts.filter(q=>q.l>0);for(const f of fx)f.l-=dt;fx=fx.filter(f=>f.l>0);
     // XP gems fly to the hero
@@ -147,7 +148,7 @@ const WorldGame=(()=>{
       storyBox('📡 إشارة قديمة في '+PLN[o.reg].n,POIS[o.reg]+' · +'+WORLD.poi.mat+' '+REG[o.reg].me+' · +'+WORLD.poi.c+' 💎','رائع');dirty()}}
     for(const g of guards)if(!g.alive&&Math.hypot(g.hx-p.x,g.hy-p.y)<480)wakeGuard(g);
     if(Math.random()<dt*WORLD.spawn.rate)spawnMon();
-    worldEvent(dt);
+    worldEvent(dt);raidTick(dt);
     {const B=BAL.world.bot,tx=p.x-26,ty=p.y-34,k=Math.min(1,dt*5);bot.x+=(tx-bot.x)*k;bot.y+=(ty-bot.y)*k;bot.cd-=dt;   // companion drone follows and helps
       if(bot.cd<=0&&p.dead<=0){let tg=null,bd=B.range;for(const m of mons){const d=Math.hypot(m.x-bot.x,m.y-bot.y)-m.r;if(d<bd){bd=d;tg=m}}
         if(tg){bot.cd=1/B.rate;const a=Math.atan2(tg.y-bot.y,tg.x-bot.x);bshots.push({x:bot.x,y:bot.y,vx:Math.cos(a)*520,vy:Math.sin(a)*520,l:0.6})}}
@@ -156,6 +157,27 @@ const WorldGame=(()=>{
     hudTick()}
   const dirty=()=>{st._d=1};
   /* random world events: a monster invasion or a meteor shower; meteors mark the ground first so the hero walks out of them */
+  /* ---------- raids on the built base: warning (longer with a powered radar) → a wave marches on the base → reward or losses ---------- */
+  const RD={ph:'idle',t:BAL.build.raid.firstS,x:0,y:0,left:0,end:0};window.WRAID=RD;
+  function raidTick(dt){const Rb=BAL.build.raid,c=typeof WB!=='undefined'&&WB.center();if(!c){RD.ph='idle';return}const b=col.base,lv=b.rl||0;
+    if(RD.ph==='idle'){RD.t-=dt;if(RD.t>0)return;
+      for(let k=0;k<24;k++){const a=Math.random()*6.283,x=c.x+Math.cos(a)*Rb.dist,y=c.y+Math.sin(a)*Rb.dist;if(regAt(x,y)===0&&Math.hypot(x-WORLD.base.x,y-WORLD.base.y)>WORLD.base.r+80){RD.x=x;RD.y=y;break}if(k===23){RD.t=20;return}}
+      RD.radar=WB.radarOn();RD.ph='warn';RD.t=RD.radar?Rb.warnRadar:Rb.warnBase;snd('err');buzz([40,60,40]);toast('⚠️ غارة تقترب من القاعدة!'+(RD.radar?' الرادار يحدد اتجاهها':''));return}
+    if(RD.ph==='warn'){RD.t-=dt;if(RD.t>0)return;const n=Math.min(Rb.maxN,Rb.n0+lv*Rb.perLv),L0=WORLD.LV[0]+1+Math.floor(lv/2);
+      for(let k=0;k<n;k++){const a=Math.random()*6.283,x=RD.x+Math.cos(a)*rnd(10,70),y=RD.y+Math.sin(a)*rnd(10,70),big=k%4===3,s=monStats(0,big,L0+(big?1:0));
+        mons.push({x,y,reg:0,big,lv:L0+(big?1:0),hp:s.hp,max:s.hp,dmg:s.dmg,spd:s.spd*0.9,r:s.r,wx:0,wy:0,wt:0,hit:0,fl:0,raid:1,tx:c.x+rnd(-30,30),ty:c.y+rnd(-30,30)})}
+      RD.ph='on';RD.end=Rb.timeoutS;RD.lost=0;snd('hit');toast('👾 الغارة بدأت: '+n+' وحوش تتجه إلى القاعدة');return}
+    if(RD.ph==='on'){RD.end-=dt;const live=mons.filter(m=>m.raid&&m.hp>0);RD.left=live.length;
+      if(!live.length){const W2=Rb.win,ok=!RD.lost;b.rl=lv+1;if(ok){col.res.c+=W2.c+lv;b.sc=(b.sc||0)+W2.sc;snd('win');toast('🛡️ صمدت القاعدة! +'+(W2.c+lv)+' 💎 +'+W2.sc+' ♻️','ach')}else{snd('ok');toast('🛡️ انتهت الغارة · نُهب '+RD.lost+' مرة. قوِّ الجدران والأبراج')}
+        colSave();RD.ph='idle';RD.t=Rb.everyS;return}
+      if(RD.end<=0){live.forEach(m=>{m.raid=0});RD.ph='idle';RD.t=Rb.everyS}}}
+  function raidSteal(m){const S=BAL.build.raid.steal;m.hp=0;RD.lost=(RD.lost||0)+1;const tk={m:Math.min(S.m,Math.floor(col.res.m)),f:Math.min(S.f,Math.floor(col.res.f))};col.res.m-=tk.m;col.res.f-=tk.f;
+    snd('err');buzz(30);say('💸 وحش نهب القاعدة: −'+tk.m+' ⛏️ −'+tk.f+' 🌱');for(let k=0;k<8&&parts.length<240;k++){const a=Math.random()*6.283;parts.push({x:m.x,y:m.y,vx:Math.cos(a)*90,vy:Math.sin(a)*90,l:0.4,c:'#ff4d5e'})}}
+  // the raid banner and the arrow toward the raid (the arrow needs a powered radar)
+  function raidHud(){const el=hud&&hud.querySelector('.wraid');if(!el)return;if(RD.ph==='idle'){el.hidden=true;return}el.hidden=false;
+    const near=RD.ph==='on'?mons.filter(m=>m.raid&&m.hp>0).sort((a,c)=>Math.hypot(a.x-p.x,a.y-p.y)-Math.hypot(c.x-p.x,c.y-p.y))[0]:null,tx=near?near.x:RD.x,ty=near?near.y:RD.y;
+    el.querySelector('span').textContent=RD.ph==='warn'?'⚠️ غارة على القاعدة بعد '+Math.ceil(RD.t)+'ث':'👾 غارة: '+RD.left+' متبقية';
+    const ar=el.querySelector('i');ar.hidden=!RD.radar||Math.hypot(tx-p.x,ty-p.y)<120;if(!ar.hidden){const a=Math.atan2(ty-p.y,tx-p.x),th=view==='3d'?a-cam.yaw-Math.PI/2:a;ar.style.transform=`rotate(${th}rad)`}}
   function worldEvent(dt){const V=BAL.world.events,inB=Math.hypot(p.x-WORLD.base.x,p.y-WORLD.base.y)<WORLD.base.r+60;
     for(const q of mets){q.w-=dt;if(q.w<=0&&!q.hit){q.hit=1;fx.push({k:'boom',x:q.x,y:q.y,r:q.r,l:0.35});snd('hit');buzz(30);if(Math.hypot(p.x-q.x,p.y-q.y)<q.r)hitP(p.max*V.meteorDmg,false);if(typeof WB!=='undefined')WB.blast(q.x,q.y,q.r,BAL.build.meteorDmg);
       for(const m of mons)if(!m.guard&&m.hp>0&&Math.hypot(m.x-q.x,m.y-q.y)<q.r){m.hp-=p.dmg*2;m.fl=0.08;if(m.hp<=0)kill(m)}}}
@@ -183,7 +205,7 @@ const WorldGame=(()=>{
     if(st.gq[reg]>=WORLD.guard.kills){st.gd[reg]=0;st.gq[reg]=0;snd('err');toast('👑 حارس '+PLN[reg].n+' استيقظ!')}}
   /* ---------- HUD (shared by both views) ---------- */
   function hudBuild(){hud=document.createElement('div');hud.className='whud';hud.innerHTML=`<div class="whp"><i></i><b></b></div><div class="whlv"><b></b><i><u></u></i></div><div class="whreg"></div><div class="whmat"></div><div class="wgd" hidden><small></small><i><u></u></i></div>
-    <button type="button" class="wview" aria-label="تبديل المنظور">🎥 3D</button><button type="button" class="wforgeb" hidden>⚒️ ورشة الأسلحة</button><div class="wforge" hidden></div><canvas class="wmini" width="120" height="80"></canvas><div class="wjoy" hidden><i></i></div>`;stage.appendChild(hud);mini=hud.querySelector('.wmini');
+    <button type="button" class="wview" aria-label="تبديل المنظور">🎥 3D</button><button type="button" class="wforgeb" hidden>⚒️ ورشة الأسلحة</button><div class="wforge" hidden></div><canvas class="wmini" width="120" height="80"></canvas><div class="wjoy" hidden><i></i></div><div class="wraid" hidden><i aria-hidden="true">➤</i><span></span></div>`;stage.appendChild(hud);mini=hud.querySelector('.wmini');
     hud.querySelector('.wview').onclick=e=>{e.stopPropagation();setView(view==='2d'?'3d':'2d')};
     hud.querySelector('.wforgeb').onclick=e=>{e.stopPropagation();snd('tap');forge(true)};
     hud.querySelector('.wforge').addEventListener('pointerdown',e=>e.stopPropagation());
@@ -211,12 +233,13 @@ const WorldGame=(()=>{
     hud.querySelector('.whmat').textContent=REG[r].me+' '+matN(REG[r].mat)+'  ⚔️ '+(st.kills||0)+gs;
     const g=mons.find(m=>m.guard&&Math.hypot(m.x-p.x,m.y-p.y)<520),gb=hud.querySelector('.wgd');gb.hidden=!g;if(g){gb.querySelector('small').textContent='👑 حارس '+PLN[g.reg].n;gb.querySelector('u').style.width=(100*g.hp/g.max)+'%'}
     const j=hud.querySelector('.wjoy');if(joy&&joy.on){j.hidden=false;const rc=stage.getBoundingClientRect();j.style.left=(joy.ox-rc.left)+'px';j.style.top=(joy.oy-rc.top)+'px';const dx=joy.x-joy.ox,dy=joy.y-joy.oy,L=Math.min(36,Math.hypot(dx,dy)),a=Math.atan2(dy,dx);j.firstChild.style.transform=`translate(${Math.cos(a)*L}px,${Math.sin(a)*L}px)`}else j.hidden=true;
-    if((t*4|0)%2===0)drawMini()}
+    raidHud();if((t*4|0)%2===0)drawMini()}
   function drawMini(){const m=mini.getContext('2d'),k=120/WW;m.clearRect(0,0,120,80);
     if(!POLY)regTrace();m.save();m.scale(k,k);for(let i=0;i<6;i++){m.fillStyle=open(i)?WORLD.ground[i]:'#111';m.fill(P2D[i])}m.restore();
     m.strokeStyle='#ffffff40';m.strokeRect(0.5,0.5,119,79);m.fillStyle='#00e5ff';m.beginPath();m.arc(WORLD.base.x*k,WORLD.base.y*k,3,0,6.283);m.fill();
     for(const g of guards)if(open(g.reg)&&!((st.gd||{})[g.reg]>Date.now())){m.fillStyle='#ffd34d';m.fillRect(g.hx*k-2,g.hy*k-2,4,4)}
     for(const o of pois)if(open(o.reg)&&!(st.poi||{})[o.reg]){m.fillStyle='#ff7ad9';m.fillRect(o.x*k-1.5,o.y*k-1.5,3,3)}
+    if(RD.ph!=='idle'&&RD.radar){m.fillStyle='#ff4d5e';m.globalAlpha=0.5+0.5*Math.sin(t*8);m.beginPath();m.arc(RD.x*k,RD.y*k,4,0,6.283);m.fill();m.globalAlpha=1;for(const q of mons)if(q.raid&&q.hp>0)m.fillRect(q.x*k-1,q.y*k-1,2,2)}
     m.fillStyle='#fff';m.beginPath();m.arc(p.x*k,p.y*k,2.6,0,6.283);m.fill()}
   /* ---------- 2D view ---------- */
   const PAT={},PROP={};
@@ -270,7 +293,7 @@ const WorldGame=(()=>{
     for(const o of orbs){if(o.gp){ctx.font='18px sans-serif';ctx.textAlign='center';ctx.fillText('🧩',o.x,o.y+6+2*Math.sin(t*5));continue}ctx.fillStyle='#7dff9a';ctx.shadowColor='#7dff9a';ctx.shadowBlur=8;ctx.beginPath();ctx.moveTo(o.x,o.y-6);ctx.lineTo(o.x+4,o.y);ctx.lineTo(o.x,o.y+6);ctx.lineTo(o.x-4,o.y);ctx.fill();ctx.shadowBlur=0}
     for(const f of fx){ctx.globalAlpha=Math.min(1,f.l*6);if(f.k==='slash'){ctx.strokeStyle='#ffe27a';ctx.lineWidth=6;ctx.beginPath();ctx.arc(f.x,f.y-10,f.r*0.85,f.a-1.1,f.a+1.1);ctx.stroke()}
       else if(f.k==='boom'||f.k==='rage'){ctx.fillStyle=f.k==='boom'?'#ffb04a':'#ff3a3a';ctx.globalAlpha=Math.min(0.7,f.l*3);ctx.beginPath();ctx.ellipse(f.x,f.y,f.r*(1.2-f.l),f.r*0.62*(1.2-f.l),0,0,6.283);ctx.fill()}
-      else if(f.k==='nova'||f.k==='lvl'){ctx.strokeStyle=f.k==='lvl'?'#7dff9a':'#ff8ad8';ctx.lineWidth=4;ctx.beginPath();ctx.arc(f.x,f.y-8,f.r*(1-f.l*2),0,6.283);ctx.stroke()}
+      else if(f.k==='nova'||f.k==='lvl'){ctx.strokeStyle=f.k==='lvl'?'#7dff9a':'#ff8ad8';ctx.lineWidth=4;ctx.beginPath();ctx.arc(f.x,f.y-8,Math.max(0,f.r*(1-f.l*2)),0,6.283);ctx.stroke()}
       else if(f.k==='bolt'){ctx.strokeStyle='#bfe9ff';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(f.x,f.y-14);ctx.lineTo((f.x+f.x2)/2+rnd(-8,8),(f.y+f.y2)/2+rnd(-8,8));ctx.lineTo(f.x2,f.y2);ctx.stroke()}ctx.globalAlpha=1}
     ctx.fillStyle='#7ffcff';for(const s of shots){ctx.beginPath();ctx.arc(s.x,s.y,3.2,0,6.283);ctx.fill()}
     ctx.fillStyle='#ff5a8a';for(const s of eshots){ctx.beginPath();ctx.arc(s.x,s.y,5,0,6.283);ctx.fill()}
@@ -446,7 +469,7 @@ const WorldGame=(()=>{
       cv=document.createElement('canvas');c3=document.createElement('canvas');c3.className='w3';stage.appendChild(cv);stage.appendChild(c3);ctx=cv.getContext('2d');hudBuild();if(typeof WB!=='undefined')WB.start({hud,stage,regAt,base:WORLD.base,moon:WORLD.moon,player:()=>p,say,open,mons:()=>mons,mini:()=>mini,
         hit:(m,n)=>{if(m.hp<=0)return;m.hp-=n;m.fl=0.08;if(m.hp<=0)kill(m)},heroDmg:()=>p.dmg,addGear:n=>{st.gp=(st.gp||0)+n;gSave('world',st)},gear:()=>st.gp||0});resize();
       setView(st.view==='3d'?'3d':'2d');stage.addEventListener('pointerdown',pd);addEventListener('pointermove',pm);addEventListener('pointerup',pu);addEventListener('pointercancel',pu);addEventListener('keydown',kd);addEventListener('keyup',ku);addEventListener('resize',resize);
-      running=true;last=performance.now();raf=requestAnimationFrame(frame);snd('win')},
+      RD.ph='idle';RD.t=BAL.build.raid.firstS;running=true;last=performance.now();raf=requestAnimationFrame(frame);snd('win')},
     stop(){running=false;cancelAnimationFrame(raf);if(typeof WB!=='undefined')WB.stop();if(st&&p){st.x=Math.round(p.x);st.y=Math.round(p.y);delete st._d;gSave('world',st);colSave()}stage.removeEventListener('pointerdown',pd);removeEventListener('pointermove',pm);removeEventListener('pointerup',pu);removeEventListener('pointercancel',pu);removeEventListener('keydown',kd);removeEventListener('keyup',ku);removeEventListener('resize',resize);
       if(R3){R3.dispose();R3=null}stage.classList.remove('wstage');document.body.classList.remove('wfull');stage.style.height='';stage.style.top='';hud=null},
     pauseExt(){running=false},resumeExt(){running=true;last=performance.now()},forfeit(){return false}}})();

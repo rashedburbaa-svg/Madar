@@ -47,7 +47,7 @@ const WBD=(()=>{
     radar:{em:'📡',n:'شاشة رادار',d2(ctx,c,n,t){const on=n.ok&&n.sup>0;shadow(ctx,c,16);ctx.fillStyle='#c9d1dc';ctx.fillRect(c.x-3,c.y-26,6,28);ctx.save();ctx.translate(c.x,c.y-30);ctx.scale(Math.cos(on?t*2:0.6),1);ctx.fillStyle='#eef2f6';ctx.beginPath();ctx.ellipse(0,0,15,9,0,0,6.283);ctx.fill();ctx.strokeStyle='#f5c451';ctx.lineWidth=1.5;ctx.stroke();ctx.restore();
         if(on){ctx.strokeStyle='#00e5ff66';ctx.lineWidth=1;ctx.beginPath();ctx.arc(c.x,c.y-30,18+((t*30)%30),0,6.283);ctx.stroke()}},
       d3(M,c){M.cyl(2.5,26,M.white,c.x,13,c.y);const g=M.group(c.x,30,c.y);const dish=M.dishIn(g,14,M.white);dish.rotation.x=-0.6;return (t,n)=>{g.rotation.y=n.ok&&n.sup>0?t*2:0}},
-      info(d,n){return n.ok&&n.sup>0?'📡 الرادار يعمل: المناطق والحرّاس':'📡 الرادار يحتاج طاقة'},radar:1},
+      info(d,n){if(!(n.ok&&n.sup>0))return '📡 الرادار يحتاج طاقة';const R=window.WRAID;return R&&R.ph==='warn'?'⚠️ غارة قادمة بعد '+Math.ceil(R.t)+'ث · السهم الأحمر يشير إليها':R&&R.ph==='on'?'👾 غارة: '+R.left+' وحوش · النقاط الحمراء على الخريطة':'📡 الرادار يعمل: المناطق والحرّاس · ينذر بالغارات مبكراً'},radar:1},
     turret:{em:'🗼',n:'برج دفاع',d2(ctx,c,n,t,d){const on=n.ok&&n.sup>0;shadow(ctx,c,17);box(ctx,c.x-14,c.y-14,28,16,'#f5c451','#dfe5ec');ctx.save();ctx.translate(c.x,c.y-22);ctx.rotate(d.aim==null?d.r*1.571:d.aim);ctx.fillStyle='#eef2f6';ctx.beginPath();ctx.arc(0,0,9,0,6.283);ctx.fill();ctx.fillStyle='#2a3448';ctx.fillRect(4,-2.5,16,5);ctx.restore();
         ctx.fillStyle=on?'#00e5ff':'#5a6070';glow(ctx,on);ctx.beginPath();ctx.arc(c.x,c.y-22,3,0,6.283);ctx.fill();ctx.shadowBlur=0;
         if(on&&d===T._sel){ctx.strokeStyle='#00e5ff33';ctx.beginPath();ctx.arc(c.x,c.y,K('turret').range,0,6.283);ctx.stroke()}},

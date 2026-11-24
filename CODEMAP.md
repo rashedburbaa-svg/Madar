@@ -20,11 +20,11 @@ bfx:2 · puff:3 · rise:4 · lights:5 · CORR:23 · corridorsSVG:24 · dur:30 ·
 ## js/astro3d.js — 57 سطر، 6KB
 Astro3D:2 · mat:4 · build:5 · cap:15 · limb:30 · init:40 · pose:45 · draw:51 · dir:52
 
-## js/balance.js — 137 سطر، 11KB
+## js/balance.js — 139 سطر، 11KB
 BAL:3
 
-## js/build.js — 246 سطر، 34KB
-WB:10 · doorOpen:12 · TOOLS:15 · ISDEV:17 · pipes:17 · NAME:18 · EDGE:19 · cost:20 · costTxt:21 · ctr:22 · dev:23 · devAt:24 · eType:25 · maxHp:26 · hpOf:27 · covered:28 · zoneOk:29 · target:31 · pieceAt:35 · why:37 · pay2:46 · refund:47 · cacheB:49 · changed:52 · place:53 · near:67 · link:69 · solve:77 · sum:78 · pp:82 · grp:83 · rooms:85 · solid:86 · damage:89 · blast:93 · push:97 · clampN:102 · hpBar:104 · showHp:105 · floor2d:106 · edge2d:125 · items2d:139 · roof2d:143 · make3d:153 · build3d:154 · S2:157 · BG:162 · hurt:163 · box:164 · mat:174 · own:176 · draw3d:189 · paint:193 · open2:196 · starter:198 · has:200 · put:203 · wire:207 · TUT:210 · tb:213 · tutBase:214 · tutDraw:215 · tutTick:218 · start:220 · showPanel:233 · onKill:239 · update:240 · stop:245
+## js/build.js — 249 سطر، 35KB
+WB:10 · doorOpen:12 · TOOLS:15 · ISDEV:17 · pipes:17 · NAME:18 · EDGE:19 · cost:20 · costTxt:21 · ctr:22 · dev:23 · devAt:24 · eType:25 · maxHp:26 · hpOf:27 · covered:28 · zoneOk:29 · target:31 · pieceAt:35 · why:37 · pay2:46 · refund:47 · cacheB:49 · changed:52 · place:53 · near:67 · link:69 · solve:77 · sum:78 · pp:82 · grp:83 · rooms:85 · solid:86 · damage:89 · blast:93 · push:97 · clampN:102 · hpBar:104 · showHp:105 · floor2d:106 · edge2d:125 · items2d:139 · roof2d:143 · make3d:153 · build3d:154 · S2:157 · BG:162 · hurt:163 · box:164 · mat:174 · own:176 · draw3d:189 · paint:193 · open2:196 · starter:198 · has:200 · put:203 · wire:207 · TUT:210 · tb:213 · tutBase:214 · tutDraw:215 · tutTick:218 · start:220 · showPanel:233 · onKill:239 · update:240 · stop:245 · center:247 · radarOn:248
 
 ## js/colony.js — 710 سطر، 111KB
 RES:4 · BLD:5 · BORDER:19 · PARTS:20 · GAMEOF:21 · colSave:23 · cap:24 · crew:25 · techLv:27 · tMul:27 · mult:28 · rate:29 · upCost:30 · upTime:31 · canPay:32 · pay:33 · OVERB:34 · gain:35 · fmtN:37 · fmtDur:38 · accrue:40 · finishBuild:44 · startBuild:46 · rush:54 · left:54 · repair:57 · colonyReward:64 · got:64 · QUESTS:75 · questCheck:96 · storyBox:99 · chapterDone:102 · TINT:106 · TNAME:107 · _mix:108 · GSET:109 · tintDefs:112 · tint:116 · lvBadge:117 · _sh:136 · _box:138 · _win:140 · _lattice:141 · art:144 · artRaw:145 · mod:187 · SLOT:258 · PRODB:260 · FEN:262 · fp:263 · fenceStyle:264 · dp:267 · domeSVG:268 · fenceSVG:283 · fenceRaw:284 · gateSVG:296 · gateRaw:297 · CRE:319 · CTOP:377 · ROAM:378 · TDEG:385 · towerN:386 · tierOf:387 · WNAME:388 · HEAD:389 · towerSVG:393 · towersSVG:395 · towersRaw:396 · CHP:401 · CTYPES:403 · crType:404 · popN:405 · creaturesSVG:406 · BT:409 · SPEED:411 · fenceR:412 · okSpot:413 · spawnPt:414 · pickTarget:415 · stepCreature:417 · battleInit:422 · svgEl:431 · spawnPack:433 · battleTick:437 · fire:452 · spark:457 · boom:458 · hurt:461 · fxAt:467 · zapSVG:468 · sceneSVG:470 · cam:511 · camView:512 · camZoom:518 · camBind:522 · up:528 · fxFloat:534 · fxRing:536 · resBar:540 · costHTML:541 · cardHTML:542 · bindActions:555 · go:559 · openSheet:561 · renderSheet:564 · listHTML:570 · closeSheet:575 · rankChip:576 · renderColony:577 · left:579 · go:594 · bRate:610 · bCap:611 · fillStores:612 · bubMin:613 · collect:614 · collectAll:619 · bubbleSVG:620 · updBubbles:622 · updRes:624 · flyRes:626 · phase:636 · SKY:637 · nightLights:638 · guideSVG:644 · tgt:644 · DAILY:648 · dayKey:649 · chestReady:650 · chestBox:651 · raidsOn:658 · raidPower:659 · defPower:660 · raidPlan:661 · raidCheck:662 · lost:666 · raidSoon:668 · raidShow:669 · end:675 · ambStart:679 · os:681 · ambStop:686 · ambSync:687 · focusB:691 · goTo:692 · left:700
@@ -53,7 +53,7 @@ FarmGame:2 · CROPS:3 · CR:7 · UPG:9 · fl:11 · speed:12 · init:13 · save:1
 ## js/hub.js — 43 سطر، 4KB
 GAMES:3 · pilotCard:4 · renderHub:8 · drawBadges:25 · showTab:29 · openGame:33 · goHub:41
 
-## js/i18n-en.js — 155KB — جدول الترجمة الإنجليزية — ابحث فيه بـ grep فقط
+## js/i18n-en.js — 156KB — جدول الترجمة الإنجليزية — ابحث فيه بـ grep فقط
 
 ## js/i18n.js — 53 سطر، 4KB
 LANG:3 · I18N:4 · UNIT:7 · trCore:8 · nums:11 · SPLITS:21 · trDeep:22 · tr:27 · TATTR:33 · trAttr:34 · trText:35 · trNode:36 · setLang:42 · run:48
@@ -95,13 +95,13 @@ TFM:4 · TFS:9 · tfInit:20 · tfTI:21 · tfStage:22 · tfOpen:23 · tfCost:24 �
 
 ## js/three.min.js — 653KB — مكتبة three.js — لا تقرأه
 
-## js/world.js — 460 سطر، 68KB
-WORLD:3 · WorldGame:31 · bot:34 · IMG:35 · img:35 · regAt:38 · regTrace:42 · regPos:47 · regMid:48 · regRand:50 · open:52 · gateOk:53 · gateTxt:54 · discover:55 · enterReg:57 · gateReady:59 · rnd:60 · seeded:61 · buildWorld:63 · kinds:65 · weap:72 · stats:73 · restat:75 · newPlayer:76 · monStats:79 · bandLv:81 · spawnMon:82 · wakeGuard:87 · input:90 · say:95 · update:96 · shot:111 · dirty:157 · worldEvent:159 · gainXP:167 · hitP:170 · float:171 · kill:172 · guardTick:182 · hudBuild:185 · forge:197 · WTXT:204 · hudTick:205 · gw:210 · drawMini:215 · PAT:222 · pat:223 · propSpr:228 · tri:229 · MATC:243 · draw2d:244 · vis:256 · sprC:286 · c2:290 · LEGS:291 · legs:292 · monKey:296 · drawMon:297 · drawBot:315 · drawPlayer:318 · make3D:321 · deep:325 · TX:330 · sky:332 · blobT:337 · blob:339 · gmat:342 · rockG:351 · GEO:352 · COLR:355 · GLOWK:356 · spr:368 · NM:375 · part:380 · limb:392 · pool:398 · sync:399 · draw:403 · met3:425 · unlockReg:426 · dispose:427 · setView:429 · frame:433 · resize:434 · pd:436 · POIS:439 · worldCard:455
+## js/world.js — 483 سطر، 72KB
+WORLD:3 · WorldGame:31 · bot:34 · IMG:35 · img:35 · regAt:38 · regTrace:42 · regPos:47 · regMid:48 · regRand:50 · open:52 · gateOk:53 · gateTxt:54 · discover:55 · enterReg:57 · gateReady:59 · rnd:60 · seeded:61 · buildWorld:63 · kinds:65 · weap:72 · stats:73 · restat:75 · newPlayer:76 · monStats:79 · bandLv:81 · spawnMon:82 · wakeGuard:87 · input:90 · say:95 · update:96 · shot:111 · dirty:158 · RD:161 · raidTick:162 · raidSteal:174 · tk:174 · raidHud:177 · worldEvent:181 · gainXP:189 · hitP:192 · float:193 · kill:194 · guardTick:204 · hudBuild:207 · forge:219 · WTXT:226 · hudTick:227 · gw:232 · drawMini:237 · PAT:245 · pat:246 · propSpr:251 · tri:252 · MATC:266 · draw2d:267 · vis:279 · sprC:309 · c2:313 · LEGS:314 · legs:315 · monKey:319 · drawMon:320 · drawBot:338 · drawPlayer:341 · make3D:344 · deep:348 · TX:353 · sky:355 · blobT:360 · blob:362 · gmat:365 · rockG:374 · GEO:375 · COLR:378 · GLOWK:379 · spr:391 · NM:398 · part:403 · limb:415 · pool:421 · sync:422 · draw:426 · met3:448 · unlockReg:449 · dispose:450 · setView:452 · frame:456 · resize:457 · pd:459 · POIS:462 · worldCard:478
 
 ## js/worldmap.js — 130 سطر، 17KB
 REG:3 · GEAR:18 · WM:29 · matN:30 · regOpen:31 · regReq:32 · regReady:33 · wmBonus:36 · gearOn:39 · tripDur:44 · tripStart:45 · tripRush:49 · addMat:50 · tripTick:51 · hrs:53 · got:60 · lmBuild:68 · gearMake:70 · regGo:73 · MAPV:76 · closeMap:77 · mapBox:78 · tripLine:81 · shipLine:83 · left:83 · matBar:85 · mapHTML:86 · regHTML:91 · gearHTML:106 · mapRender:111 · on:114
 
-## style.css — 922 سطر، 98KB
+## style.css — 926 سطر، 99KB
 
 ## index.html — 120 سطر، 6KB
 

@@ -1883,5 +1883,16 @@ const EN={
 "+{0} سعة لمخازن المستعمرة":"+{0} storage for the colony",
 "فيه 🌱 {0}":"holds 🌱 {0}",
 "القاعدة المبنية":"The built base",
-"🏗️ القاعدة المبنية في عالم المدار":"🏗️ The base built in the open world"
+"🏗️ القاعدة المبنية في عالم المدار":"🏗️ The base built in the open world",
+"⚠️ غارة تقترب من القاعدة!":"⚠️ A raid is coming to the base!",
+"⚠️ غارة تقترب من القاعدة! الرادار يحدد اتجاهها":"⚠️ A raid is coming to the base! The radar shows where from",
+"👾 الغارة بدأت: {0} وحوش تتجه إلى القاعدة":"👾 The raid started: {0} monsters head for the base",
+"🛡️ صمدت القاعدة! +{0} 💎 +{1} ♻️":"🛡️ The base held! +{0} 💎 +{1} ♻️",
+"🛡️ انتهت الغارة · نُهب {0} مرة. قوِّ الجدران والأبراج":"🛡️ Raid over · looted {0} times. Strengthen the walls and turrets",
+"💸 وحش نهب القاعدة: −{0} ⛏️ −{1} 🌱":"💸 A monster looted the base: −{0} ⛏️ −{1} 🌱",
+"⚠️ غارة على القاعدة بعد {0}ث":"⚠️ Raid on the base in {0}s",
+"👾 غارة: {0} متبقية":"👾 Raid: {0} left",
+"⚠️ غارة قادمة بعد {0}ث · السهم الأحمر يشير إليها":"⚠️ Raid in {0}s · the red arrow points to it",
+"👾 غارة: {0} وحوش · النقاط الحمراء على الخريطة":"👾 Raid: {0} monsters · red dots on the map",
+"📡 الرادار يعمل: المناطق والحرّاس · ينذر بالغارات مبكراً":"📡 Radar on: regions and guardians · early raid warning"
 };
