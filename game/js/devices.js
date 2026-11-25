@@ -87,7 +87,7 @@ const WBD=(()=>{
   /* ---------- phase 4: the colony economy runs from the built base (also offline, through colony.js accrue) ---------- */
   let ecoSig='',ecoVal=null;
   function eco(){const b=typeof col!=='undefined'&&col.base;const Z={f:0,e:0,cap:0,def:0,res:0};if(!b||!Array.isArray(b.d)||!b.d.length)return Z;
-    const sig=b.n+'|'+b.d.length+'|'+(b.wi||[]).length+'|'+(b.pi||[]).length;if(sig===ecoSig&&ecoVal)return ecoVal;ecoSig=sig;
+    const sig=b.n+'|'+b.d.length+'|'+(b.wi||[]).length+'|'+(b.pi||[]).length+'|'+(typeof WXFX!=='undefined'?WXFX.v:0);if(sig===ecoSig&&ecoVal)return ecoVal;ecoSig=sig;
     const par={},f=x=>par[x]===x?x:(par[x]=f(par[x]));b.d.forEach(d=>par[d.id]=d.id);(b.wi||[]).forEach(([a,c])=>{if(par[a]!=null&&par[c]!=null)par[f(a)]=f(c)});
     const S={};b.d.forEach(d=>{const s=S[f(d.id)]=S[f(d.id)]||{sup:0,use:0};if(d.t==='gen')s.sup+=K('gen').power;if(d.t==='bay')s.sup+=shipFx('core');s.use+=K(d.t).use||0});
     const pp={},g=x=>pp[x]===x?x:(pp[x]=g(pp[x]));b.d.forEach(d=>pp[d.id]=d.id);(b.pi||[]).forEach(([a,c])=>{if(pp[a]!=null&&pp[c]!=null)pp[g(a)]=g(c)});
@@ -95,6 +95,7 @@ const WBD=(()=>{
     for(const d of b.d){const s=S[f(d.id)],on=s.sup>0&&s.sup>=s.use;Z.cap+=d.t==='tank'?K('tank').capAdd:0;if(!on)continue;
       if(d.t==='planter'&&tankIn[g(d.id)])Z.f+=K('planter').perHour;if(d.t==='turret')Z.def+=K('turret').def;if(d.t==='research'&&rs<K('research').maxN){rs++;Z.res+=K('research').cut}}
     for(const r in S){const s=S[r];if(s.sup>=s.use)Z.e+=(s.sup-s.use)*K('gen').surplusE}
+    if(typeof WXFX!=='undefined'){Z.e*=WXFX.gen;Z.f*=WXFX.farm}   // weather and night in عالم المدار
     return ecoVal=Z}
   return {T,tick,fx2d,list,eco}})();
 function baseEco(){return WBD.eco()}

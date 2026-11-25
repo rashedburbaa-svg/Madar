@@ -100,7 +100,7 @@ const BAL={
 
   /* ---------- free modular building in عالم المدار (build.js, phase 1): pieces snap to a 48-unit grid in المدار-1 ---------- */
   build:{
-    cell:48,reach:58,refund:0.5,wireMaxCells:6,
+    cell:48,reach:58,tapReach:230,roofFade:190,refund:0.5,wireMaxCells:6,
     floor:{m:20},wall:{m:15,e:5,hp:120},wire:{m:5},
     gen:{m:120,e:40,power:10,surplusE:6},     // power generator: +10 power for its network; unused power feeds the colony +6 ⚡/hour per unit
     lamp:{m:20,use:2},             // a base light: uses 2 power, glows only when its network has enough
@@ -140,7 +140,12 @@ const BAL={
     guard:{phase2At:0.5,fireMul:1.35,summonBonus:2,respawnS:300,fastKills:25},
     gear:{base:0.04,guard:0.25,perTier:0.005,discount:0.5},   // rare weapon part: chance per kill; tier = HQ level + region; one part halves an upgrade's 💎 cost
     bot:{rate:1.1,dmgMul:0.35,range:240},   // companion drone: shots per second, share of the hero's damage, reach
-    events:{everyS:110,types:['invasion','meteors'],invasionExtra:10,meteorWarnMs:1100,meteorN:7,meteorR:42,meteorDmg:0.18}  // meteor damage = share of max health
+    events:{everyS:110,types:['invasion','meteors'],invasionExtra:10,meteorWarnMs:1100,meteorN:7,meteorR:42,meteorDmg:0.18},  // meteor damage = share of max health
+    time:{dayS:480,startTod:0.3,nightGen:0.85,nightRaid:1.5},   // one full day = 8 real minutes; at night generators give 85% and the raid clock runs 1.5× faster
+    weather:{stormP:0.35,minS:70,maxS:160,storm:{gen:0.7,farm:0.75},clearFarm:1.1,particles:90},   // chance a new spell is a storm, spell length (s), storm penalties, clear-day farm bonus
+    terrain:{perRegion:[14,12,12,12,14,12]},   // hills, mesas and craters per region
+    edgeFog:520,   // width of the fog band at the planet's edge
+    story:{gems:3}   // 💎 for a story step (+1 per step number)
   }
 };
 BAL.bld.prod.mine=['m',BAL.mineProd];

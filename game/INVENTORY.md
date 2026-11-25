@@ -116,3 +116,8 @@
 2. رفع رقم `madar-vN` في `sw.js`، ثم تحديث `?v=` لكل سكربت في `index.html`.
 3. تجربة في المتصفح على عرض 390 بكسل بدون أخطاء.
 4. الرفع إلى GitHub (يُنشر تلقائياً على GitHub Pages).
+
+## wext.js — WX (عالم المدار: تضاريس، طقس، يوم وساعة، ضباب الحواف، قصة، لوحة المستعمرة)
+- الحفظ: حقول جديدة فقط في `arcade-world`: `day`, `tod`, `wx{k,t}`, `sq`.
+- `WXFX{gen,farm,raid}`: أثر الليل والطقس على فائض الطاقة وغذاء أحواض الزراعة (في `WBD.eco`) وعدّاد الغارات.
+- الأرقام: `BAL.world.time`, `weather`, `terrain`, `edgeFog`, `story`؛ و`BAL.build.tapReach`, `roofFade`.

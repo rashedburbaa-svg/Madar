@@ -26,10 +26,13 @@ const WB=(()=>{
   const maxHp=t=>(BAL.build[t]&&BAL.build[t].hp)||100;
   const hpOf=(key,t)=>{const h=B().hp[key];return typeof h==='number'&&isFinite(h)?Math.min(h,maxHp(t)):maxHp(t)};
   const covered=k=>{const b=col.base;return !!(b&&((b.r&&b.r[k])||(b.f&&b.f[k]==='cor')))};
-  function zoneOk(gx,gy){if(!api)return false;const {x,y}=ctr(gx,gy),b=api.base,m=api.moon;return api.regAt(x,y)===0&&api.regAt(x-C/2,y-C/2)===0&&api.regAt(x+C/2,y+C/2)===0&&Math.hypot(x-b.x,y-b.y)>b.r+C*0.75&&Math.hypot(x-m.x,y-m.y)>130}
+  function zoneOk(gx,gy){if(!api)return false;const {x,y}=ctr(gx,gy),b=api.base,m=api.moon;const r0=api.regAt(x,y),ok=r0>=0&&(!api.open||api.open(r0))&&api.regAt(x-C/2,y-C/2)===r0&&api.regAt(x+C/2,y+C/2)===r0&&!(typeof WX!=='undefined'&&WX.blocked(x,y,C*0.5));return ok&&Math.hypot(x-b.x,y-b.y)>b.r+C*0.75&&Math.hypot(x-m.x,y-m.y)>130}
   // target: the cell in front of the astronaut; an edge piece takes the edge of that cell that faces him, turned by «↻»
-  function target(){const p=api.player(),a=p.face==null?-Math.PI/2:p.face,R=BAL.build.reach,tx=p.x+Math.cos(a)*R,ty=p.y+Math.sin(a)*R,gx=Math.floor(tx/C),gy=Math.floor(ty/C),c=ctr(gx,gy);
-    const dx=p.x-c.x,dy=p.y-c.y,auto=Math.abs(dx)>Math.abs(dy)?(dx>0?1:3):(dy>0?2:0),r=(auto+rot)%4;
+  let tapP=null,tapDev=null;   // a cell picked by touching the ground (kept while the hero stays near it)
+  function target(){const p=api.player(),a=p.face==null?-Math.PI/2:p.face,R=BAL.build.reach;let tx=p.x+Math.cos(a)*R,ty=p.y+Math.sin(a)*R,hx=p.x,hy=p.y;
+    if(tapP&&Math.hypot(tapP.x-p.x,tapP.y-p.y)<BAL.build.tapReach){tx=tapP.x;ty=tapP.y;hx=tapP.x;hy=tapP.y}else tapP=null;
+    const gx=Math.floor(tx/C),gy=Math.floor(ty/C),c=ctr(gx,gy);
+    let dx=hx-c.x,dy=hy-c.y;if(tapP){dx=-dx;dy=-dy}const auto=Math.abs(dx)>Math.abs(dy)?(dx>0?1:3):(dy>0?2:0),r=(auto+rot)%4;
     const edge=r===0?[gx,gy,'h']:r===1?[gx+1,gy,'v']:r===2?[gx,gy+1,'h']:[gx,gy,'v'];return {gx,gy,fk:gx+','+gy,edge,ek:edge.join(',')}}
   // the structural piece a ✔ of «🔧» or «🗑️» acts on: device, then cover, then edge, then floor
   function pieceAt(T){const b=B();const d=devAt(T.gx,T.gy);if(d)return {k:'d',d};if(b.r[T.fk])return {k:'r',key:'r'+T.fk,t:b.r[T.fk]};
@@ -64,7 +67,7 @@ const WB=(()=>{
     if(k==='floor')b.f[T.fk]=1;else if(k==='cor')b.f[T.fk]='cor';else if(k==='wall')b.w[T.ek]=1;else if(EDGE[k])b.w[T.ek]=k;else if(COVER[k])b.r[T.fk]=k;else b.d.push({id:b.n++,t:k,gx:T.gx,gy:T.gy,r:rot});
     bfx('place');buzz(12);changed()}
   // wires: stand by a device and tap ✔, then by a second device and tap ✔ again
-  function near(){const p=api.player();let best=null,bd=80;for(const d of B().d){const c=ctr(d.gx,d.gy),e=Math.hypot(c.x-p.x,c.y-p.y);if(e<bd){bd=e;best=d}}return best}
+  function near(){if(tapDev&&dev(tapDev.id)){const d=tapDev;tapDev=null;return d}const p=api.player();let best=null,bd=80;for(const d of B().d){const c=ctr(d.gx,d.gy),e=Math.hypot(c.x-p.x,c.y-p.y);if(e<bd){bd=e;best=d}}return best}
   // links: wires carry power, pipes carry goods (a planter's food into a tank); same two taps for both
   function link(k){const d=near(),b=B(),L=k==='wire'?'wi':'pi',em=k==='wire'?'🔌':'🧪',mx=k==='wire'?BAL.build.wireMaxCells:BAL.build.pipeMaxCells;if(!d){snd('err');api.say(em+' اقترب من مولد أو جهاز');return}
     if(!sel||!dev(sel)){sel=d.id;snd('tap');api.say(em+' اختر الجهاز الثاني');return paint()}
@@ -153,7 +156,9 @@ const WB=(()=>{
         if(hz||!vt){for(let i=0;i<=3;i++){const xx=x+i*C/3;ctx.moveTo(xx,y-26);ctx.lineTo(xx,y-26+C)}}else{for(let i=0;i<=3;i++){const yy=y-26+i*C/3;ctx.moveTo(x,yy);ctx.lineTo(x+C,yy)}}ctx.stroke();ctx.fillStyle='#f5c45199';ctx.fillRect(x,y-27,C,2)}
       ctx.globalAlpha=1;if(f<1){if(!inn){ctx.fillStyle=`rgba(255,77,94,${(1-f)*0.35})`;ctx.fillRect(x,y-36,C,C)}if(showHp(x+C/2,y))hpBar(ctx,x+C/2,y-44,f)}}}
   /* ---------- 3D ---------- */
-  function make3d(scene){scene3=scene;build3d()}
+  let gh3=null;   // 3D placement marker: a glowing cell, plus a bar on the chosen edge for walls, doors and windows
+  function make3d(scene){scene3=scene;build3d();const gm=new THREE.MeshBasicMaterial({color:0x00e5ff,transparent:true,opacity:0.38,depthWrite:false}),em=new THREE.MeshBasicMaterial({color:0x00e5ff,transparent:true,opacity:0.75,depthWrite:false});
+    const g=new THREE.Group(),cell=new THREE.Mesh(new THREE.PlaneGeometry(C-4,C-4),gm);cell.rotation.x=-Math.PI/2;cell.position.y=1.5;const edge=new THREE.Mesh(new THREE.BoxGeometry(C,30,5),em);edge.position.y=15;g.add(cell,edge);g.visible=false;scene.add(g);gh3={g,cell,edge,gm,em}}
   function build3d(){if(!scene3||typeof THREE==='undefined')return;if(G3){scene3.remove(G3);G3.traverse(o=>{if(o.geometry&&!o.geometry.userData.keep)o.geometry.dispose();if(o.material&&o.material.userData.own)o.material.dispose()})}
     G3=new THREE.Group();blades=[];lamps3=[];doors3=[];covers3=[];anim3=[];const b=B();
     // shared materials and geometries: made once for the whole session, reused by every rebuild (only per-piece ones are disposed)
@@ -172,10 +177,10 @@ const WB=(()=>{
       if(t==='door'){const [a,c]=L(6,7),off=C/2-3;box(a,32,c,m,h?cx-off:cx,17,h?cz:cz-off);box(a,32,c,m,h?cx+off:cx,17,h?cz:cz+off);const [p1,p2]=L(C-12,3),panel=box(p1,30,p2,glass,cx,16,cz);doors3.push([panel,k])}
       const [a2,c2]=L(C,7);box(a2,3,c2,gold,cx,34,cz)}
     for(const k in b.f){if(b.f[k]!=='cor')continue;const [gx,gy]=k.split(',').map(Number),cx=gx*C+C/2,cz=gy*C+C/2,hz=!!(b.f[(gx-1)+','+gy]||b.f[(gx+1)+','+gy]);box(C-2,2,C-2,dark,cx,1,cz);
-      const mat=glass.clone();mat.userData.own=1;const tube=new THREE.Mesh(new THREE.CylinderGeometry(C/2-2,C/2-2,C,12,1,true,0,Math.PI),mat);tube.rotation.z=Math.PI/2;if(!hz)tube.rotation.y=Math.PI/2;tube.position.set(cx,2,cz);G3.add(tube);covers3.push([mat,k,0.35])}
+      const mat=glass.clone();mat.userData.own=1;const tube=new THREE.Mesh(new THREE.CylinderGeometry(C/2-2,C/2-2,C,12,1,true,0,Math.PI),mat);tube.rotation.z=Math.PI/2;if(!hz)tube.rotation.y=Math.PI/2;tube.position.set(cx,2,cz);G3.add(tube);covers3.push([mat,k,0.35,cx,cz])}
     for(const k in b.r){const [gx,gy]=k.split(',').map(Number),cx=gx*C+C/2,cz=gy*C+C/2,t=b.r[k];
-      if(t==='roof'){const mat=(hpOf('r'+k,t)/maxHp(t)<0.5?SH.roofHurt:SH.roofOk).clone();mat.transparent=true;mat.userData.own=1;const o=new THREE.Mesh(new THREE.BoxGeometry(C,3,C),mat);o.position.set(cx,36,cz);G3.add(o);covers3.push([mat,k,1])}
-      if(t==='dome'){const mat=glass.clone();mat.userData.own=1;mat.opacity=0.3;const o=new THREE.Mesh(new THREE.SphereGeometry(C*0.62,16,10,0,Math.PI*2,0,Math.PI/2),mat);o.scale.y=1.15;o.position.set(cx,1,cz);G3.add(o);covers3.push([mat,k,0.3])}}
+      if(t==='roof'){const mat=(hpOf('r'+k,t)/maxHp(t)<0.5?SH.roofHurt:SH.roofOk).clone();mat.transparent=true;mat.userData.own=1;const o=new THREE.Mesh(new THREE.BoxGeometry(C,3,C),mat);o.position.set(cx,36,cz);G3.add(o);covers3.push([mat,k,1,cx,cz])}
+      if(t==='dome'){const mat=glass.clone();mat.userData.own=1;mat.opacity=0.3;const o=new THREE.Mesh(new THREE.SphereGeometry(C*0.62,16,10,0,Math.PI*2,0,Math.PI/2),mat);o.scale.y=1.15;o.position.set(cx,1,cz);G3.add(o);covers3.push([mat,k,0.3,cx,cz])}}
     const own=m=>{m.userData.own=1;return m},M={white,gold,dark,cyan,glassT:glass,soil:SH.soil,leaf:SH.leaf,leafE:own(new THREE.MeshLambertMaterial({color:0x7dff9a,emissive:0x2a7a3a,emissiveIntensity:0.5})),
       box:(w,h,d,m,x,y,z)=>box(w,h,d,m,x,y,z),cyl:(r,h,m,x,y,z)=>{const o=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,12),m);o.position.set(x,y,z);G3.add(o);return o},cylM:(r,h,m,x,y,z)=>M.cyl(r,h,m,x,y,z),
       group:(x,y,z)=>{const g=new THREE.Group();g.position.set(x,y,z);G3.add(g);return g},sub:g=>{const s2=new THREE.Group();g.add(s2);return s2},
@@ -191,7 +196,10 @@ const WB=(()=>{
     scene3.add(G3)}
   function draw3d(t){solve();rooms();if(SH){SH.wireM.opacity=netA;SH.pipeM.opacity=Math.max(0.35,netA);SH.wireM.emissive.setHex(netA>0.85?0x3a2a00:0);SH.pipeM.emissive.setHex(netA>0.85?0x0a3a44:0)}const p=api&&api.player();for(const [fn,d] of anim3)fn(t,net[d.id]||{sup:0,use:0},d);
     for(const [m,ek] of doors3){const [i,j,o]=ek.split(','),mx=+i*C+(o==='h'?C/2:0),my=+j*C+(o==='v'?C/2:0),op=clampN((doorOpen[ek]||0)+(p&&Math.hypot(p.x-mx,p.y-my)<56?0.12:-0.08),0,1);doorOpen[ek]=op;m.position.y=16+op*28;m.scale.y=1-op*0.8}
-    for(const [m,k,base] of covers3)m.opacity=inside.has(k)?Math.min(base,0.08):on?Math.min(base,0.3):base}   // roofs see-through while building, so the wiring shows
+    for(const [m,k,base,cx,cz] of covers3){const nr=p&&Math.hypot(cx-p.x,cz-p.y)<BAL.build.roofFade;m.opacity=inside.has(k)?Math.min(base,0.08):on||nr?Math.min(base,0.3):base}   // roofs near the hero fade so the camera can see him and his base
+    if(gh3){gh3.g.visible=on&&!!api&&tool!=='wire'&&tool!=='pipe';if(gh3.g.visible){const T=target(),bad=!!why(tool,T),c=ctr(T.gx,T.gy),col3=bad?0xff4d5e:0x00e5ff,pul=0.3+0.15*Math.sin(t*6);
+      gh3.gm.color.setHex(col3);gh3.em.color.setHex(col3);gh3.gm.opacity=pul;gh3.g.position.set(c.x,0,c.y);const E=['wall','door','window'].includes(tool);gh3.edge.visible=E;
+      if(E){const [ei,ej,o]=T.edge;gh3.edge.position.set(+ei*C+(o==='h'?C/2:0)-c.x,15,+ej*C+(o==='v'?C/2:0)-c.y);gh3.edge.rotation.y=o==='v'?Math.PI/2:0}}}}   // roofs see-through while building, so the wiring shows
   /* ---------- HUD: 🔨 button and the build bar ---------- */
   function paint(){if(!bar)return;bar.querySelectorAll('[data-t]').forEach(x=>x.classList.toggle('on',x.dataset.t===tool));
     const T=TOOLS.find(x=>x[0]===tool),hint=tool==='pipe'?(sel?'اقترب من الجهاز الثاني واضغط ✔':'الأنابيب تنقل إنتاج الأحواض إلى الخزانات · اقترب من جهاز واضغط ✔'):ISDEV(tool)?'معاينة شبحية أمامك · ↻ للتدوير · يُوضع فوق أرضية':tool==='wire'?(sel?'اقترب من الجهاز الثاني واضغط ✔ (اضغط على وصلة موجودة لقطعها)':'اقترب من مولد أو جهاز واضغط ✔'):tool==='del'?'وجّه الرائد نحو القطعة واضغط ✔':tool==='fix'?'وجّه الرائد نحو قطعة متضررة واضغط ✔':EDGE[tool]?'يلتصق بحافة الخانة أمامك · ↻ لتغيير الحافة':COVER[tool]?'يُوضع فوق أرضية · يختفي حين تكون تحته':'تلتصق القطعة بالخانة أمام الرائد';
@@ -248,9 +256,16 @@ const WB=(()=>{
     if(d){const n=net[d.id]||{sup:0,use:0};chip.hidden=false;chip.textContent=WBD.T[d.t].em+' '+WBD.T[d.t].n+' · ⚡ '+n.use+'/'+n.sup;return}
     const P=pieceAt(target());if(P&&P.key){const h=hpOf(P.key,P.t),M=maxHp(P.t);if(on||h<M){chip.hidden=false;chip.textContent=NAME[P.t]+' · ❤️ '+Math.ceil(h)+'/'+M+(h<M?' · 🔧':'');return}}
     chip.hidden=true}
-  function stop(){colSave();on=false;bar=null;chip=null;panel=null;tutEl=null;G3=null;scene3=null;api=null;cache=null}
+  function stop(){colSave();on=false;gh3=null;tapP=null;tapDev=null;bar=null;chip=null;panel=null;tutEl=null;G3=null;scene3=null;api=null;cache=null}
   // for raids: the middle of the built base (null if nothing is built in المدار-1), and whether a radar there has power
   function center(){const b=col.base;if(!b||!b.f)return null;const F=cacheB().F;if(!F.length)return null;let x=0,y=0;for(const f of F){x+=f.x+C/2;y+=f.y+C/2}return {x:x/F.length,y:y/F.length,n:F.length}}
   function radarOn(){solve();return B().d.some(d=>d.t==='radar'&&net[d.id]&&net[d.id].ok&&net[d.id].sup>0)}
   function refresh(){dirty=true;inCell='';panelId=null}
-  return {start,stop,update,push,blast,floor2d,items2d,roof2d,make3d,draw3d,onKill,center,radarOn,refresh}})();
+  function isOn(){return on}
+  function tap(x,y){if(!on||!api)return;const p=api.player();if(Math.hypot(x-p.x,y-p.y)>BAL.build.tapReach){snd('err');api.say('📍 اقترب أكثر من المكان');return}
+    if(tool==='wire'||tool==='pipe'){let best=null,bd=C*0.9;for(const d of B().d){const c=ctr(d.gx,d.gy),e=Math.hypot(c.x-x,c.y-y);if(e<bd){bd=e;best=d}}if(!best){snd('err');api.say('اضغط على جهاز');return}tapDev=best;return place()}
+    const gx=Math.floor(x/C),gy=Math.floor(y/C),same=tapP&&Math.floor(tapP.x/C)===gx&&Math.floor(tapP.y/C)===gy;
+    // the edge of the cell closest to the finger becomes the wall side
+    const c=ctr(gx,gy),ex=x-c.x,ey=y-c.y;rot=0;tapP={x:c.x-ex*0.001,y:c.y-ey*0.001,ex,ey};
+    if(same){place()}else{snd('tap');dirty=true}}
+  return {isOn,tap,start,stop,update,push,blast,floor2d,items2d,roof2d,make3d,draw3d,onKill,center,radarOn,refresh}})();

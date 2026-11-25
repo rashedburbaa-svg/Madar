@@ -926,3 +926,45 @@ body.wfull .wbbar:not([hidden])~.wforgeb,.whud:has(.wbbar:not([hidden])) .wview{
 @keyframes wrp{50%{box-shadow:0 0 0 4px #ff4d5e33}}
 .wdpanel{max-height:48vh;overflow-y:auto}
 .wmute{position:absolute;bottom:110px;inset-inline-end:10px;pointer-events:auto;width:48px;height:40px;border-radius:12px;border:1px solid #f5c451;background:#0b1226dd;color:#fff;font-size:18px}.wmute.off{border-color:#ffffff44;opacity:.75}
+/* ===== عالم المدار: clock, weather, story, colony panel, landscape ===== */
+.wxov{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
+.whud{z-index:2}
+.wclock{position:absolute;top:94px;inset-inline-end:8px;background:#0b1226cc;border:1px solid #f5c45166;border-radius:99px;padding:3px 10px;font-size:11.5px;font-weight:800;color:#ffe9b0;white-space:nowrap;text-shadow:0 1px 2px #000}
+.wstory{position:absolute;top:122px;inset-inline-start:8px;max-width:min(62%,300px);background:linear-gradient(135deg,#0b1226e6,#10203ae6);border:1px solid #00e5ff66;border-inline-start:3px solid #f5c451;border-radius:12px;padding:5px 10px;display:flex;flex-direction:column;gap:1px;box-shadow:0 2px 12px #00e5ff22}
+.wstory small{font-size:10px;color:#9fe8ff}.wstory b{font-size:12px;color:#fff;line-height:1.35;font-weight:700}
+.whud:has(.wtut:not([hidden])) .wstory,.whud:has(.wraid:not([hidden])) .wstory{display:none}
+.wcolb{position:absolute;bottom:158px;inset-inline-end:10px;pointer-events:auto;width:48px;height:44px;border-radius:12px;border:1px solid #f5c451;background:#0b1226dd;color:#fff;font-size:20px}
+.wcolb.on{background:#f5c451;box-shadow:0 0 0 3px #00e5ff55}
+.wcol{position:absolute;inset-inline-end:66px;bottom:calc(10px + env(safe-area-inset-bottom));width:min(320px,calc(100% - 84px));max-height:calc(100% - 140px);overflow-y:auto;pointer-events:auto;background:rgba(7,11,22,.94);border:1px solid rgba(245,196,81,.55);border-radius:18px;padding:10px;display:flex;flex-direction:column;gap:8px;box-shadow:0 8px 30px #000a,0 0 0 1px #00e5ff22 inset;animation:wcin .18s ease-out}
+.wcol[hidden]{display:none}
+@keyframes wcin{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
+.wchd{display:flex;justify-content:space-between;align-items:center}.wchd b{color:#f5c451;font-size:15px}
+.wcx{border:0;background:#ffffff14;color:#fff;border-radius:9px;width:32px;height:30px;font:inherit}
+.wcres{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.wcres span{background:#ffffff0b;border:1px solid #ffffff1a;border-radius:10px;padding:5px 7px;display:grid;grid-template-columns:auto 1fr;align-items:baseline;column-gap:5px}
+.wcres i{font-style:normal;grid-row:span 2}.wcres b{font-size:13.5px;color:#fff}.wcres small{display:none}.wcres em{font-style:normal;font-size:10px;color:#7dff9a}
+.wcbld{font-size:11.5px;color:#ffd34d;background:#f5c4511a;border-radius:9px;padding:5px 8px}
+.wcgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.wcgrid button{min-height:58px;border-radius:12px;border:1px solid #00e5ff40;background:#00e5ff10;color:#fff;font:inherit;font-size:11px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.wcgrid button i{font-style:normal;font-size:20px}
+.wcgrid button:active{transform:scale(.96);background:#00e5ff2a}
+.csheet{z-index:45}
+/* landscape: thinner HUD, the build bar is one centred row, panels use the height they have */
+body.wland.wfull #play .stage.wstage{top:44px}
+body.wland .wmini{width:96px;height:64px}
+body.wland .wclock{top:76px}
+body.wland .wstory{top:96px;max-width:min(40%,320px)}
+body.wland .wgd{top:8px;width:34%}
+body.wland .wbbar{left:50%;right:auto;transform:translateX(-50%);width:min(640px,calc(100% - 140px));padding:6px;gap:4px}
+body.wland .wbbar .bhint{font-size:11px}
+body.wland .wbbar .btools button{min-height:48px;flex-basis:56px}
+body.wland .wbbar .bacts button{min-height:38px}
+body.wland .wdpanel{max-height:calc(100% - 90px);width:min(340px,42%)}
+body.wland .wtut{top:60px}
+body.wland .wcol{max-height:calc(100% - 20px);width:min(380px,48%)}
+body.wland .wcgrid{grid-template-columns:repeat(7,1fr)}
+body.wland .wcres{grid-template-columns:repeat(4,1fr)}
+body.wland .wmute{bottom:10px;inset-inline-end:66px}
+body.wland .wcolb{bottom:58px;inset-inline-end:66px}
+body.wland .wbchip{top:70px}
+@media (orientation:landscape) and (max-height:520px){.hmodal{padding:6px;overflow-y:auto}.hmodal>*{max-height:calc(100vh - 12px);overflow-y:auto}}
