@@ -121,3 +121,16 @@
 - الحفظ: حقول جديدة فقط في `arcade-world`: `day`, `tod`, `wx{k,t}`, `sq`.
 - `WXFX{gen,farm,raid}`: أثر الليل والطقس على فائض الطاقة وغذاء أحواض الزراعة (في `WBD.eco`) وعدّاد الغارات.
 - الأرقام: `BAL.world.time`, `weather`, `terrain`, `edgeFog`, `story`؛ و`BAL.build.tapReach`, `roofFade`.
+
+## 7. أدوات العمل (`tools/` في جذر المستودع)
+تُشغَّل من جذر المستودع، وتحتاج Python 3 وNode وPlaywright للاختبار فقط.
+
+| الأداة | الاستعمال |
+|---|---|
+| `python3 tools/stamp.py` | يحدّث `?v=` لكل سكربت و`style.css` في `game/index.html` (بصمة md5) |
+| `python3 tools/join.py` | يدمج اللعبة كلها في ملف واحد `tools/out/arcade-store.html` (للمعاينة والنشر كصفحة واحدة) |
+| `cd tools && python3 mktest.py` | يبني بعد `join.py` النسخة التجريبية `tools/out/madar-test-full.html`: تفتح بكل التطويرات مكتملة (`seed.json`) ولوحة 🧪 للتنقل بين المناطق |
+| `node tools/i18n/merge.cjs ملف.tsv` | يضيف دفعة ترجمة (عربي ⇥ إنجليزي في كل سطر، والأرقام {0} {1}) إلى `game/js/i18n-en.js` |
+| `node tools/full.cjs` و`full_en.cjs` | اختبار انحدار كامل بالعربي والإنجليزي على `http://localhost:8772/game/` (شغّل قبلها `python3 -m http.server 8772` من جذر المستودع). أخطاء «sheet galaxy» من الاختبار نفسه وتُتجاهل |
+
+خطوات النشر: عدّل في `game/` ← `python3 codemap.py` ← ارفع `madar-vN` في `game/sw.js` ← `python3 tools/stamp.py` ← اختبر ← `git push` (GitHub Pages ينشر تلقائياً).
